@@ -53419,3 +53419,20 @@ PR250 mergedf9c5d6754; installed narrow overlay and API guard qualified. Live ac
 ## 2026-10-10 | Plan0396 GPT-6 premium mapping
 
 Current UI selection-and-restore proved GPT-6 Power4 Pro. Added fallback from absent6 Pro row, exact GPT-6 family recognition, non-inert model-list navigation and verified fifth-slot selection. Shared post-model effort guard protects premium across CLI and workbench. Live source selector now selects GPT-6 Pro and restores Medium; zero provider sends. Root dirty work preserved. Source acceptance separate from installation and active-chat TTL. Memory disposition forbidden.
+
+
+## 2026-10-10 | Plan0397 in-flight lease renewal
+
+Executor fake-clock regression reproduced active->lost during pending response
+maintenance, then passed after renewal/claim serialization. Added error, cancel,
+ownership-loss, absolute-deadline and provider-admission gates; legacy abort
+forwarding red/green. Focused validation, build and review in progress; no live
+request or installed adoption in this packet.
+
+
+### Plan0397 source qualification
+
+45 focused tests PASS, typecheck/build/scoped lint/diff checks PASS. Serial
+Standards and Spec review PASS after fixing cancellation forwarding. Source
+packet CLOSED; installed adoption and visually watched long-chat expiry acceptance
+remain separate gates. No provider request or wake created.

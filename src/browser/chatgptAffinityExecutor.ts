@@ -5,8 +5,8 @@ import type {
 	ProviderWarningClassification,
 } from "../../packages/browser-service/src/service/interactionLedger.js";
 import {
-	createInMemoryBrowserMutationLog,
 	type BrowserMutationAuditSink,
+	createInMemoryBrowserMutationLog,
 } from "../../packages/browser-service/src/service/mutationDispatcher.js";
 import { createProviderTrafficGovernor } from "../../packages/browser-service/src/service/providerTrafficGovernor.js";
 import type {
@@ -16,9 +16,9 @@ import type {
 	TabLeaseScope,
 	TabLeaseWorkload,
 } from "../../packages/browser-service/src/service/tabLeaseRegistry.js";
-import type { PromptInput, PromptResult } from "./llmService/types.js";
-import { recordChatgptRateLimitDetection } from "./chatgptRateLimitGuard.js";
 import { probeChatgptRateLimitWarning } from "./chatgptProviderTraffic.js";
+import { recordChatgptRateLimitDetection } from "./chatgptRateLimitGuard.js";
+import type { PromptInput, PromptResult } from "./llmService/types.js";
 import {
 	assertChatgptLeasedPromptResult,
 	buildChatgptLeasedPromptOptions,
@@ -215,6 +215,16 @@ async function executeAdmittedChatgptConversation(
 	now: () => Date,
 ): Promise<ChatgptConversationExecutionResult> {
 	assertLeaseClaim(request.lease, request.claim, request.operationId);
+	let activeClaim = request.claim;
+	let claimWork: Promise<void> = Promise.resolve();
+	const withClaim = <T>(work: () => Promise<T>): Promise<T> => {
+		const next = claimWork.then(work);
+		claimWork = next.then(
+			() => undefined,
+			() => undefined,
+		);
+		return next;
+	};
 	const providerOptions = buildChatgptLeasedPromptOptions({
 		lease: request.lease,
 		operationId: request.operationId,
@@ -237,19 +247,21 @@ async function executeAdmittedChatgptConversation(
 			request.mutationAudit ??
 			request.options?.mutationAudit ??
 			createInMemoryBrowserMutationLog().record,
-		assertLease: async (attribution) => {
-			const lease = (await request.registry.list({ states: ["active"] })).find(
-				(candidate) => candidate.leaseId === attribution.tabLeaseId,
-			);
-			if (
-				!lease ||
-				lease.ownerOperationId !== attribution.operationId ||
-				lease.targetId !== request.lease.targetId ||
-				lease.revision !== request.claim.revision
-			) {
-				throw new Error("Provider traffic tab lease ownership changed before prompt action.");
-			}
-		},
+		assertLease: (attribution) =>
+			withClaim(async () => {
+				if (renewalFailed) throw renewalError;
+				const lease = (await request.registry.list({ states: ["active"] })).find(
+					(candidate) => candidate.leaseId === attribution.tabLeaseId,
+				);
+				if (
+					!lease ||
+					lease.ownerOperationId !== attribution.operationId ||
+					lease.targetId !== request.lease.targetId ||
+					lease.revision !== activeClaim.revision
+				) {
+					throw new Error("Provider traffic tab lease ownership changed before prompt action.");
+				}
+			}),
 		probeWarning: probeChatgptRateLimitWarning,
 		persistWarning: async (warning) => {
 			const observedAt = now();
@@ -274,14 +286,96 @@ async function executeAdmittedChatgptConversation(
 		},
 	});
 
+	const controller = new AbortController();
+	const originalSignal = providerOptions.abortSignal;
+	providerOptions.abortSignal = originalSignal
+		? AbortSignal.any([originalSignal, controller.signal])
+		: controller.signal;
+	let stopped = false;
+	let timer: ReturnType<typeof setTimeout> | undefined;
+	let renewalError: unknown;
+	let renewalFailed = false;
+	let rejectRenewal!: (error: unknown) => void;
+	const renewalFailure = new Promise<never>((_, reject) => {
+		rejectRenewal = reject;
+	});
+	// Cancellation can already be present before the provider promise is started.
+	void renewalFailure.catch(() => undefined);
+	const failRenewal = (error: unknown) => {
+		if (renewalFailed) return;
+		renewalFailed = true;
+		renewalError = error;
+		stopped = true;
+		if (timer) clearTimeout(timer);
+		controller.abort(error);
+		rejectRenewal(error);
+	};
+	const intervalMs = Math.max(1, Math.min(30_000, Math.floor(request.idleTtlMs / 3)));
+	const nextRenewalDelay = () =>
+		Math.max(
+			1,
+			Math.min(intervalMs, Date.parse(request.lease.absoluteExpiresAt) - now().getTime()),
+		);
+	const renew = async () => {
+		try {
+			await withClaim(async () => {
+				if (stopped) return;
+				const at = now();
+				if (at.getTime() >= Date.parse(request.lease.absoluteExpiresAt)) {
+					throw new Error("ChatGPT in-flight tab lease reached its absolute deadline.");
+				}
+				const used = await request.registry.recordMeaningfulUse({
+					claim: activeClaim,
+					now: at.toISOString(),
+					idleTtlMs: request.idleTtlMs,
+				});
+				if (!used.ok)
+					throw new Error(`ChatGPT in-flight lease renewal failed: ${used.conflict.kind}.`);
+				activeClaim = used.value.claim;
+			});
+			if (!stopped) timer = setTimeout(renew, nextRenewalDelay());
+		} catch (error) {
+			failRenewal(error);
+		}
+	};
+	const cancelRenewal = () =>
+		failRenewal(originalSignal?.reason ?? new Error("ChatGPT prompt cancelled."));
+	originalSignal?.addEventListener("abort", cancelRenewal, { once: true });
+	const stopRenewal = async () => {
+		stopped = true;
+		if (timer) clearTimeout(timer);
+		originalSignal?.removeEventListener("abort", cancelRenewal);
+		await claimWork;
+	};
 	let result: PromptResult;
-	let activeClaim = request.claim;
 	try {
-		result = await request.runPrompt(request.input, providerOptions);
+		if (originalSignal?.aborted) cancelRenewal();
+		else timer = setTimeout(renew, nextRenewalDelay());
+		try {
+			if (renewalFailed) throw renewalError;
+			result = await Promise.race([
+				request.runPrompt(request.input, providerOptions),
+				renewalFailure,
+			]);
+		} finally {
+			await stopRenewal();
+		}
+		if (renewalFailed) throw renewalError;
 		assertChatgptLeasedPromptResult(request.lease, result);
-		activeClaim = await settleSuccessfulLease(request, result, now().toISOString());
+		activeClaim = await settleSuccessfulLease(
+			{ ...request, claim: activeClaim },
+			result,
+			now().toISOString(),
+		);
 	} catch (error) {
-		await settleFailedExecution(request, activeClaim, reservationId, now, error);
+		await stopRenewal();
+		await settleFailedExecution(
+			{ ...request, claim: activeClaim },
+			activeClaim,
+			reservationId,
+			now,
+			error,
+		);
 		throw error;
 	}
 	const settled = await request.ledger.settle({

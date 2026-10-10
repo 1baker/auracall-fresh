@@ -1,0 +1,39 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-issue226-heartbeat
+
+ ❯ tests/browser/chatgptAffinityExecutor.test.ts (10 tests | 1 failed) 21ms
+     ✓ reserves aggregate capacity before provisioning and then binds the created tab 5ms
+     ✓ does not provision a tab when aggregate warning admission denies the workload 1ms
+     ✓ projects a provider warning before any later workload can be admitted 2ms
+     ✓ keeps serialized rollback free of lease and aggregate-ledger dependencies 0ms
+     ✓ admits, submits, rebinds, and idles a new conversation on its exact tab 1ms
+     ✓ denies before provider execution when aggregate admission is unavailable 0ms
+     ✓ retains an outcome-unknown failure without retrying the provider 1ms
+     ✓ cancels a confirmed pre-effect failure without consuming settled interaction usage 1ms
+     ✓ fences the exact lease when ledger settlement fails after provider success 1ms
+   × keeps an in-flight chat active through maintenance past its original idle expiry 6ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/browser/chatgptAffinityExecutor.test.ts > keeps an in-flight chat active through maintenance past its original idle expiry
+AssertionError: expected 'lost' to be 'active' // Object.is equality
+
+Expected: "active"
+Received: "lost"
+
+ ❯ tests/browser/chatgptAffinityExecutor.test.ts:510:43
+    508|  await ready;await vi.advanceTimersByTimeAsync(960_000);
+    509|  await reconcileStaleTabLeases({registry,scope,currentOwner:{processId…
+    510|  expect((await registry.list())[0].state).toBe("active");
+       |                                           ^
+    511|  complete({text:"done",conversationId:"fixture",url:"https://chatgpt.c…
+    512|  await expect(pending).resolves.toMatchObject({status:"completed"});
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 9 passed (10)
+   Start at  17:26:02
+   Duration  570ms (transform 268ms, setup 48ms, import 328ms, tests 21ms, environment 0ms)
+

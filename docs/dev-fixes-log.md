@@ -24436,3 +24436,14 @@ not attribute prior incidents or cover every possible close actor.
 ## 2026-10-10 | GPT-6 premium Power selection
 
 When6 Pro disappears from the Chat model rows, premium requires exact GPT-6 plus verified Pro Power, not merely a model-label alias. Model family recognition must admit the checked GPT-6 row; hidden inert lists cannot establish current selection. A later ordinary effort selection must not downgrade a verified premium composite. Real source UI proof selected Pro and restored Medium without sending a prompt. Plan0396 retains initial fixture/live failures.
+
+
+## 2026-10-10 | Pending ChatGPT lease renewal (Issue226, Plan0397)
+
+A pending prompt left its lease heartbeat fixed, allowing reconciliation to mark
+a live owner's active lease lost at idle expiry. Renew while the original prompt
+is in flight, serialize claim checks with renewal, and drain renewal before
+settlement. Stop on cancellation/error/ownership loss and preserve the absolute
+deadline; forward cancellation through the legacy browser affinity path.
+Pre-close active/unknown DOM protection remains independent. This source repair
+does not attribute the previous browser exit or prove live elapsed acceptance.

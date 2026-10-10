@@ -1824,7 +1824,7 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 			userConfig: options.tabAffinityUserConfig,
 			browserOptions: options,
 			resolvedConfig: config,
-			runLeased: ({ host, port, targetId, targetUrl, providerTrafficGovernor }) =>
+			runLeased: ({ host, port, targetId, targetUrl, providerTrafficGovernor, abortSignal }) =>
 				runRemoteBrowserMode(
 					promptText,
 					attachments,
@@ -1837,6 +1837,7 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 					{
 						...options,
 						tabAffinity: { host, port, targetId },
+						abortSignal,
 						providerTrafficGovernor,
 						tabAffinityUserConfig: undefined,
 						skipBrowserExecutionOperation: true,
