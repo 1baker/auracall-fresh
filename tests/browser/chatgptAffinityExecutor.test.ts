@@ -9,6 +9,7 @@ import {
 	createInMemoryBrowserTabLeaseRegistry,
 	type TabLeaseScope,
 } from "../../packages/browser-service/src/service/tabLeaseRegistry.js";
+import { reconcileStaleTabLeases } from "../../packages/browser-service/src/service/tabLeaseRestartReconciliation.js";
 import {
 	executeChatgptConversation,
 	executeProvisionedChatgptConversation,
@@ -378,7 +379,9 @@ describe("ChatGPT affinity executor", () => {
 
 	test("cancels a confirmed pre-effect failure without consuming settled interaction usage", async () => {
 		const registry = createInMemoryBrowserTabLeaseRegistry({ createLeaseId: () => "lease-1" });
-		const ledger = createInMemoryProviderInteractionLedger({ createReservationId: () => "interaction-1" });
+		const ledger = createInMemoryProviderInteractionLedger({
+			createReservationId: () => "interaction-1",
+		});
 		const reserved = await registry.reserve({
 			scope,
 			targetId: "target-1",
@@ -492,4 +495,286 @@ describe("ChatGPT affinity executor", () => {
 			},
 		});
 	});
+});
+
+test.each([
+	"conversation",
+	"new-conversation",
+] as const)("keeps an in-flight %s active through maintenance past its original idle expiry", async (kind) => {
+	vi.useFakeTimers();
+	vi.setSystemTime(new Date("2026-10-10T12:00:00Z"));
+	try {
+		const registry = createInMemoryBrowserTabLeaseRegistry({
+			ownerIdentity: { processId: 41, instanceId: "chat" },
+		});
+		const reserved = await registry.reserve({
+			scope,
+			targetId: "pending",
+			workload:
+				kind === "conversation"
+					? { kind, conversationId: "fixture" }
+					: { kind, reservationId: "fixture" },
+			operationId: "pending",
+			now: new Date().toISOString(),
+			idleTtlMs: 900_000,
+			absoluteTtlMs: 28_800_000,
+		});
+		if (!reserved.ok) throw Error("reserve failed");
+		let complete!: (value: {
+			text: string;
+			conversationId: string;
+			url: string;
+			tabTargetId: string;
+		}) => void;
+		let started!: () => void;
+		const ready = new Promise<void>((resolve) => {
+			started = resolve;
+		});
+		const pending = executeChatgptConversation({
+			mode: "tab-affinity",
+			registry,
+			ledger: createInMemoryProviderInteractionLedger(),
+			lease: reserved.value.lease,
+			claim: reserved.value.claim,
+			operationId: "pending",
+			endpoint: { host: "127.0.0.1", port: 9222 },
+			input: { prompt: "fixture", conversationId: kind === "conversation" ? "fixture" : undefined },
+			policy,
+			reservationTtlMs: 28_800_000,
+			idleTtlMs: 900_000,
+			runPrompt: async () => {
+				started();
+				return new Promise((resolve) => {
+					complete = resolve;
+				});
+			},
+		});
+		await ready;
+		await vi.advanceTimersByTimeAsync(960_000);
+		await reconcileStaleTabLeases({
+			registry,
+			scope,
+			currentOwner: { processId: 99, instanceId: "maintenance" },
+			isOwnerAlive: () => true,
+		});
+		expect((await registry.list())[0].state).toBe("active");
+		complete({
+			text: "done",
+			conversationId: "fixture",
+			url: "https://chatgpt.com/c/fixture",
+			tabTargetId: "pending",
+		});
+		await expect(pending).resolves.toMatchObject({ status: "completed" });
+		const idle = (await registry.list())[0];
+		expect(idle.state).toBe("idle");
+		await vi.advanceTimersByTimeAsync(120_000);
+		expect((await registry.list())[0]).toEqual(idle);
+	} finally {
+		vi.useRealTimers();
+	}
+});
+
+async function pendingChatFixture(
+	idleTtlMs = 900_000,
+	absoluteTtlMs = 28_800_000,
+	abortSignal?: AbortSignal,
+) {
+	const registry = createInMemoryBrowserTabLeaseRegistry({
+		ownerIdentity: { processId: 41, instanceId: "chat" },
+	});
+	const ledger = createInMemoryProviderInteractionLedger();
+	const reserved = await registry.reserve({
+		scope,
+		targetId: "pending",
+		workload: { kind: "conversation", conversationId: "fixture" },
+		operationId: "pending",
+		now: new Date().toISOString(),
+		idleTtlMs,
+		absoluteTtlMs,
+	});
+	if (!reserved.ok) throw Error("reserve failed");
+	let fail!: (error: Error) => void;
+	let started!: () => void;
+	let providerSignal: AbortSignal | undefined;
+	let governor:
+		| import("../../packages/browser-service/src/service/providerTrafficGovernor.js").ProviderTrafficGovernor
+		| undefined;
+	const ready = new Promise<void>((resolve) => {
+		started = resolve;
+	});
+	const pending = executeChatgptConversation({
+		mode: "tab-affinity",
+		registry,
+		ledger,
+		lease: reserved.value.lease,
+		claim: reserved.value.claim,
+		operationId: "pending",
+		endpoint: { host: "127.0.0.1", port: 9222 },
+		input: { prompt: "fixture", conversationId: "fixture" },
+		policy,
+		reservationTtlMs: 28_800_000,
+		idleTtlMs,
+		options: { abortSignal },
+		runPrompt: async (_input, options) => {
+			providerSignal = options?.abortSignal;
+			governor = options?.providerTrafficGovernor;
+			started();
+			return new Promise((_resolve, reject) => {
+				fail = reject;
+			});
+		},
+	});
+	void pending.catch(() => undefined);
+	await Promise.race([
+		ready,
+		pending.then(
+			() => undefined,
+			() => undefined,
+		),
+	]);
+	return {
+		registry,
+		ledger,
+		pending,
+		fail,
+		signal: () => providerSignal,
+		governor: () => governor,
+	};
+}
+
+test.each([
+	"provider-error",
+	"cancelled",
+] as const)("stops in-flight renewal after %s", async (kind) => {
+	vi.useFakeTimers();
+	vi.setSystemTime(new Date("2026-10-10T12:00:00Z"));
+	try {
+		const controller = new AbortController();
+		const f = await pendingChatFixture(900_000, 28_800_000, controller.signal);
+		await vi.advanceTimersByTimeAsync(60_000);
+		const failure = Error("stop original");
+		if (kind === "cancelled") controller.abort(failure);
+		else f.fail(failure);
+		await expect(f.pending).rejects.toThrow("stop original");
+		const settled = (await f.registry.list())[0];
+		expect(settled.state).toBe("idle");
+		expect(settled.effectState).toBe("outcome-unknown");
+		await vi.advanceTimersByTimeAsync(120_000);
+		expect((await f.registry.list())[0]).toEqual(settled);
+	} finally {
+		vi.useRealTimers();
+	}
+});
+
+test("renewal does not extend the absolute deadline of a pending response", async () => {
+	vi.useFakeTimers();
+	vi.setSystemTime(new Date("2026-10-10T12:00:00Z"));
+	try {
+		const f = await pendingChatFixture(1000, 3000);
+		await vi.advanceTimersByTimeAsync(3400);
+		await expect(f.pending).rejects.toThrow("absolute deadline");
+		expect(f.signal()?.aborted).toBe(true);
+		const lease = (await f.registry.list())[0];
+		expect(Date.parse(lease.idleExpiresAt)).toBeLessThanOrEqual(
+			Date.parse(lease.absoluteExpiresAt),
+		);
+		const before = lease;
+		await vi.advanceTimersByTimeAsync(5000);
+		expect((await f.registry.list())[0]).toEqual(before);
+	} finally {
+		vi.useRealTimers();
+	}
+});
+
+test("a lost lease cancels the original provider instead of renewing another claim", async () => {
+	vi.useFakeTimers();
+	vi.setSystemTime(new Date("2026-10-10T12:00:00Z"));
+	try {
+		const f = await pendingChatFixture();
+		const lease = (await f.registry.list())[0];
+		await f.registry.markLost({
+			leaseId: lease.leaseId,
+			expectedRevision: lease.revision,
+			now: new Date().toISOString(),
+			reason: "restart-unverified",
+		});
+		await vi.advanceTimersByTimeAsync(30_000);
+		await expect(f.pending).rejects.toThrow("renewal failed");
+		expect(f.signal()?.aborted).toBe(true);
+		expect((await f.registry.list())[0].state).toBe("lost");
+	} finally {
+		vi.useRealTimers();
+	}
+});
+
+test("provider actions remain admitted using the renewed claim", async () => {
+	vi.useFakeTimers();
+	vi.setSystemTime(new Date("2026-10-10T12:00:00Z"));
+	try {
+		const f = await pendingChatFixture();
+		await vi.advanceTimersByTimeAsync(60_000);
+		const governor = f.governor();
+		if (!governor) throw new Error("Provider governor missing");
+		const action = await governor.begin({
+			kind: "in-page-click",
+			interactionClass: "generic",
+			source: "fixture",
+			abortSignal: f.signal(),
+		});
+		await action.settle({ outcome: "succeeded" });
+		f.fail(Error("done"));
+		await expect(f.pending).rejects.toThrow("done");
+	} finally {
+		vi.useRealTimers();
+	}
+});
+
+test("an already cancelled request never dispatches the provider", async () => {
+	vi.useFakeTimers();
+	vi.setSystemTime(new Date("2026-10-10T12:00:00Z"));
+	try {
+		const controller = new AbortController();
+		controller.abort(Error("already cancelled"));
+		const f = await pendingChatFixture(900_000, 28_800_000, controller.signal);
+		await expect(f.pending).rejects.toThrow("already cancelled");
+		expect(f.signal()).toBeUndefined();
+		const before = (await f.registry.list())[0];
+		await vi.advanceTimersByTimeAsync(60_000);
+		expect((await f.registry.list())[0]).toEqual(before);
+	} finally {
+		vi.useRealTimers();
+	}
+});
+
+test("failure settlement waits for an outstanding renewal write and uses its claim", async () => {
+	vi.useFakeTimers();
+	vi.setSystemTime(new Date("2026-10-10T12:00:00Z"));
+	try {
+		const f = await pendingChatFixture();
+		let release!: () => void;
+		const blocked = new Promise<void>((resolve) => {
+			release = resolve;
+		});
+		const original = f.registry.recordMeaningfulUse.bind(f.registry);
+		let first = true;
+		vi.spyOn(f.registry, "recordMeaningfulUse").mockImplementation(async (input) => {
+			if (first) {
+				first = false;
+				await blocked;
+			}
+			return original(input);
+		});
+		await vi.advanceTimersByTimeAsync(30_000);
+		f.fail(Error("provider failed"));
+		await Promise.resolve();
+		expect((await f.ledger.list())[0].state).toBe("started");
+		release();
+		await expect(f.pending).rejects.toThrow("provider failed");
+		const lease = (await f.registry.list())[0];
+		expect(lease.state).toBe("idle");
+		expect(lease.effectState).toBe("outcome-unknown");
+	} finally {
+		vi.restoreAllMocks();
+		vi.useRealTimers();
+	}
 });

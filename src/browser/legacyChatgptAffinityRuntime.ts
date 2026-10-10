@@ -21,6 +21,7 @@ import {
 import type { BrowserRunOptions, BrowserRunResult, ResolvedBrowserConfig } from "./types.js";
 
 export interface LegacyChatgptLeasedTarget {
+	abortSignal?: AbortSignal;
 	host: string;
 	port: number;
 	targetId: string;
@@ -86,6 +87,7 @@ export async function runLegacyChatgptWithConfiguredAffinity(input: {
 					)
 				: (promptInput.configuredUrl ?? configuredUrl);
 			const legacyResult = await input.runLeased({
+				abortSignal: options.abortSignal,
 				host: options.host,
 				port: options.port,
 				targetId: options.tabTargetId,

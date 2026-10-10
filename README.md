@@ -842,6 +842,11 @@ Terminology note:
   provider-unavailable evidence, and `materialized` identifies verified local
   output. A repair-prompt candidate is diagnostic only; AuraCall does not send
   a repair prompt automatically.
+  While a ChatGPT tab-affinity prompt is in flight, AuraCall renews its active
+  lease at intervals of at most 30 seconds. Renewal stops when the request
+  completes, fails, is cancelled, loses ownership, or reaches its absolute
+  deadline. The separate provider-activity check still prevents cleanup from
+  closing a tab with an active or uncertain response.
 
   A completion-owned failed job with zero verified materializations blocks its live-follow
   operation before another provider pass; inspect and correct the
