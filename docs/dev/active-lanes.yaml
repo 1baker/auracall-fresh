@@ -1771,14 +1771,14 @@ lanes:
     target: main
     plan_state: CLOSED
     custody_state: INTEGRATED
-    checkpoint: 6e7009727d7f0b18ce84fb125986129360aebd59
+    checkpoint: 57514aebf41a3e6a03b9a613f7ccc0f00d3f786e
     remote_ref: refs/remotes/origin/feat/issue264-desktop-pool
     integration: merge
     work_items: [ecochran76/auracall#264, ecochran76/auracall#265, ecochran76/auracall#266, ecochran76/auracall#267, ecochran76/auracall#268]
     dependencies: [P86]
     overlaps: [P86]
     reconciled_overlaps: [P86]
-    reconciliation_note: P86 source is integrated; preserve its rail, viewer and control contracts. P87 changes automatic allocation rather than provider behavior.
+    reconciliation_note: P86 source is integrated; preserve its rail, viewer and control contracts. P89 changes automatic allocation rather than provider behavior.
     blocker: None within Plan0404; public human input remains outside this lane.
     validation_status: integrated-installed-five-desktops-one-spare
     validation_ref: docs/dev/evidence/desktop-pool-installed/acceptance.json
