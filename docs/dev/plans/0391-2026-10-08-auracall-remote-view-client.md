@@ -9,6 +9,20 @@ Branch: feat/issue240-named-desktops
 Base: origin/main at 591a118245cafbc54c34cd0bc179c4b380308ef6
 Work items: ecochran76/auracall#240, ecochran76/auracall#241, ecochran76/auracall#242
 
+## Current deployment checkpoint: 2026-10-10
+
+PR244 merged at578b642c33104e3b1bf4db2f10c6989a9504bb42. The combined desktop
+and launch-policy package is installed byte-identically across589 dist files;
+API88638 serves /desktops200 and four ready owned browsers on Research. Writing
+is currently empty. Five registered browser parent identities and27 Remote View/
+display identities survive from the pre-build census. Of136 broader identities,
+18 Chrome identities disappeared over the build/test/adoption interval; no matching
+lifecycle records identify an actor, so whole-census preservation is not claimed.
+Configuration is unchanged; scheduler remains paused with17 paused completions.
+Public unauthenticated /desktops reaches expected authentication302. Authenticated
+public pixels/input and root acceptance were not rerun; the wider plan stays OPEN.
+[Installed route acceptance](../evidence/desktops-install-reconciliation/installed-acceptance.json).
+
 ## Installed route regression recovery: 2026-10-10
 
 The later Plan0403 installation replaced the off-main desktop client, causing

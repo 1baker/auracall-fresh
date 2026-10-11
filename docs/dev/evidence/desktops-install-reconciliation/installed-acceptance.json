@@ -1,0 +1,26 @@
+{
+  "status": "PASS_BOUNDED_ROUTE_RESTORATION",
+  "integratedCommit": "578b642c33104e3b1bf4db2f10c6989a9504bb42",
+  "pullRequest": 244,
+  "apiPid": 88638,
+  "localDesktopHttpStatus": 200,
+  "publicUnauthenticatedHttpStatus": 302,
+  "publicRedirect": "expected authentication",
+  "packagedDistFileParity": 589,
+  "registeredBrowserParentsPreserved": 5,
+  "remoteViewAndDisplayIdentitiesPreserved": 27,
+  "originalCensusSize": 136,
+  "originalCensusIdentitiesStillPresent": 118,
+  "missingEarlierCensusIdentities": 18,
+  "exitActor": "unknown; no matching lifecycle records; earlier snapshot precedes build/test interval",
+  "unchangedStateFileCount": 33,
+  "changedStateFileKinds": [
+    "browser registry bookkeeping"
+  ],
+  "configurationUnchanged": true,
+  "schedulerPaused": true,
+  "pausedCompletionCount": 17,
+  "desktopReadyBrowserCount": 4,
+  "authenticatedPublicInputAndRootAcceptance": "not rerun",
+  "rollbackCopyRetained": true
+}

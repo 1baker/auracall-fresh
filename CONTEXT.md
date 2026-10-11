@@ -69,3 +69,11 @@ _Avoid_: View selection, browser launch
 
 **Memory routing**:
 The selection of a reviewed Graphiti group and audience for qualified source-backed memory. AuraCall uses `auracall_main`. Unresolved routing is distinct from a verified memory-service failure.
+
+
+**Installed runtime**:
+The user-scoped AuraCall package adopted from integrated source, with compiled
+code identity and required application surfaces verified before promotion. Its
+source commit is distinct from browser processes, browser profiles and the
+package version, which alone cannot prove feature preservation.
+_Avoid_: Version-only runtime identity

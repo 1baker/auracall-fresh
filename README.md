@@ -38,6 +38,10 @@ checkout into `~/.auracall/user-runtime` and writes user-owned wrappers under
 `~/.local/bin`; see `docs/user-scoped-runtime.md`.
 Public npm distribution is intentionally deferred; `auracall` is not currently
 offered through npm or Homebrew.
+The installer checks the compiled `/desktops` application before replacing the
+install prefix. Reconcile active PRs, worktrees and already deployed capabilities
+before installation; a successful build alone does not authorize dropping them.
+
 
 Requires Node 22+.
 
