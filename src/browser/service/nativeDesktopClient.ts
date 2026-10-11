@@ -7,9 +7,10 @@ export async function readyNativeDesktopBrowsers(selected: RemoteViewDesktopConf
   const bindings = (await store.browsers()).filter(binding => nativeDesktopKey(binding) === nativeDesktopKey(selected));
   const result: NativeDesktopBrowser[] = [];
   for (const binding of bindings) {
+    if (!await verify(binding)) continue;
     const assignments = ready.filter(item => item.assignmentId === binding.assignment.assignmentId && item.desktopId === binding.assignment.desktopId && item.generation === binding.assignment.generation);
     if (assignments.length !== 1 || !assignments[0]) throw new Error('Retained AuraCall native desktop ownership is stale.');
-    if (await verify(binding)) result.push({ ...binding, assignment: assignments[0] });
+    result.push({ ...binding, assignment: assignments[0] });
   }
   return result;
 }

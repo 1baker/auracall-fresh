@@ -72,6 +72,9 @@ function httpsOrigin(value: string): string {
 	return url.origin;
 }
 
+const retirementSchema = z.object({ schemaVersion: z.literal(1), desktopId: identity, generation, routes: z.array(identity), sessions: z.array(identity) });
+export type RemoteViewRetirement = z.infer<typeof retirementSchema>;
+
 export interface RemoteViewAssignment {
 	assignmentId: string;
 	desktopId: string;
@@ -224,6 +227,23 @@ export class RemoteViewApplication {
     const reserved = inventory.assignments.filter(a => a.poolId === pool.poolId && a.registrationId === inventory.registration.registrationId && !['released', 'failed'].includes(a.state)).length;
     if (reserved !== assignments.length) throw new Error('Remote View pool contains unresolved or unavailable assignments.');
     return { maximum: policy.maximum_reserved, minimum: policy.minimum_reserved, allowScaleIn: policy.allow_scale_in, assignments, reserved };
+  }
+
+  async observeIdle(assignment: RemoteViewAssignment): Promise<{ idle: boolean; retirement: RemoteViewRetirement }> {
+    const result = z.object({ schemaVersion: z.literal(1), readinessScope: z.literal('live_resource'), target: viewTargetSchema, retirement: retirementSchema, idle: z.boolean(), viewerActive: z.boolean() }).parse(await this.request({ operation: 'observe_idle', assignment_id: assignment.assignmentId, expected_generation: assignment.generation }));
+    if (result.target.assignmentId !== assignment.assignmentId || result.target.desktopId !== assignment.desktopId || result.target.lifecycleGeneration !== assignment.generation || result.target.viewingGeneration !== assignment.viewingGeneration || result.retirement.desktopId !== assignment.desktopId || result.retirement.generation !== assignment.generation) throw new Error('Remote View idle observation generation changed.');
+    return { idle: result.idle && !result.viewerActive && result.retirement.sessions.length === 0, retirement: result.retirement };
+  }
+
+  async releaseIdle(assignment: RemoteViewAssignment, retirement: RemoteViewRetirement, key: string): Promise<'released' | 'retained'> {
+    if (retirement.desktopId !== assignment.desktopId || retirement.generation !== assignment.generation || retirement.sessions.length) throw new Error('Idle release target is not empty.');
+    const result = await this.request({ operation: 'release_idle', assignment_id: assignment.assignmentId, expected_generation: assignment.generation, expected_viewing_generation: assignment.viewingGeneration, idempotency_key: key, expected_retirement: retirement,
+      cleanup: { schemaVersion: 1, assignmentId: assignment.assignmentId, lifecycleGeneration: assignment.generation, applicationReferencesClear: true, pendingRecoveryClear: true, foregroundLeasesClear: true, cleanupTasksClear: true } });
+    const deferred = z.object({ schemaVersion: z.literal(1), operation: z.literal('release_idle'), state: z.literal('retained'), assignmentId: identity, generation }).safeParse(result);
+    if (deferred.success) { if (deferred.data.assignmentId !== assignment.assignmentId || deferred.data.generation !== assignment.generation) throw new Error('Idle release result identity changed.'); return 'retained'; }
+    const released = z.object({ assignment: z.object({ assignmentId: identity, desktopId: identity, generation, state: z.literal('released') }), retirement: retirementSchema }).parse(result);
+    if (released.assignment.assignmentId !== assignment.assignmentId || released.assignment.desktopId !== assignment.desktopId || released.assignment.generation !== assignment.generation || JSON.stringify(released.retirement) !== JSON.stringify(retirement)) throw new Error('Idle release result identity changed.');
+    return 'released';
   }
 
   async windowCount(assignment: RemoteViewAssignment): Promise<number> {

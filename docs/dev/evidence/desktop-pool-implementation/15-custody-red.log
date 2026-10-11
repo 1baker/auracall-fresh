@@ -1,0 +1,34 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-desktop-pool
+
+ ❯ tests/browser/desktopPoolMaintenance.test.ts (5 tests | 1 failed) 653ms
+   ✓ pool maintenance protects obligations: {"viewerActive":false,"recovery":false,"replyLoss":false,"unretained":false} 165ms
+   × pool maintenance protects obligations: {"viewerActive":false,"recovery":false,"replyLoss":false,"unretained":true} 93ms
+   ✓ pool maintenance protects obligations: {"viewerActive":true,"recovery":false,"replyLoss":false} 74ms
+   ✓ pool maintenance protects obligations: {"viewerActive":false,"recovery":true,"replyLoss":false} 201ms
+   ✓ pool maintenance protects obligations: {"viewerActive":false,"recovery":false,"replyLoss":true} 119ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/browser/desktopPoolMaintenance.test.ts > pool maintenance protects obligations: {"viewerActive":false,"recovery":false,"replyLoss":false,"unretained":true}
+AssertionError: expected 'ready' to be 'deferred' // Object.is equality
+
+Expected: "deferred"
+Received: "ready"
+
+ ❯ tests/browser/desktopPoolMaintenance.test.ts:154:50
+    152|   }
+    153|   if (unretained) {
+    154|    expect(await maintainDesktopPool(remoteView)).toBe("deferred");
+       |                                                  ^
+    155|    expect(releases).toEqual([]);
+    156|    return;
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 passed (5)
+   Start at  00:07:22
+   Duration  1.17s (transform 178ms, setup 46ms, import 280ms, tests 653ms, environment 0ms)
+

@@ -1,0 +1,25 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-desktop-pool
+
+ ❯ tests/browser/nativeDesktopRestart.test.ts (1 test | 1 failed) 667ms
+   × a fresh process reconciles a pool lock only after the original owner is proven absent 666ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/browser/nativeDesktopRestart.test.ts > a fresh process reconciles a pool lock only after the original owner is proven absent
+AssertionError: promise rejected "Error: Native desktop operation is busy; …" instead of resolving
+ ❯ tests/browser/nativeDesktopRestart.test.ts:8:294
+
+
+Caused by: Error: Native desktop operation is busy; inspect retained ownership before retrying.
+ ❯ NativeDesktopStore.exclusive src/browser/service/nativeDesktopStore.ts:79:83
+ ❯ tests/browser/nativeDesktopRestart.test.ts:8:236
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  00:01:19
+   Duration  1.13s (transform 116ms, setup 74ms, import 152ms, tests 667ms, environment 0ms)
+

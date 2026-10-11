@@ -1,0 +1,48 @@
+tests/browser/desktopPoolMaintenance.test.ts:125:22 lint/style/useTemplate  FIXABLE  ━━━━━━━━━━━━━━━
+
+  i Template literals are preferred over string concatenation.
+  
+    123 │ 				retirement: request.expected_retirement,
+    124 │ 			};
+  > 125 │ 		} else throw Error("Unexpected request " + request.operation);
+        │ 		                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    126 │ 		res.end(JSON.stringify(data));
+    127 │ 	}).listen(0, "127.0.0.1");
+  
+  i Unsafe fix: Use a template literal.
+  
+    123 123 │   				retirement: request.expected_retirement,
+    124 124 │   			};
+    125     │ - → → }·else·throw·Error("Unexpected·request·"·+·request.operation);
+        125 │ + → → }·else·throw·Error(`Unexpected·request·${request.operation}`);
+    126 126 │   		res.end(JSON.stringify(data));
+    127 127 │   	}).listen(0, "127.0.0.1");
+  
+
+tests/browser/nativeDesktopRestart.test.ts:24:14 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+  
+    22 │ 	);
+    23 │ 	try {
+  > 24 │ 		await once(child.stdout!, "data");
+       │ 		           ^^^^^^^^^^^^^
+    25 │ 		const store = new NativeDesktopStore(directory);
+    26 │ 		await expect(store.exclusive("pool-restart", async () => true)).rejects.toThrow("busy");
+  
+
+tests/browser/nativeDesktopRestart.test.ts:56:14 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+  
+    54 │ 	);
+    55 │ 	try {
+  > 56 │ 		await once(child.stdout!, "data");
+       │ 		           ^^^^^^^^^^^^^
+    57 │ 		const { DesktopControlGate } = await import("../../src/browser/service/desktopControlGate.js");
+    58 │ 		const gate = new DesktopControlGate("display", directory);
+  
+
+Checked 8 files in 711ms. No fixes applied.
+Found 2 warnings.
+Found 1 info.

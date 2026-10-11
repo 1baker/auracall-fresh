@@ -1,4 +1,4 @@
-import { RemoteViewApplication, type RemoteViewAssignment } from './remoteViewApplication.js';
+import { RemoteViewApplication, type RemoteViewAssignment, type RemoteViewRetirement } from './remoteViewApplication.js';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
@@ -55,12 +55,53 @@ export class NativeDesktopStore {
   async completePoolAcquisition(config: RemoteViewDesktopConfig): Promise<void> {
     await fs.rm(path.join(this.directory, `pool-acquire-${digest(JSON.stringify([config.origin, config.application, config.poolName]))}.json`), { force: true });
   }
+  async forgetDesktop(desktop: NativeDesktop): Promise<void> {
+    const current = await this.desktop({ ...desktop, publicOrigin: 'https://unused.test', appOrigin: 'https://unused.test' });
+    if (current && JSON.stringify(current.assignment) === JSON.stringify(desktop.assignment)) await fs.rm(path.join(this.directory, `desktop-${nativeDesktopKey(desktop)}.json`));
+  }
+  async recordPoolRelease(record: { key: string; desktop: NativeDesktop; retirement: RemoteViewRetirement }): Promise<void> {
+    await this.write(`pool-release-${digest(record.key)}.json`, record);
+  }
+  async poolReleases(): Promise<Array<{ key: string; desktop: NativeDesktop; retirement: RemoteViewRetirement }>> {
+    const names = await fs.readdir(this.directory).catch((e: NodeJS.ErrnoException) => { if (e.code === 'ENOENT') return []; throw e; });
+    const schema = z.object({ key: z.string().min(1), desktop: desktopSchema, retirement: z.object({ schemaVersion: z.literal(1), desktopId: z.string().min(1), generation: z.number().int().positive(), routes: z.array(z.string()), sessions: z.array(z.string()) }) });
+    return Promise.all(names.filter(n => /^pool-release-[a-f0-9]{64}\.json$/.test(n)).map(async n => schema.parse(JSON.parse(await fs.readFile(path.join(this.directory,n),'utf8')))));
+  }
+  async completePoolRelease(key: string): Promise<void> { await fs.rm(path.join(this.directory, `pool-release-${digest(key)}.json`), { force: true }); }
+  async hasOtherOperations(poolLock: string): Promise<boolean> {
+    const names = await fs.readdir(this.directory);
+    return names.some(n => n.startsWith('lock-') && n !== `lock-${digest(poolLock)}`);
+  }
   async exclusive<T>(key: string, operation: () => Promise<T>): Promise<T> {
     await fs.mkdir(this.directory, { recursive: true, mode: 0o700 });
     const lock = path.join(this.directory, `lock-${digest(key)}`);
-    try { await fs.mkdir(lock, { mode: 0o700 }); }
-    catch (error) { if ((error as NodeJS.ErrnoException).code === 'EEXIST') throw new Error('Native desktop operation is busy; inspect retained ownership before retrying.'); throw error; }
-    try { return await operation(); } finally { await fs.rm(lock, { recursive: true }); }
+    const owner = { id: randomUUID(), pid: process.pid };
+    const acquire = async () => {
+      await fs.mkdir(lock, { mode: 0o700 });
+      try { await fs.writeFile(path.join(lock, 'owner.json'), JSON.stringify(owner), { mode: 0o600, flag: 'wx' }); }
+      catch(e) { await fs.rm(lock, { recursive: true }); throw e; }
+    };
+    try { await acquire(); }
+    catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
+      if (process.platform !== 'linux') throw new Error('Native desktop operation is busy; owner absence is not qualified on this platform.');
+      const reconcile = `${lock}.reconcile`;
+      try { await fs.mkdir(reconcile, { mode: 0o700 }); }
+      catch { throw new Error('Native desktop operation is busy; inspect retained ownership before retrying.'); }
+      try {
+        const previous = z.object({ id: z.string().uuid(), pid: z.number().int().positive() }).parse(JSON.parse(await fs.readFile(path.join(lock,'owner.json'),'utf8')));
+        try { await fs.access(`/proc/${previous.pid}`); throw new Error('Native desktop operation is busy; original owner is still present.'); }
+        catch(e) { if ((e as NodeJS.ErrnoException).code !== 'ENOENT') throw e; }
+        // The reconciliation lock prevents two stale readers from removing a newly acquired generation.
+        await fs.rename(lock, path.join(this.directory, `retired-lock-${previous.id}`));
+        try { await acquire(); } catch { throw new Error('Native desktop operation is busy; another process acquired it during reconciliation.'); }
+      } finally { await fs.rm(reconcile, { recursive: true }); }
+    }
+    try { return await operation(); }
+    finally {
+      const current = JSON.parse(await fs.readFile(path.join(lock,'owner.json'),'utf8'));
+      if (current.id === owner.id) await fs.rm(lock, { recursive: true });
+    }
   }
 }
 

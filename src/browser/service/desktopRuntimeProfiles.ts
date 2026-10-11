@@ -262,14 +262,6 @@ export async function wakeDesktopRuntimeProfile(
 			() => {},
 		);
 		handle.process?.unref();
-		// Persist placement for normal CLI and API launches; never rewrite the user's config text.
-		await rememberDesktopProfileAssignment(id, {
-			browserProfileId: familyId,
-			provider,
-			desktopName: plan.launchPolicy.remoteViewDesktop.automatic
-        ? (await (deps.bindings ?? (() => new NativeDesktopStore().browsers()))()).find(b => path.resolve(b.managedProfileDir) === path.resolve(plan.managedBrowserProfile.directory))?.desktopName ?? "auto"
-        : selected as string,
-		});
 		const result = (await listDesktopRuntimeProfiles(current, deps)).find(
 			(p) => p.runtimeProfileId === id,
 		);
@@ -277,6 +269,12 @@ export async function wakeDesktopRuntimeProfile(
 			throw new Error(
 				"Browser launch completed but native ownership is not ready. Inspect this profile before retrying.",
 			);
+		// Persist verified placement; never fabricate an automatic destination after an ambiguous launch.
+		await rememberDesktopProfileAssignment(id, {
+			browserProfileId: familyId,
+			provider,
+			desktopName: result.desktopName,
+		});
 		const binding = await (deps.findNative ?? findNativeDesktopBrowser)(
 			plan.launchPolicy as ResolvedBrowserConfig,
 			plan.managedBrowserProfile.directory,

@@ -1045,3 +1045,39 @@ Under the hood, pruning removes entire session directories (metadata + logs). Th
 The desktop client renews passive observation grants every four minutes through
 the existing native viewer. Its iframe and native settings remain mounted.
 Control claims retain their existing verified release and inactivity rules.
+
+
+### Automatic AuraCall desktop pool
+
+To place unpinned browser profiles automatically, configure `remoteView.pool.name`
+with the existing native application origins. Example:
+
+```json5
+remoteView: {
+  application: {
+    name: 'auracall',
+    origin: 'http://127.0.0.1:19096',
+    publicOrigin: 'https://remote-view.example.test',
+    appOrigin: 'https://auracall.example.test'
+  },
+  pool: { name: 'main' },
+  desktops: {}
+}
+```
+
+The desktop rail keeps sleeping runtime profiles visible. Wake reuses a healthy
+empty desktop or grows the pool. At the configured capacity it wraps around to
+the least crowded healthy desktop. The maximum comes from Remote View's consumer
+pool policy (`maximum_reserved`); it is not hard-coded in AuraCall. Set that
+policy to the desired limit, such as ten, and enable `allow_scale_in` for shrinking.
+
+Automatic mode ignores old remembered Wake placement as a permanent pin. Explicit
+browser/runtime desktop selections still take precedence, including `root`.
+Existing running browsers retain their exact placement until deliberately closed
+and awakened; enabling the pool does not move a process between displays.
+
+While the API service runs, maintenance retains one ready spare where capacity
+permits and returns excess verified-empty desktops. Remote View owns physical
+cooldown and retirement. Open browsers, human viewers/control, unresolved recovery,
+unknown observations and ambiguous operations prevent unsafe cleanup. Inventory
+exposes the latest maintenance state. No chat is submitted by Wake or maintenance.

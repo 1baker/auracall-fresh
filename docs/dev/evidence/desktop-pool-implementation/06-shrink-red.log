@@ -1,0 +1,21 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-desktop-pool
+
+ ❯ tests/browser/desktopPoolMaintenance.test.ts (1 test | 1 failed) 52ms
+   × pool maintenance returns excess verified-empty desktops and retains one ready spare 50ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/browser/desktopPoolMaintenance.test.ts > pool maintenance returns excess verified-empty desktops and retains one ready spare
+TypeError: (0 , __vite_ssr_import_7__.maintainDesktopPool) is not a function
+ ❯ tests/browser/desktopPoolMaintenance.test.ts:20:8
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  23:50:40
+   Duration  465ms (transform 94ms, setup 54ms, import 162ms, tests 52ms, environment 0ms)
+

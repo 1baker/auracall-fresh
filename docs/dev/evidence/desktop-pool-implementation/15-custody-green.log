@@ -1,0 +1,17 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-desktop-pool
+
+ ✓ tests/browser/nativeDesktopRestart.test.ts (2 tests) 920ms
+   ✓ a fresh process reconciles a pool lock only after the original owner is proven absent  542ms
+   ✓ dead automation releases its local gate while human custody remains protected  377ms
+ ✓ tests/browser/desktopPoolMaintenance.test.ts (5 tests) 885ms
+ ✓ tests/browser/desktopRuntimeProfiles.test.ts (6 tests) 122ms
+ ✓ tests/browser/nativeDesktopPool.test.ts (2 tests) 3179ms
+   ✓ automatic rail Wake grows and wraps at configured capacity 2  1428ms
+   ✓ automatic rail Wake grows and wraps at configured capacity 4  1749ms
+
+ Test Files  4 passed (4)
+      Tests  15 passed (15)
+   Start at  00:07:38
+   Duration  4.29s (transform 1.52s, setup 219ms, import 3.26s, tests 5.11s, environment 0ms)
+

@@ -1,0 +1,10 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-desktop-pool
+
+ ✓ tests/browser/desktopPoolMaintenance.test.ts (3 tests) 496ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  23:57:21
+   Duration  1.02s (transform 167ms, setup 54ms, import 275ms, tests 496ms, environment 0ms)
+

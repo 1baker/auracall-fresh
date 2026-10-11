@@ -1,3 +1,28 @@
+## 2026-10-11 — Plan0404 source review and integration preparation
+
+Final primary validation: 64 tests across19 files, typecheck and production build
+pass. Rendered rail fixture passes26 assertions; its actual Chrome cleanup leaves
+zero owned processes. Compiled runtime contract checked separately. Review fixes
+unknown local custody (defer, never grow), verifies placement before remembering
+it, and rechecks local recovery before replaying retained release requests under
+control admission. Qualified dead-owner restart regressions pass; human control
+is preserved. Installed rollout and original-browser redistribution remain open.
+See desktop-pool-implementation/review.md and retained red/green logs.
+
+## 2026-10-10 — Plan0404 guarded maintenance and source verification
+
+Automatic Wake, configured wrap-around, spare replenishment and excess-empty
+release are implemented on P87. Native retirement checks viewers and generations;
+local gates preserve browser references, tab recovery and concurrent operations.
+Lost acquire/release replies reconcile durable keys. A red/green regression also
+prevents dead old bindings from hiding a live browser on a reused desktop.
+Rendered client passes26 checks including automatic Wake payload and zero owned
+processes remaining. Initial allocation checkpoint typecheck statement was
+premature: three fixture annotations failed; corrected run completed successfully.
+Current final typecheck/build/review are pending. Installed Remote View readback
+currently caps AuraCall at two and disables scale-in; rollout must adopt ten and
+verify the effective policy. No live redistribution or provider prompt occurred.
+
 ## 2026-10-10 — Plan0404 allocation source checkpoint
 
 P87 on feat/issue264-desktop-pool delivers provider-free automatic rail Wake,

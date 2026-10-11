@@ -1,0 +1,28 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-desktop-pool
+
+ ❯ tests/browser/nativeDesktopRestart.test.ts (2 tests | 1 failed) 3265ms
+   ✓ a fresh process reconciles a pool lock only after the original owner is proven absent  509ms
+   × dead automation releases its local gate while human custody remains protected 2754ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/browser/nativeDesktopRestart.test.ts > dead automation releases its local gate while human custody remains protected
+AssertionError: promise rejected "Error: Desktop control is busy; automatio…" instead of resolving
+ ❯ tests/browser/nativeDesktopRestart.test.ts:15:297
+
+
+Caused by: Error: Desktop control is busy; automation or another human owns the display.
+ ❯ src/browser/service/desktopControlGate.ts:61:12
+ ❯ DesktopControlGate.transition src/browser/service/desktopControlGate.ts:44:11
+ ❯ DesktopControlGate.withAutomation src/browser/service/desktopControlGate.ts:121:13
+ ❯ tests/browser/nativeDesktopRestart.test.ts:15:243
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  00:02:06
+   Duration  3.77s (transform 157ms, setup 89ms, import 185ms, tests 3.26s, environment 0ms)
+

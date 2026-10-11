@@ -1,3 +1,5 @@
+import { RemoteViewConfigSchema } from '../schema/types.js';
+import { maintainDesktopPool } from '../browser/service/nativeDesktopPool.js';
 import { applyDesktopProfileAssignments } from "../browser/service/desktopProfileAssignments.js";
 import { listDesktopRuntimeProfiles, wakeDesktopRuntimeProfile } from '../browser/service/desktopRuntimeProfiles.js';
 import { spawn } from "node:child_process";
@@ -1865,6 +1867,20 @@ export async function createResponsesHttpServer(
   }, 1000);
   desktopControlInactivityTimer.unref();
   server.once('close', () => clearInterval(desktopControlInactivityTimer));
+  let maintainingDesktopPool = false;
+  let desktopPoolMaintenance: { state: 'ready' | 'unused' | 'deferred'; at: string; message?: string } | undefined;
+  const desktopPoolMaintenanceTimer = setInterval(() => {
+    if (maintainingDesktopPool || deps.desktopClient || !RemoteViewConfigSchema.parse(configuredRuntimeConfig?.remoteView ?? {}).pool) return;
+    maintainingDesktopPool = true;
+    void maintainDesktopPool(configuredRuntimeConfig?.remoteView).then(state => {
+      desktopPoolMaintenance = { state, at: new Date().toISOString() };
+    }, error => {
+      desktopPoolMaintenance = { state: 'deferred', at: new Date().toISOString(), message: error instanceof Error ? error.message : 'Desktop pool maintenance unavailable.' };
+    }).finally(() => { maintainingDesktopPool = false; });
+  }, 30_000);
+  desktopPoolMaintenanceTimer.unref();
+  server.once('close', () => clearInterval(desktopPoolMaintenanceTimer));
+
 
 	server.on("request", async (req, res) => {
 		try {
@@ -1964,7 +1980,7 @@ export async function createResponsesHttpServer(
       if (req.method === "GET" && url.pathname === "/v1/desktops") {
         const catalog = await (deps.desktopClient?.list() ?? listDesktopViews({ remoteView: configuredRuntimeConfig?.remoteView }));
         const runtimeProfiles = await (deps.desktopClient?.profiles?.() ?? (deps.desktopClient ? Promise.resolve([]) : resolvedUserConfig ? listDesktopRuntimeProfiles(resolvedUserConfig) : Promise.resolve([])));
-        sendJson(res, 200, { ...catalog, runtimeProfiles }, { "Cache-Control": "no-store" });
+        sendJson(res, 200, { ...catalog, runtimeProfiles, ...(catalog.automaticPlacement ? { poolMaintenance: desktopPoolMaintenance } : {}) }, { "Cache-Control": "no-store" });
         return;
       }
       const desktopFrame = url.pathname.match(/^\/v1\/desktops\/([^/]+)\/frame$/);

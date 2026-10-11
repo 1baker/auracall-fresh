@@ -149,7 +149,8 @@ const server = await createResponsesHttpServer(
 				}
 				return { state: "closed" as const };
 			},
-			wakeProfile: async (id) => {
+			wakeProfile: async (id, desktopName) => {
+        if (process.env.AURACALL_DESKTOP_POOL_SMOKE === "1") assert.equal(desktopName, undefined, "automatic Wake must not pin selected desktop");
 				assert.equal(id, "dormant-runtime");
 				controlEvents.push(`wake:${id}`);
 				const item = runtimeProfiles[2];
@@ -160,7 +161,8 @@ const server = await createResponsesHttpServer(
 				return { runtimeProfileId: id, desktopName: "writing", browserId: "writing-browser" };
 			},
 			list: async () => ({
-				defaultDesktop: "research",
+				...(process.env.AURACALL_DESKTOP_POOL_SMOKE === "1" ? { automaticPlacement: true } : {}),
+        defaultDesktop: "research",
 				rootDesktopUrl: "https://browser.example.test/root",
 				desktops,
 			}),
