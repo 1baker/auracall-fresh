@@ -39,3 +39,7 @@ Fresh browser opening and new-target creation each failed red against a malforme
 ## Installed opening readback
 
 PR278 merged as ae2d56422. CLI wrappers use user-runtime-issue253-opening; compiled parity is590 files with0 mismatches. API reloaded to the new wrapper, active/running PID47468. Existing managed browser PID96300 retains OS start35926802; the zero-byte input ownership record retains its exact mtime. LitScout has begun one bounded no-submit acceptance, with opening and subsequent input admission reported separately. Full Issue253 native acceptance remains pending.
+
+### Native opening outcome
+
+LitScout performed one original installed no-submit app test. Primary independently inspected its readback and stderr: one new ChatGPT page was observed, total CDP targets4 to8, no original target removed, browser PID preserved. The command exited1 at subsequent DesktopControlGate.owner JSON parsing of the retained empty input ownership record. No submission intent/result exists. Opening accepted for this bounded check; full app automation and Issue253 remain unaccepted. No retries or ownership recovery performed.

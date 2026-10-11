@@ -1,0 +1,16 @@
+{
+  "installed_source": "ae2d56422",
+  "opening": "observed_one_new_chatgpt_page",
+  "targets_before": 4,
+  "targets_after": 8,
+  "added_page_targets": 1,
+  "removed_targets": 0,
+  "browser_pid_preserved": true,
+  "command_exit": 1,
+  "next_failed_boundary": "DesktopControlGate.owner JSON.parse empty ownership record during subsequent withAutomation",
+  "native_receipt_bytes": 0,
+  "submission_intent_exists": false,
+  "submission_receipt_exists": false,
+  "full_issue253_acceptance": false,
+  "source": "LitScout demo10 issue253-opening-post-readout.json independently inspected"
+}
