@@ -4506,3 +4506,8 @@ plan. A future migration needs an explicit precedence contract; no runtime chang
 operator's runtime > browser profile > global decision following Plan0402. The
 launch plan owns resolution and stored execution consumes it. Provider-free source
 acceptance is separate from source integration and installed/live adoption.
+
+
+## Plan0405 | Developer-app affinity configuration
+
+State: OPEN. [Plan0405](docs/dev/plans/0405-2026-10-11-developer-app-affinity-config.md), issue #253. Selected resolved configuration forwarding; source validation in progress, LitScout installed acceptance pending.

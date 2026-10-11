@@ -43,6 +43,8 @@ export async function submitChatgptDeveloperApp(
 		const result = await runBrowser({
 			prompt,
 			completionMode: "assistant_response",
+			tabAffinityUserConfig:
+				plan.launchPolicy.tabConcurrencyMode === "tab-affinity" ? userConfig : undefined,
 			abortSignal: options.abortSignal,
 			skipBrowserExecutionOperation: options.browserOperationOwned === true,
 			config: {

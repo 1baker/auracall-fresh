@@ -303,6 +303,30 @@ describe("developer app to real shared remote lifecycle", () => {
 });
 
 describe("bounded submission contract", () => {
+	it("preserves full selected runtime configuration at affinity admission without provider effects", async () => {
+		const selectedConfig = {
+			...config,
+			defaultRuntimeProfile: "other",
+			profiles: {
+				...config.profiles,
+				other: { browserProfile: "other", services: { chatgpt: { identity: { email: "other@example.com" } } } },
+			},
+			model: "current",
+			browser: { ...config.browser, tabConcurrencyMode: "tab-affinity" as const },
+		};
+		const runBrowser = vi.fn(async (options) => {
+			expect(options.tabAffinityUserConfig).toBe(selectedConfig);
+			expect(options.tabAffinityUserConfig.auracallProfile).toBe("fixture");
+			expect(options.tabAffinityUserConfig.profiles.fixture.services.chatgpt.identity.email).toBe("fixture@example.com");
+			throw new BrowserAutomationError("Fixture affinity admission stopped before transport", { effectState: "pre_effect" });
+		});
+		const outcome = await submitChatgptDeveloperApp(selectedConfig as never, app, "Fixture prompt", { runBrowser });
+		expect(outcome).toMatchObject({ status: "failed", message: "Fixture affinity admission stopped before transport", effectState: "pre_effect", retrySafe: true, conversationId: null });
+		expect(runBrowser).toHaveBeenCalledTimes(1);
+		expect(fixture.submit).not.toHaveBeenCalled();
+		expect(fixture.forbiddenLaunch).not.toHaveBeenCalled();
+	});
+
 	it("preserves the selected AuraCall runtime profile across the shared submit lifecycle", async () => {
 		const runBrowser = vi.fn(async () => ({ answerText: "answer" }) as never);
 		await submitChatgptDeveloperApp(config as never, app, "Use app", { runBrowser });
@@ -338,6 +362,7 @@ describe("bounded submission contract", () => {
 		expect(runBrowser).toHaveBeenCalledWith(
 			expect.objectContaining({
 				skipBrowserExecutionOperation: false,
+				tabAffinityUserConfig: undefined,
 				config: expect.objectContaining({
 					chatgptMode: "chat",
 					modelStrategy: "current",
