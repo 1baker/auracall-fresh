@@ -226,11 +226,13 @@ async function acquireDedicatedBrowserTab(
 	}
 	if (!endpoint) throw new Error("Live-follow browser startup returned no endpoint.");
 	assertEndpoint(endpoint, input.scope.managedBrowserProfile);
+	const coldStart =
+		startedBrowser && !input.requireExistingTarget
+			? await prepareColdStartTarget(input, endpoint)
+			: { target: null };
 	const reusableTarget = input.requireExistingTarget
 		? await selectExistingTarget(input, endpoint)
-		: startedBrowser
-			? await prepareColdStartTarget(input, endpoint)
-			: null;
+		: coldStart.target;
 	if (input.requireExistingTarget && !reusableTarget) {
 		throw new Error("Dedicated browser work found no existing compatible target.");
 	}
@@ -305,6 +307,40 @@ async function acquireDedicatedBrowserTab(
 			);
 		}
 		throw accountingError;
+	}
+	if (coldStart.retirement) {
+		try {
+			const current = await input.inspectTarget(endpoint, coldStart.retirement.targetId);
+			if (current && current.url !== coldStart.retirement.url) {
+				throw new Error("Cold-start target changed before retirement; preserving it.");
+			}
+			if (current) {
+				await input.closeTarget({
+					host: endpoint.host,
+					port: endpoint.port,
+					targetId: coldStart.retirement.targetId,
+				});
+				if (await input.inspectTarget(endpoint, coldStart.retirement.targetId)) {
+					throw new Error("Live-follow browser startup target remained present after close.");
+				}
+			}
+		} catch (error) {
+			// Retain qualified replacement custody rather than closing the browser's last window.
+			const retained = await input.registry.idle({
+				claim: provisioned.value.claim,
+				now: now().toISOString(),
+				effectState: "settled",
+			});
+			if (!retained.ok)
+				throw new AggregateError(
+					[error, new Error("Replacement lease could not be idled.")],
+					"Cold-start retirement failed; replacement custody remains fenced.",
+				);
+			throw new Error(
+				`Cold-start retirement failed; replacement retained under lease ${provisioned.value.lease.leaseId}.`,
+				{ cause: error },
+			);
+		}
 	}
 	return { ...provisioned.value, endpoint };
 }
@@ -413,7 +449,10 @@ async function selectExistingTarget(
 async function prepareColdStartTarget(
 	input: DedicatedBrowserTabInput,
 	endpoint: LiveFollowBrowserEndpoint,
-): Promise<{ targetId: string; url: string } | null> {
+): Promise<{
+	target: { targetId: string; url: string } | null;
+	retirement?: { targetId: string; url: string };
+}> {
 	// A newly created target carries explicit custody even when Chromium restores other tabs.
 	if (input.coldStartTargetPolicy === "create") {
 		if (!input.preLeaseProviderTrafficGovernor) {
@@ -427,9 +466,9 @@ async function prepareColdStartTarget(
 			now: input.now,
 			targets: await input.listTargets(endpoint),
 		});
-		return null;
+		return { target: null };
 	}
-	if (!input.listTargets) return null;
+	if (!input.listTargets) return { target: null };
 	const ownedTargetIds = new Set(
 		(await input.registry.list())
 			.filter((lease) => lease.state !== "released")
@@ -442,21 +481,14 @@ async function prepareColdStartTarget(
 	if (compatible.length > 1) {
 		throw new Error("Live-follow browser startup returned multiple compatible unowned targets.");
 	}
-	if (compatible[0]) return compatible[0];
+	if (compatible[0]) return { target: compatible[0] };
 	if (unowned.length > 1) {
 		throw new Error("Live-follow browser startup returned multiple incompatible unowned targets.");
 	}
 	const disposable = unowned[0];
-	if (!disposable) return null;
-	await input.closeTarget({
-		host: endpoint.host,
-		port: endpoint.port,
-		targetId: disposable.targetId,
-	});
-	if (await input.inspectTarget(endpoint, disposable.targetId)) {
-		throw new Error("Live-follow browser startup target remained present after close.");
-	}
-	return null;
+	if (!disposable) return { target: null };
+	// Closing the only startup page can exit Chromium. Retire it after replacement custody exists.
+	return { target: null, retirement: disposable };
 }
 
 async function releaseMissingCrawler(

@@ -1,0 +1,16 @@
+{
+  "trace_scope": "instrumented original no-submit CLI",
+  "pid": 44273,
+  "process_start": "38912267",
+  "live_states": [
+    "R",
+    "S"
+  ],
+  "then_state": "Z",
+  "environment_error_on_zombie": "EACCES",
+  "executable_error_on_zombie": "ENOENT",
+  "traced_nonzero_termination_signals": 0,
+  "historical_exit_actor": "unknown",
+  "minimized_public_seam": "acquireLiveFollowCrawlerTab with sole startup page and browser exit when last page closes",
+  "red_error": "Browser exited after its last window closed"
+}

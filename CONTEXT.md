@@ -83,3 +83,6 @@ The retained identity and role governing desktop interaction. Invalid or incompl
 
 **Browser opening custody**:
 The retained managed-profile process identity plus current desktop assignment that qualifies creation of a new tab/window. A current window cannot be a prerequisite for creating its replacement. Existing-page interaction separately requires current window proof and desktop input ownership.
+
+**Cold-start browser handoff**:
+The creation and lease qualification of a replacement page before retiring the selected incompatible startup page. This preserves the browser lifetime and keeps replacement custody explicit when retirement fails.

@@ -24700,3 +24700,7 @@ Final evaluation timeout in optional Developer-mode observation threw instead of
 ### 2026-10-11 | Native opening custody
 
 Current window/PID join was imposed before replacement-tab creation on a retained scrubbed browser. Opening uses exact retained process identity and fresh desktop assignment/display; existing-page interaction retains current window proof and control handoff. Real wire red/green and29 focused tests qualify source; do not infer historical exit attribution.
+
+### 2026-10-11 | Cold-start last-page lifetime
+
+Closing the only incompatible startup page before creating its replacement can exit Chromium; a subsequent proc environment EACCES may be a zombie-state symptom. Qualify replacement custody before retiring startup, preserve startup on creation failure, and retain replacement lease if retirement fails. The original fixture missed browser lifetime; strengthened public coordinator regression detects it. Historical exit actors remain unknown.
