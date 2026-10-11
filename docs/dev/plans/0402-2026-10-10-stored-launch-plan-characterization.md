@@ -1,6 +1,6 @@
 # Plan0402 | Stored browser launch-plan characterization
 
-State: OPEN
+State: CLOSED
 Authority: user approved Issue226 reconciliation and scoping the survey's
 launch-plan improvement. Implementation and source review/PR authorized by subsequent operator go-ahead. No provider request or installation in this packet. Source baseline e3d6d94c1388ce0b1640efeacdc90ba33d484508.
 
@@ -53,3 +53,30 @@ A mismatch is evidence for a separate decision, not automatic permission to chan
 semantics. If characterization reveals no materially duplicated decision to remove,
 park the maintenance lane. Source review, PR integration and installed/live adoption
 remain separate. Memory forbidden: no explicit durable memory-update request.
+
+## Outcome | 2026-10-10
+
+Characterization completed; convergence refactor parked under the stopping rule.
+Every proposed replacement has a demonstrated precedence difference; the managed
+directory already uses the plan and source root is not an emitted stored option.
+There is no equivalent duplicated decision removable through the existing plan
+without changing current behavior. Production source unchanged; no wrapper added.
+See [field map and review](../evidence/plan0402/characterization.md).
+
+| Acceptance requirement | Current evidence |
+| --- | --- |
+| Stored ChatGPT tracer; conflicting explicit/default selections | Three new public executor cases and existing default-Grok provenance case |
+| Executable, source root/name/cookies/bootstrap, display, managed root/directory | Field map plus exact plan and emitted-option assertions |
+| Explicit canonical/legacy overrides; fallback; stale defaults | Literal expectations for all three new cases; existing complete-options stale-directory assertion |
+| Source versus managed identity and authorization origin | Typed source assertions, distinct managed directory, canonical/legacy authorization contexts |
+| Mutable authorization excluded from immutable launch snapshot | Public snapshot assertion and original authorization remains unfrozen |
+| Remove only equivalent duplication; no relocated precedence wrapper | Six temporary single-field substitutions detected; production source restored exactly; park refactor |
+| Preserve model/tool/recovery/evidence/artifact behavior | Production source unchanged; full existing stored executor suite passes |
+| Focused validation, typecheck, targeted lint | Adjacent validation receipt and retained command outputs |
+| Source review and PR delivery | Separate Standards/Spec review retained; PR publication recorded in delivery artifact |
+| No provider/install/live scope expansion | Public browser seam injected; no provider command, installation or wake |
+
+The initial fixture expectation was corrected from Browser Source to the observed
+Global Source baseline. This is discovery evidence, not a repaired defect. No
+precedence migration was approved or implemented. Installed/live acceptance and
+Issue226 closure remain separate from this completed characterization packet.

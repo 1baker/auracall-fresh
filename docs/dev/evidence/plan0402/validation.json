@@ -1,0 +1,46 @@
+{
+  "tier": "focused",
+  "baseline": "e3d6d94c1388ce0b1640efeacdc90ba33d484508",
+  "testCommit": "a00be8cad869020724c6d3d4b3833094629e9c1b",
+  "checks": [
+    {
+      "command": "pnpm vitest run tests/runtime.configuredExecutor.test.ts tests/browser/browserLaunchPlan.test.ts tests/browser/browserLaunchPlanStructure.test.ts",
+      "exitCode": 0,
+      "passed": 39,
+      "files": 3
+    },
+    {
+      "command": "pnpm exec tsc --noEmit",
+      "exitCode": 0
+    },
+    {
+      "command": "pnpm exec biome lint tests/runtime.configuredExecutor.test.ts",
+      "exitCode": 0
+    },
+    {
+      "command": "git diff --check",
+      "exitCode": 0
+    }
+  ],
+  "sourceSha256": {
+    "tests/runtime.configuredExecutor.test.ts": "3d8fa7380930d6fd30518681b51eb525af801adad4741d044082b7a31dc06149",
+    "src/runtime/configuredExecutor.ts": "ac8bce5f5c0dc9029fbb5f0f11670299c6be857f629d114f66d7b4a93829dd71",
+    "src/browser/service/browserLaunchPlan.ts": "33bf3e8e1727fc3d2646e14fe14d255fc577d4b762aaedfb99bb90b059fc23a4"
+  },
+  "productionSourceEqualsBaseline": true,
+  "retries": 0,
+  "providerRequests": 0,
+  "installedChanges": 0,
+  "review": {
+    "standardsAcceptedFindings": 0,
+    "specAcceptedFindings": 0,
+    "mode": "serial_primary",
+    "spec": "docs/dev/plans/0402-2026-10-10-stored-launch-plan-characterization.md"
+  },
+  "excluded": [
+    "comprehensive",
+    "presubmit",
+    "live_or_soak"
+  ],
+  "outcome": "characterization_complete_convergence_parked"
+}

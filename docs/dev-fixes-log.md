@@ -24460,3 +24460,12 @@ retain exact single/multi-model identities alongside existing shorthand coverage
 A deferred provider result can win before a queued renewal callback executes.
 Check the lease hard deadline at successful completion before conversation binding
 or heartbeat mutation. Preserve existing failure settlement and unknown fencing.
+
+## 2026-10-10 | Characterize launch precedence before extracting it
+
+Stored browser options and BrowserLaunchPlan look duplicated but choose different
+runtime/browser/global values. Cookie-copy paths also depend on cookieSync, while
+mutable authorization has its own source-name provenance. Characterize both public
+seams with conflicting literal fixtures before replacing raw options with resolved
+policy. Plan0402 parks convergence under the preserve-behavior decision; production
+code is unchanged. See docs/dev/evidence/plan0402/characterization.md.

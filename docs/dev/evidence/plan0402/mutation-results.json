@@ -1,0 +1,61 @@
+{
+  "baseline": "e3d6d94c1388ce0b1640efeacdc90ba33d484508",
+  "sourceRestoredSha256": "ac8bce5f5c0dc9029fbb5f0f11670299c6be857f629d114f66d7b4a93829dd71",
+  "command": "pnpm vitest run tests/runtime.configuredExecutor.test.ts -t \"browser launch plan selects\"",
+  "results": [
+    {
+      "field": "chromePath",
+      "projection": "browserLaunchPlan.launchPolicy.chromePath",
+      "exitCode": 1,
+      "detected": true,
+      "failedCases": 3,
+      "failureKind": "literal emitted-option assertion",
+      "sourceRestored": true
+    },
+    {
+      "field": "chromeProfile",
+      "projection": "browserLaunchPlan.sourceBrowserProfile.name",
+      "exitCode": 1,
+      "detected": true,
+      "failedCases": 3,
+      "failureKind": "literal emitted-option assertion",
+      "sourceRestored": true
+    },
+    {
+      "field": "chromeCookiePath",
+      "projection": "browserLaunchPlan.launchPolicy.chromeCookiePath",
+      "exitCode": 1,
+      "detected": true,
+      "failedCases": 2,
+      "failureKind": "literal emitted-option assertion",
+      "sourceRestored": true
+    },
+    {
+      "field": "bootstrapCookiePath",
+      "projection": "browserLaunchPlan.launchPolicy.bootstrapCookiePath",
+      "exitCode": 1,
+      "detected": true,
+      "failedCases": 3,
+      "failureKind": "literal emitted-option assertion",
+      "sourceRestored": true
+    },
+    {
+      "field": "display",
+      "projection": "browserLaunchPlan.launchPolicy.display",
+      "exitCode": 1,
+      "detected": true,
+      "failedCases": 3,
+      "failureKind": "literal emitted-option assertion",
+      "sourceRestored": true
+    },
+    {
+      "field": "managedProfileRoot",
+      "projection": "browserLaunchPlan.managedBrowserProfile.root",
+      "exitCode": 1,
+      "detected": true,
+      "failedCases": 3,
+      "failureKind": "literal emitted-option assertion",
+      "sourceRestored": true
+    }
+  ]
+}
