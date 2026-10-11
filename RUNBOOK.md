@@ -22182,5 +22182,14 @@ reconciliation pinned desktop4fd905b39 and main8aa11f18a; a dedicated recovery
 worktree combines both with independent documentation histories retained. The
 compiled /desktops contract is now a pre-replacement installer gate. Focused
 desktop, launch and lease checks pass; staged parity covers589 dist files.
-Rendered refused-takeover recovery is being diagnosed; first failures retained.
+Rendered refused-takeover recovery now passes after forced observe renewal; first failures retained.
 See docs/dev/notes/2026-10-10-desktops-install-reconciliation.md.
+
+PR244 merged578b642c3 and staged package promoted with rollback retained. API88638
+serves desktops200, public ingress redirects to auth302, and four owned browsers
+are ready. All five registered browser parent identities and27 native/display
+identities match the pre-build census.18 broader Chrome identities are absent
+without matching lifecycle records; exit actor remains unknown.33/34 recorded
+state files match (browser registry bookkeeping changed), configuration is stable,
+and scheduler/17 paused completions are unchanged. Installed acceptance is bounded
+to restored application routes; no provider prompts or new wake ran.

@@ -80,3 +80,16 @@ trailing whitespace; original captures remain in private diagnostic raw-source-l
 Whole-merge diff hygiene reports inherited main evidence whitespace; validation
 uses origin/main comparison excluding historical evidence, plus new evidence
 normalization. Historical parent artifacts were not rewritten.
+
+Installed recovery complete: PR244 integrated at578b642c33104e3b1bf4db2f10c6989a9504bb42,
+with staged589-file parity and required-route behavior before promotion. Original
+runtime retained at ~/.auracall/user-runtime-before-desktops-reconciliation. API
+PID88638 serves /desktops200 and four ready owned browsers; public anonymous request
+reaches auth302. Five registered browser parents and27 Remote View/display process
+identities match the earlier census;18/136 broader Chrome identities are absent
+with no matching lifecycle records. Their exit actor/timing remain unknown; no
+claim of full physical preservation or deployment causation. Configuration and
+33 other state files match; browser registry bookkeeping changed. Scheduler stays
+paused and17 paused completions are unchanged. The installed guard also passes.
+Authenticated public input/root acceptance was not rerun; wider Plan0391 remains
+OPEN and issues240/241/242 are not closed. Native requests were never resubmitted.

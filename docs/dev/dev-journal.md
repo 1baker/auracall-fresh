@@ -53752,3 +53752,10 @@ all installed capabilities, published lane checkpoints and target ancestry befor
 replacement; a green bounded change is insufficient. Combined desktop/launch
 source and a required compiled /desktops installation gate recover the route.
 See [recovery evidence](notes/2026-10-10-desktops-install-reconciliation.md).
+
+Installed closeout: PR244 merged578b642c3; combined desktop and launch runtime
+restores /desktops200 with four ready owned browsers.202 focused tests,26 rendered
+assertions, compiled guard and589-file parity pass. Five registered browser parents
+and27 display/provider identities persist;18 broader pre-build Chrome identities
+are missing without attributable lifecycle records. Configuration and scheduler
+pause remain intact; broader authenticated input/root acceptance remains OPEN.

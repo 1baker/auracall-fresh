@@ -7,13 +7,11 @@
 - OPEN P86: [Plan 0391](docs/dev/plans/0391-2026-10-08-auracall-remote-view-client.md)
   and [its spec](docs/dev/plans/0392-2026-10-08-auracall-remote-view-client-spec.md) govern the dedicated AuraCall remote-view client with multiple configured
   desktops, independent root desktop and explicit coordinated control handoff.
-  Current State: PR243 and provider PR346 are merged. Both runtimes are installed;
-  two-minute never-used idle expiry passes. Compact real runtime-profile rail and
-  canonical dormant Wake pass source and rendered validation; source d6d047f86
-  is installed with seven real runtime profiles; real default/Grok Wake succeeds.
-  Full native toolbar and single coordinated native mode switch remain open.
-  Operator reports viewing works. Actual gateway input renewal, rendered idle
-  transition, independent signed-in root viewing and PR244 integration remain open.
+  Current State: PR244 is merged and combined desktop/launch source578b642c3
+  is installed; /desktops returns200 with four owned ready browsers. The
+  pre-replacement compiled route gate prevents the observed missing-client build.
+  Authenticated public input/root acceptance remains separate; broader process
+  census exceptions are recorded without exit attribution.
   Approved tickets stay #240 → #241 → #242.
 
 
