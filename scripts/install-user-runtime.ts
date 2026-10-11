@@ -124,6 +124,12 @@ async function main(): Promise<void> {
       run('pnpm', ['run', 'build'], { cwd: repoRoot, dryRun: options.dryRun });
     }
 
+    // A green launch-policy build must not remove the deployed desktop client.
+    // Verify actual compiled HTTP behavior before removing any install prefix.
+    run('node', [path.join(repoRoot, 'dist/scripts/verify-runtime-contract.js'), repoRoot], {
+      cwd: repoRoot, dryRun: options.dryRun,
+    });
+
     let tarballPath = path.join(packDir, 'auracall-package.tgz');
     let tarballName: string | null = null;
     if (options.dryRun) {

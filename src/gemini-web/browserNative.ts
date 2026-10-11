@@ -1,6 +1,6 @@
 import { mkdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
-import puppeteer from 'puppeteer-core';
+import { connectGuardedPuppeteer } from '../../packages/browser-service/src/guardedPuppeteer.js';
 import type { Browser, Page, Target } from 'puppeteer-core';
 import { launchChrome, hideChromeWindow, wasChromeLaunchedByAuracall } from '../browser/chromeLifecycle.js';
 import { openOrReuseChromeTarget } from '../../packages/browser-service/src/chromeLifecycle.js';
@@ -956,7 +956,7 @@ export async function runGeminiNativeBrowserAttachmentPrompt(options: {
   let browser: Browser | null = null;
   let page: Page | null = null;
   try {
-    browser = await puppeteer.connect({
+    browser = await connectGuardedPuppeteer({
       browserURL: `http://${chromeHost}:${chrome.port}`,
       defaultViewport: null,
     });

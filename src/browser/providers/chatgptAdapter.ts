@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
-import CDP from "chrome-remote-interface";
+import CDP from "../cdp.js";
 import {
 	connectToChromeTarget,
 	openOrReuseChromeTarget,

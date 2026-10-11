@@ -1,0 +1,9 @@
+# Plan0391 native controls and blank Wake installation
+
+AuraCall source decad6233 installed with exact parity for all 584 dist files; API active PID66026. Remote View source 964887ab46b0757ecd63138bd39c7d8c81d33a7c integrated via PR350 and adopted by 12 software units, doctor ready. Native consumer viewer/CSS installed hashes match source. Client serves no outer Take/Release buttons and hides the duplicate wrapper status. Full native-assets rendered smoke verifies every toolbar control, native mode pause/release coordination, exact claim replay, refused/uncertain control recovery, compact rail/grouping/Wake and independent root link; zero page errors, zero owned fixture processes remaining.
+
+Original blank Wake regression is red before explicit guarded CDP navigation and green after it. Source typecheck/build and scoped tests pass; Remote View has 61 JavaScript and 372 serial Rust tests passing, 10 environment skips. Initial parallel/targeted one-second Wake subprocess timing failures are retained in /tmp/remote-view072-cargo-test.log and /tmp/remote-view072-wake-recheck.log; diagnostic and serial verification pass without scheduler changes.
+
+Process readback preserves 37 tracked native/marker processes and the original configuration/marker receipt. API service restart terminated its owned Grok child PID89704. Installed Wake restored PID78709/browser10d61408-ece6-42bd-b5fc-ce74bde34e8e and actual CDP page origin is https://grok.com (not blank). No provider prompt was sent. Future API adoption must account for systemd child-process lifetime; do not claim all browser identities survived. Private evidence: ~/.auracall/plan0391-native-controls-before.json and plan0391-native-controls-installed.json.
+
+Public authenticated viewer acceptance is not verified by the fixture or local API. Plan0391 remains OPEN for full acceptance/integration; PR244 remains draft.

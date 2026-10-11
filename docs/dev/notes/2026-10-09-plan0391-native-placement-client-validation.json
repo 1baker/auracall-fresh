@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "at": "2026-10-09T03:00:00Z",
+  "scope": "Native AuraCall source placement, positively owned catalog and observe client; no installed AuraCall acceptance",
+  "source_base": "373e9b802d9aebc3cfd22ccea0d6d781331274ac",
+  "red": [
+    {
+      "test": "nativeDesktopLaunch.test.ts",
+      "result": "Prior configuration rejected native pool definitions with missing legacy runtimeProfile/routePoolEntryId"
+    },
+    {
+      "test": "desktopLaunchDispatch.test.ts",
+      "result": "Disabling native dispatch returned local port 45124 instead of native 45125"
+    },
+    {
+      "test": "nativeDesktopCdp.test.ts",
+      "result": "Raw CDP emitted command during human ownership and resolved sequence 2 instead of rejecting"
+    }
+  ],
+  "green": {
+    "focused": "121 tests passed across 17 config, profile, launch, service, native transport and HTTP files",
+    "native_and_legacy_wire": "2 tests passed after stale native process filtering",
+    "typecheck": "pnpm typecheck passed",
+    "lint": "Targeted native source/tests Biome lint passed without warnings",
+    "rendered": "Provider-free native observe embed, two-desktop navigation, reload, empty/unavailable and root link pass; zero page errors",
+    "fresh_os": "Rendered smoke: zero remaining owned processes",
+    "build": "pnpm build passed, including both UI bundles and vendor copy"
+  },
+  "render_artifact": "/tmp/auracall391-native-client.png",
+  "native_contract": [
+    "One stable acquisition per named desktop",
+    "Two actual fixture child processes share the retained assignment",
+    "Exact PID boot/start/executable/profile/display receipts",
+    "Foreign application browser receipt excluded",
+    "Provider launch environment goes only to the child",
+    "Actual WebSocket commands blocked during human control and restored after exact release",
+    "Scoped API key refused desktop operator access",
+    "Native viewer uses unchanged Remote View consumer helper"
+  ],
+  "remaining": [
+    "Native viewer control grant/revoke joined to admission",
+    "Installed AuraCall consumer configuration and two actual desktop acceptance",
+    "Whole-feature review and integration"
+  ],
+  "planning_audit": {
+    "plan0391_findings": 0,
+    "preexisting_plan0386_findings": 3
+  }
+}

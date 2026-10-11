@@ -1,0 +1,60 @@
+{
+  "scope": "real runtime-profile Wake RDP validation failure",
+  "reportedError": "agent-browser RDP launch requires browserFamily to be explicitly set to chrome or chromium.",
+  "cause": "native expectedNativeExecutable called the legacy RDP compatibility helper",
+  "reproduction": {
+    "command": "pnpm vitest run tests/browser/nativeDesktopRuntime.test.ts",
+    "resultBefore": "failed with exact reported error",
+    "minimalCondition": "native launch with resolved Chrome path and ordinary null browserFamily/browserBuild"
+  },
+  "fix": "resolve selected native executable directly; retain exact process/executable/assignment verification",
+  "validation": {
+    "focusedTests": 28,
+    "files": 3,
+    "legacyRdpTests": 21,
+    "typecheck": "passed",
+    "build": "passed",
+    "scopedLint": "passed",
+    "planningAudit": {
+      "ok": false,
+      "problems": [
+        "OPEN plan missing Current State section: 0386-2026-10-01-chatgpt-materialization-surface-repair.md",
+        "plan not wired in ROADMAP.md: 0386-2026-10-01-chatgpt-materialization-surface-repair.md",
+        "plan not wired in RUNBOOK.md: 0386-2026-10-01-chatgpt-materialization-surface-repair.md"
+      ]
+    }
+  },
+  "installed": {
+    "sourceCommit": "d6d047f8697f584e9e6f0ca20917feb2e96e6d36",
+    "apiPid": 88307,
+    "distFilesMatched": 584,
+    "realWake": {
+      "runtimeProfileId": "default",
+      "desktopName": "research",
+      "status": 200,
+      "elapsedMs": 6052,
+      "result": {
+        "runtimeProfileId": "default",
+        "desktopName": "research",
+        "browserId": "044574bb-8443-4cf8-9477-9e3c9785183e"
+      },
+      "providerPrompts": 0
+    },
+    "observeStatus": 200,
+    "sharedAliasReady": true,
+    "normalConfigPlacement": true,
+    "osReadback": {
+      "nativeComponentsPreserved": 35,
+      "markerBrowsersPreserved": 2,
+      "bothMarkerValuesUnchanged": true,
+      "mainConfigUnchanged": true,
+      "existingBindingsUnchanged": true,
+      "newBrowser": "one intentionally retained real default/Grok browser on Research"
+    },
+    "rollbackPrefix": "/home/ecochran76/.auracall/user-runtime-before-native-wake-d6d047f86"
+  },
+  "nativeToolbarCorrection": "still open; restore native controls and connect native mode switch to automation coordination",
+  "sourceCommit": "d6d047f8697f584e9e6f0ca20917feb2e96e6d36",
+  "memoryDisposition": "forbidden: no explicit memory write request",
+  "completedAt": "2026-10-10T01:21:46.466016+00:00"
+}

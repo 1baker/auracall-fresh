@@ -4,11 +4,18 @@
 
 # Aura-Call Roadmap
 
-- Planned P86: [Plan 0391](docs/dev/plans/0391-2026-10-08-auracall-remote-view-client.md)
+- OPEN P86: [Plan 0391](docs/dev/plans/0391-2026-10-08-auracall-remote-view-client.md)
   and [its spec](docs/dev/plans/0392-2026-10-08-auracall-remote-view-client-spec.md) govern the dedicated AuraCall remote-view client with multiple configured
   desktops, independent root desktop and explicit coordinated control handoff.
-  Approved tickets are #240 → #241 → #242; implementation has not started.
-  This registers the requested feature without changing other lane priorities.
+  Current State: PR243 and provider PR346 are merged. Both runtimes are installed;
+  two-minute never-used idle expiry passes. Compact real runtime-profile rail and
+  canonical dormant Wake pass source and rendered validation; source d6d047f86
+  is installed with seven real runtime profiles; real default/Grok Wake succeeds.
+  Full native toolbar and single coordinated native mode switch remain open.
+  Operator reports viewing works. Actual gateway input renewal, rendered idle
+  transition, independent signed-in root viewing and PR244 integration remain open.
+  Approved tickets stay #240 → #241 → #242.
+
 
 - Completed P78 / issue 131: [Plan 0378](docs/dev/plans/0378-2026-09-29-chatgpt-rate-limit-terminal-reconciliation.md)
   adds bounded terminal reconciliation for delayed account-wide ChatGPT rate
@@ -4480,6 +4487,11 @@ See [docs/dev/browser-service-upgrade-backlog.md](docs/dev/browser-service-upgra
   cadence.
 
 - P18 remains paused: [Plan 0325](docs/dev/plans/0325-2026-09-01-installed-history-materialization-fairness-canary.md), now held on a stable published operational branch; no live allowance was used by maintenance.
+
+Plan0391 inactivity handoff revision: operator chose 120 seconds. The source
+packet depends on Remote View PR346's gateway input tracking and conditional
+revocation. Source checks are green; installed wall-clock handoff and independent
+root viewing remain acceptance gates. This revision does not close P86.
 
 ## Plan0402 | Stored browser launch precedence
 

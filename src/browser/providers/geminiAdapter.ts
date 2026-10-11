@@ -1,6 +1,6 @@
 import * as fs from "node:fs/promises";
 import path from "node:path";
-import CDP from "chrome-remote-interface";
+import CDP from "../cdp.js";
 import type { Page } from "puppeteer-core";
 import type { BrowserToolsUiListResult } from "../../../packages/browser-service/src/browserTools.js";
 import {

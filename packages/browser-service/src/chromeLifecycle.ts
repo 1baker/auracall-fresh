@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import CDP from 'chrome-remote-interface';
+import CDP from './guardedCdp.js';
 import { Launcher, type LaunchedChrome } from 'chrome-launcher';
 import type { BrowserLogger, ResolvedBrowserConfig, ChromeClient } from './types.js';
 import { cleanupStaleProfileState, quarantineColdManagedProfileSessions, readDevToolsPort, readChromePid, writeDevToolsActivePort } from './profileState.js';
@@ -156,6 +156,7 @@ export async function launchChrome(
     abortSignal?: AbortSignal;
     onStage?: (stage: string) => void;
     suppressStartupWindow?: boolean;
+    launchEnvironment?: NodeJS.ProcessEnv;
   } = {},
 ) {
   options.abortSignal?.throwIfAborted();
@@ -320,23 +321,24 @@ export async function launchChrome(
     await terminateChromeProcess(existingPid, logger);
   }
 
+  const launchEnvironment = { ...process.env, ...options.launchEnvironment };
   if (!config.headless && process.platform === 'linux') {
     const overrideDisplay =
       config.display ?? process.env.BROWSER_SERVICE_BROWSER_DISPLAY ?? process.env.AURACALL_BROWSER_DISPLAY;
     if (overrideDisplay) {
-      process.env.DISPLAY = overrideDisplay;
+      launchEnvironment.DISPLAY = overrideDisplay;
       logger(`DISPLAY override set to ${overrideDisplay}.`);
     } else {
-      const display = process.env.DISPLAY;
+      const display = launchEnvironment.DISPLAY;
       if (!display || display === '0' || display === '0.0' || display === ':0' || display === ':0.0') {
-        process.env.DISPLAY = ':0.0';
+        launchEnvironment.DISPLAY = ':0.0';
         logger('DISPLAY not set; defaulting to :0.0 for Chrome launch.');
       }
     }
-    if (!process.env.XAUTHORITY) {
+    if (!launchEnvironment.XAUTHORITY) {
       const fallback = path.join(os.homedir(), '.Xauthority');
       if (existsSync(fallback)) {
-        process.env.XAUTHORITY = fallback;
+        launchEnvironment.XAUTHORITY = fallback;
         logger(`XAUTHORITY not set; using ${fallback}.`);
       }
     }
@@ -427,6 +429,7 @@ export async function launchChrome(
             host: usePatchedLauncher ? probeHost ?? '127.0.0.1' : null,
             requestedPort: debugPort ?? undefined,
             ignoreDefaultFlags: minimalFlags,
+            launchEnvironment,
             abortSignal: options.abortSignal,
             onStage: options.onStage,
           });
@@ -1922,7 +1925,7 @@ export function buildChromeFlags(
   options: { minimal?: boolean; startMinimized?: boolean; suppressStartupWindow?: boolean } = {},
 ): string[] {
   const flags = options.minimal
-    ? [options.suppressStartupWindow ? '--no-startup-window' : '--new-window', '--hide-crash-restore-bubble']
+    ? [options.suppressStartupWindow ? '--no-startup-window' : '--new-window', '--no-first-run', '--hide-crash-restore-bubble']
     : [
         '--disable-background-networking',
         '--disable-background-timer-throttling',
@@ -2151,6 +2154,7 @@ async function launchWithCustomHost({
   host,
   requestedPort,
   ignoreDefaultFlags,
+  launchEnvironment,
   abortSignal,
   onStage,
 }: {
@@ -2160,6 +2164,7 @@ async function launchWithCustomHost({
   host: string | null;
   requestedPort?: number;
   ignoreDefaultFlags?: boolean;
+  launchEnvironment?: NodeJS.ProcessEnv;
   abortSignal?: AbortSignal;
   onStage?: (stage: string) => void;
 }): Promise<LaunchedChrome & { host?: string }> {
@@ -2170,6 +2175,7 @@ async function launchWithCustomHost({
     handleSIGINT: false,
     port: requestedPort ?? undefined,
     ignoreDefaultFlags: Boolean(ignoreDefaultFlags),
+    envVars: launchEnvironment,
   });
 
   const launcherTempPrefix =

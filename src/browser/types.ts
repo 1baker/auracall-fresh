@@ -13,6 +13,7 @@ export type {
   BrowserProfileFamily,
   AgentBrowserBuild,
   AgentBrowserRdpConfig,
+  RemoteViewDesktopConfig,
 } from '../../packages/browser-service/src/types.js';
 
 export type BrowserModelStrategy = 'select' | 'current' | 'ignore';

@@ -28,6 +28,8 @@ const BROWSER_PROFILE_OWNED_FIELDS = [
   'browserFamily',
   'browserBuild',
   'agentBrowserRdp',
+  'remoteViewDesktop',
+  'desktop',
   'chromePath',
   'chromeProfile',
   'profilePath',

@@ -194,8 +194,9 @@ describe('agent-browser RDP launcher', () => {
         operatorVisible: { state: 'pending', browserId: 'browser-123' },
       }), stderr: '' })
       .mockResolvedValueOnce({ stdout: JSON.stringify({ success: true, data: {
-        status: 'opened', handoffId: 'handoff-123', browserId: 'browser-123',
-        operatorVisible: { state: 'ready', browserId: 'browser-123' },
+        status: 'ready', handoffId: 'handoff-123', browserId: 'browser-123',
+        open: { status: 'opened', browserId: 'browser-123',
+          operatorVisible: { state: 'ready', browserId: 'browser-123' } },
       } }), stderr: '' })
       .mockResolvedValueOnce({ stdout: JSON.stringify({ success: true, data: {
         browsers: [{ id: 'browser-123', cdpEndpoint: 'http://127.0.0.1:45015' }],

@@ -1,3 +1,5 @@
+import { applyDesktopProfileAssignments } from "../browser/service/desktopProfileAssignments.js";
+import { listDesktopRuntimeProfiles, wakeDesktopRuntimeProfile } from '../browser/service/desktopRuntimeProfiles.js';
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { createReadStream } from "node:fs";
@@ -5,7 +7,10 @@ import fs from "node:fs/promises";
 import http from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import CDP from "chrome-remote-interface";
+import CDP from "../browser/cdp.js";
+import { NativeDesktopControlError } from "../browser/service/nativeDesktopControl.js";
+import { captureDesktopView, closeDesktopBrowser, listDesktopViews, openDesktopView, takeDesktopControl, releaseDesktopControl, expireInactiveDesktopControls, desktopControlStatus } from "../browser/service/desktopClient.js";
+import { renderDesktopClientPage } from "./desktopClientPage.js";
 import type { OptionValues } from "commander";
 import { ZodError, z } from "zod";
 import {
@@ -366,6 +371,17 @@ export interface ResponsesHttpServerOptions {
 }
 
 export interface ResponsesHttpServerDeps {
+  desktopClient?: {
+    list: () => ReturnType<typeof listDesktopViews>;
+    profiles?: () => ReturnType<typeof listDesktopRuntimeProfiles>;
+    wakeProfile?: (id: string, desktopName?: string) => ReturnType<typeof wakeDesktopRuntimeProfile>;
+    closeBrowser?: (name: string, browserId: string) => ReturnType<typeof closeDesktopBrowser>;
+    capture: (name: string, browserId: string) => ReturnType<typeof captureDesktopView>;
+    view?: (name: string, browserId: string) => ReturnType<typeof openDesktopView>;
+    takeControl?: (name: string, browserId: string, token: string) => ReturnType<typeof takeDesktopControl>;
+    controlStatus?: (name: string, browserId: string, token: string) => ReturnType<typeof desktopControlStatus>;
+    releaseControl?: (name: string, browserId: string, token: string) => ReturnType<typeof releaseDesktopControl>;
+  };
 	control?: ExecutionRuntimeControlContract;
 	runnersControl?: ExecutionRunnerControlContract;
 	config?: Record<string, unknown>;
@@ -1839,6 +1855,16 @@ export async function createResponsesHttpServer(
 	};
 	const operatorDashboardRoutes = resolveOperatorDashboardRoutes(options.serviceRouting);
 	const server = http.createServer();
+  let expiringDesktopControls = false;
+  const desktopControlInactivityTimer = setInterval(() => {
+    if (expiringDesktopControls || deps.desktopClient || !configuredRuntimeConfig?.remoteView) return;
+    expiringDesktopControls = true;
+    void expireInactiveDesktopControls(configuredRuntimeConfig.remoteView).catch(() => {
+      // Revocation or ownership uncertainty retains automation exclusion.
+    }).finally(() => { expiringDesktopControls = false; });
+  }, 1000);
+  desktopControlInactivityTimer.unref();
+  server.once('close', () => clearInterval(desktopControlInactivityTimer));
 
 	server.on("request", async (req, res) => {
 		try {
@@ -1858,6 +1884,107 @@ export async function createResponsesHttpServer(
 				} satisfies HttpErrorPayload);
 				return;
 			}
+
+      if ((req.method === "GET" || req.method === "HEAD") && url.pathname === "/") {
+        res.writeHead(302, {Location: operatorDashboardRoutes.consolePath, "Cache-Control":"no-store"});
+        res.end();
+        return;
+      }
+      if ((req.method === "GET" || req.method === "HEAD") && url.pathname === "/favicon.svg") {
+        const icon = await fs.readFile(new URL("../assets/auracall.svg", import.meta.url));
+        res.writeHead(200, {"Content-Type":"image/svg+xml", "Cache-Control":"public, max-age=3600"});
+        res.end(req.method === "HEAD" ? undefined : icon);
+        return;
+      }
+      if (url.pathname === '/v1/desktops' || url.pathname.startsWith('/v1/desktops/')) {
+        const desktopAuthError = authorizeOperatorConfigAccess(apiAuthContext);
+        if (desktopAuthError) { sendJson(res, 403, { error: { message: desktopAuthError } }); return; }
+      }
+      const desktopClose = url.pathname.match(/^\/v1\/desktops\/([^/]+)\/close$/);
+      if (req.method === 'POST' && desktopClose) {
+        let payload: {browserId:string};
+        try { payload = z.object({browserId:z.string().min(1)}).strict().parse(JSON.parse(await readRequestBody(req))); }
+        catch { sendJson(res,400,{error:{message:'Select an owned browser to close.'}});return; }
+        try {
+          const name=decodeURIComponent(desktopClose[1]);
+          const result=await (deps.desktopClient?.closeBrowser?.(name,payload.browserId) ?? closeDesktopBrowser({remoteView:configuredRuntimeConfig?.remoteView,name,browserId:payload.browserId}));
+          sendJson(res,200,result,{'Cache-Control':'no-store'});
+        } catch(error) {sendJson(res,409,{error:{message:error instanceof Error?error.message:'Browser close was not confirmed.'}},{'Cache-Control':'no-store'});}
+        return;
+      }
+      const runtimeProfileWake = url.pathname.match(/^\/v1\/desktops\/profiles\/([^/]+)\/wake$/);
+      if (req.method === 'POST' && runtimeProfileWake) {
+        try {
+          const input = z.object({ desktopName: z.string().min(1).optional() }).strict().parse(JSON.parse(await readRequestBody(req)));
+          const id = decodeURIComponent(runtimeProfileWake[1]);
+          const result = deps.desktopClient?.wakeProfile ? await deps.desktopClient.wakeProfile(id, input.desktopName)
+            : resolvedUserConfig ? await wakeDesktopRuntimeProfile(resolvedUserConfig, id, input.desktopName) : undefined;
+          if (!result) throw new Error('Runtime profile configuration is unavailable.');
+          if (!deps.desktopClient && resolvedUserConfig) await applyDesktopProfileAssignments(resolvedUserConfig);
+          sendJson(res, 200, result, { 'Cache-Control': 'no-store' });
+        } catch (error) { sendJson(res, 409, { error: { message: error instanceof Error ? error.message : 'Runtime profile wake unavailable.' } }); }
+        return;
+      }
+      const desktopControl = url.pathname.match(/^\/v1\/desktops\/([^/]+)\/(control|release|control-status)$/);
+      if (req.method === 'POST' && desktopControl) {
+        const name = decodeURIComponent(desktopControl[1]);
+        let payload: { browserId: string; token: string };
+        try {
+          payload = z.object({ browserId: z.string().min(1), token: z.string().uuid() }).parse(JSON.parse(await readRequestBody(req)));
+        } catch { sendJson(res, 400, { error: { message: 'Provide a browser and control claim identity.' } }); return; }
+        try {
+          const input = { remoteView: configuredRuntimeConfig?.remoteView, name, ...payload };
+          if (desktopControl[2] === 'control') {
+            const result = await (deps.desktopClient?.takeControl?.(name, payload.browserId, payload.token) ?? takeDesktopControl(input));
+            sendJson(res, 200, result, { 'Cache-Control': 'no-store' });
+          } else if (desktopControl[2] === 'control-status') {
+            sendJson(res, 200, await (deps.desktopClient?.controlStatus?.(name, payload.browserId, payload.token) ?? desktopControlStatus(input)), { 'Cache-Control': 'no-store' });
+          } else {
+            await (deps.desktopClient?.releaseControl?.(name, payload.browserId, payload.token) ?? releaseDesktopControl(input));
+            sendJson(res, 200, { state: 'released' }, { 'Cache-Control': 'no-store' });
+          }
+        } catch (error) { sendJson(res, 409, { error: { message: error instanceof Error ? error.message : 'Desktop control unavailable.', ...(error instanceof NativeDesktopControlError ? { claimRetained: error.claimRetained } : {}) } }, { 'Cache-Control': 'no-store' }); }
+        return;
+      }
+      const nativeDesktopView = url.pathname.match(/^\/v1\/desktops\/([^/]+)\/view$/);
+      if (req.method === 'GET' && nativeDesktopView) {
+        const name = decodeURIComponent(nativeDesktopView[1]);
+        const browserId = url.searchParams.get('browser');
+        if (!browserId) { sendJson(res, 400, { error: { message: 'Select an AuraCall browser to view.' } }); return; }
+        try {
+          const view = await (deps.desktopClient?.view?.(name, browserId) ?? openDesktopView({ remoteView: configuredRuntimeConfig?.remoteView, name, browserId }));
+          sendJson(res, 200, view, { 'Cache-Control': 'no-store' });
+        } catch (error) { sendJson(res, 503, { error: { message: error instanceof Error ? error.message : 'Desktop unavailable.' } }, { 'Cache-Control': 'no-store' }); }
+        return;
+      }
+      if (req.method === "GET" && url.pathname === "/desktops") {
+        sendHtml(res, 200, renderDesktopClientPage());
+        return;
+      }
+      if (req.method === "GET" && url.pathname === "/v1/desktops") {
+        const catalog = await (deps.desktopClient?.list() ?? listDesktopViews({ remoteView: configuredRuntimeConfig?.remoteView }));
+        const runtimeProfiles = await (deps.desktopClient?.profiles?.() ?? (deps.desktopClient ? Promise.resolve([]) : resolvedUserConfig ? listDesktopRuntimeProfiles(resolvedUserConfig) : Promise.resolve([])));
+        sendJson(res, 200, { ...catalog, runtimeProfiles }, { "Cache-Control": "no-store" });
+        return;
+      }
+      const desktopFrame = url.pathname.match(/^\/v1\/desktops\/([^/]+)\/frame$/);
+      if (req.method === "GET" && desktopFrame) {
+        const name = decodeURIComponent(desktopFrame[1]);
+        const browserId = url.searchParams.get("browser");
+        if (!browserId) {
+          sendJson(res, 400, { error: { message: "Select an AuraCall browser to view." } });
+          return;
+        }
+        try {
+          const frame = await (deps.desktopClient?.capture(name, browserId) ?? captureDesktopView({
+            remoteView: configuredRuntimeConfig?.remoteView, name, browserId,
+          }));
+          sendJson(res, 200, frame, { "Cache-Control": "no-store" });
+        } catch (error) {
+          sendJson(res, 503, { error: { message: error instanceof Error ? error.message : "Desktop unavailable." } }, { "Cache-Control": "no-store" });
+        }
+        return;
+      }
 
 			if (
 				(req.method === "GET" || req.method === "HEAD") &&
@@ -7810,6 +7937,8 @@ function sameHost(left: string, right: string): boolean {
 
 function isOperatorDashboardPath(pathname: string, routes: OperatorDashboardRoutes): boolean {
 	const dashboardRoutes = [
+
+    "/desktops",
 		routes.consolePath,
 		routes.dashboardPath,
 		routes.debugDashboardPath,

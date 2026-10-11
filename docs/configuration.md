@@ -657,6 +657,115 @@ the named agent-browser runtime profile and RDP route pool to be healthy.
 AuraCall rejects a family/build mismatch both before launch and after
 agent-browser reports the actual selected executable.
 
+## Named AuraCall desktops
+
+Native `remoteView` uses Remote View's application consumer API. AuraCall owns
+its Chromium processes, managed browser profiles and CDP; Remote View supplies
+desktops and the native viewer. Configure an enabled external-mode `auracall`
+consumer with a bounded pool and AuraCall's exact HTTPS embedding origin in the
+Remote View installation before selecting it here. No provider installation,
+network provisioning or borrowed Agent Browser desktop adoption is automatic.
+
+```json5
+remoteView: {
+  application: {
+    name: "auracall",
+    origin: "http://127.0.0.1:19096", // private native control endpoint
+    publicOrigin: "https://desktops.example.com",
+    appOrigin: "https://auracall.example.com"
+  },
+  defaultDesktop: "research",
+  desktops: {
+    research: { poolName: "main", label: "Research" },
+    writing: { poolName: "main", label: "Writing" }
+  },
+  rootDesktopUrl: "https://desktops.example.com/root"
+},
+browserProfiles: {
+  "work-chrome": { desktop: "writing" },
+  "root-chrome": { desktop: "root" }
+}
+```
+
+The private origin must use loopback HTTP; presentation origins use HTTPS.
+The root URL is operator-supplied and independent of AuraCall's assignments.
+A browser-profile assignment overrides the global default. `root` selects
+ordinary desktop launching explicitly. Unknown names, unavailable configuration,
+stale assignments and unverified browser ownership fail clearly without root
+fallback. Selecting a native desktop forces a persistent headed browser and
+keeps the existing managed browser directory and authentication.
+
+Each named desktop retains one exact native assignment. Multiple browser
+profiles can share it; different names acquire distinct assignments within the
+configured pool's capacity. Configuration changes apply to subsequent launches;
+an existing browser on a different desktop is refused rather than moved.
+Native browser receipts bind the PID, boot/start identity, selected executable,
+managed directory, display, CDP endpoint and assignment generation. Configure the
+Remote View application with `inventory`, `acquire`, `release`, `observe`,
+`control` and `windows` capabilities. Chromium may flatten its process title and
+scrub its environment; AuraCall then requires a fresh native window/PID join on
+the exact desktop and both generations instead of guessing ownership from a
+missing `DISPLAY`. Native launch resolves the configured local executable directly; it does not
+require Agent Browser RDP family/build declarations. Minimal manual-login launches skip Chrome's first-run shell
+so that CDP can become ready; provider sign-in remains interactive.
+
+Open `/desktops` on the AuraCall HTTP service. The compact left rail lists configured AuraCall runtime profiles, grouped by
+**Account** or **Profile**, alongside positively owned running AuraCall browsers.
+The SVG header control hides or restores the rail with a short slide; grouping
+and collapse preferences survive reload. Reduced-motion preferences are honored.
+The selected browser mounts Remote View's native observe-only embed.
+
+**Wake** opens a dormant local browser runtime profile on its configured native
+desktop, or the selected existing desktop when no placement is configured. It
+uses the same managed browser directory, browser family, provider and configured
+account identity as ordinary AuraCall commands. Remembered placement lives in
+`~/.auracall/desktop-profile-assignments.json`; runtime profiles sharing the same
+browser family and provider share placement. Explicit operator configuration
+wins. Existing running browsers are preserved; profiles running outside the
+native desktops show an actionable unavailable state. Windows and remote browser
+profiles cannot be awakened here. Wake opens the provider page for interactive
+sign-in; it does not send a prompt or start background jobs. Takeover remains an
+explicit action in the single header. Selecting another desktop disposes the old viewer, and
+reload preserves the selected desktop/browser through AuraCall's own URL.
+Fresh presentation routes are issued after exact assignment/generation readback;
+opaque provider routes are temporary and never become durable browser identity.
+Existing ingress authentication remains in force. Scoped execution API keys do
+not authorize desktop operator access.
+
+Viewing sends no input and closing the client keeps browsers and assignments
+running. **Take control** first excludes AuraCall direct CDP and Puppeteer commands, plus browser launches
+on that desktop, then issues a native input-capable grant. A second human claim
+or an active automation command prevents takeover. **Release control** disposes
+the local viewer and revokes the exact provider grant before automation resumes.
+`remoteView.controlInactivitySeconds` defaults to **120 seconds** (two minutes).
+Remote View's gateway tracks actual keyboard/pointer input across every viewer
+transport for the exact control grant. When that input stops for the configured
+period, AuraCall requests conditional revocation, returns the client to view-only,
+and resumes automation only after exact terminal proof. New clicks or keystrokes
+cannot regain control; use **Take control** again. Display updates, stream
+acknowledgements, resize and connection polling do not reset the input timer.
+**Release control** remains available for immediate handoff.
+
+This requires Remote View's `revoke_inactive_view` consumer operation (Plan0071).
+If the provider response is uncertain or that operation is unavailable, automation
+stays paused. Closing a tab is not release evidence. Authorization expiry remains
+independent; exact revocation or terminal issuance replay must qualify resumption. Reload retains
+the claim in this browser tab; **Reconnect control** reuses that claim. Durable
+private receipts contain claim and generation identities, never viewer URLs.
+A definitively refused takeover with no caller-owned claim returns to passive
+viewing; uncertain issuance retains the recovery claim. Selecting root for a
+still-running native-bound browser is refused: close that browser explicitly
+before changing its desktop placement.
+
+Coordination covers AuraCall's managed CDP and launch paths. External OS tools and
+root desktop access remain independently available. Native installed acceptance
+and whole-feature integration remain open under Plan 0391.
+
+Existing explicit `agentBrowserRdp` configuration remains independent. A legacy
+named desktop may still specify `runtimeProfile` plus `routePoolEntryId` instead
+of `poolName`; its compatibility presentation uses passive captures. Legacy RDP
+route state does not establish native Remote View availability.
+
 ## Compatibility Bridge Example
 
 If you are still troubleshooting or maintaining the compatibility bridge shape,
@@ -930,3 +1039,9 @@ Under the hood, pruning removes entire session directories (metadata + logs). Th
   and `1h30m` are accepted.
 - Defaults: `auto` = 60 m for `gpt-5.1-pro`; non-pro API models use `120s` if you don’t set a value.
 - Heartbeat messages print the live remaining time so you can see when the client-side deadline will fire.
+
+### Native viewer observation renewal
+
+The desktop client renews passive observation grants every four minutes through
+the existing native viewer. Its iframe and native settings remain mounted.
+Control claims retain their existing verified release and inactivity rules.

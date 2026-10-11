@@ -1,3 +1,100 @@
+## 2026-10-10 — Preserve connected embedded viewers during refresh
+
+Periodic polling and visibility return must not destroy a selected connected
+viewer or replay its control acquisition. Replace the viewer for explicit mode
+changes, changed selection or recovery, while preserving exact retained claims.
+The full rendered fixture independently times out at dormant-profile Wake on
+unchanged source; the bounded stability run covers refresh, input and release.
+
+## 2026-10-10 — Root desktop discovery and favicon
+
+The root API URL previously returned404. It now redirects to the configured console, which exposes Desktops alongside the operator dashboard link. One canonical glowing SVG supplies the favicon to all three web clients and is copied into the installed runtime.
+
+## 2026-10-10 — Browser close and API lifecycle
+
+Rail close targets a freshly verified owned browser through guarded CDP, reconciles transport disconnect against original process identity, and retains native desktop and managed data. Refused closes retain the row. The API user service uses KillMode=process so software restarts do not implicitly close its persistent managed browsers.
+
+## 2026-10-09 — Native Wake must not impose legacy RDP metadata
+
+Native Remote View owns its Chrome launch directly. Reusing the Agent Browser
+RDP compatibility helper required family/build declarations absent from ordinary
+real runtime profiles, so provider-free Wake mocks passed while real Wake failed
+before launch. Resolve the canonical selected executable directly, retain
+physical executable and assignment verification, and exercise the native launch
+boundary with normal null family/build metadata. Keep RDP validation in RDP.
+
+## 2026-10-09 — Runtime profiles can share native browser placement
+
+Desktop Wake must use the canonical managed browser directory. That directory is
+namespaced by browser family and provider, so runtime-profile aliases share one
+physical browser. Remember placement for matching aliases, ignore stale/rebound
+origin records, honor explicit operator assignments, and verify retained native
+ownership/build before reporting readiness. Refresh the API's cached configuration
+after Wake so subsequent ordinary commands use the remembered desktop.
+
+## 2026-10-09 — Input inactivity must be observed at the gateway
+
+Cross-origin viewer input cannot be inferred from the surrounding application's
+mouse events or connection state. A second viewer window also bypasses a parent
+page callback. Track admitted keyboard/pointer instructions for the exact control
+grant at both HTTP and WebSocket gateway paths, exclude sync/ack/resize/ping, and
+persist the input timestamp. Compare and revoke under one provider store lock.
+AuraCall releases automation exclusion only after exact terminal proof and then
+mounts observe-only presentation. Source tests and a real rendered transport
+fixture qualify the implementation; installed wall-clock acceptance is separate.
+
+## 2026-10-09 — Remote View verification must adopt the effective config
+
+A live verifier loop caches configuration at process startup. Updating the
+effective config and restarting control/gateway alone leaves that loop writing
+old-hash readiness receipts, causing gateway 503 despite healthy desktops and
+successful grant issuance. Direct verification can briefly succeed before the
+old loop overwrites it. Restart the verifier after configuration adoption and
+check multiple renewal cycles for current hash, connection links and age under
+ten seconds. Plan0391 repaired this installed failure with a verifier-only restart;
+authenticated viewing remains a separate acceptance boundary.
+
+## 2026-10-09 — Real Chromium can scrub process ownership inputs
+
+A live Google Chrome process replaced argv with a flattened title and erased
+its environment. Node fixtures retaining separate argv and DISPLAY could not
+qualify that boundary. Retain boot/start/executable identity and exact managed
+directory parsing, then require Remote View's current native window/PID join
+for the exact lifecycle/viewing generations when those inputs are scrubbed.
+Never treat a missing environment value as ownership or absence proof. A new
+process-title regression and actual two-desktop Chrome run qualify this repair.
+Chrome's first-run terms shell also prevented CDP readiness; minimal launches
+now carry the existing automation no-first-run flag. Provider authentication
+is separate and was not exercised.
+
+## 2026-10-09 — Revocation must precede automation resumption
+
+A human viewer is an input authority, so a presentation toggle alone cannot
+coordinate automation. Acquire the shared desktop gate before issuing a native
+control grant, retain a stable issuance identity before the effect, and release
+the gate only after exact provider revocation. Generic access denial and local
+expiry are insufficient; an exact terminal issuance replay can reconcile an
+expired or acknowledged-lost revocation. HTTP uncertainty, viewer disconnect and
+process restart preserve a human hold. Installed transport acceptance remains a
+separate boundary from source fixtures and rendered client checks.
+
+## 2026-10-09 — Verify CLI syntax separately from collection schemas
+
+Agent Browser's route-pool collection contract does not imply a service
+route-pool CLI command. The installed CLI rejects it. Use the supported service
+status response and service_state.routePool map, including projection completeness
+and exact identity checks. Provider fixtures must reproduce the actual CLI
+response shape. Successful fixture checks alone cannot qualify installed routing.
+
+## 2026-10-09 — Desktop placement must cover prompt and reuse paths
+
+BrowserService's manual-login launcher is only one launch seam. Ordinary
+ChatGPT/Grok prompts call the Chrome lifecycle wrapper directly, and existing
+endpoint discovery can skip launching entirely. Named desktop selection must
+cover both seams and validate exact service session/display ownership before
+reattachment. Provider-free tests caught both bypasses; this source checkpoint
+is not installed or live desktop acceptance.
+
 ## 2026-10-10 | Plan0394 memory routing
 
 Issue251 owner ecochran76 IN_PROGRESS. Canonical auracall_main route and routing-only manifest are documented; unresolved destination and actual service failure are separate causes. Shared Graphiti code and unrelated root work are preserved. Independent review passed; atlas job completed-visible and the original discovery query now returns auracall_main. Direct source-group repair retrieval passed. Plan0394 closes; remote CI reported no checks.
@@ -24423,6 +24520,70 @@ child publication, and pause does not establish child absence. Re-read the
 durable child before another resume; observe an existing running child to
 terminal without creating or claiming a second child.
 
+### 2026-10-09 — Plan0391 native Remote View contract correction
+
+For native Remote View integrations, verify canonical Agent Browser source and
+Remote View's application integration guide before using legacy route-pool
+assumptions. The native consumer API owns assignments and separate lifecycle/
+viewing generations; legacy RDP route availability does not qualify that path.
+AuraCall's application adapter now joins exact application/pool ownership and
+live-resource generations. This source checkpoint does not establish native
+client or installed AuraCall acceptance. See Plan0391 and the native validation
+receipt for red/green and read-only installed evidence.
+
+### 2026-10-09 — Plan0391 CDP mutation admission
+
+Manual desktop ownership must exclude commands at the real transport boundary.
+Generated chrome-remote-interface domain methods call `client.send`; guarding
+only high-level browser operations leaves existing clients able to mutate.
+Shared transport now gates those sends and static target mutations against
+cross-process desktop ownership and fresh retained browser generation. Resolve
+admission from the actual WebSocket target when supplied. A real WebSocket
+regression proves no command emission during human control and verified release
+resumes automation. Native viewer grant coordination remains a separate gate.
+
+### 2026-10-09 — Native desktop launch environments and owned embeds
+
+Passing DISPLAY/XAUTHORITY through process.env couples concurrent desktop
+launches. Chrome launch now uses a per-child environment, including the exact
+Remote View slot generation and X11 toolkit posture. Native AuraCall receipts
+bind managed directory, process boot/start/executable, display and CDP to the
+retained application assignment. The dedicated client uses the provider's
+existing observe embed; it does not reconstruct pixels or transport. Source
+and fixture rendering evidence remains separate from installed acceptance.
+
+### 2026-10-09 — Native desktop review boundary fixes
+
+Puppeteer needs its own command transport admission: each request holds the same
+physical-desktop gate through its reply, including flattened session commands.
+A connection-wide lock deadlocks mixed CDP/Puppeteer work. Changing config to
+root cannot silently adopt a live native-bound process. A positively refused
+human claim may return to observe; lost issuance/revocation keeps recovery state
+and pause. Use a prototype-free map for arbitrary configured desktop names.
+See Plan0391 bounded-review and review-remediation-validation receipts.
+
+### 2026-10-09 — Blank Wake and native viewer controls
+
+Chrome launch URL was configuration metadata, not navigation. Wake must explicitly navigate a blank owned page through guarded CDP; preserve every existing nonblank page. Embedded native mode changes require exact-origin coordination and fresh grant replacement; local mode acknowledgments never authorize input. Replay status after frame load to avoid a missed startup message.
+
+### 2026-10-10 — Share native control implementation
+
+Matching button names does not establish native viewer parity. Consumer transport must plug into the primary viewer control implementation and shared markup. Rendered tests must exercise pointer mode, keyboard focus and mobile edits, in addition to presence and grant coordination.
+
+## 2026-10-10 | Embedded viewer reload and stopped recovery
+
+Mode changes recreated the entire iframe, discarding native UI state and showing
+a desktop disconnect. Preserve the native page and validate a replacement opaque
+grant against the exact desktop binding before reconnecting its transport. A
+status poll previously stopped transport without restarting it after successful
+access; recovery must establish transport before restoring control input.
+
+## 2026-10-10 | Retention must preserve grant renewal
+
+Keeping a ready iframe must not suppress the timer that renews its expiring
+passive grant. Use the existing same-iframe grant handoff on scheduled observation
+refresh; ordinary visibility return should retain the connected native viewer.
+
 ## 2026-10-10 — Preserve owned-browser exit attribution (#226)
 
 An owned child exit previously removed its registry generation without retaining
@@ -24479,3 +24640,12 @@ Raw user-config resolution must apply the manual-login default before binding an
 explicit service managed directory; otherwise scoped cookies and reattachment
 lose custody. A derived profile cookie path is not an explicit bootstrap request:
 respect cookieSync, including runtime false. Public regressions retain both risks.
+
+
+## 2026-10-10 | Desktop deployment reconciliation
+
+Plan0403 adoption dropped the installed off-main PR244 desktop client. Reconcile
+all installed capabilities, published lane checkpoints and target ancestry before
+replacement; a green bounded change is insufficient. Combined desktop/launch
+source and a required compiled /desktops installation gate recover the route.
+See [recovery evidence](dev/notes/2026-10-10-desktops-install-reconciliation.md).

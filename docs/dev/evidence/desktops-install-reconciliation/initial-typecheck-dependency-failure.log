@@ -1,0 +1,12 @@
+
+> auracall@0.1.1 typecheck /home/ecochran76/workspace.local/auracall-desktops-reconciliation
+> tsc --noEmit
+
+packages/browser-service/src/guardedPuppeteer.ts(2,23): error TS2307: Cannot find module 'ws' or its corresponding type declarations.
+packages/browser-service/src/guardedPuppeteer.ts(11,26): error TS7006: Parameter 'data' implicitly has an 'any' type.
+packages/browser-service/src/guardedPuppeteer.ts(29,33): error TS7006: Parameter 'error' implicitly has an 'any' type.
+tests/browser/desktopCdpTransport.test.ts(5,33): error TS2307: Cannot find module 'ws' or its corresponding type declarations.
+tests/browser/desktopCdpTransport.test.ts(21,28): error TS7006: Parameter 'socket' implicitly has an 'any' type.
+tests/browser/desktopCdpTransport.test.ts(21,61): error TS7006: Parameter 'bytes' implicitly has an 'any' type.
+tests/browser/puppeteerDesktopAdmission.test.ts(6,44): error TS2307: Cannot find module 'ws' or its corresponding type declarations.
+ ELIFECYCLE  Command failed with exit code 2.

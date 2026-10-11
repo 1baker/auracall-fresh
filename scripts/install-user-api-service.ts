@@ -146,6 +146,8 @@ ExecStart=${options.binPath} api serve
 Restart=on-failure
 RestartSec=5s
 TimeoutStopSec=20s
+# Managed browser profiles outlive API software restarts. Close them explicitly.
+KillMode=process
 StandardOutput=append:${options.logPath}
 StandardError=append:${options.logPath}
 

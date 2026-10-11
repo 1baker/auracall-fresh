@@ -6,7 +6,8 @@ import os from 'node:os';
 import path from 'node:path';
 import readline from 'node:readline/promises';
 import { stdin as input, stdout as output } from 'node:process';
-import puppeteer, { type Browser, type Frame, type Page } from 'puppeteer-core';
+import type { Browser, Frame, Page } from 'puppeteer-core';
+import { connectGuardedPuppeteer } from './guardedPuppeteer.js';
 import {
   buildBrowserDomSearchExpression,
   type BrowserDomSearchMatch,
@@ -389,7 +390,7 @@ function browserURL(port: number): string {
 }
 
 async function connectBrowser(port: number) {
-  return puppeteer.connect({ browserURL: browserURL(port), defaultViewport: null });
+  return connectGuardedPuppeteer({ browserURL: browserURL(port), defaultViewport: null });
 }
 
 async function getActivePage(port: number, options?: { urlContains?: string }) {

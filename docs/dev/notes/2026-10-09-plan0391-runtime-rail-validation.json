@@ -1,0 +1,133 @@
+{
+  "scope": "compact real runtime-profile rail and canonical dormant Wake",
+  "sourceParent": "ae9bf53afa2b634fb311fafb9ffe2d761af8c8ce",
+  "validation": {
+    "focusedTests": 87,
+    "files": 15,
+    "typecheck": "passed",
+    "scopedLint": "passed",
+    "build": "passed",
+    "renderedFixture": [
+      {
+        "scope": "provider-free rendered client",
+        "passed": [
+          "compact-profile-rows",
+          "account-profile-toggle",
+          "persisted-grouping",
+          "svg-rail-collapse",
+          "dormant-profile-wake",
+          "single-control-header",
+          "native-observe-embed",
+          "constructor-desktop-observe",
+          "refused-take-clears-only-unowned-claim",
+          "explicit-control",
+          "retained-control-reload",
+          "failed-release-retains-claim",
+          "explicit-release-to-observe",
+          "two-desktop-navigation",
+          "durable-selection-reload",
+          "empty-state",
+          "unavailable-state",
+          "independent-root-link"
+        ],
+        "pageErrors": [],
+        "installedDesktopAcceptance": false
+      },
+      {
+        "freshOsReadback": true,
+        "remainingOwnedProcesses": 0
+      }
+    ],
+    "planningAudit": {
+      "ok": false,
+      "scope": "active",
+      "problems": [
+        "OPEN plan missing Current State section: 0386-2026-10-01-chatgpt-materialization-surface-repair.md",
+        "plan not wired in ROADMAP.md: 0386-2026-10-01-chatgpt-materialization-surface-repair.md",
+        "plan not wired in RUNBOOK.md: 0386-2026-10-01-chatgpt-materialization-surface-repair.md"
+      ]
+    },
+    "windowsWslRegression": {
+      "tests": 7,
+      "files": 2,
+      "typecheck": "passed",
+      "build": "passed"
+    }
+  },
+  "failedAttempt": {
+    "scenario": "Wake click while rail expansion still moving",
+    "resolution": "wait for completed rail transform in rendered harness",
+    "ownedProcessesAfterFailure": 0
+  },
+  "installed": {
+    "sourceCommit": "48704e08de0a43bfdd4724163ea466e9d2d5b8ea",
+    "apiPid": 49216,
+    "distFilesMatched": 584,
+    "catalog": {
+      "singleHeader": true,
+      "runtimeProfiles": [
+        {
+          "id": "auracall-gemini-pro",
+          "state": "dormant",
+          "wakeable": true
+        },
+        {
+          "id": "auracall-grok-auto",
+          "state": "dormant",
+          "wakeable": true
+        },
+        {
+          "id": "default",
+          "state": "dormant",
+          "wakeable": true
+        },
+        {
+          "id": "windows-chrome-test",
+          "state": "unavailable",
+          "wakeable": false,
+          "message": "This browser runs outside the local native desktop runtime."
+        },
+        {
+          "id": "wsl-chrome-2",
+          "state": "dormant",
+          "wakeable": true
+        },
+        {
+          "id": "wsl-chrome-3",
+          "state": "dormant",
+          "wakeable": true
+        },
+        {
+          "id": "wsl-chrome-4",
+          "state": "dormant",
+          "wakeable": true
+        }
+      ],
+      "desktopCount": 2,
+      "servedPageStatus": 200,
+      "observeEndpoints": [
+        "research",
+        "writing"
+      ],
+      "markerValues": {
+        "research": "research-391",
+        "writing": "writing-391"
+      }
+    },
+    "osReadback": {
+      "nativeComponents": 35,
+      "markerBrowsers": 2,
+      "allIdentitiesPreserved": true,
+      "mainConfigUnchanged": true,
+      "markerBindingsUnchanged": true
+    },
+    "rollbackPrefix": "/home/ecochran76/.auracall/user-runtime-before-runtime-rail-b3fea3af1",
+    "actualDormantProviderWake": "not exercised against real accounts; canonical launch, ownership and persistence qualified by fixtures",
+    "adoptedAt": "2026-10-10T00:51:04.260180+00:00"
+  },
+  "publicAuthenticatedVisualAcceptance": "operator reported viewer works; new UX not inferred accepted",
+  "providerPrompts": 0,
+  "sourceCommit": "48704e08de0a43bfdd4724163ea466e9d2d5b8ea",
+  "memoryDisposition": "forbidden: developer permits memory writes only on explicit request",
+  "completedAt": "2026-10-10T00:51:53.122650+00:00"
+}

@@ -19,9 +19,21 @@ export type DebugPortStrategy = 'fixed' | 'auto';
 export type BrowserProfileFamily = 'chrome' | 'chromium';
 export type AgentBrowserBuild = 'stock_chrome' | 'stealthcdp_chromium';
 
+export interface RemoteViewDesktopConfig {
+  desktopName: string;
+  origin: string;
+  publicOrigin: string;
+  appOrigin: string;
+  application: string;
+  poolName: string;
+}
+
 export interface AgentBrowserRdpConfig {
   enabled: boolean;
   runtimeProfile: string;
+  /** Exact service-owned route pool entry for a configured AuraCall desktop. */
+  routePoolEntryId?: string;
+  desktopName?: string;
   command?: string;
   jobTimeoutMs?: number;
 }
@@ -66,6 +78,7 @@ export interface BrowserSessionConfig {
   browserFamily?: BrowserProfileFamily | null;
   browserBuild?: AgentBrowserBuild | null;
   agentBrowserRdp?: AgentBrowserRdpConfig | null;
+  remoteViewDesktop?: RemoteViewDesktopConfig | null;
   chromeProfile?: string | null;
   chromePath?: string | null;
   chromeCookiePath?: string | null;
@@ -102,6 +115,7 @@ export interface BrowserAutomationConfig {
   browserFamily?: BrowserProfileFamily | null;
   browserBuild?: AgentBrowserBuild | null;
   agentBrowserRdp?: AgentBrowserRdpConfig | null;
+  remoteViewDesktop?: RemoteViewDesktopConfig | null;
   chromeProfile?: string | null;
   chromePath?: string | null;
   chromeCookiePath?: string | null;
@@ -201,12 +215,14 @@ export type ResolvedBrowserConfig = Required<
       'profileConflictAction' |
       'browserFamily' |
       'browserBuild' |
-      'agentBrowserRdp'
+      'agentBrowserRdp' |
+      'remoteViewDesktop'
   >
 > & {
   browserFamily?: BrowserProfileFamily | null;
   browserBuild?: AgentBrowserBuild | null;
   agentBrowserRdp?: AgentBrowserRdpConfig | null;
+  remoteViewDesktop?: RemoteViewDesktopConfig | null;
   chromeProfile?: string | null;
   chromePath?: string | null;
   chromeCookiePath?: string | null;

@@ -1,5 +1,6 @@
 #!/usr/bin/env ts-node
 
+import '../src/browser/service/desktopControlRuntime.js';
 import { execSync } from 'node:child_process';
 import fs from 'node:fs/promises';
 import os from 'node:os';

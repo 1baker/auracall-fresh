@@ -1,0 +1,25 @@
+{
+  "sourceValidation": {
+    "typecheck": "passed",
+    "build": "passed",
+    "lint": "passed",
+    "targetedTests": {
+      "files": 11,
+      "tests": 20,
+      "passed": true
+    }
+  },
+  "providerDependency": {
+    "issue": "https://github.com/CochranResearchGroup/remote-view/issues/345",
+    "pr": "https://github.com/CochranResearchGroup/remote-view/pull/346",
+    "sourceCheckpoint": "28baf0359378d5ff369e3401c2cf0f8282c7effa",
+    "fullCargoTests": 372,
+    "renderedNativeChrome": "HTTP and WebSocket input passed; owner fixture clock +120001ms revoked current control",
+    "clockQualification": "source fixture clock, not installed wall clock"
+  },
+  "installation": "not performed",
+  "twoMinuteInstalledAcceptance": "pending",
+  "rootViewer": "pending",
+  "goalPreviousTurnClassification": "progress",
+  "memoryDisposition": "forbidden"
+}

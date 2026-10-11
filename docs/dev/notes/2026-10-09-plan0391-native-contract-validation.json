@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "at": "2026-10-09T02:39:00Z",
+  "scope": "Native application inventory adapter, not integrated client or installed AuraCall acceptance",
+  "contracts": {
+    "remote_view_source": "e1ad20d",
+    "agent_browser_source": "c4054ed6",
+    "guide": "Remote View docs/consumer-integration-guide.md"
+  },
+  "red": {
+    "command": "pnpm vitest run tests/browser/remoteViewApplication.test.ts",
+    "result": "2 failed against no-op adapter: owned assignment projection absent and invalid origins accepted"
+  },
+  "green": {
+    "command": "pnpm vitest run tests/browser/remoteViewApplication.test.ts tests/browser/desktopControlGate.test.ts tests/browser/desktopCdpTransport.test.ts",
+    "result": "4 passed across 3 files; gate source still uncommitted"
+  },
+  "typecheck": "pnpm typecheck passed",
+  "installed_read_only": {
+    "origin": "http://127.0.0.1:19096",
+    "application": "agent-browser",
+    "ready_assignments": 2,
+    "mutations": 0,
+    "auracall_consumer_configured": false
+  },
+  "separate_installed_failure": {
+    "command": "agent-browser --json service browsers",
+    "code": "protected_browser_owner_observation_invalid",
+    "effect_state": "no_effect",
+    "retried": false
+  },
+  "remaining": [
+    "named native placement",
+    "native observe/control embed integration",
+    "controller grant coordinated with admission",
+    "integration and installed acceptance"
+  ],
+  "observe_embed": {
+    "red": "issueObserveEmbed absent; public fixture test failed before implementation",
+    "green": "3 native application tests pass; 5 total with control gate/wire tests",
+    "contract": "Fresh exact observe_assignment readback precedes observe-only issue_view; grant target, origin, opaque embed path and lifetime checked",
+    "installed_view_issuance": false
+  }
+}

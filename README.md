@@ -12,6 +12,15 @@
 
 Aura-Call bundles your prompt and files so another AI can answer with real context. Its default API model is the durable `openai:frontier` alias, currently backed by GPT-6 Astra; exact provider model IDs remain available as explicit pins. Browser automation uses capability-oriented selectors such as `chatgpt:fast`, `chatgpt:reasoning-high`, and `chatgpt:premium`, or `--browser-model-strategy current` to preserve the active ChatGPT model. GPT-5.2 and Sol/Terra/Luna spellings remain compatibility inputs but are no longer advertised as durable configuration. API remains the most reliable path, and `--copy` is an easy manual fallback.
 
+Configured [named AuraCall desktops](docs/configuration.md#named-auracall-desktops)
+use Remote View's native viewer in the dedicated `/desktops` client. Viewing is
+passive by default; explicit takeover coordinates human input with AuraCall
+browser automation. After two minutes without external keyboard/pointer input,
+control returns to view-only after verified revocation, allowing automation to
+resume. A compact, collapsible rail groups real runtime profiles by account or
+profile; **Wake** opens dormant local browser profiles on the selected desktop.
+Connected embedded viewers stay mounted during routine refreshes and when returning to the tab. Switching interaction capability replaces the viewer. Root desktop access remains independently available.
+
 API model IDs containing `/` (for example, `vendor/claude-sonnet-custom-v1`)
 are exact pins: AuraCall trims surrounding whitespace and preserves their spelling
 and case rather than interpreting provider words as shorthand aliases.
@@ -2571,3 +2580,14 @@ Name inspired by: https://ampcode.com/news/oracle
 - ✂️ [Trimmy](https://trimmy.app) — “Paste once, run once.” Flatten multi-line shell snippets so they paste and run.
 - 🟦🟩 [CodexBar](https://codexbar.app) — Keep Codex token windows visible in your macOS menu bar.
 - 🧳 [MCPorter](https://mcporter.dev) — TypeScript toolkit + CLI for Model Context Protocol servers.
+
+The dedicated desktop client uses Remote View’s native toolbar. Its view-only/interactive switch pauses AuraCall before enabling input and confirms release before resuming automation. Two minutes without actual input returns to view only. Wake opens the provider page only when the owned browser has no nonblank pages.
+
+The desktop client uses the left rail for navigation, grouping and browser actions. Close ends the selected AuraCall-owned browser while retaining its desktop and managed browser data; its runtime profiles become dormant and can be woken again. API service restarts preserve managed browsers.
+
+The desktop mode switch retains the native viewer page and its settings while
+changing between observation and control. Only the authorized desktop transport
+reconnects. Input remains blocked during the change, and AuraCall resumes
+automation only after control-grant revocation is confirmed.
+
+Open the AuraCall root URL to reach the console, then select **Desktops** to open the browser client. Console, operator dashboard and desktop client share AuraCall's glowing halo favicon.

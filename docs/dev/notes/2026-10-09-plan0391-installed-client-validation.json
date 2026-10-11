@@ -1,0 +1,156 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-09T04:08:35.105054+00:00",
+  "scope": "Installed AuraCall API adoption and native browser preparation; human viewer acceptance pending",
+  "sourceCommit": "cdb767f86942c57af03579604028ee5f2f647da5",
+  "apiService": {
+    "unit": "auracall-api.service",
+    "mainPid": 91439,
+    "active": true
+  },
+  "configSha256": "1ec971e5e80021fc2415d6576292e8835755cce9d76a5682de0726d68ae46689",
+  "existingLaunchPlansPreserved": 21,
+  "pausedCompletionIdsAndStatesPreserved": 17,
+  "schedulerPaused": true,
+  "backgroundDrainPausePreserved": true,
+  "preUpgradeChromeProcessesPreserved": 33,
+  "beforeUpgradeChromeMissing": [],
+  "desktopApi": {
+    "at": "2026-10-09T04:06:02.241Z",
+    "api": "127.0.0.1:18095",
+    "desktops": [
+      {
+        "name": "research",
+        "state": "ready",
+        "ownedBrowsers": 1,
+        "status": 200,
+        "capability": "observe",
+        "viewerOrigin": "https://remote-view.ecochran.dyndns.org",
+        "nativeEmbedPath": true
+      },
+      {
+        "name": "writing",
+        "state": "ready",
+        "ownedBrowsers": 1,
+        "status": 200,
+        "capability": "observe",
+        "viewerOrigin": "https://remote-view.ecochran.dyndns.org",
+        "nativeEmbedPath": true
+      }
+    ],
+    "rootDesktopUrl": "https://remote-view.ecochran.dyndns.org",
+    "authenticatedPixelsAndHumanInput": false
+  },
+  "browserLauncherExitReadback": {
+    "at": "2026-10-09T04:07:34.710Z",
+    "checks": [
+      {
+        "name": "research",
+        "pid": 16248,
+        "owned": true,
+        "ppid": "1"
+      },
+      {
+        "name": "writing",
+        "pid": 17293,
+        "owned": true,
+        "ppid": "1"
+      }
+    ]
+  },
+  "browsers": [
+    {
+      "browserId": "a3b08d1c-046b-489d-a9a2-ff4122e1c9ed",
+      "desktopName": "research",
+      "pid": 16248,
+      "assignment": {
+        "assignmentId": "65d5fdccb6771-b71a417cda46f98b688a7362c114cafc",
+        "desktopId": "00a954b4-5220-4faf-bf8e-67a2e7031f23",
+        "generation": 1,
+        "viewingGeneration": 2
+      },
+      "managedProfileDir": "/home/ecochran76/.auracall/browser-profiles/remote-view-research/remote-view-research/chatgpt"
+    },
+    {
+      "browserId": "ff90ae52-e371-45f9-bad1-de8702455831",
+      "desktopName": "writing",
+      "pid": 17293,
+      "assignment": {
+        "assignmentId": "65d5ffc4ed202-5a7b425d997f9bc00337556eb1f3c3ae",
+        "desktopId": "d9888253-944d-47e8-803d-2d532dc00d24",
+        "generation": 1,
+        "viewingGeneration": 2
+      },
+      "managedProfileDir": "/home/ecochran76/.auracall/browser-profiles/remote-view-writing/remote-view-writing/chatgpt"
+    }
+  ],
+  "preparedBrowserLifetime": "Two owned blank marker browsers intentionally retained for requested human verification; preparation launcher is absent",
+  "authenticatedNativeViewerPixels": false,
+  "actualHumanInput": false,
+  "rootViewer": false,
+  "publicIngress": "Both public origins redirect unauthenticated requests to existing Authelia; no ingress changes",
+  "rollbackRuntime": "/home/ecochran76/.auracall/user-runtime-before-plan0391",
+  "rollbackConfig": "/home/ecochran76/.auracall/config-before-plan0391.json",
+  "providerPrompts": 0,
+  "infrastructureProvisioned": false,
+  "sourceSha256": {
+    "src/http/desktopClientPage.ts": "109c86c7afb426297ffc8c329dab4d00ef7547a7713895b4f43f6fc23c2e2182"
+  },
+  "compiledDesktopClientSha256": "2a6e50dba95c023a3a62df153c387e7478855c4800316887d87dec7f5c9ca1fd",
+  "compiledSourceAndInstalledMatch": true,
+  "nextAction": "Operator authenticates, sees both native markers, takes control/types research-391 and writing-391/releases each, and confirms independent root viewing; verify markers through installed CDP before integration",
+  "remoteViewHealth": {
+    "at": "2026-10-09T04:09:49.197056+00:00",
+    "doctorOk": true,
+    "failedChecks": [],
+    "borrowedActiveAssignmentsPreserved": 2,
+    "unknownChecks": [
+      {
+        "name": "public_routing",
+        "code": "public_check_not_requested"
+      },
+      {
+        "name": "authenticated_viewer",
+        "code": "viewer_proof_unknown"
+      }
+    ]
+  },
+  "validation": {
+    "typecheck": "passed",
+    "targetedLint": "passed",
+    "build": "passed full build; final cleanup enhancement passes TypeScript build",
+    "planningAuditPlan0391Findings": 0,
+    "preexistingPlan0386Findings": 3,
+    "cleanup": "Not run against the two pending-human marker browsers; current process-group ownership positively read back"
+  },
+  "currentResourceReadback": {
+    "at": "2026-10-09T04:13:36.660035+00:00",
+    "ownedRetainedBrowserRoots": 2,
+    "ownedProcessGroupMembers": 24,
+    "ownedGroups": [
+      16248,
+      17293
+    ],
+    "preUpgradeChromePreserved": 33,
+    "preUpgradeChromeMissing": [],
+    "preparationLauncherAbsent": true
+  },
+  "acceptanceHarnessSha256": "6af487b632a4d2ab0acbd35f10a775c6265ff140b33932164e6c594ebf63d336",
+  "humanMarkerVerification": {
+    "at": "2026-10-09T04:19:23.572788+00:00",
+    "command": "AURACALL_INSTALLED_DESKTOP_ACCEPTANCE=1 pnpm tsx scripts/acceptance-installed-desktop-client.ts verify",
+    "exitCode": 1,
+    "actualValues": {
+      "research": "",
+      "writing": ""
+    },
+    "expectedValues": {
+      "research": "research-391",
+      "writing": "writing-391"
+    },
+    "meaning": "Actual installed CDP read succeeded; required human viewer input is not yet present. No marker reset, new browser, takeover or release occurred.",
+    "lastRevalidatedAt": "2026-10-09T04:20:10.963556+00:00",
+    "consecutiveImpasseGoalTurns": 3
+  },
+  "goalDisposition": "blocked on operator authenticated native viewer/input and root acceptance; not complete"
+}

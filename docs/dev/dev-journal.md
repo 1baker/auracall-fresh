@@ -1,3 +1,176 @@
+## 2026-10-10 — Stability runtime adoption
+
+Installed source 0df5c458e after operator approval, with exact staged parity for
+584 dist files and retained previous runtime. API active PID16899 after a
+KillMode=process restart. Selected research browser PID78709 and native desktop
+records are preserved. Remote View companion installed at 1e9eb78a2; doctor
+ready and current native capture passed. Public authenticated human input still
+requires operator readback after page reload. Private deployment receipts:
+remote-view runtime receipts/desktop-stability-20261010. Integration pending.
+
+## 2026-10-10 — Desktop stability correction
+
+Prepared refresh preservation on `fix/desktop-viewer-stability`, with companion
+Remote View reconnect input restoration. Focused HTTP/control tests and TypeScript
+check pass. Installed human acceptance is pending; baseline full rendered smoke
+has a dormant-Wake timeout, preserved separately from the stability verdict.
+
+## 2026-10-09 — Real-profile Wake incorrectly used RDP validation
+
+Operator reports Wake fails with an Agent Browser RDP family-declaration error.
+The native launcher called RDP-specific compatibility validation before starting
+Chrome. A native-path regression with ordinary null family/build metadata
+reproduces the exact error; resolving the selected executable directly removes
+the RDP dependency while retaining exact executable/process/assignment checks.
+28 focused tests, typecheck, lint and build pass. Installed source d6d047f86
+matches all 584 dist files. Real default/Grok Wake on Research returns 200 in
+6052ms, observe succeeds, the shared alias and normal configuration retain
+placement, and all 37 original process identities and markers are preserved.
+One real browser remains intentionally available; no provider prompt was sent. Native-toolbar restoration and a
+single native mode switch remain a separate open client correction.
+
+## 2026-10-09 — Compact runtime-profile desktop rail
+
+Operator reports installed viewer working and requests compact rows, SVG animated rail collapse, account/profile grouping, and dormant real runtime profile Wake. Implementing on the existing Plan0391 branch; canonical launch plans and remembered configuration placement preserve account/browser identity. Existing live browsers are not moved or closed. 87 focused checks, typecheck, scoped lint, build and the rendered rail/control fixture pass. Shared browser-family placement and live ownership verification are enforced. Installed source 48704e08d serves the new UI and seven real runtime profiles (six wakeable, one Windows unavailable). API49216 retains both observe endpoints, unchanged markers and all 37 process identities. Actual provider-account Wake remains fixture-qualified; no provider prompt or scheduler change occurred. Receipt: [runtime rail](notes/2026-10-09-plan0391-runtime-rail-validation.json).
+
+## 2026-10-09 — Installed two-minute idle handoff verified
+
+Both real installed never-used control grants expired after approximately 124 seconds, automation gates reopened, fresh observe grants succeeded, and explicit retake/release passed. Actual CDP marker reads were denied while held and passed after release; both original markers and 37 borrowed process identities remain intact. No browser launched or provider prompt sent. Continued actual gateway input, rendered view-only transition, and signed-in root viewer remain pending; operator questions are outstanding. [Receipt](notes/2026-10-09-plan0391-installed-idle-validation.json).
+
+## 2026-10-09 — Plan0391 inactivity runtime installed
+
+Installed AuraCall 77030b33d and integrated RemoteView 28baf035 on explicit operator request. All ten provider software units adopted the verified new binary, doctor passed, 35 native components and both Research/Writing process/binding identities survived. Both observe endpoints return 200, markers match, and resolved inactivity is 120 seconds. Actual wall-clock handoff and root visual acceptance remain open. [Installed receipt](notes/2026-10-09-plan0391-inactivity-installed-validation.json).
+
+## 2026-10-09 — Plan0391 budget checkpoint
+
+Two-minute inactivity source qualified; RemoteView PR346 merged and AuraCall PR244 remains draft. No inactivity revision installed. Stopping before the explicit three-hour limit. Restart authority and acceptance gates: [checkpoint](notes/2026-10-09-plan0391-inactivity-budget-checkpoint.md).
+
+## 2026-10-09 | Plan0391 authoritative inactivity handoff source packet
+
+The resumed goal advances the two-minute human-input requirement. Remote View
+now has a source dependency (Plan0071 / issue345) tracking input at both gateway
+transports with durable grant activity and conditional revoke. AuraCall source
+uses that operation before releasing its shared automation gate and polls exact
+terminal receipts to return the client to view-only. Twenty targeted tests across
+eleven files, typecheck and focused lint pass. Current canonical Remote View
+configuration-coherence repair is merged into the provider branch; full tests,
+strict Clippy, integration and installed two-minute acceptance are in progress.
+Production binaries/config and both owned marker browsers remain unchanged.
+
+## 2026-10-09 | Plan0391 inactivity duration selected
+
+Operator selected two minutes (120 seconds) without external input before
+returning human control to view-only. Plan0391 and Spec0392 record this exact
+duration. Implementation and installed timeout acceptance remain pending.
+
+## 2026-10-09 | Plan0391 inactivity handoff requirement
+
+Operator requests human control to return to view-only after external-input
+inactivity, with AuraCall paused while input is active. Governing plan/spec now
+record the revised contract, upstream activity seam, revoke-before-resume order
+and acceptance boundaries. Duration selection is pending. This is a requirement
+checkpoint, not implementation or installed acceptance; current behavior remains
+explicit release. The earlier bounded goal remains checkpointed.
+
+## 2026-10-09 | Plan0391 actual human input verified
+
+After the verifier configuration repair, the operator reported entering the
+requested text. Installed acceptance verification read research-391 and
+writing-391 from the two retained actual Chrome marker inputs, with exact
+installed source and ownership bindings checked. Receipt:
+notes/2026-10-09-plan0391-human-input-verification.json. This advances the human
+input gate; root desktop viewing remains pending operator confirmation.
+No browser reset, cleanup or automatic control release was performed.
+
+## 2026-10-09 | Plan0391 reported viewer 503 repair
+
+The operator reported Service Unavailable on both desktops. The Remote View
+verifier process predated configuration adoption and continually wrote a receipt
+for the previous config hash with no connection links. Gateway admission requires
+a matching receipt no older than ten seconds, so ready browsers and successful
+consumer grant resolution did not qualify viewer availability. A direct current
+Guacamole verification succeeded; restarting only the verifier service restored
+current receipts across four samples over twenty seconds, covering slots 5 and 6.
+Fresh OS reads preserve both exact browser PID/start identities. No browser,
+control, gateway, X server or account restart was performed. Authenticated viewer,
+human input and root acceptance remain pending; the operator can reload existing
+views. Evidence: notes/2026-10-09-plan0391-viewer-unavailable-repair.json.
+
+## 2026-10-09 | Plan0391 blocked acceptance checkpoint
+
+The authenticated native viewer/input/root gate recurred across three consecutive
+goal turns. Actual installed CDP verification succeeds in reading both marker
+fields, but both remain blank. No authenticated visual/root attestation has
+arrived. PR244 remains draft and all tickets remain open. Source and installed
+API work are retained; the two exact owned marker browsers remain intentionally
+available. Automatic goal continuation stops as blocked, before the user time
+or token limits. Resume only from the operator response: read actual markers
+after release, bind native visual/root acceptance, then integrate if qualified.
+Do not reset markers, create replacement browsers or auto-release control.
+
+## 2026-10-09 | Plan 0391 installed dedicated client prepared
+
+Installed code checkpoint cdb767f86942c57af03579604028ee5f2f647da5 is active in
+user-runtime; API91439 serves two ready owned desktops and actual observe embeds.
+The config adds explicit remote-view-research/writing browser profiles; all 21
+prior runtime/provider launch plans compare unchanged. Atomic adoption retained
+rollback copies, scheduler pause, all 17 completion identities/pauses, background
+drain posture, and all 33 pre-upgrade Chrome identities. Actual installed config
+resolution launched two blank marker browsers on distinct native assignments.
+They remain positively owned after the preparation launcher exits. The operator
+has been asked to authenticate, view both markers, type via explicit takeover,
+release, and confirm root viewing. No human-input or pixel proof is claimed yet.
+Use scripts/acceptance-installed-desktop-client.ts verify/cleanup; do not rerun
+prepare while the operator may be typing, because prepare resets marker pages.
+
+## 2026-10-09 | Plan 0391 bounded review remediation
+
+The single allowed broad review found four accepted blockers: raw Puppeteer
+commands bypassed human exclusion; root could reuse a native-bound browser;
+refused takeover stranded an unowned tab claim and prototype desktop names
+misbehaved; companion spec still prescribed snapshots. The single bounded
+remediation pass fixes those seams. 170 regressions across 25 files, typecheck,
+build and rendered client smoke pass. Actual Chrome on both retained desktops
+proves Puppeteer session/connection exclusion, root reuse refusal, post-revoke
+resumption and zero remaining acceptance Chrome. No delegated independent review
+is claimed. Authenticated pixels/input, independent root viewing, installed
+AuraCall API adoption and integration remain OPEN. Continue from the ledger.
+
+## 2026-10-09 | Plan 0391 installed native placement/control qualification
+
+Configured AuraCall from the existing 10-desktop effective Remote View config;
+preserved the separate unapplied 32-desktop source config. Control/gateway reload
+preserved both borrowed assignment generations and all 32 preexisting Chrome
+process identities. Private doctor reports ok=true. Real Chrome exposed two
+fixture gaps: a first-run terms window blocked CDP, and process-title/environment
+scrubbing invalidated argv/environment-only ownership. The bounded repair adds
+no-first-run to minimal launches and exact native window/PID/generation proof
+for scrubbed processes. A new real process-title fixture fails before repair and
+passes after it; 135 regressions across 23 files pass.
+
+Installed acceptance now launches real Chrome on distinct retained Research and
+Writing assignments, positively verifies process/window ownership, reuses PIDs,
+issues actual observe/control grants, rejects CDP mutation during human hold,
+and resumes after exact revocation. The final run exits 0; fresh OS readback
+finds zero acceptance Chrome processes. Both AuraCall assignments remain retained
+for explicit adoption/cleanup, with no provider prompts or infrastructure
+expansion. Authenticated native viewer pixels/input, independent root viewing,
+whole-feature bounded review and integration remain OPEN.
+
+## 2026-10-09 | Plan 0391 native control source checkpoint
+
+Native take/release now joins the provider grant lifecycle to AuraCall's persisted
+desktop automation gate. Take refuses in-flight automation and another human;
+release requires exact revocation or exact issuance replay proving a terminal
+grant. Unknown responses remain paused. Claim identities survive HTTP uncertainty
+and reload; viewer URLs remain ephemeral. Rendered fixture smoke proves explicit
+take, reload retention, failed-release retention, explicit return to observe,
+multiple desktops, independent root link and zero remaining smoke processes.
+Nine focused checks pass; removing admission makes the public takeover test fail.
+Installed AuraCall consumer configuration, native two-desktop/input acceptance,
+broad review and integration remain OPEN. No provider prompts or infrastructure
+changes occurred. Continue from the execution ledger and draft PR244.
+
 ## 2026-10-10 | Plan0403 launch precedence implemented
 
 Operator accepted runtime browser overrides > browser-profile settings > global
@@ -53415,6 +53588,117 @@ next detail pass; limitation preserved, stopping rule corrected. Journey3 uses
 the same parent and retained settled idle lease/one known target. No source
 change or acceptance closure claimed.
 
+### 2026-10-09 — Plan0391 desktop launch dispatch in progress
+
+PR243 is merged at591a118245cafbc54c34cd0bc179c4b380308ef6. Issue240
+adds named desktop config, exact route preflight, ordinary prompt dispatch,
+and read-only session/display checks for service attachment.64 focused checks
+pass; typecheck passes. Red evidence reproduced ordinary prompt routing to
+local Chrome and service attachment skipping desktop verification. Remaining:
+full launch/convergence contract fixtures, mutation-safe reuse reconciliation,
+client, control handoff, integrated and installed acceptance. No live launches
+or feature completion claimed. Original workspace dirty work is preserved.
+
+### 2026-10-09 — Plan0391 passive client source checkpoint
+
+Added dedicated/desktops app, retained per-managed-browser handoffs, positive
+service inventory filtering, exact capture identity checks and root link.
+68 focused checks and typecheck pass. Puppeteer renders two-desktop navigation,
+reload retention, empty/unavailable states and independent root access with
+fixture frames; it does not establish actual desktops. Installed command probe
+caught nonexistent service route-pool syntax in the prior checkpoint; corrected
+to supported service status and its service_state collections. Three installed
+RDP routes currently report unavailable. Control and installed acceptance remain
+open. All provider work and infrastructure provisioning remain excluded.
+
+### 2026-10-09 — Plan0391 native contract correction
+
+Current canonical Agent Browser and Remote View source supersede the local
+legacy RDP integration assumptions. Remote View supplies application pools and
+native observe/control embeds; AuraCall owns selection and automation arbitration.
+Recorded the correction in Plan0391 and the ledger, preserving old receipts.
+Native consumer boundary regression was red against a no-op implementation;
+two tests now pass, including exact ownership/generation joins and loopback-only
+control transport. A read-only installed probe using this adapter reports two
+ready Agent Browser assignments; no AuraCall consumer is configured yet and no
+borrowed desktop was mutated. CDP wire exclusion and gate tests also pass.
+Source integration, native presentation/control and installed acceptance remain.
+
+Native observe embed issuance also has a failing-before-implementation fixture
+and passes afterward. The adapter rechecks exact assignment/lifecycle/viewing
+generations and validates the opaque observe grant target, configured HTTPS
+origins and current bounded lifetime. Three native tests pass; integrated
+launch/client behavior is still open.
+
+### 2026-10-09 — Plan0391 CDP admission source checkpoint
+
+Shared CDP transport enforces a cross-process per-desktop gate across provider,
+HTTP and lifecycle entry points. Human ownership blocks generated commands
+before WebSocket emission; release requires exact token/generation, and old
+clients reject replaced retained browser identity. A target WebSocket URL supplies
+the actual endpoint used for admission. The wire regression failed with raw CDP
+and passes with the guarded transport. 292 browser checks pass across 12 files;
+focused gate checks pass after endpoint binding refinement. Locks are retained
+on uncertainty; no automatic abandoned-lock reclamation is implemented. Native
+viewer grant/revoke, client integration and installed acceptance remain open.
+
+### 2026-10-09 — Plan0391 native placement and client checkpoint
+
+Native named-desktop resolution now drives normal prompt and service attachment
+paths through AuraCall's existing Chrome lifecycle. Stable acquisition retains
+one exact assignment per name; two real fixture child processes share it. Child
+environment no longer mutates global DISPLAY/XAUTHORITY. Exact native process
+receipts and fresh ownership joins exclude foreign or stale browsers. The
+dedicated client mounts the provider's unchanged observe embed helper and keeps
+root access independent. 121 focused checks pass across 17 files; native wire
+red/green verifies no mutation during human control. Rendered native fixture
+smoke passes with zero page errors and zero remaining owned processes. Native
+controller grant/revoke, installed AuraCall configuration/acceptance and final
+integration remain open. See native placement/client validation receipt.
+
+### 2026-10-09 — Blank Wake and native viewer controls
+
+The native toolbar owns mode changes; duplicate parent buttons and connection status are removed. Rendered native-assets smoke passes with exact-token reload and refused/uncertain claim cases. Wake now navigates only an entirely blank owned browser; the existing Grok PID89704 has a page at https://grok.com. Source tests/typecheck/build pass; installed adoption pending.
+
+Installed native controls/Wake checkpoint: AuraCall decad6233 and Remote View 964887a adopted; local API/new native assets verified. 37 original processes retained; API-owned Grok replaced after service restart, now PID78709 at grok.com. See native-controls-installed receipt; authenticated public acceptance remains open.
+
+### 2026-10-10 — Primary viewer control parity
+
+The user requests the primary native control design. Remote View PR352 removes reconstructed embed controls and reuses primary chrome/viewer.js with a grant-only adapter. The rendered fixture now exercises pointer cycling, document keyboard capture and mobile edits; exact mode coordination and root-link regressions pass. Installation/identity readback remains pending upstream; AuraCall API runtime has no source change.
+
+Installed parity checkpoint: Remote View fa1cca0 adopted by 13 software units, doctor ready. Primary and embedded controls share native source/markup. All 39 tracked processes retained, no API restart; rendered pointer/keyboard/mobile/grant checks pass. Public authenticated acceptance remains unverified by the fixture.
+
+### 2026-10-10 — Rail-only browser management
+
+Remove redundant top navigation, refresh and opaque browser selector. Add accessible close actions to ready native browser rows, release the caller's exact control claim first, and confirm browser process exit under the automation gate. Retain desktop/data and show dormant runtime profile Wake actions. API service KillMode=process preserves browsers across software adoption. Targeted ownership/auth tests pass; rendered and installation checks pending.
+
+## 2026-10-10 | Embedded desktop grant handoff
+
+The primary Remote View works for the operator; the AuraCall embed remains
+sluggish and reloads on mode changes. Replace grants inside the existing native
+iframe instead of rebuilding its page. Keep immutable-grant authorization,
+automation pause/revoke and inactivity handoff unchanged. Regression fixtures
+prove same-iframe takeover/release, native keyboard/mouse and released input
+exclusion. The helper/adapter also restarts transport after status authorization
+recovers. Installed human acceptance remains required.
+
+Installed the bounded handoff repair, preserving all native desktop records and
+the selected browser. The public page serves the new coordination; doctor/MCP
+readbacks pass. The authenticated operator input verdict remains pending. See
+`notes/2026-10-10-embedded-viewer-handoff-installed.md` for source and runtime proof.
+
+## 2026-10-10 | Passive embed grant renewal
+
+Signed-in inspection reproduced expiry after the ready-view guard skipped its
+scheduled refresh. Scheduled passive refresh now renews the opaque grant inside
+the existing native iframe; visibility and active-control retention remain.
+Rendered red/green coverage proves renewed URL with same iframe and no duplicate
+control implementation. Software adoption and public stability follow separately.
+
+### 2026-10-10 — Aura favicon and desktop discovery
+
+Create one canonical SVG favicon: crisp mint A with glowing violet halo and soft aura, visually checked at 16/32/64px. Root opens the configured console; console and operator navigation link to Desktops. Preserve installed passive-grant renewal and existing iframe handoff changes. Integration build and targeted HTTP regression pass. Installed a0ec3d5a; root console navigation, SVG GET/HEAD and asset byte parity verified, all36 non-API identities preserved and both Grok aliases ready. See favicon receipt; public authenticated acceptance remains separate.
+
 ## 2026-10-10 — Plan 0395 lifecycle attribution source slice
 
 Asked LitScout exact tab for current evidence; received direct handoff at
@@ -53459,3 +53743,12 @@ remain separate gates. No provider request or wake created.
 Plan0399: qualified model-ID defect reproduced at CLI run-option seam and real dry-run; slash-qualified exact ID now bypasses fuzzy aliases, preserving case. Focused96 tests/typecheck/targeted lint pass. Isolated fix/qualified-model-id; no provider or installed changes.
 
 Plan0401: retained new-conversation absolute deadline failure reproduced on current main; success-boundary timestamp gate repaired. Focused53 tests/typecheck/targeted lint PASS. Source only; separate installed/live gates.
+
+
+## 2026-10-10 | Desktop deployment reconciliation
+
+Plan0403 adoption dropped the installed off-main PR244 desktop client. Reconcile
+all installed capabilities, published lane checkpoints and target ancestry before
+replacement; a green bounded change is insufficient. Combined desktop/launch
+source and a required compiled /desktops installation gate recover the route.
+See [recovery evidence](notes/2026-10-10-desktops-install-reconciliation.md).

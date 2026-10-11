@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "objective": "Merge PR243 and execute full Plan0391",
+  "started_at": "2026-10-09T01:54:51Z",
+  "checkpoint_deadline": "2026-10-09T04:40:00Z",
+  "hard_stop_before": "2026-10-09T04:54:51Z",
+  "token_checkpoint_before": 1900000,
+  "token_limit": 2000000,
+  "checkpoint_cadence": "At each packet transition and at most 30 minutes apart",
+  "max_work_unit_attempts": 2,
+  "max_broad_reviews": 1,
+  "max_review_remediation_passes": 1,
+  "plan": "docs/dev/plans/0391-2026-10-08-auracall-remote-view-client.md",
+  "base": "591a118245cafbc54c34cd0bc179c4b380308ef6",
+  "branch": "feat/issue240-named-desktops",
+  "pr243": "merged",
+  "tickets": {
+    "240": {
+      "state": "running",
+      "blockers": []
+    },
+    "241": {
+      "state": "pending",
+      "blockers": [
+        240
+      ]
+    },
+    "242": {
+      "state": "pending",
+      "blockers": [
+        241
+      ]
+    }
+  },
+  "unmet": "Authenticated native viewer pixels/human input and independent root viewing; integration",
+  "authority": "User explicitly requested merge and full execution; safe in-scope fixture/live verification included; unrelated authenticated provider work and infrastructure provisioning excluded",
+  "progress_classification": "no_progress: same external acceptance gate remains; actual marker read confirms input absent",
+  "evidence": "170 regressions/25 files; all four bounded review findings verify; installed API91439 code cdb767f8 serves two ready owned native desktops; all 21 old launch plans, 17 paused completions and 33 pre-upgrade Chrome processes preserved",
+  "next_action": "Operator completes the existing viewer check and replies. Resume by verifying both actual marker values after release, binding visual/root attestation, and integrating only if acceptance qualifies. Do not reset markers or automatically release human control.",
+  "source_checkpoint": "b557da7fb",
+  "last_checkpoint_at": "2026-10-09T04:20:10.963556+00:00",
+  "installed_route_readback": {
+    "at": "2026-10-09T02:16:00Z",
+    "command": "agent-browser --json service status",
+    "routes": {
+      "guacamole-rdp-3": "unavailable",
+      "guacamole-rdp-a": "unavailable",
+      "guacamole-rdp-b": "unavailable"
+    },
+    "acceptance": false,
+    "scope": "Historical legacy RDP readback; does not qualify native Remote View capacity"
+  },
+  "native_contract_correction": {
+    "agent_browser_main": "c4054ed6",
+    "remote_view_main": "e1ad20d",
+    "consumer_origin": "http://127.0.0.1:19096",
+    "read_only_ready_agent_browser_assignments": 2,
+    "auracall_consumer_configured": true,
+    "agent_browser_inventory_failure": "protected_browser_owner_observation_invalid",
+    "installed_acceptance": "placement/API-CDP passed; authenticated pixels/input/root pending"
+  },
+  "broad_reviews_used": 1,
+  "review_remediation_passes_used": 1,
+  "installed_client": {
+    "code_checkpoint": "cdb767f86942c57af03579604028ee5f2f647da5",
+    "api_pid": 91439,
+    "two_owned_marker_browsers_intentionally_retained": true,
+    "human_question_pending": true,
+    "receipt": "docs/dev/notes/2026-10-09-plan0391-installed-client-validation.json"
+  },
+  "blocking_gate": {
+    "condition": "Authenticated native viewer pixels/input and independent root viewing require operator session/attestation; no authorized authenticated browser session available to the agent",
+    "first_impasse_turn": "2026-10-09 installed-client preparation and question",
+    "consecutive_impasse_goal_turns": 3,
+    "question_pending": true,
+    "do_not_repeat_prepare": true,
+    "safe_next_step": "Read actual marker values after human release; bind operator visual/root attestation; do not infer acceptance from API grants",
+    "memory_disposition": "forbidden",
+    "memory_receipt": "/home/ecochran76/.graphiti-openclaw/state/closeout-memory/20261009T041710Z-remember.json",
+    "last_revalidated_at": "2026-10-09T04:20:10.963556+00:00",
+    "actual_marker_values": {
+      "research": "",
+      "writing": ""
+    }
+  },
+  "continuation_rule": "Do not rerun prepare or create more acceptance browsers while operator check is pending. On operator response, verify actual marker values after release, bind native-pixel/root attestation, then integrate only if all gates qualify. Preserve the one broad review/one remediation bounds. Stop before deadline or token checkpoint.",
+  "execution_disposition": "Installation request fulfilled; prior goal remains paused and full live timeout/root acceptance remains open",
+  "inactivity_revision": {
+    "seconds": 120,
+    "provider_issue": 345,
+    "provider_pr": 346,
+    "source_validation": "docs/dev/notes/2026-10-09-plan0391-input-inactivity-source-validation.json",
+    "installed": true,
+    "provider_merge": "c988cf624da81dfdb03abd08283279ff9a50614d",
+    "installed_source": "77030b33d279b1cc52f2e7fd994d4763ce6fd7be",
+    "installed_provider_source": "28baf0359378d5ff369e3401c2cf0f8282c7effa",
+    "installed_validation": "docs/dev/notes/2026-10-09-plan0391-inactivity-installed-validation.json",
+    "installed_idle_validation": "docs/dev/notes/2026-10-09-plan0391-installed-idle-validation.json",
+    "never_used_real_120_second_expiry": "passed both desktops; about 124 seconds including polling"
+  },
+  "resumed_turn_classification": "progress",
+  "resumed_budget": {
+    "tokens_used_at_checkpoint_read": 1448062,
+    "active_seconds_used_at_checkpoint_read": 10701,
+    "stop_before_active_seconds": 10800,
+    "token_stop_before": 2000000,
+    "budgets_reset": false
+  },
+  "next_packet": "Verify actual input resets the installed idle deadline, rendered client switches to observe and blocks input until explicit retake, and signed-in root viewer. Operator questions pending. Keep original browser/account state and markers; PR244 remains draft.",
+  "final_checkpoint": "docs/dev/notes/2026-10-09-plan0391-inactivity-budget-checkpoint.md"
+}

@@ -457,6 +457,7 @@ function App() {
           <span>AuraCall</span>
         </a>
         <nav className="topnav" aria-label="Primary navigation">
+          <a className="nav-item" href="/desktops">Desktops</a>
           {NAV_ITEMS.map((item) => (
             <a
               className={navItemToView(item) === activeView ? "nav-item active" : "nav-item"}

@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises';
+import { applyDesktopProfileAssignments } from './browser/service/desktopProfileAssignments.js';
 import path from 'node:path';
 import JSON5 from 'json5';
 import { getAuracallHomeDir } from './auracallHome.js';
@@ -82,7 +83,7 @@ export async function loadUserConfig(
   const merged = configs.reduce<UserConfig>((acc, next) => mergeConfig(acc, next.config), {} as UserConfig);
   const loaded = configs.length > 0;
   return {
-    config: merged,
+    config: await applyDesktopProfileAssignments(merged),
     path: userPath,
     loaded,
     sources: {

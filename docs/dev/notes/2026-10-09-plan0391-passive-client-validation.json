@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "scope": "Plan0391 partial source checkpoint; not feature acceptance",
+  "prior_checkpoint": "82c3818754e1387f74db01e64270e2d13e0cdd31",
+  "focused": {
+    "tests": 68,
+    "passed": 68
+  },
+  "launch_regression": {
+    "tests": 30,
+    "passed": 30
+  },
+  "typecheck": "passed",
+  "targeted_lint": "passed",
+  "rendered_smoke": {
+    "mode": "provider-free fixtures",
+    "passed": [
+      "two-desktop-navigation",
+      "selection-reload",
+      "empty-state",
+      "unavailable-state",
+      "independent-root-link"
+    ],
+    "page_errors": 0,
+    "fresh_os_remaining_owned_processes": 0
+  },
+  "http_regression": {
+    "tests": 223,
+    "passed": 222,
+    "failed": 1,
+    "failure": "http responses adapter reports live background drain state through /status",
+    "baseline_same_failure": true,
+    "baseline_commit": "82c3818754e1387f74db01e64270e2d13e0cdd31",
+    "isolated_repeat": "passed; does not erase suite failure",
+    "disposition": "pre-existing timing sensitivity; outside desktop slice"
+  },
+  "installed": {
+    "command": "agent-browser --json service status",
+    "routes": {
+      "guacamole-rdp-3": "unavailable",
+      "guacamole-rdp-a": "unavailable",
+      "guacamole-rdp-b": "unavailable"
+    },
+    "two_desktop_acceptance": false
+  },
+  "remaining": [
+    "real controller grant and exclusion",
+    "conflict/release/resume",
+    "integration",
+    "installed two desktops and root"
+  ]
+}

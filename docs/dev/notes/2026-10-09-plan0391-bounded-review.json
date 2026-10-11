@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "mode": "drift_discovery",
+  "evaluator": "primary agent; serial source/spec review; no delegated independence claimed",
+  "fixed_point": "591a118245cafbc54c34cd0bc179c4b380308ef6",
+  "head": "1a49eeb3f868972e293d8f04360021dafa970961",
+  "recorded_at": "2026-10-09T03:48:02.235307+00:00",
+  "broad_reviews_used": 1,
+  "broad_reviews_allowed": 1,
+  "remediation_passes_allowed": 1,
+  "findings": [
+    {
+      "id": "B1",
+      "axis": "spec",
+      "criterion": "Human takeover excludes AuraCall browser automation",
+      "evidence": [
+        "packages/browser-service/src/browserTools.ts:392 calls raw puppeteer.connect",
+        "src/gemini-web/browserNative.ts:959 calls raw puppeteer.connect"
+      ],
+      "consequence": "Puppeteer commands bypass guardedCdp and can compete with native human input",
+      "reproducer": "Create a Puppeteer connection to the owned endpoint, take a human claim, then send Runtime.evaluate through Puppeteer",
+      "confidence": "high",
+      "disposition": "blocking",
+      "repair": "Use a guarded Puppeteer CDP transport with per-command admission through the same resolver and actual response settlement",
+      "verification": "passed",
+      "verification_evidence": "Real WebSocket regression plus actual Chrome/Puppeteer established-session refusal, connection refusal and post-release resumption"
+    },
+    {
+      "id": "B2",
+      "axis": "spec",
+      "criterion": "Config changes never silently reuse a running browser on a different desktop; root is explicit",
+      "evidence": [
+        "src/browser/index.ts root path calls generic reuseRunningChromeProfile",
+        "src/browser/service/browserService.ts non-native branch falls back to generic endpoint resolution"
+      ],
+      "consequence": "Changing a native browser profile to root can reuse its still-running native browser",
+      "reproducer": "Retain a live native browser then select root for the same managed directory and invoke public launch/endpoint resolution",
+      "confidence": "high",
+      "disposition": "blocking",
+      "repair": "Refuse root launch/reuse/endpoint admission when exact retained native ownership still exists",
+      "verification": "passed",
+      "verification_evidence": "Live retained profile/explicit-endpoint regressions and actual public root-launch refusal"
+    },
+    {
+      "id": "B3",
+      "axis": "spec",
+      "criterion": "Conflict messages and passive client remain usable without displacing another controller",
+      "evidence": [
+        "src/http/desktopClientPage.ts stores claims before take and retains all errors",
+        "claims object uses prototype-bearing JSON object lookup"
+      ],
+      "consequence": "A refused second takeover leaves an unowned local claim blocking passive viewing; configured constructor desktop is misread as a retained claim",
+      "reproducer": "Refuse take before acquiring a human claim, refresh; select a ready desktop named constructor",
+      "confidence": "high",
+      "disposition": "blocking",
+      "repair": "Return authoritative claim-retained state for known refused takeover, clear only positively unowned local claims, use a prototype-free claim map",
+      "verification": "passed",
+      "verification_evidence": "Actual HTTP definitive-refusal/unknown distinction; rendered constructor desktop and refused-take passive restoration; uncertain issuance retains pause"
+    },
+    {
+      "id": "B4",
+      "axis": "standards",
+      "criterion": "Governing spec matches current architecture and operator behavior",
+      "evidence": [
+        "Spec0392 Implementation Decisions still requires capture frames and no iframe"
+      ],
+      "consequence": "Spec contradicts approved Plan0391 native contract correction and source",
+      "reproducer": "Read current spec against Plan0391 native correction and actual embed implementation",
+      "confidence": "high",
+      "disposition": "blocking",
+      "repair": "Update companion spec to native application/assignment/embed contracts and source/installed acceptance boundaries",
+      "verification": "passed",
+      "verification_evidence": "Companion spec Implementation Decisions now states native application/assignment/embed contract"
+    }
+  ],
+  "acceptance_gates_not_findings": [
+    "Authenticated native viewer pixels and human input",
+    "Independent root viewing",
+    "Final integration/runtime readback"
+  ],
+  "nonblocking": [
+    {
+      "id": "N1",
+      "disposition": "nonblocking_backlog",
+      "note": "Crash-stale coordination locks stay fail-closed and need explicit inspection; transparent crash recovery is not claimed."
+    }
+  ],
+  "remediation_passes_used": 1,
+  "verification_mode": "closed_world",
+  "remediation_verified_at": "2026-10-09T03:57:55.398221+00:00",
+  "remaining_acceptance": "Authenticated native viewer pixels/human input, independent root viewing, installed AuraCall API adoption and integration"
+}

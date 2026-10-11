@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "twoNativeDesktops": true,
+  "selectedExecutable": "/usr/bin/google-chrome",
+  "exactProcessOwnership": true,
+  "reusePreservesPid": true,
+  "observeGrant": true,
+  "takeoverBlocksActualCdp": true,
+  "revokeBeforeResume": true,
+  "authenticatedViewerPixelsAndHumanInput": false,
+  "providerPrompts": 0,
+  "infrastructureProvisioned": false,
+  "browsers": [
+    {
+      "browserId": "632aaae7-dd69-4d07-a49c-40f0e3873967",
+      "desktopName": "research",
+      "assignment": {
+        "assignmentId": "65d5fdccb6771-b71a417cda46f98b688a7362c114cafc",
+        "desktopId": "00a954b4-5220-4faf-bf8e-67a2e7031f23",
+        "generation": 1,
+        "viewingGeneration": 2
+      },
+      "pid": 7410,
+      "cdpPort": 38441
+    },
+    {
+      "browserId": "165d9243-c0f1-4462-bab2-047c10f38615",
+      "desktopName": "writing",
+      "assignment": {
+        "assignmentId": "65d5ffc4ed202-5a7b425d997f9bc00337556eb1f3c3ae",
+        "desktopId": "d9888253-944d-47e8-803d-2d532dc00d24",
+        "generation": 1,
+        "viewingGeneration": 2
+      },
+      "pid": 7809,
+      "cdpPort": 37447
+    }
+  ],
+  "recordedAt": "2026-10-09T03:36:39.835555+00:00",
+  "scope": "Installed native Chrome placement and API/CDP control; authenticated viewer acceptance pending",
+  "exitCode": 0,
+  "freshOsReadback": {
+    "remainingAcceptanceChromeProcesses": 0,
+    "preexistingChromeProcessesPreserved": 32,
+    "borrowedActiveAssignmentsPreserved": 2,
+    "unclassifiedSnapshotWrapperDisappeared": 22552
+  },
+  "configuration": {
+    "installationId": "5146a1bafcc4d670f3f717b0aacab691",
+    "configHash": "998f47e753b659d14af2712832c64cc326037b776f435fad847068e94668d9fa",
+    "desktopCount": 10,
+    "candidate": "/home/ecochran76/.config/remote-view/auracall-plan0391.toml",
+    "originalUnapplied32DesktopConfigPreserved": true,
+    "doctorOk": true,
+    "applyOperations": [
+      "65d5fd410dca4-3448c8f79b629fefdd758a710582ed63",
+      "65d5ffb4f18e5-fe799b65fa26610733805946ba3777f7"
+    ],
+    "servicesRestarted": [
+      "remote-view-main-5146a1bafcc4-control.service",
+      "remote-view-main-5146a1bafcc4-gateway.service"
+    ]
+  },
+  "sourceValidation": {
+    "tests": 135,
+    "files": 23,
+    "scrubbedProcessRedBeforeGreenAfter": true
+  },
+  "initialFailures": [
+    "Minimal first-run terms window prevented CDP; exact failed launch group stopped, profile preserved",
+    "Next launch refused the unretained process before effects",
+    "First repaired run met core assertions but cleanup checked window ownership during shutdown; cleanup changed to physical process absence, final run exits 0"
+  ],
+  "remaining": [
+    "Authenticated native viewer pixels and human input",
+    "Independent root viewer acceptance",
+    "Whole-feature bounded review",
+    "Integration and closure"
+  ],
+  "sourceSha256": {
+    "src/browser/service/nativeDesktopStore.ts": "645ffc27566035dc3c0c267abb0048ddb5d88bd9efb986c63cc5fbe9fee13965",
+    "src/browser/service/nativeDesktopRuntime.ts": "92fc66b21313317f003debbc1abf5a2f0af0d2870e7d04f88862b5c4d8b69a5a",
+    "src/browser/service/remoteViewApplication.ts": "e7cc59fc15ce3085463aec68415a0d1f633d47cb344beaa82b5eda7c60c54ef8",
+    "packages/browser-service/src/chromeLifecycle.ts": "a057ad5cb0b04fc92df87dffbd7d3efd488f664e86ee2bfc009defd0afb92f48",
+    "scripts/acceptance-native-desktops.ts": "4cc92a35c6da744ef7db5bf47dbcae437309bb5f7d0b5d819e5a3bd0d5a56c77"
+  },
+  "typecheck": "passed",
+  "build": "passed",
+  "targetedLint": "passed"
+}

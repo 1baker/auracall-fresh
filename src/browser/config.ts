@@ -195,7 +195,7 @@ export function resolveBrowserConfig(
     normalizeBlockingProfileAction(config?.blockingProfileAction) ??
     normalizeBlockingProfileAction(mapProfileConflictAction(config?.profileConflictAction)) ??
     DEFAULT_BROWSER_CONFIG.blockingProfileAction;
-  const agentBrowserRdpEnabled = config?.agentBrowserRdp?.enabled === true;
+  const agentBrowserRdpEnabled = config?.agentBrowserRdp?.enabled === true || Boolean(config?.remoteViewDesktop);
   return {
     ...DEFAULT_BROWSER_CONFIG,
     ...(config ?? {}),

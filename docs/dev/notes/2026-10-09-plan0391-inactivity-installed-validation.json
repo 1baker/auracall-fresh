@@ -1,0 +1,155 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-09T21:48:02.728765+00:00",
+  "scope": "Authorized installation only; full Plan0391 live acceptance remains open",
+  "auracall": {
+    "at": "2026-10-09T21:47:01.732Z",
+    "sourceCommit": "77030b33d279b1cc52f2e7fd994d4763ce6fd7be",
+    "controlInactivitySeconds": 120,
+    "desktops": [
+      {
+        "name": "research",
+        "pid": 16248,
+        "sameBrowserIdentity": true,
+        "state": "ready",
+        "viewStatus": 200,
+        "capability": "observe"
+      },
+      {
+        "name": "writing",
+        "pid": 17293,
+        "sameBrowserIdentity": true,
+        "state": "ready",
+        "viewStatus": 200,
+        "capability": "observe"
+      }
+    ],
+    "retainedMarkerValues": {
+      "research": "research-391",
+      "writing": "writing-391"
+    },
+    "rootDesktopUrl": "https://remote-view.ecochran.dyndns.org",
+    "servedInactivityClient": true,
+    "actualTwoMinuteTransition": "not exercised during installation",
+    "rootVisualAcceptance": "pending",
+    "takeovers": 0,
+    "providerPrompts": 0
+  },
+  "provider": {
+    "sourceCommit": "28baf0359378d5ff369e3401c2cf0f8282c7effa",
+    "canonicalMerge": "c988cf624da81dfdb03abd08283279ff9a50614d",
+    "binarySha256": "5984346ecd2066457dfe9f15e94a777a5babd9ded12bca714838bceec7b52fa8",
+    "bundleSha256": "1031a7e86b99ad18287093de9c8811b624d401344190f2f2d6a0e8139eeee00c",
+    "adoptionResult": "complete",
+    "adoptedServices": [
+      "remote-view-main-5146a1bafcc4-slot-1-monitor.service",
+      "remote-view-main-5146a1bafcc4-slot-2-monitor.service",
+      "remote-view-main-5146a1bafcc4-slot-3-monitor.service",
+      "remote-view-main-5146a1bafcc4-slot-4-monitor.service",
+      "remote-view-main-5146a1bafcc4-slot-5-monitor.service",
+      "remote-view-main-5146a1bafcc4-slot-6-monitor.service",
+      "remote-view-main-5146a1bafcc4-slot-7-monitor.service",
+      "remote-view-main-5146a1bafcc4-control.service",
+      "remote-view-main-5146a1bafcc4-gateway.service",
+      "remote-view-main-5146a1bafcc4-verifier.service"
+    ],
+    "pendingReconciliation": [],
+    "doctorOk": true,
+    "failedChecks": [],
+    "unknownChecks": [
+      "public_routing",
+      "authenticated_viewer"
+    ]
+  },
+  "preservation": {
+    "nativeComponentsChecked": 35,
+    "nativeComponentsMissing": [],
+    "protectedConfigurationAndSecretHashesUnchanged": true,
+    "researchAndWritingProcessAndBindingIdentitiesUnchanged": true,
+    "broadOsSnapshot": {
+      "before": 114,
+      "same": 113,
+      "missingUnrelatedChromeCandidatePid": 7937,
+      "causality": "not established; no Chrome process was signalled by installation"
+    }
+  },
+  "services": [
+    {
+      "unit": "auracall-api.service",
+      "pid": 28088,
+      "state": "active"
+    },
+    {
+      "unit": "remote-view-main-5146a1bafcc4-control.service",
+      "pid": 26854,
+      "state": "active",
+      "executableMatchesInstalled": true
+    },
+    {
+      "unit": "remote-view-main-5146a1bafcc4-gateway.service",
+      "pid": 27124,
+      "state": "active",
+      "executableMatchesInstalled": true
+    },
+    {
+      "unit": "remote-view-main-5146a1bafcc4-verifier.service",
+      "pid": 26856,
+      "state": "active",
+      "executableMatchesInstalled": true
+    },
+    {
+      "unit": "remote-view-main-5146a1bafcc4-slot-1-monitor.service",
+      "pid": 25744,
+      "state": "active",
+      "executableMatchesInstalled": true
+    },
+    {
+      "unit": "remote-view-main-5146a1bafcc4-slot-2-monitor.service",
+      "pid": 25938,
+      "state": "active",
+      "executableMatchesInstalled": true
+    },
+    {
+      "unit": "remote-view-main-5146a1bafcc4-slot-3-monitor.service",
+      "pid": 25962,
+      "state": "active",
+      "executableMatchesInstalled": true
+    },
+    {
+      "unit": "remote-view-main-5146a1bafcc4-slot-4-monitor.service",
+      "pid": 26084,
+      "state": "active",
+      "executableMatchesInstalled": true
+    },
+    {
+      "unit": "remote-view-main-5146a1bafcc4-slot-5-monitor.service",
+      "pid": 26178,
+      "state": "active",
+      "executableMatchesInstalled": true
+    },
+    {
+      "unit": "remote-view-main-5146a1bafcc4-slot-6-monitor.service",
+      "pid": 26213,
+      "state": "active",
+      "executableMatchesInstalled": true
+    },
+    {
+      "unit": "remote-view-main-5146a1bafcc4-slot-7-monitor.service",
+      "pid": 26485,
+      "state": "active",
+      "executableMatchesInstalled": true
+    }
+  ],
+  "rollback": {
+    "auracall": "~/.auracall/user-runtime-pre-inactivity",
+    "remoteView": "~/.auracall/plan0391-inactivity-install/remote-view-running-before-adoption",
+    "oldProviderBinarySha256": "bb7c2b8c395f19b58afb95e537b12c1a280490de81e5de499b062e8c0b4aa114"
+  },
+  "privateEvidence": "~/.auracall/plan0391-inactivity-install",
+  "remainingAcceptance": [
+    "actual two-minute idle transition and automation admission on both desktops",
+    "continued actual gateway input extends inactivity",
+    "independent authenticated root visual acceptance"
+  ],
+  "memoryDisposition": "forbidden"
+}

@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "twoNativeDesktops": true,
+  "selectedExecutable": "/usr/bin/google-chrome",
+  "exactProcessOwnership": true,
+  "reusePreservesPid": true,
+  "observeGrant": true,
+  "takeoverBlocksActualCdp": true,
+  "takeoverBlocksActualPuppeteer": true,
+  "rootRejectsLiveNativeReuse": true,
+  "revokeBeforeResume": true,
+  "authenticatedViewerPixelsAndHumanInput": false,
+  "providerPrompts": 0,
+  "infrastructureProvisioned": false,
+  "browsers": [
+    {
+      "browserId": "b9e981fd-bbf3-43fb-9feb-29866f93ca22",
+      "desktopName": "research",
+      "assignment": {
+        "assignmentId": "65d5fdccb6771-b71a417cda46f98b688a7362c114cafc",
+        "desktopId": "00a954b4-5220-4faf-bf8e-67a2e7031f23",
+        "generation": 1,
+        "viewingGeneration": 2
+      },
+      "pid": 37450,
+      "cdpPort": 37269
+    },
+    {
+      "browserId": "ff01ec3d-0343-49d6-bba1-801482047862",
+      "desktopName": "writing",
+      "assignment": {
+        "assignmentId": "65d5ffc4ed202-5a7b425d997f9bc00337556eb1f3c3ae",
+        "desktopId": "d9888253-944d-47e8-803d-2d532dc00d24",
+        "generation": 1,
+        "viewingGeneration": 2
+      },
+      "pid": 37773,
+      "cdpPort": 37629
+    }
+  ],
+  "recordedAt": "2026-10-09T03:57:55.398221+00:00",
+  "sourceParent": "1a49eeb3f868972e293d8f04360021dafa970961",
+  "scope": "Closed-world review remediation; source and actual native Chrome/API/CDP/Puppeteer acceptance",
+  "sourceTests": {
+    "tests": 170,
+    "files": 25,
+    "passed": true
+  },
+  "typecheck": true,
+  "build": true,
+  "renderedClient": {
+    "pageErrors": 0,
+    "remainingOwnedProcesses": 0,
+    "constructorDesktop": true,
+    "refusedTakeReturnsToObserve": true
+  },
+  "freshOsReadback": {
+    "remainingOwnedBrowserProcesses": 0
+  },
+  "rootViewing": false,
+  "integration": false,
+  "redProof": {
+    "mutation": "Remove Puppeteer transport admission",
+    "result": "Public transport test fails: takeover resolves during in-flight command",
+    "restored": true
+  },
+  "planningAudit": {
+    "plan0391Findings": 0,
+    "preexistingPlan0386Findings": 3
+  },
+  "sourceSha256": {
+    "packages/browser-service/src/guardedPuppeteer.ts": "e13b96f0fd76f4c3b7d2d9731b2a5ea8c5f5250c2138f9277cdc55565013368f",
+    "src/browser/service/nativeDesktopStore.ts": "b18529d0ce3073b60f4ade851ebfe29c4b2f4e7ea346d91324d24fba86f2d3af",
+    "src/browser/service/nativeDesktopControl.ts": "93239bd0722925ef469a79c05b9e20392a3fc70e6dee8d48d5663ff9efcc9658",
+    "src/http/desktopClientPage.ts": "109c86c7afb426297ffc8c329dab4d00ef7547a7713895b4f43f6fc23c2e2182",
+    "src/http/responsesServer.ts": "c3f450f1ab4378371edbb4884888088cde3e384514a6bfb710f337e47abe81d6"
+  }
+}

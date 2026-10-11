@@ -1687,6 +1687,7 @@ function HealthViewport({ apiStatus, selectedLiveFollowAccount, onSelectedLiveFo
           <span>{discovery.local?.hostname ?? "auracall.localhost"}</span>
           <div className="route-list">
             <a href={routes.operatorBrowserDashboard ?? "/dashboard"}>Dashboard</a>
+            <a href="/desktops">Desktops</a>
             <a href={routes.operatorDebugDashboard ?? "/ops/browser"}>Debug</a>
             <a href={routes.accountMirrorDashboard ?? "/account-mirror"}>Mirror</a>
           </div>

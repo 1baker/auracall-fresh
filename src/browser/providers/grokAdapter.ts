@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
-import CDP from 'chrome-remote-interface';
+import CDP from '../cdp.js';
 import type { Project, Conversation, ConversationContext, FileRef } from './domain.js';
 import type {
   BrowserProvider,

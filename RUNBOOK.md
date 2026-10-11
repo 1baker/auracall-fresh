@@ -21998,6 +21998,145 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   installation, infrastructure provisioning or service restart occurred.
   Original checkout dirty work is preserved in the separate source checkout.
 
+## Turn 634 | 2026-10-09
+
+- User authorized merge and full execution of Plan0391, with checkpoint before
+  two million tokens or three hours. PR243 merged at591a118245cafbc54c34cd0bc179c4b380308ef6.
+- Published initial named-desktop dispatch checkpoint82c381875, then implemented
+  retained ownership, supported service status reads, passive full-desktop
+  capture and the dedicated/desktops HTTP application on the same serialized
+  implementation branch. No controller UI is exposed before real exclusion.
+- 68 focused checks, 30 launch regression checks, typecheck and targeted lint
+  qualify source. Rendered fixture smoke covers multiple desktop navigation,
+  reload, empty/unavailable states and root link; fresh OS readback has zero
+  smoke-owned processes. The broader HTTP suite has222 passes and one timing
+  failure, reproduced identically on checkpoint82c381875; isolated repeat passes.
+- Installed service readback lists three existing RDP routes as unavailable.
+  This blocks two-actual-desktop acceptance; no state was fabricated and no
+  infrastructure was provisioned. Plan and tickets remain OPEN.
+
+## Turn 635 | 2026-10-09
+
+Plan0391 native contract correction is implemented through native assignment
+acquisition, per-child launch environment, process-bound browser receipts, owned
+catalog and passive native embeds. The initial RDP snapshot checkpoint remains
+historical evidence. 121 focused source checks and rendered provider-free
+native client smoke pass. Root remains independently selectable. No native
+controller presentation, installed AuraCall consumer adoption or feature
+completion is claimed. Receipt: docs/dev/notes/2026-10-09-plan0391-native-placement-client-validation.json.
+
+
+## Turn 636 | 2026-10-09
+
+Plan0391 native control presentation joins exact grant issuance/revocation to
+persisted automation exclusion; explicit takeover/release and reload retention
+pass rendered fixture smoke. Installed AuraCall application configuration was
+applied to the existing 10-desktop effective configuration without infrastructure
+expansion; the separate unapplied 32-desktop source config remains untouched.
+Chrome first-run and scrubbed process ownership failures were retained and
+repaired with no-first-run plus exact current native window/PID/generation proof.
+135 regressions/23 files, typecheck, build and targeted lint pass. Actual Chrome
+acceptance passes distinct Research/Writing desktops, positive ownership,
+same-PID reuse, observe/control grants, actual CDP refusal and post-revoke resume.
+Fresh OS readback preserves 32 preexisting Chrome processes and both borrowed
+assignments; zero acceptance Chrome processes remain. Doctor is ok. Native
+authenticated pixels/input, independent root viewing, bounded review and
+integration remain OPEN. Receipts: docs/dev/notes/2026-10-09-plan0391-native-control-validation.json and docs/dev/notes/2026-10-09-plan0391-installed-native-placement-validation.json.
+
+## Turn 637 | 2026-10-09
+
+Plan0391 used its one broad serial primary review and one bounded remediation
+pass. All four accepted blockers verify: actual Puppeteer commands are excluded
+through replies, live native profiles cannot be reused as root, definitive
+refused claims return to observe while uncertain claims retain pause, and
+Spec0392 reflects native embeds. 170 focused regressions/25 files, build,
+typecheck, rendered smoke and actual two-desktop Chrome/Puppeteer acceptance
+pass; owned acceptance processes are absent. Authenticated pixels/input, root
+viewing, installed AuraCall API adoption and integration remain OPEN. Continue
+from the execution ledger and the bounded-review/remediation receipts.
+
+## Turn 638 | 2026-10-09
+
+Installed Plan0391 code cdb767f8 via staged/atomic user-runtime adoption with
+rollback copies. API91439 lists two positively owned ready native desktops and
+issues actual observe embeds. Existing 21 launch plans, scheduler pause, 17
+completion IDs/pauses, drain posture and 33 pre-upgrade Chrome identities are
+preserved. Explicit Research/Writing browser profiles launch distinct blank
+marker browsers through installed config. Both survive preparation launcher
+exit and remain intentionally available for the requested human viewer check.
+Authenticated native pixels/input, root viewing and integration remain OPEN.
+See installed-client-validation receipt and installed acceptance script. Do not
+rerun prepare before human verification; verify reads actual marker values and
+cleanup requires exact ownership plus automation admission.
+
+## Turn 639 | 2026-10-09
+
+Resumed Plan0391 with the operator's two-minute external-input inactivity revision.
+AuraCall source polls authoritative Remote View conditional control revocation;
+exact terminal receipts return the client to view-only and restore automation
+admission. Remote View issue345/PR346 tracks real gateway input across HTTP and
+WebSocket. Twenty AuraCall regressions across eleven files, typecheck, build and
+lint pass. Provider full Cargo suite (372 tests), strict Clippy and the native
+Chrome rendered fixture pass. That fixture advances the owner's clock by
+120001ms; it does not prove a production wall-clock timeout or operator ingress.
+Installed timeout adoption and root acceptance remain open. Preserve the two
+existing marker browsers and all unrelated runtime/working-tree state. Receipts:
+docs/dev/notes/2026-10-09-plan0391-input-inactivity-source-validation.json.
+
+## Turn 640 | 2026-10-09
+
+Operator requested installation after the budget checkpoint. Installed exact
+AuraCall 77030b33d and merged RemoteView source 28baf035 through source-bound
+release build/extract, install, and identity-preserving software adoption. Ten
+provider software units match binary SHA256 5984346e; doctor passes including
+registered MCP ownership. API28088 serves both retained native desktops and
+observe grants, and both actual markers remain correct. All 35 native components
+retain process identities. Resolved inactivity is 120 seconds. No takeover,
+provider prompt, ingress change, or desktop restart occurred. The actual idle
+transition and independent authenticated root visual acceptance remain OPEN.
+Receipt: docs/dev/notes/2026-10-09-plan0391-inactivity-installed-validation.json.
+
+## Turn 641 | 2026-10-09
+
+Operator authorized installed acceptance. Both retained native marker browsers
+passed real 120-second never-used takeover expiry (Research124840ms, Writing124417ms),
+with initial automation exclusion and post-revocation admission. A real installed
+CDP read was rejected while held and succeeded after release; both marker values
+remain correct. Fresh observe grants and explicit retake/release passed. All 35
+native components and two marker browser process identities were preserved.
+Root capture succeeds locally; public ingress requires authentication. Continued
+actual gateway input, rendered view-only behavior and signed-in root viewing
+remain pending. Two concise operator questions are outstanding. No source
+acceptance is promoted to public viewer proof. Receipt:
+docs/dev/notes/2026-10-09-plan0391-installed-idle-validation.json.
+
+## Turn 642 | 2026-10-09
+
+P86 / Plan0391 gains compact runtime-profile rows, account/profile grouping,
+SVG rail collapse with reduced-motion support, and one control header. Dormant
+Wake uses canonical provider/family placement and remembers shared-family desktop
+configuration without rewriting the main config. Root-running browsers cannot
+be moved. 87 focused checks, typecheck, scoped lint, build and rendered fixture
+pass; fixture Chrome cleanup has zero remaining owned processes. Installed
+adoption at 48704e08d passes all 584 dist-file comparisons. API49216 serves seven
+real runtime profiles: six wakeable and Windows unavailable. Both observe grants,
+marker values, main config and all 37 process identities are preserved. No real
+provider-account Wake or prompt ran. Plan0391 and draft PR244 remain open. Receipt:
+docs/dev/notes/2026-10-09-plan0391-runtime-rail-validation.json.
+
+## Turn 643 | 2026-10-09
+
+P86 native Wake called legacy Agent Browser RDP compatibility validation, rejecting
+normal real profiles without family/build declarations. Native-path regression
+reproduces the exact operator error and passes after resolving the selected
+executable directly. 28 focused tests, typecheck, lint and build pass. Installed
+d6d047f86 matches 584 dist files; real default/Grok Wake succeeds on Research in
+6052ms. Observe, shared-alias placement and normal config readback pass. All 37
+original process identities and markers survive; one real browser remains owned
+and available. Native full-toolbar restoration and a single coordinated native
+mode switch remain OPEN. Receipt:
+docs/dev/notes/2026-10-09-plan0391-native-wake-repair.json.
+
 ## Turn | 2026-10-10 | Plan0393
 
 Issue225 installed apps list reproduces45second timeout and missing-switch failure. Complete app data precedes settings failure. Minimal public adapter replay RED2.26seconds, then GREEN when missing control reports unknown; affirmative mutation guards retained. Private live evidence stays outside Git. Isolated worktree preserves unrelated root changes; source/build/review and installed acceptance remain distinct.
@@ -22032,3 +22171,16 @@ explicit runtime directory and cookie opt-in. Resolver owns canonical/legacy fie
 stored executor consumes one projection. Final focused/adjacent207 tests pass.
 No provider/installed/live changes. Source review/PR and integration remain distinct.
 Memory forbidden; no durable-memory update requested.
+
+
+## 2026-10-10 | Desktop route deployment regression recovery
+
+The operator reported public /desktops404. Initial wrong-host diagnosis was
+corrected against PR244 and installed Plan0391 receipts. Plan0403's later complete
+main package replaced the off-main desktop application. Read-only PR/ref/custody
+reconciliation pinned desktop4fd905b39 and main8aa11f18a; a dedicated recovery
+worktree combines both with independent documentation histories retained. The
+compiled /desktops contract is now a pre-replacement installer gate. Focused
+desktop, launch and lease checks pass; staged parity covers589 dist files.
+Rendered refused-takeover recovery is being diagnosed; first failures retained.
+See docs/dev/notes/2026-10-10-desktops-install-reconciliation.md.

@@ -3361,6 +3361,39 @@ nonzero snapshot fileCount do not prove newly captured bytes.
 Completion conversation scope must survive disk persistence and service restart.
 Validate it in the child request before accepting a resumed scoped run.
 
+
+Plan 0391 native control boundary: `pnpm vitest run tests/browser/nativeDesktopControl.test.ts tests/browser/nativeDesktopCdp.test.ts tests/browser/desktopControlGate.test.ts tests/browser/remoteViewApplication.test.ts tests/http.desktopClient.test.ts`.
+The native controller test uses real loopback HTTP and the persisted gate to
+verify in-flight exclusion, second-human refusal, stale release rejection,
+failed-revoke pause, exact revoke-before-resume and terminal-replay recovery after
+restart. `pnpm tsx scripts/smoke-desktop-client.ts` renders the dedicated app with
+fixture native embeds, exercises explicit take/release and reload, and checks
+fresh OS absence of its own browser processes. Neither qualifies installed
+Remote View input or authenticated provider behavior.
+
+Plan0391 installed dedicated-client acceptance uses
+`AURACALL_INSTALLED_DESKTOP_ACCEPTANCE=1 pnpm tsx scripts/acceptance-installed-desktop-client.ts prepare`
+against the user-scoped installed runtime and explicit `remote-view-research`
+and `remote-view-writing` browser-profile configuration. It opens only blank
+local marker pages and leaves the browsers available after the launcher exits.
+Authenticate at the real `/desktops` ingress, view both marker pages, take
+control/type `research-391` and `writing-391`/release on each, and independently
+open Root desktop. Run the same command with `verify` to check both actual marker
+values through installed CDP; visual/root attestation remains separate. `cleanup`
+closes only exact retained owned browsers and checks fresh physical absence.
+Never rerun prepare while awaiting human input: it resets the marker pages.
+Unknown or retained human control prevents cleanup commands through the same gate.
+
+### Runtime-profile desktop rail
+
+Run `pnpm vitest run tests/browser/desktopRuntimeProfiles.test.ts tests/http.desktopClient.test.ts`
+for canonical Wake, shared-family placement, explicit configuration precedence,
+ownership refusal and operator authorization. `pnpm tsx scripts/smoke-desktop-client.ts`
+uses isolated provider-free Chrome and verifies compact rows, grouping persistence,
+SVG collapse, dormant Wake, and existing observe/control/release behavior. It
+prints fresh owned-process cleanup evidence. Installed catalog and served-byte
+readbacks qualify adoption separately from authenticated viewer interaction.
+
 - GPT-6 premium Power and downgrade protection: `pnpm vitest run tests/browser/modelSelection.test.ts tests/browser/thinkingTime.test.ts tests/browser/chatgptDeveloperAppLifecycle.test.ts tests/browser/browserModeExports.test.ts tests/browser/pageActions.test.ts`. Captured DOM fixtures cover checked GPT-6 recognition and available/unavailable Pro slot; source live selector-and-restore proof does not establish provider execution or lease-expiry acceptance.
 
 
@@ -3383,3 +3416,13 @@ Absolute-deadline regression: `pnpm vitest run tests/browser/chatgptAffinityExec
 includes new/existing conversation results at and just after the deadline without
 running timer callbacks. Success must be rejected, aggregate outcome remains
 unknown, and the existing registry ownership fence remains intact.
+
+
+### Required installed runtime surface
+
+Before package adoption, run `node dist/scripts/verify-runtime-contract.js <runtime-root>`
+to verify required /desktops HTML in an isolated temporary home with all background
+execution disabled. The user-runtime installer executes this gate before prefix
+replacement. Run it against the staged package as well, then verify dist byte parity,
+installed identity, live local routes and existing browser/configuration preservation.
+The route probe does not replace active-lane/PR/ancestry reconciliation.

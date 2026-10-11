@@ -1,0 +1,12 @@
+{
+  "sourceCommit": "cdb767f86942c57af03579604028ee5f2f647da5",
+  "humanInputVerifiedAt": "2026-10-09T17:48:08.588Z",
+  "verifiedMarkerValues": {
+    "research": "research-391",
+    "writing": "writing-391"
+  },
+  "phase": "human-input-verified",
+  "operatorReportedTextEntry": true,
+  "rootViewerAttestation": "pending",
+  "authenticatedPixelAttestation": "operator text entry reported; exact pixels not separately attested"
+}

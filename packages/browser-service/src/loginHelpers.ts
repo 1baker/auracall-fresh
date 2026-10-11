@@ -1,4 +1,4 @@
-import CDP from 'chrome-remote-interface';
+import CDP from './guardedCdp.js';
 import type { CookieParam } from './types.js';
 import { delay } from './utils.js';
 import { buildWslFirewallHint } from './chromeLifecycle.js';

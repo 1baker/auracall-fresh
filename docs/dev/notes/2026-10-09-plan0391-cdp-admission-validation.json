@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "scope": "Cross-process desktop automation admission at actual CDP transport; native controller UI not integrated",
+  "red": {
+    "test": "tests/browser/desktopCdpTransport.test.ts",
+    "change": "Use raw chrome-remote-interface instead of AuraCall guarded transport",
+    "result": "Page.reload resolved and emitted a wire command during human ownership instead of rejecting"
+  },
+  "green": {
+    "focused": "desktopControlGate and desktopCdpTransport: 2 passed",
+    "broader": "292 tests passed across 12 browser test files",
+    "lint": "Biome targeted transport/gate lint passed",
+    "typecheck": "pnpm typecheck passed"
+  },
+  "proved": [
+    "In-flight command retains display exclusion until settlement",
+    "Human control rejects generated domain command before WebSocket emission",
+    "Release resumes automation",
+    "Changed retained browser generation rejects old client",
+    "WebSocket target URL determines endpoint admission identity"
+  ],
+  "remaining": [
+    "Native control grant and revoke ordering",
+    "Dedicated native client integration",
+    "Installed acceptance",
+    "Explicit operator reconciliation for abandoned locks"
+  ],
+  "no_automatic_stale_lock_reaping": true
+}

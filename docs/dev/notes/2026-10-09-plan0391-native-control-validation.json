@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-09T03:18:05.034874+00:00",
+  "scope": "Native control source qualification; provider-free fixtures only",
+  "parent_commit": "6d20b000051ab34f423aa38b980f6e2549539d56",
+  "source_sha256": {
+    "src/browser/service/nativeDesktopControl.ts": "66e388d992f56eed1e0a205b1f9bad4e3073dc0b6669412bff5c5a1571820405",
+    "src/browser/service/desktopControlGate.ts": "32a8013afc8847a70a2d8d40eaf79113287fe7703928c1d625baf222915765e8",
+    "src/browser/service/remoteViewApplication.ts": "3c14db34d5d259af3b5041421b6af0ee1f0ec3779244a4269d03333675e1e7ae",
+    "src/http/desktopClientPage.ts": "af60c959d243649f2440aabb0c64ae4f450d5cfa5c581d08199be4fcebef43dc",
+    "src/http/responsesServer.ts": "5affc5b1f116a9aa8d00bc62cfc1278ee9bf7e508ab629f289df8f9058210242",
+    "tests/browser/nativeDesktopControl.test.ts": "026a3578c9a877dfa5e94038730ca3abf36f21607898a9d680736bcbc12faf85",
+    "tests/http.desktopClient.test.ts": "ae6a45c50367588f3e62e38230617aad295f2d748ffe5bf9cd6cbe1622f1613b",
+    "scripts/smoke-desktop-client.ts": "b401e78b16b40a597e90e922fd6707dd3eaf2a208cf87ef731696a1f75b69109"
+  },
+  "tests": {
+    "command": "pnpm vitest run tests/browser/nativeDesktopControl.test.ts tests/browser/remoteViewApplication.test.ts tests/browser/desktopControlGate.test.ts tests/browser/nativeDesktopCdp.test.ts tests/browser/nativeDesktopRuntime.test.ts tests/http.desktopClient.test.ts",
+    "passed": 9,
+    "files": 6
+  },
+  "typecheck": "passed",
+  "build": "passed (before final UI claim-confirmation wording; rendered final source passed)",
+  "targeted_lint": "passed",
+  "red_proof": {
+    "mutation": "Remove human gate acquisition from public native takeover",
+    "result": "test failed: takeover resolved while automation was in flight",
+    "restored": true
+  },
+  "rendered_smoke": {
+    "command": "pnpm tsx scripts/smoke-desktop-client.ts",
+    "checks": [
+      "native observe embed",
+      "explicit control",
+      "retained claim reload",
+      "failed release keeps claim",
+      "explicit release returns observe",
+      "two desktop navigation",
+      "durable selection",
+      "empty/unavailable states",
+      "independent root link"
+    ],
+    "page_errors": [],
+    "fresh_os_remaining_owned_processes": 0
+  },
+  "installed_acceptance": false,
+  "remaining": [
+    "Installed AuraCall consumer configuration",
+    "Actual native two-desktop Chrome placement and viewer/input acceptance",
+    "Whole-feature bounded review",
+    "Integration and ticket closure"
+  ],
+  "memory_disposition": "forbidden",
+  "memory_reason": "No explicit memory-write request"
+}

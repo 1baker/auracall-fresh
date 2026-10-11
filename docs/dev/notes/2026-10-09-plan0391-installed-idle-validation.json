@@ -1,0 +1,72 @@
+{
+  "startedAt": "2026-10-10T00:15:56.246Z",
+  "sourceCommit": "77030b33d279b1cc52f2e7fd994d4763ce6fd7be",
+  "scenario": "real installed wall-clock never-used control grants",
+  "desktops": [
+    {
+      "name": "research",
+      "timeoutSeconds": 120,
+      "automationExcludedInitially": true,
+      "initialState": "held",
+      "releasedAfterMs": 124840,
+      "terminalState": "released",
+      "automationAdmittedAfterRelease": true,
+      "freshObserveGrant": true,
+      "explicitRetakeAndRelease": true
+    },
+    {
+      "name": "writing",
+      "timeoutSeconds": 120,
+      "automationExcludedInitially": true,
+      "initialState": "held",
+      "releasedAfterMs": 124417,
+      "terminalState": "released",
+      "automationAdmittedAfterRelease": true,
+      "freshObserveGrant": true,
+      "explicitRetakeAndRelease": true
+    }
+  ],
+  "publicAuthenticatedViewer": "not qualified by this API-only check",
+  "providerPrompts": 0,
+  "finishedAt": "2026-10-10T00:17:59.468Z",
+  "result": "passed",
+  "automationCdpReadWhileHeld": {
+    "result": "rejected",
+    "message": "AuraCall automation is paused while a human controls this desktop."
+  },
+  "afterReleaseCdpReads": {
+    "result": "passed",
+    "markerValues": {
+      "research": "research-391",
+      "writing": "writing-391"
+    },
+    "browserBindingsUnchanged": true
+  },
+  "osReadback": {
+    "checked": 37,
+    "nativeComponents": 35,
+    "markerBrowsers": 2,
+    "allPreserved": true,
+    "createdBrowserProcesses": 0,
+    "retainedTaskBrowserProcesses": 0
+  },
+  "root": {
+    "nativeCaptureSucceeded": true,
+    "slot": 1,
+    "generation": 25,
+    "width": 1440,
+    "height": 900,
+    "sha256": "26e314c88dc960b06e42599c6efcc3a6e009f9c9bc0c4f25bc3567fad5a14a22",
+    "imageObservation": "black desktop background; no root viewer UI acceptance inferred",
+    "publicUnauthenticatedStatus": 401,
+    "signedInVisualAcceptance": "pending"
+  },
+  "remainingAcceptance": [
+    "actual input extends the idle deadline on the installed gateway",
+    "rendered client automatically switches to view-only and rejects input until explicit retake",
+    "signed-in independent root viewer"
+  ],
+  "memoryDisposition": "forbidden",
+  "privateEvidence": "~/.auracall/plan0391-inactivity-install",
+  "reproducer": "docs/dev/notes/2026-10-09-plan0391-installed-idle-acceptance.mjs"
+}
