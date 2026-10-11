@@ -1,9 +1,9 @@
 # Plan0404 — Demand-driven desktop pool
 
-State: OPEN
+State: CLOSED
 Owner: primary AuraCall desktop lane
 Spec status: approved; published as GitHub issue264.
-Lane: P87
+Lane: P89
 Branch: feat/issue264-desktop-pool
 Target: main
 Integration: merge
@@ -16,7 +16,7 @@ Named desktop placement and remembered assignments currently concentrate browser
 on Research. Profiles already appear in the rail and support Wake. Agent Browser
 provides primary-source demand allocation, wrap-around and guarded empty-capacity
 release patterns. Operator approved equivalent allocation plus rail Wake and
-redistribution. Source implements automatic Wake, growth, configured-capacity wrap-around, guarded shrink and qualified restart reconciliation. Final primary checks: 64 tests in19 files, typecheck, build and26 rendered rail checks pass. Standards and Spec review are recorded in desktop-pool-implementation/review.md. Integration, installed maximum-ten policy and redistribution remain pending.
+redistribution. Source implements automatic Wake, growth, configured-capacity wrap-around, guarded shrink and qualified restart reconciliation. Final primary checks: 64 tests in19 files, typecheck, build and26 rendered rail checks pass. Standards and Spec review are recorded in desktop-pool-implementation/review.md. PR270 integrated at6e7009727; exact compiled package is installed. Native policy maximum10 and application-managed scale-in are effective. Five original browsers occupy five desktops with one ready spare; all14 original routes and managed browser directories/executables are preserved. See desktop-pool-installed/acceptance.json. Lane registration is corrected to P89 because P87 already belongs to Plan0393.
 
 ## Problem Statement
 
@@ -108,3 +108,27 @@ these source facts are not installed AuraCall acceptance. Tracker configuration
 file is absent; use existing repository GitHub policy and repo plan authority
 when publishing approved tickets. Do not publish draft tickets before breakdown
 review required by the to-tickets skill.
+
+## Installed closeout | 2026-10-11
+
+Primary source tests64 across19 files, typecheck/build/scoped lint and26 rendered
+rail checks passed. Installed package matches590 compiled files from integrated
+source6e7009727. API reports automatic placement and six ready rail profiles
+backed by five exact native browsers. Runtime maximum10 is policy driven; current
+demand consumes five occupied desktops plus one spare. Four idle browsers moved
+sequentially through canonical Close/Wake with captured routes and zero visible
+drafts. wsl-chrome-3 remains unchanged on the first desktop, preserving its active
+chat and ten routes. All14 original routes remain available; one additional
+startup route is retained. No provider prompt or scheduler wake was created.
+
+Source fixtures prove excess-empty release and viewer/recovery exclusion; no
+installed idle release was needed because there is only one empty spare. Actual
+account pages and before/after screenshots are private evidence. Authenticated
+public viewer/input and active-chat TTL acceptance remain outside this plan.
+Gemini's close409 was reconciled by exact OS absence without resubmitting Close.
+The initial inspection helper nested native admission and was refused without
+effect; corrected helper uses canonical per-command admission.
+
+Catalog collision correction: published historical packets called this P87.
+Plan0393 already owns P87; current plan/catalog authority uses unused P89.
+Memory disposition: forbidden; no explicit user authorization for memory write.
