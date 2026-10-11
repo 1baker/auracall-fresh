@@ -1,0 +1,10 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-issue253-triage
+
+ ✓ tests/browser/chatgptAppComposer.test.ts (17 tests) 247ms
+
+ Test Files  1 passed (1)
+      Tests  17 passed (17)
+   Start at  17:54:27
+   Duration  3.13s (transform 1.64s, setup 174ms, import 2.25s, tests 247ms, environment 0ms)
+

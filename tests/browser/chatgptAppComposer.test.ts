@@ -5,6 +5,7 @@ import { clearDeveloperAppComposerForTest } from "../../src/browser/providers/ch
 import {
 	ensureChatgptEcosystemMention,
 	readChatgptEcosystemMention,
+	assertChatgptEcosystemMentionSelected,
 } from "../../src/browser/actions/chatgptEcosystemMention.js";
 
 const ui = vi.hoisted(() => ({
@@ -163,6 +164,33 @@ test("reads exact app identity from the captured rich composer and rejects multi
 });
 
 test.each([
+	{ path: "app://asdk_fixture", accepted: true },
+	{ path: "app://asdk_other", accepted: false },
+	{ path: "gpt://asdk_fixture", accepted: false },
+	{ path: "app://asdk_fixture/extra", accepted: false },
+	{ path: "", accepted: false },
+	{ path: "app://asdk_fixture\n", accepted: false },
+])("revalidates the captured modern app identity before Send: $path", async ({
+	path,
+	accepted,
+}) => {
+	const { editor, client } = capturedComposer();
+	editor.pills = [
+		{
+			textContent: "LitScout",
+			getAttribute: (name) =>
+				({ "app-mention-name": "litscout", "app-mention-path": path })[name] ?? null,
+		},
+	];
+	const pending = assertChatgptEcosystemMentionSelected(client as never, {
+		label: "LitScout",
+		acceptedPluginIds: ["asdk_fixture"],
+	});
+	if (accepted) await expect(pending).resolves.toBeUndefined();
+	else await expect(pending).rejects.toThrow("selection changed before Send");
+});
+
+test.each([
 	{
 		description: "Literature research with durable session provenance.",
 		duplicate: false,
@@ -237,9 +265,25 @@ test.each([
 			{
 				textContent: "LitScout",
 				getAttribute: (name) =>
-					({ "data-symbol": "ecosystemMention", "data-id": "plugin:asdk_fixture" })[name] ?? null,
+					({ "app-mention-name": "litscout", "app-mention-path": "app://asdk_fixture" })[name] ??
+					null,
 			},
 		];
+		const postReady = options.postSelector.split(", ").some((part: string) => {
+			const pillSelector = part.slice(part.lastIndexOf("] ") + 2);
+			const attrs = [...pillSelector.matchAll(/\[([\w-]+)(\^=|=)?(?:"([^"]*)")?\]/g)];
+			return (
+				attrs.length > 0 &&
+				attrs.every(([, name, op, value]) => {
+					const actual = editor.pills[0].getAttribute(name);
+					return (
+						actual !== null && (!op || (op === "^=" ? actual.startsWith(value) : actual === value))
+					);
+				})
+			);
+		});
+		if (!postReady)
+			return { ok: false, reason: `Post selector not found: ${options.postSelector}` };
 		return { ok: true, matchedLabel: node.innerText };
 	});
 	const insertText = vi.fn(async ({ text }: { text: string }) => {

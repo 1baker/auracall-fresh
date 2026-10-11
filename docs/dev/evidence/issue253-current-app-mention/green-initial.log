@@ -1,0 +1,11 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-issue253-triage
+
+ ✓ tests/browser/chatgptEcosystemMention.test.ts (7 tests) 46ms
+ ✓ tests/browser/chatgptAppComposer.test.ts (11 tests) 202ms
+
+ Test Files  2 passed (2)
+      Tests  18 passed (18)
+   Start at  17:49:31
+   Duration  4.23s (transform 3.32s, setup 162ms, import 4.28s, tests 248ms, environment 0ms)
+

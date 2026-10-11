@@ -1,4 +1,4 @@
-import { buildChatgptAppComposerLookup } from "../actions/chatgptComposer.js";
+import { buildChatgptAppComposerLookup, CHATGPT_APP_MENTION_SELECTOR } from "../actions/chatgptComposer.js";
 import type { DevToolsConnectionOptions } from "../../../packages/browser-service/src/types.js";
 import type { ResolvedUserConfig } from "../../config.js";
 import {
@@ -1188,7 +1188,7 @@ async function clearDeveloperAppComposer(client: ChromeClient): Promise<void> {
       const editor = ${buildChatgptAppComposerLookup()};
       if (!editor) return null;
       return !String(editor.innerText || '').trim()
-        && editor.querySelectorAll('[data-inline-selection-pill]').length === 0;
+        && editor.querySelectorAll(${JSON.stringify(CHATGPT_APP_MENTION_SELECTOR)}).length === 0;
     })()`,
 			returnByValue: true,
 		});

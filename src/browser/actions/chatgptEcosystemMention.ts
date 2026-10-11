@@ -1,6 +1,7 @@
 import {
 	buildChatgptAppComposerLookup,
 	CHATGPT_APP_COMPOSER_SELECTORS,
+	CHATGPT_APP_MENTION_SELECTOR,
 } from "./chatgptComposer.js";
 import { dismissOpenMenus, pressButton, waitForPredicate } from "../service/ui.js";
 import type { ChromeClient } from "../types.js";
@@ -26,14 +27,19 @@ export async function readChatgptEcosystemMention(
 		expression: `(() => {
       const editor = ${buildChatgptAppComposerLookup()};
       if (!editor) return null;
-      const pills = Array.from(editor.querySelectorAll('[data-inline-selection-pill]'));
-      const ecosystem = pills.filter((pill) => pill.getAttribute('data-symbol') === 'ecosystemMention');
-      const documents = pills.filter((pill) => pill.getAttribute('data-symbol') === 'documentReference');
-      if (ecosystem.length !== 1 || documents.length !== 0) return null;
-      const pill = ecosystem[0];
+      const pills = Array.from(editor.querySelectorAll(${JSON.stringify(CHATGPT_APP_MENTION_SELECTOR)}));
+      if (pills.length !== 1) return null;
+      const pill = pills[0];
+      const modernName = pill.getAttribute('app-mention-name');
+      const modernPath = pill.getAttribute('app-mention-path');
+      const modernMatch = modernPath?.match(new RegExp('^app://([a-zA-Z0-9_-]+)$'));
+      const modernId = modernMatch?.[0] === modernPath ? modernMatch?.[1] : null;
+      const modern = modernName !== null || modernPath !== null;
+      if (modern && (!modernName || !modernId)) return null;
+      if (!modern && pill.getAttribute('data-symbol') !== 'ecosystemMention') return null;
       return {
         label: String(pill.textContent || '').replace(/\\s+/g, ' ').trim() || null,
-        pluginId: pill.getAttribute('data-system-hint-type') || pill.getAttribute('data-id') || null,
+        pluginId: modernId || pill.getAttribute('data-system-hint-type') || pill.getAttribute('data-id') || null,
       };
     })()`,
 		returnByValue: true,
@@ -68,7 +74,7 @@ async function selectChatgptEcosystemMention(
       const editor = ${buildChatgptAppComposerLookup()};
       if (!editor) return false;
       const text = String(editor.innerText || '').trim();
-      const pills = editor.querySelectorAll('[data-inline-selection-pill]');
+      const pills = editor.querySelectorAll(${JSON.stringify(CHATGPT_APP_MENTION_SELECTOR)});
       const turns = document.querySelectorAll('[data-message-author-role="user"], [data-message-author-role="assistant"]');
       return text.length === 0 && pills.length === 0
         && (${JSON.stringify(requireFreshConversation)} ? turns.length === 0 : true);
@@ -123,9 +129,10 @@ async function selectChatgptEcosystemMention(
 		selector: '[data-auracall-app-mention-choice="true"]',
 		interactionStrategies: ["pointer"],
 		requireVisible: true,
-		postSelector: CHATGPT_APP_COMPOSER_SELECTORS.map(
-			(selector) => `${selector} [data-inline-selection-pill][data-symbol="ecosystemMention"]`,
-		).join(", "),
+		postSelector: CHATGPT_APP_COMPOSER_SELECTORS.flatMap((selector) => [
+			`${selector} [data-inline-selection-pill][data-symbol="ecosystemMention"]`,
+			`${selector} [app-mention-name][app-mention-path^="app://"]`,
+		]).join(", "),
 		timeoutMs: 8_000,
 	});
 	const mention = await readChatgptEcosystemMention(client);

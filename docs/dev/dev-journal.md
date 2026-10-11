@@ -53889,3 +53889,5 @@ PR284 native no-submit reaches mention insertion then fails old picker selector;
 Issue253 trigger observer proves picker opens with current app BUTTON markup; a same-name GPT arrives separately. Real-expression/public ensure regression catches exact legacy selector error. Source waits for unique current name+installed-description row; no-metadata and duplicates stop before option click. Native prompt unsent. Memory disposition: forbidden; no general memory write authorization.
 
 Issue253 PR285 picker integrated/installed b68bec240;591file parity and installed config/description boundary pass. Native no-submit with trigger observer handed to LitScout; no original prompt. Browser53930 absent before promotion, unknown exit actor. Memory disposition: forbidden; no general memory write authorization.
+
+Issue253 PR285 native app click verified exact URI by trigger observer; old inline-pill post-selector then fails. Current modern mention semantic attrs supported in readiness/readback and clear/pristine guards; captured post-condition red2.75s. Original prompt remains unsent. Memory disposition: forbidden; no general memory write authorization.

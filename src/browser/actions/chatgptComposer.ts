@@ -7,6 +7,9 @@ export const CHATGPT_APP_COMPOSER_SELECTORS = [
 	CHATGPT_RICH_PROMPT_INPUT_SELECTOR,
 ];
 
+export const CHATGPT_APP_MENTION_SELECTOR =
+	"[data-inline-selection-pill], [app-mention-name], [app-mention-path]";
+
 /** Resolve exactly one visible, enabled composer, excluding modal editors. */
 export function buildChatgptAppComposerLookup(): string {
 	return `(() => {
