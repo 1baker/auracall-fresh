@@ -1,0 +1,175 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-launch-plan
+
+ ✓ tests/browser/browserLaunchPlanStructure.test.ts (4 tests) 90ms
+ ✓ tests/browser/browserLaunchPlan.test.ts (12 tests) 70ms
+ ❯ tests/runtime.configuredExecutor.test.ts (24 tests | 2 failed) 279ms
+     ✓ binds explicit ChatGPT runtime provenance instead of the default Grok managed profile 14ms
+     ✓ uses the launch plan for 'canonical source fields' in stored execution and affinity configuration 6ms
+     ✓ uses the launch plan for 'legacy source aliases' in stored execution and affinity configuration 3ms
+     ✓ uses the launch plan for 'browser-profile source fallback' in stored execution and affinity configuration 3ms
+     ✓ executes a Grok browser-backed step from runtime-profile config and returns response output 3ms
+     ✓ spills large API prompts to a browser attachment without truncating caller input 11ms
+     ✓ extracts one bounded local shell action request from a JSON tool envelope 3ms
+     ✓ enforces opt-in AuraCall step output contract for browser-backed steps 4ms
+     × executes a Gemini browser-backed step through the Gemini web executor path 65ms
+     ✓ publishes transient Gemini live thinking state while the browser-backed executor is in flight 61ms
+     ✓ publishes transient Grok live thinking state while the browser-backed executor is in flight 56ms
+     ✓ persists ChatGPT passive observations from browser execution metadata 5ms
+     ✓ converts ChatGPT passive runtime evidence into lease heartbeats and live service state 3ms
+     × reattaches recovered stranded ChatGPT steps to the submitted tab instead of replaying the prompt 8ms
+     ✓ replays recovered ChatGPT steps when only pre-submit project evidence was recorded 3ms
+     ✓ resolves ChatGPT semantic agent model selectors into browser model and thinking controls 3ms
+     ✓ resolves agents from an effective registry-backed config provider 3ms
+     ✓ materializes declared browser response artifacts into step and shared state 8ms
+     ✓ fails declared browser response artifact runs when only status text is returned 4ms
+     ✓ retries once in the same ChatGPT conversation when a required artifact reply is status-only 2ms
+     ✓ keeps exact ChatGPT agent model pins ahead of semantic selector defaults 3ms
+     ✓ persists Gemini passive observations from browser execution metadata 3ms
+     ✓ persists Grok passive observations from browser execution metadata 3ms
+     ✓ fails browser-backed steps that complete without assistant output 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/runtime.configuredExecutor.test.ts > configured stored-step executor > executes a Gemini browser-backed step through the Gemini web executor path
+AssertionError: expected { …(9) } to match object { …(2) }
+(36 matching properties omitted from actual)
+
+- Expected
++ Received
+
+@@ -3,11 +3,11 @@
+      "auracallProfileName": "default",
+      "bootstrapCookiePath": "/tmp/source/Cookies",
+      "chromeCookiePath": "/tmp/source/Cookies",
+      "chromeProfile": "Default",
+      "desiredModel": "Gemini 3 Pro",
+-     "inlineCookiesSource": "scoped:cookies.json",
++     "inlineCookiesSource": null,
+      "modelStrategy": "select",
+      "target": "gemini",
+    },
+    "prompt": "Reply exactly with AURACALL_GEMINI_TEAM_SMOKE_OK",
+  }
+
+ ❯ tests/runtime.configuredExecutor.test.ts:843:57
+    841|     expect(runGeminiBrowserModeImpl).toHaveBeenCalledTimes(1);
+    842|     expect(runBrowserModeImpl).not.toHaveBeenCalled();
+    843|     expect(runGeminiBrowserModeImpl.mock.calls[0]?.[0]).toMatchObject({
+       |                                                         ^
+    844|       prompt: 'Reply exactly with AURACALL_GEMINI_TEAM_SMOKE_OK',
+    845|       config: {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/runtime.configuredExecutor.test.ts > configured stored-step executor > reattaches recovered stranded ChatGPT steps to the submitted tab instead of replaying the prompt
+AssertionError: expected "vi.fn()" to be called with arguments: [ ObjectContaining{…}, …(3) ]
+
+Received: 
+
+  1st vi.fn() call:
+
+  [
+-   ObjectContaining {
++   {
++     "auracallProfileName": "default",
++     "browserProfileId": "default",
+      "chromeHost": "127.0.0.1",
+      "chromePort": 45012,
+      "chromeTargetId": "target-restart",
+      "conversationId": "recovered-chat",
++     "runtimeProfileId": "default",
++     "selectedAgentId": "chatgpt-recovered-agent",
+      "tabUrl": "https://chatgpt.com/c/recovered-chat",
++     "userDataDir": "/tmp/auracall-vitest-8gwA1a/browser-profiles/default/chatgpt",
+    },
+-   ObjectContaining {
+-     "manualLoginProfileDir": "/tmp/auracall/browser-profiles/default/chatgpt",
++   {
++     "allowCookieErrors": true,
++     "auracallProfileName": "default",
++     "bootstrapCookiePath": null,
++     "chatgptMode": "chat",
++     "chatgptToolApproval": "manual",
++     "chatgptUrl": undefined,
++     "chromeCookiePath": "/home/ecochran76/.config/google-chrome/Default/Cookies",
++     "chromePath": "/usr/bin/google-chrome",
++     "chromeProfile": "Default",
++     "composerTool": null,
++     "conversationId": null,
++     "cookieSync": false,
++     "deepResearchPlanAction": undefined,
++     "desiredModel": null,
++     "display": ":0.0",
++     "geminiUrl": undefined,
++     "grokUrl": undefined,
++     "hideWindow": false,
++     "inlineCookies": undefined,
++     "inlineCookiesSource": null,
++     "keepBrowser": false,
++     "managedProfileRoot": "/tmp/auracall-vitest-8gwA1a/browser-profiles",
++     "manualLogin": true,
++     "manualLoginProfileDir": "/tmp/auracall-vitest-8gwA1a/browser-profiles/default/chatgpt",
++     "manualLoginWaitForSession": false,
++     "modelStrategy": "ignore",
++     "projectId": null,
++     "providerSessionAuthorization": {
++       "authority": {
++         "assertProof": [Function assertProof],
++         "resolveExpectation": [Function resolveExpectation],
++         "validateProof": [Function validateProof],
++         "verify": [Function verify],
++       },
++       "context": {
++         "auracallRuntimeProfile": "default",
++         "browserProcessId": null,
++         "browserProfile": "default",
++         "browserTargetId": null,
++         "managedBrowserProfile": "/tmp/auracall-vitest-8gwA1a/browser-profiles/default/chatgpt",
++         "providerId": "chatgpt",
++         "sourceBrowserProfile": "Default",
++       },
++       "expectation": {
++         "configuredIdentity": null,
++         "configuredServiceAccountId": null,
++         "providerId": "chatgpt",
++         "source": null,
++       },
++     },
++     "selectedAgentId": "chatgpt-recovered-agent",
++     "tabConcurrencyMode": undefined,
+      "target": "chatgpt",
++     "thinkingTime": undefined,
++     "url": undefined,
++     "workModel": null,
+    },
+-   Any<Function>,
+-   ObjectContaining {
+-     "promptPreview": StringContaining "Reply exactly with AURACALL_REATTACHED_OK",
+-     "waitForAssistantResponse": Any<Function>,
++   [Function log],
++   {
++     "promptPreview": "Reply exactly with AURACALL_REATTACHED_OK",
++     "waitForAssistantResponse": [Function waitForAssistantResponse],
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ tests/runtime.configuredExecutor.test.ts:1542:38
+    1540| 
+    1541|     expect(runBrowserModeImpl).not.toHaveBeenCalled();
+    1542|     expect(resumeBrowserSessionImpl).toHaveBeenCalledWith(
+       |                                      ^
+    1543|       expect.objectContaining({
+    1544|         chromePort: 45012,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed | 2 passed (3)
+      Tests  2 failed | 38 passed (40)
+   Start at  20:58:16
+   Duration  10.09s (transform 8.64s, setup 1.29s, import 11.38s, tests 439ms, environment 2ms)
+

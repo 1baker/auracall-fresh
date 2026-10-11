@@ -25,7 +25,7 @@ The provider-specific account, target, model, and workflow defaults selected for
 _Avoid_: Service binding, provider config
 
 **Browser launch plan**:
-The fully resolved, immutable description of one browser launch, including its browser profile, managed browser profile, provider binding, and launch policy.
+The fully resolved, immutable description of one browser launch, including its browser profile, managed browser profile, provider binding, and launch policy. For user-config launch fields, explicit runtime browser overrides precede browser-profile settings and configured global defaults. Source identity and opt-in copying remain separate from managed browser identity.
 _Avoid_: Browser config, launch profile
 
 **Provider prompt**:

@@ -6,6 +6,228 @@ import { createProviderSessionAuthorization } from '../../src/browser/providers/
 import { resolveBrowserLaunchPlan } from '../../src/browser/service/browserLaunchPlan.js';
 
 describe('resolveBrowserLaunchPlan', () => {
+  test('gives explicit runtime launch overrides priority over browser-profile and global defaults', () => {
+    const config = {
+      auracallProfile: 'default',
+      browser: {
+        target: 'grok',
+        chromePath: '/global/chrome',
+        chromeProfile: 'Global Source',
+        chromeCookiePath: '/global/Cookies',
+        bootstrapCookiePath: '/global/bootstrap',
+        display: ':71',
+        managedProfileRoot: '/global/managed',
+        manualLoginProfileDir: '/global/managed/default/grok',
+      },
+      runtimeProfiles: {
+        default: { browserProfile: 'default', defaultService: 'grok' },
+        selected: {
+          browserProfile: 'selected-browser',
+          defaultService: 'chatgpt',
+          browser: {
+            chromePath: '/runtime/chrome',
+            sourceProfilePath: '/runtime/source',
+            sourceProfileName: 'Runtime Source',
+            sourceCookiePath: '/runtime/Cookies',
+            bootstrapCookiePath: '/runtime/bootstrap',
+            display: ':72',
+            managedProfileRoot: '/runtime/managed',
+          },
+        },
+      },
+      browserProfiles: {
+        'selected-browser': {
+          chromePath: '/browser/chrome',
+          sourceProfilePath: '/browser/source',
+          sourceProfileName: 'Browser Source',
+          sourceCookiePath: '/browser/Cookies',
+          bootstrapCookiePath: '/browser/bootstrap',
+          display: ':73',
+          managedProfileRoot: '/browser/managed',
+        },
+      },
+    };
+    const before = structuredClone(config);
+    const plan = resolveBrowserLaunchPlan({
+      source: { kind: 'user-config', config: config as never },
+      intent: {
+        provider: 'chatgpt',
+        runtimeProfileId: 'selected',
+        browserProfileId: 'selected-browser',
+      },
+    });
+    expect(plan.launchPolicy).toMatchObject({
+      chromePath: '/runtime/chrome',
+      chromeProfile: 'Runtime Source',
+      chromeCookiePath: '/runtime/Cookies',
+      bootstrapCookiePath: '/runtime/bootstrap',
+      display: ':72',
+      managedProfileRoot: '/runtime/managed',
+    });
+    expect(plan.sourceBrowserProfile).toEqual({
+      rootPath: '/runtime/source',
+      name: 'Runtime Source',
+      cookiePath: null,
+      bootstrapCookiePath: null,
+    });
+    expect(plan.managedBrowserProfile.directory).toBe('/runtime/managed/selected-browser/chatgpt');
+    expect(config).toEqual(before);
+  });
+
+  test.each([
+    {
+      label: 'browser settings after blank runtime values',
+      browser: {
+        chromePath: '/browser/chrome',
+        sourceProfileName: 'Browser Source',
+        managedProfileRoot: '/browser/managed',
+      },
+      expected: {
+        chromePath: '/browser/chrome',
+        chromeProfile: 'Browser Source',
+        managedProfileRoot: '/browser/managed',
+      },
+    },
+    {
+      label: 'global defaults after blank runtime and selected browser settings',
+      browser: { chromePath: ' ', sourceProfileName: '', managedProfileRoot: ' ' },
+      expected: {
+        chromePath: '/global/chrome',
+        chromeProfile: 'Global Source',
+        managedProfileRoot: '/global/managed',
+      },
+    },
+  ])('uses $label while honoring explicit browser selection', ({ browser, expected }) => {
+    const plan = resolveBrowserLaunchPlan({
+      source: {
+        kind: 'user-config',
+        config: {
+          auracallProfile: 'default',
+          browser: {
+            target: 'grok',
+            chromePath: '/global/chrome',
+            chromeProfile: 'Global Source',
+            managedProfileRoot: '/global/managed',
+            manualLoginProfileDir: '/global/managed/default/grok',
+          },
+          runtimeProfiles: {
+            default: { defaultService: 'grok' },
+            selected: {
+              browserProfile: 'ignored-browser',
+              browser: { chromePath: ' ', sourceProfileName: ' ', managedProfileRoot: '' },
+            },
+          },
+          browserProfiles: {
+            'ignored-browser': {
+              chromePath: '/ignored/chrome',
+              sourceProfileName: 'Ignored Source',
+            },
+            explicit: browser,
+          },
+        } as never,
+      },
+      intent: { provider: 'chatgpt', runtimeProfileId: 'selected', browserProfileId: 'explicit' },
+    });
+    expect(plan.launchPolicy).toMatchObject(expected);
+    expect(plan.selection.browserProfileId).toBe('explicit');
+    expect(plan.managedBrowserProfile.directory).not.toBe('/global/managed/default/grok');
+  });
+
+  test('retains an explicit runtime managed directory instead of a stale global provider directory', () => {
+    const plan = resolveBrowserLaunchPlan({
+      source: {
+        kind: 'user-config',
+        config: {
+          auracallProfile: 'default',
+          browser: { target: 'grok', manualLoginProfileDir: '/stale/grok' },
+          runtimeProfiles: {
+            selected: {
+              browserProfile: 'work',
+              browser: { manualLoginProfileDir: '/explicit/runtime/chatgpt' },
+            },
+          },
+        } as never,
+      },
+      intent: { provider: 'chatgpt', runtimeProfileId: 'selected' },
+    });
+    expect(plan.managedBrowserProfile.directory).toBe('/explicit/runtime/chatgpt');
+  });
+
+  test.each([
+    false,
+    true,
+  ])('copies the selected source cookies only with runtime opt-in %s', async (cookieSync) => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), 'auracall-runtime-source-'));
+    try {
+      const selectedCookie = path.join(root, 'runtime-Cookies');
+      const otherCookie = path.join(root, 'browser-Cookies');
+      await fs.writeFile(selectedCookie, 'synthetic runtime cookies');
+      await fs.writeFile(otherCookie, 'synthetic browser cookies');
+      const plan = resolveBrowserLaunchPlan({
+        source: {
+          kind: 'user-config',
+          config: {
+            browser: { cookieSync: !cookieSync, managedProfileRoot: root },
+            runtimeProfiles: {
+              selected: {
+                browserProfile: 'work',
+                browser: { cookieSync, sourceCookiePath: selectedCookie },
+              },
+            },
+            browserProfiles: { work: { cookieSync: !cookieSync, sourceCookiePath: otherCookie } },
+          } as never,
+        },
+        intent: { provider: 'chatgpt', runtimeProfileId: 'selected' },
+      });
+      expect(plan.launchPolicy.cookieSync).toBe(cookieSync);
+      expect(plan.sourceBrowserProfile.cookiePath).toBe(cookieSync ? selectedCookie : null);
+      expect(plan.sourceBrowserProfile.bootstrapCookiePath).toBe(
+        cookieSync ? selectedCookie : null,
+      );
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  });
+
+  test('derives cookies from the selected source root and honors a separately requested bootstrap', async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), 'auracall-source-root-'));
+    try {
+      const sourceRoot = path.join(root, 'source');
+      const cookiePath = path.join(sourceRoot, 'Runtime Source', 'Network', 'Cookies');
+      await fs.mkdir(path.dirname(cookiePath), { recursive: true });
+      await fs.writeFile(cookiePath, 'synthetic cookies');
+      const resolve = (cookieSync: boolean, explicitBootstrap: boolean) => resolveBrowserLaunchPlan({
+        source: { kind: 'user-config', config: {
+          browser: { managedProfileRoot: root },
+          runtimeProfiles: { selected: { browserProfile: 'work', browser: {
+            sourceProfilePath: sourceRoot, sourceProfileName: 'Runtime Source', cookieSync,
+            ...(explicitBootstrap ? { bootstrapCookiePath: cookiePath } : {}),
+          } } },
+          browserProfiles: { work: { sourceProfilePath: '/ignored/source', sourceProfileName: 'Ignored Source' } },
+        } as never },
+        intent: { provider: 'chatgpt', runtimeProfileId: 'selected' },
+      });
+      expect(resolve(true, false).sourceBrowserProfile).toEqual({
+        rootPath: sourceRoot, name: 'Runtime Source', cookiePath, bootstrapCookiePath: cookiePath,
+      });
+      expect(resolve(false, true).sourceBrowserProfile).toEqual({
+        rootPath: sourceRoot, name: 'Runtime Source', cookiePath: null, bootstrapCookiePath: cookiePath,
+      });
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  });
+
+  test('preserves an explicit provider binding manual-login preference during default resolution', () => {
+    const plan = resolveBrowserLaunchPlan({
+      source: { kind: 'user-config', config: {
+        runtimeProfiles: { selected: { services: { chatgpt: { manualLogin: false } } } },
+      } as never },
+      intent: { provider: 'chatgpt', runtimeProfileId: 'selected' },
+    });
+    expect(plan.launchPolicy.manualLogin).toBe(false);
+  });
+
   test('returns an immutable browser launch plan without mutating user configuration', () => {
     const config = {
       auracallProfile: 'work',

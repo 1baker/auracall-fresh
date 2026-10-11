@@ -81,4 +81,6 @@ Global Source baseline. This is discovery evidence, not a repaired defect. No
 precedence migration was approved or implemented. Installed/live acceptance and
 Issue226 closure remain separate from this completed characterization packet.
 
-Delivery: [PR260](https://github.com/ecochran76/auracall/pull/260), open for integration. Source packet and characterization complete; merge and installed adoption are separate.
+Delivery: [PR260](https://github.com/ecochran76/auracall/pull/260), merged at 813651d951c6560b3d0c74cb370a45db618239bd. Source packet and characterization complete; installed adoption is separate.
+
+Successor: [Plan0403](0403-2026-10-10-runtime-launch-precedence.md) implements the subsequently accepted runtime > browser > global policy. The characterization receipts above describe the original baseline.

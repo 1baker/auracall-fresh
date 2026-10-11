@@ -4487,3 +4487,10 @@ See [docs/dev/browser-service-upgrade-backlog.md](docs/dev/browser-service-upgra
 completed provider-free. Convergence is parked: every proposed field has a known
 precedence/normalization difference, and managed directory already consumes the
 plan. A future migration needs an explicit precedence contract; no runtime change.
+
+## Plan0403 | Agreed browser launch precedence
+
+[Plan0403](docs/dev/plans/0403-2026-10-10-runtime-launch-precedence.md) implements the
+operator's runtime > browser profile > global decision following Plan0402. The
+launch plan owns resolution and stored execution consumes it. Provider-free source
+acceptance is separate from source integration and installed/live adoption.

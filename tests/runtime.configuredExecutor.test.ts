@@ -133,7 +133,7 @@ describe('configured stored-step executor', () => {
       },
       expectedSource: 'Runtime Legacy',
       expectedCookie: '/runtime/legacy/Cookies',
-      expectedAuthoritySource: 'Browser Source',
+      expectedAuthoritySource: 'Runtime Legacy',
     },
     {
       label: 'browser-profile source fallback',
@@ -142,7 +142,7 @@ describe('configured stored-step executor', () => {
       expectedCookie: '/browser/Cookies',
       expectedAuthoritySource: 'Browser Source',
     },
-  ])('preserves $label when the browser launch plan selects different defaults', async ({
+  ])('uses the launch plan for $label in stored execution and affinity configuration', async ({
     sourceFields,
     expectedSource,
     expectedCookie,
@@ -227,16 +227,23 @@ describe('configured stored-step executor', () => {
       bootstrapCookiePath: '/runtime/bootstrap',
       display: ':72',
       managedProfileRoot: '/runtime/managed',
-      manualLoginProfileDir: '/browser/managed/selected-browser/chatgpt',
+      manualLoginProfileDir: '/runtime/managed/selected-browser/chatgpt',
       providerSessionAuthorization: {
         context: {
           providerId: 'chatgpt',
           auracallRuntimeProfile: 'selected',
           browserProfile: 'selected-browser',
           sourceBrowserProfile: expectedAuthoritySource,
-          managedBrowserProfile: '/browser/managed/selected-browser/chatgpt',
+          managedBrowserProfile: '/runtime/managed/selected-browser/chatgpt',
         },
       },
+    });
+    expect(options?.tabAffinityUserConfig?.browser).toMatchObject({
+      chromePath: '/runtime/chrome', chromeProfile: expectedSource,
+      chromeCookiePath: expectedCookie, bootstrapCookiePath: '/runtime/bootstrap',
+      display: ':72', managedProfileRoot: '/runtime/managed',
+      manualLoginProfileDir: '/runtime/managed/selected-browser/chatgpt',
+      cookieSync: false,
     });
     const plan = resolveBrowserLaunchPlan({
       source: { kind: 'user-config', config: options?.tabAffinityUserConfig as never },
@@ -248,16 +255,16 @@ describe('configured stored-step executor', () => {
       },
     });
     expect(plan.launchPolicy).toMatchObject({
-      chromePath: '/browser/chrome',
-      chromeProfile: 'Global Source',
-      chromeCookiePath: '/browser/Cookies',
-      bootstrapCookiePath: '/browser/bootstrap',
-      display: ':73',
-      managedProfileRoot: '/browser/managed',
+      chromePath: '/runtime/chrome',
+      chromeProfile: expectedSource,
+      chromeCookiePath: expectedCookie,
+      bootstrapCookiePath: '/runtime/bootstrap',
+      display: ':72',
+      managedProfileRoot: '/runtime/managed',
     });
     expect(plan.sourceBrowserProfile).toEqual({
       rootPath: '/browser/source',
-      name: 'Global Source',
+      name: expectedSource,
       cookiePath: null,
       bootstrapCookiePath: null,
     });

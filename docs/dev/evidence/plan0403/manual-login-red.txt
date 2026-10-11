@@ -1,0 +1,51 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-launch-plan
+
+ ❯ tests/browser/browserLaunchPlan.test.ts (19 tests | 1 failed | 18 skipped) 55ms
+     ↓ gives explicit runtime launch overrides priority over browser-profile and global defaults
+     ↓ uses 'browser settings after blank runtime …' while honoring explicit browser selection
+     ↓ uses 'global defaults after blank runtime a…' while honoring explicit browser selection
+     ↓ retains an explicit runtime managed directory instead of a stale global provider directory
+     ↓ copies the selected source cookies only with runtime opt-in false
+     ↓ copies the selected source cookies only with runtime opt-in true
+     ↓ derives cookies from the selected source root and honors a separately requested bootstrap
+     × preserves an explicit provider binding manual-login preference during default resolution 42ms
+     ↓ returns an immutable browser launch plan without mutating user configuration
+     ↓ resolves explicit AuraCall runtime and browser profile intent without caller-side merging
+     ↓ does not let stale flattened browser fields override an explicitly selected browser profile
+     ↓ resolves session provider intent into the same managed browser launch plan
+     ↓ keeps runtime provider-session authorization outside the immutable launch snapshot
+     ↓ binds the selected session provider to its resolved launch URL
+     ↓ uses the selected AuraCall runtime profile default and deep-freezes nested arrays
+     ↓ produces field-for-field equivalent plans for equivalent user and session sources
+     ↓ selects the active signed-in managed browser subprofile without changing the configured profile
+     ↓ does not expose a source browser profile for copying unless cookie sync is enabled
+     ↓ preserves browser launch validation errors at the public seam
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/browser/browserLaunchPlan.test.ts > resolveBrowserLaunchPlan > preserves an explicit provider binding manual-login preference during default resolution
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/browser/browserLaunchPlan.test.ts:228:43
+    226|       intent: { provider: 'chatgpt', runtimeProfileId: 'selected' },
+    227|     });
+    228|     expect(plan.launchPolicy.manualLogin).toBe(false);
+       |                                           ^
+    229|   });
+    230| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 18 skipped (19)
+   Start at  21:07:40
+   Duration  2.97s (transform 1.82s, setup 232ms, import 2.13s, tests 55ms, environment 0ms)
+
