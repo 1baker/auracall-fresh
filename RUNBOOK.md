@@ -22023,3 +22023,12 @@ fallback expose incompatible precedence for all proposed projected fields. Prese
 current behavior; park the refactor under the stopping rule, with retained public
 fixtures and field map. Review and PR delivery are separate from integration and
 installed/live adoption. Memory forbidden; no durable-memory update requested.
+
+## Turn 635 | 2026-10-10
+
+Plan0403 follows operator's agreed launch precedence after PR260 merge813651d95.
+Retained public red/green fixtures for precedence, affinity/authorization alignment,
+explicit runtime directory and cookie opt-in. Resolver owns canonical/legacy fields;
+stored executor consumes one projection. Final focused/adjacent207 tests pass.
+No provider/installed/live changes. Source review/PR and integration remain distinct.
+Memory forbidden; no durable-memory update requested.

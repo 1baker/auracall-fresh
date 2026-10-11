@@ -24469,3 +24469,13 @@ mutable authorization has its own source-name provenance. Characterize both publ
 seams with conflicting literal fixtures before replacing raw options with resolved
 policy. Plan0402 parks convergence under the preserve-behavior decision; production
 code is unchanged. See docs/dev/evidence/plan0402/characterization.md.
+
+## 2026-10-10 | Own launch precedence and cookie authority in the launch plan
+
+Plan0403 resolves runtime browser overrides before browser-profile and configured
+root defaults, then normalizes once. Stored launch options, affinity config and
+source authorization share that plan, deleting the independent executor chains.
+Raw user-config resolution must apply the manual-login default before binding an
+explicit service managed directory; otherwise scoped cookies and reattachment
+lose custody. A derived profile cookie path is not an explicit bootstrap request:
+respect cookieSync, including runtime false. Public regressions retain both risks.

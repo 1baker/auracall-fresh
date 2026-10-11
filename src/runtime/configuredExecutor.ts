@@ -796,12 +796,12 @@ export function createConfiguredStoredStepExecutor(
     if (service !== 'chatgpt' && service !== 'gemini' && service !== 'grok') {
       throw new Error(`Stored team execution requires a browser-capable service; step ${context.step.id} resolved ${service ?? 'none'}.`);
     }
-    const affinityUserConfig = resolveRuntimeProfileUserConfig(executionConfig, {
+    const affinityBaseConfig = resolveRuntimeProfileUserConfig(executionConfig, {
       runtimeProfileId: runtimeSelection.runtimeProfileId,
       provider: service,
     }) as ResolvedUserConfig;
     const browserLaunchPlan = resolveBrowserLaunchPlan({
-      source: { kind: 'user-config', config: affinityUserConfig },
+      source: { kind: 'user-config', config: executionConfig as ResolvedUserConfig },
       intent: {
         provider: service,
         runtimeProfileId: runtimeSelection.runtimeProfileId,
@@ -809,6 +809,21 @@ export function createConfiguredStoredStepExecutor(
         agentId: context.step.agentId,
       },
     });
+
+    const launchOptions = {
+      chromePath: browserLaunchPlan.launchPolicy.chromePath ?? undefined,
+      chromeProfile: browserLaunchPlan.sourceBrowserProfile.name ?? undefined,
+      chromeCookiePath: browserLaunchPlan.launchPolicy.chromeCookiePath ?? undefined,
+      bootstrapCookiePath: browserLaunchPlan.launchPolicy.bootstrapCookiePath ?? undefined,
+      display: browserLaunchPlan.launchPolicy.display ?? undefined,
+      managedProfileRoot: browserLaunchPlan.managedBrowserProfile.root,
+      manualLoginProfileDir: browserLaunchPlan.managedBrowserProfile.directory,
+      cookieSync: browserLaunchPlan.launchPolicy.cookieSync,
+    };
+    const affinityUserConfig: ResolvedUserConfig = {
+      ...affinityBaseConfig,
+      browser: { ...affinityBaseConfig.browser, ...launchOptions },
+    };
 
     const runtimeServiceConfig = readRuntimeServiceConfig(runtimeProfile, service);
     const globalServiceConfig = readGlobalServiceConfig(executionConfig, service);
@@ -932,11 +947,7 @@ export function createConfiguredStoredStepExecutor(
       providerId: service,
       auracallRuntimeProfile: runtimeSelection.runtimeProfileId,
       browserProfile: runtimeSelection.browserProfileId,
-      sourceBrowserProfile:
-        asNonEmptyString(runtimeBrowserConfig?.sourceProfileName) ??
-        asNonEmptyString(browserProfileConfig?.sourceProfileName) ??
-        asNonEmptyString(browserConfigRecord?.chromeProfile) ??
-        null,
+      sourceBrowserProfile: browserLaunchPlan.sourceBrowserProfile.name,
       managedBrowserProfile: manualLoginProfileDir,
       browserProcessId: null,
       browserTargetId: null,
@@ -1096,40 +1107,12 @@ export function createConfiguredStoredStepExecutor(
           asBoolean(browserConfigRecord?.hideWindow) ??
           false,
         manualLogin: true,
-        manualLoginProfileDir,
         chatgptMode: service === 'chatgpt' ? chatgptMode : undefined,
         chatgptToolApproval: service === 'chatgpt' ? chatgptToolApproval : undefined,
         workModel: service === 'chatgpt' ? workModel : null,
-        chromePath:
-          asNonEmptyString(runtimeBrowserConfig?.chromePath) ??
-          asNonEmptyString(browserProfileConfig?.chromePath) ??
-          asNonEmptyString(browserConfigRecord?.chromePath),
-        chromeProfile:
-          asNonEmptyString(runtimeBrowserConfig?.sourceProfileName) ??
-          asNonEmptyString(runtimeBrowserConfig?.chromeProfile) ??
-          asNonEmptyString(browserProfileConfig?.sourceProfileName) ??
-          asNonEmptyString(browserProfileConfig?.chromeProfile) ??
-          asNonEmptyString(browserConfigRecord?.chromeProfile),
-        chromeCookiePath:
-          asNonEmptyString(runtimeBrowserConfig?.sourceCookiePath) ??
-          asNonEmptyString(runtimeBrowserConfig?.chromeCookiePath) ??
-          asNonEmptyString(browserProfileConfig?.sourceCookiePath) ??
-          asNonEmptyString(browserProfileConfig?.chromeCookiePath) ??
-          asNonEmptyString(browserConfigRecord?.chromeCookiePath),
-        bootstrapCookiePath:
-          asNonEmptyString(runtimeBrowserConfig?.bootstrapCookiePath) ??
-          asNonEmptyString(browserProfileConfig?.bootstrapCookiePath) ??
-          asNonEmptyString(browserConfigRecord?.bootstrapCookiePath),
+        ...launchOptions,
         inlineCookies: inlineCookies?.cookies,
         inlineCookiesSource: inlineCookies?.source ?? null,
-        display:
-          asNonEmptyString(runtimeBrowserConfig?.display) ??
-          asNonEmptyString(browserProfileConfig?.display) ??
-          asNonEmptyString(browserConfigRecord?.display),
-        managedProfileRoot:
-          asNonEmptyString(runtimeBrowserConfig?.managedProfileRoot) ??
-          asNonEmptyString(browserProfileConfig?.managedProfileRoot) ??
-          asNonEmptyString(browserConfigRecord?.managedProfileRoot),
         allowCookieErrors: true,
         manualLoginWaitForSession: false,
         thinkingTime: thinkingTime ?? undefined,

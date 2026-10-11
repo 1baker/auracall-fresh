@@ -1,0 +1,52 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-launch-plan
+
+ ❯ tests/browser/browserLaunchPlan.test.ts (12 tests | 1 failed | 11 skipped) 16ms
+     × gives explicit runtime launch overrides priority over browser-profile and global defaults 14ms
+     ↓ returns an immutable browser launch plan without mutating user configuration
+     ↓ resolves explicit AuraCall runtime and browser profile intent without caller-side merging
+     ↓ does not let stale flattened browser fields override an explicitly selected browser profile
+     ↓ resolves session provider intent into the same managed browser launch plan
+     ↓ keeps runtime provider-session authorization outside the immutable launch snapshot
+     ↓ binds the selected session provider to its resolved launch URL
+     ↓ uses the selected AuraCall runtime profile default and deep-freezes nested arrays
+     ↓ produces field-for-field equivalent plans for equivalent user and session sources
+     ↓ selects the active signed-in managed browser subprofile without changing the configured profile
+     ↓ does not expose a source browser profile for copying unless cookie sync is enabled
+     ↓ preserves browser launch validation errors at the public seam
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/browser/browserLaunchPlan.test.ts > resolveBrowserLaunchPlan > gives explicit runtime launch overrides priority over browser-profile and global defaults
+AssertionError: expected { …(51) } to match object { chromePath: '/runtime/chrome', …(5) }
+(45 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "bootstrapCookiePath": "/runtime/bootstrap",
+-   "chromeCookiePath": "/runtime/Cookies",
+-   "chromePath": "/runtime/chrome",
+-   "chromeProfile": "Runtime Source",
+-   "display": ":72",
+-   "managedProfileRoot": "/runtime/managed",
++   "bootstrapCookiePath": "/browser/bootstrap",
++   "chromeCookiePath": "/browser/Cookies",
++   "chromePath": "/browser/chrome",
++   "chromeProfile": "Browser Source",
++   "display": ":73",
++   "managedProfileRoot": "/browser/managed",
+  }
+
+ ❯ tests/browser/browserLaunchPlan.test.ts:21:31
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 11 skipped (12)
+   Start at  20:56:25
+   Duration  1.33s (transform 737ms, setup 113ms, import 922ms, tests 16ms, environment 0ms)
+

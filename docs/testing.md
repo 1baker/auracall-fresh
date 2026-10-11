@@ -1,9 +1,10 @@
-- Stored browser launch precedence characterization (provider-free):
+- Runtime browser launch precedence and stored projection (provider-free):
   `pnpm vitest run tests/runtime.configuredExecutor.test.ts tests/browser/browserLaunchPlan.test.ts tests/browser/browserLaunchPlanStructure.test.ts`.
-  Conflicting runtime/browser/global settings protect current stored options,
-  explicit ChatGPT provenance, source aliases, managed identity and mutable
-  authorization. Plan0402 records why existing launch-policy values cannot replace
-  these raw options while preserving precedence. No provider or browser launch.
+  Runtime > browser profile > global launch-field defaults, canonical/legacy
+  aliases, blanks, explicit selected browser identity, stale managed directories,
+  runtime cookie opt-in and mutable authorization are exercised through public
+  seams. Plan0402 preserves historical characterization; Plan0403 implements the
+  agreed convergence. No browser launch or provider request.
 
 - Captured rich ChatGPT composer readiness (provider-free):
   `pnpm vitest run tests/browser/chatgptSingleVisitContext.test.ts`.

@@ -1,3 +1,13 @@
+## 2026-10-10 | Plan0403 launch precedence implemented
+
+Operator accepted runtime browser overrides > browser-profile settings > global
+defaults. BrowserLaunchPlan now owns the launch-field policy; stored options and
+ChatGPT affinity share its projection and selected source identity. Legacy source
+aliases affect authorization consistently. Explicit runtime/service managed
+bindings survive; derived source cookies require opt-in. Final focused/adjacent207
+checks pass; typecheck/lint and source review recorded in Plan0403 evidence.
+No provider request, installation or live acceptance; source integration separate.
+
 ## 2026-10-10 | Plan0402 characterized; convergence parked
 
 Isolated refactor/stored-browser-launch-plan from e3d6d94c1. Three public-seam

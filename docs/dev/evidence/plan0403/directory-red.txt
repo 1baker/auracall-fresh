@@ -1,0 +1,44 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-launch-plan
+
+ ❯ tests/browser/browserLaunchPlan.test.ts (15 tests | 1 failed | 14 skipped) 17ms
+     ↓ gives explicit runtime launch overrides priority over browser-profile and global defaults
+     ↓ uses 'browser settings after blank runtime …' while honoring explicit browser selection
+     ↓ uses 'global defaults after blank runtime a…' while honoring explicit browser selection
+     × retains an explicit runtime managed directory instead of a stale global provider directory 15ms
+     ↓ returns an immutable browser launch plan without mutating user configuration
+     ↓ resolves explicit AuraCall runtime and browser profile intent without caller-side merging
+     ↓ does not let stale flattened browser fields override an explicitly selected browser profile
+     ↓ resolves session provider intent into the same managed browser launch plan
+     ↓ keeps runtime provider-session authorization outside the immutable launch snapshot
+     ↓ binds the selected session provider to its resolved launch URL
+     ↓ uses the selected AuraCall runtime profile default and deep-freezes nested arrays
+     ↓ produces field-for-field equivalent plans for equivalent user and session sources
+     ↓ selects the active signed-in managed browser subprofile without changing the configured profile
+     ↓ does not expose a source browser profile for copying unless cookie sync is enabled
+     ↓ preserves browser launch validation errors at the public seam
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/browser/browserLaunchPlan.test.ts > resolveBrowserLaunchPlan > retains an explicit runtime managed directory instead of a stale global provider directory
+AssertionError: expected '/tmp/auracall-vitest-5XT56e/browser-p…' to be '/explicit/runtime/chatgpt' // Object.is equality
+
+Expected: "/explicit/runtime/chatgpt"
+Received: "/tmp/auracall-vitest-5XT56e/browser-profiles/work/chatgpt"
+
+ ❯ tests/browser/browserLaunchPlan.test.ts:54:50
+     52|       intent: { provider: 'chatgpt', runtimeProfileId: 'selected' },
+     53|     });
+     54|     expect(plan.managedBrowserProfile.directory).toBe('/explicit/runti…
+       |                                                  ^
+     55|   });
+     56| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 14 skipped (15)
+   Start at  21:00:44
+   Duration  1.48s (transform 849ms, setup 107ms, import 1.04s, tests 17ms, environment 0ms)
+
