@@ -1,3 +1,12 @@
+## 2026-10-10 — Restoring desktop code does not relocate existing browsers
+
+An existing managed browser without native ownership remains outside desktops
+after runtime restoration. Preserve all tabs and drafts, verify chat inactivity,
+close the exact process generation, then use canonical Wake with explicit native
+placement. Settings pages require route-specific inspection rather than treating
+an unknown chat-only detector result as active or safe by default.
+[Verified relocation](notes/2026-10-10-wsl-chrome-3-placement.md).
+
 ## 2026-10-10 — Preserve connected embedded viewers during refresh
 
 Periodic polling and visibility return must not destroy a selected connected

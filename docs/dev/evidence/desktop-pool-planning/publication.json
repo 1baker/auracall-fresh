@@ -1,0 +1,147 @@
+[
+  {
+    "action": "create",
+    "host": "github.com",
+    "repository": "ecochran76/auracall",
+    "actor": "ecochran76",
+    "idempotencyKey": "auracall-plan0404-spec-20261010",
+    "at": "2026-10-11T04:42:09.028223+00:00",
+    "readback": {
+      "author": {
+        "id": "MDQ6VXNlcjgzOTc2MTU=",
+        "is_bot": false,
+        "login": "ecochran76",
+        "name": "Eric W Cochran"
+      },
+      "body": "# Plan0404 \u2014 Demand-driven desktop pool\n\nState: PLANNED\nOwner: primary AuraCall desktop lane\nSpec status: operator approved; implementation pending.\n\n## Current State\n\nNamed desktop placement and remembered assignments currently concentrate browsers\non Research. Profiles already appear in the rail and support Wake. Agent Browser\nprovides primary-source demand allocation, wrap-around and guarded empty-capacity\nrelease patterns. Operator approved equivalent allocation plus rail Wake and\nredistribution. No pool implementation or redistribution has occurred.\n\n## Problem Statement\n\nSleeping profiles should remain easy to Wake without requiring a permanent\nnamed desktop. Running browsers should spread across available capacity rather\nthan all opening on an arbitrary Research desktop.\n\n## Solution\n\nWake allocates a healthy free desktop, growing the Remote View-owned pool on\ndemand within configured limits. At capacity, wrap around to the least crowded\nhealthy desktop. Keep one ready spare and release excess empty desktops. Closing\na browser leaves its runtime profile visible in the rail. Redistribute existing\nbrowsers while preserving their managed state and work.\n\n## User Stories\n\n1. As an operator, I can see sleeping runtime profiles without desktop allocations.\n2. As an operator, I can Wake a profile and see its assigned desktop immediately.\n3. As an operator, independent browsers spread across free desktop capacity.\n4. As an operator, I can configure the maximum rather than rebuild the application.\n5. As an operator, I can Wake at capacity through healthy least-crowded wrap-around.\n6. As an operator, excess empty capacity shrinks while one spare remains ready.\n7. As an operator, idle open browsers survive desktop pool maintenance.\n8. As an operator, existing browsers can be redistributed with routes and drafts preserved.\n9. As an operator, ambiguous allocation or release results are reconciled without duplicate effects.\n10. As an operator, shared browser-family aliases resolve to the same exact running browser.\n\n## Implementation Decisions\n\nRemote View owns physical desktop allocation, policy bounds and retirement.\nAuraCall owns demand, browser placement and rail presentation. The requested\ninstalled maximum is ten, read from configuration/pool policy. Research is not\na special destination. Remembered automatic placement is historical/runtime\ncustody, not a permanent pin. Explicit pin compatibility must be characterized\nagainst current configuration before migration; no silent root fallback.\n\nReuse current native consumer and guarded process/control ownership. Acquire\nand reconcile exact assignment generations before launching. Serialize concurrent\nWake and maintenance. Failed observations do not qualify free/empty capacity.\nKeep healthy existing browser identity until deliberate redistribution. Preserve\nroutes, drafts and managed browser data before any required exact browser close.\nDo not close active or unknown chat activity; defer that browser's redistribution\nand report its exact gate. No provider prompt is needed for acceptance.\n\n## Testing Decisions\n\nProposed primary seam: operator-facing Wake/Close/inventory with injected native\nRemote View transport. Assert externally visible assignment, rail state and\nallocation/release effects. Extend existing rendered rail acceptance for sleeping\nprofiles, assigned selection and stable viewer identity. Exercise concurrent\nWake, configurable limits, wrap-around, unknown inventory, release races and\nrestart reconciliation. Installed acceptance uses fresh process/generation,\nwindow/display joins and route/draft preservation receipts.\n\n## Proposed Tickets\n\n1. Automatic rail Wake allocation and demand growth. Blocked by: none.\n   Demonstrate sleeping profile -> free/new configured desktop -> ready rail row;\n   reconcile concurrent/ambiguous acquisition and preserve browser identity.\n2. Configured capacity and wrap-around. Blocked by: 1.\n   Demonstrate different configured maxima and healthy least-crowded placement\n   when full; unknown/unhealthy destinations cannot qualify.\n3. Close and guarded shrink. Blocked by: 1.\n   Demonstrate profile remains wakeable after exact close, excess empty desktops\n   release, one spare remains, and active browsers/viewers/recovery survive.\n4. Installed redistribution and preservation. Blocked by: 2 and 3.\n   Deploy verified integrated source, redistribute original browsers with\n   preserved routes/drafts/account state and exact before/after process receipts.\n\n## Acceptance and Definition of Done\n\nAll four ticket outcomes verified; targeted behavior tests, rendered acceptance,\nsource review and installed readback recorded. Configured maximum ten is effective\nwithout hard-coded allocation count. Existing browsers distributed or each\nunresolved active/unknown gate explicitly recorded; no claim of complete\nredistribution while a required browser remains deferred. Rail UX remains intact.\n\n## Out of Scope\n\nProvider prompt submissions, scheduler wakes, unrelated browser restarts,\nAgent Browser changes and idle-chat TTL policy changes.\n\n## Further Notes\n\nDecision provenance: operator conversation and desktop-pool-decisions note.\nAgent Browser demand pool and background maintenance source inform the behavior;\nthese source facts are not installed AuraCall acceptance. Tracker configuration\nfile is absent; use existing repository GitHub policy and repo plan authority\nwhen publishing approved tickets. Do not publish draft tickets before breakdown\nreview required by the to-tickets skill.\n\n\n<!-- auracall-plan0404-spec-20261010 -->\n",
+      "labels": [
+        {
+          "id": "LA_kwDOQ0LHj88AAAACUGts8g",
+          "name": "enhancement",
+          "description": "New feature or request",
+          "color": "a2eeef"
+        }
+      ],
+      "number": 264,
+      "state": "OPEN",
+      "title": "Demand-driven AuraCall desktop pool with rail Wake",
+      "url": "https://github.com/ecochran76/auracall/issues/264"
+    }
+  },
+  {
+    "action": "create",
+    "host": "github.com",
+    "repository": "ecochran76/auracall",
+    "actor": "ecochran76",
+    "idempotencyKey": "auracall-plan0404-ticket-1-20261010",
+    "at": "2026-10-11T04:42:11.748969+00:00",
+    "readback": {
+      "author": {
+        "id": "MDQ6VXNlcjgzOTc2MTU=",
+        "is_bot": false,
+        "login": "ecochran76",
+        "name": "Eric W Cochran"
+      },
+      "body": "## Parent\n\nhttps://github.com/ecochran76/auracall/issues/264\n\n## What to build\n\nAutomatic rail Wake allocation and demand growth. Deliver this end-to-end through the runtime-profile rail and native Remote View ownership boundary.\n\n## State and owner\n\nREADY (ready-for-agent); owning lane: AuraCall desktop pool. Implementation not started.\n\n## Acceptance criteria\n\n- [ ] Sleeping runtime profiles remain visible without desktop allocations.\n- [ ] Wake uses a verified free desktop or acquires capacity within configured Remote View policy before launch.\n- [ ] Concurrent and ambiguous acquisitions reconcile durable identity without duplicate allocation or browser launch.\n- [ ] Running profile and shared aliases retain exact managed browser and desktop generation; rail selects the ready browser.\n\n## Blocked by\n\nNone: can start immediately\n\n## Validation\n\nExercise operator Wake/Close/inventory with injected native transport and rendered rail behavior; record source and installed evidence appropriate to this slice.\n\n<!-- auracall-plan0404-ticket-1-20261010 -->\n",
+      "labels": [
+        {
+          "id": "LA_kwDOQ0LHj88AAAACUGts8g",
+          "name": "enhancement",
+          "description": "New feature or request",
+          "color": "a2eeef"
+        }
+      ],
+      "number": 265,
+      "state": "OPEN",
+      "title": "Automatic rail Wake allocation and demand growth",
+      "url": "https://github.com/ecochran76/auracall/issues/265"
+    }
+  },
+  {
+    "action": "create",
+    "host": "github.com",
+    "repository": "ecochran76/auracall",
+    "actor": "ecochran76",
+    "idempotencyKey": "auracall-plan0404-ticket-2-20261010",
+    "at": "2026-10-11T04:42:14.340894+00:00",
+    "readback": {
+      "author": {
+        "id": "MDQ6VXNlcjgzOTc2MTU=",
+        "is_bot": false,
+        "login": "ecochran76",
+        "name": "Eric W Cochran"
+      },
+      "body": "## Parent\n\nhttps://github.com/ecochran76/auracall/issues/264\n\n## What to build\n\nConfigured capacity and healthy wrap-around. Deliver this end-to-end through the runtime-profile rail and native Remote View ownership boundary.\n\n## State and owner\n\nREADY (ready-for-agent); owning lane: AuraCall desktop pool. Implementation not started.\n\n## Acceptance criteria\n\n- [ ] Maximum desktop count comes from configuration/pool policy; requested deployment maximum is ten.\n- [ ] Different configured limits work without source changes.\n- [ ] At capacity, Wake chooses the least crowded healthy desktop deterministically.\n- [ ] Unknown or unhealthy observations never qualify a placement destination; failures remain visible.\n\n## Blocked by\n\n- https://github.com/ecochran76/auracall/issues/265\n\n## Validation\n\nExercise operator Wake/Close/inventory with injected native transport and rendered rail behavior; record source and installed evidence appropriate to this slice.\n\n<!-- auracall-plan0404-ticket-2-20261010 -->\n",
+      "labels": [
+        {
+          "id": "LA_kwDOQ0LHj88AAAACUGts8g",
+          "name": "enhancement",
+          "description": "New feature or request",
+          "color": "a2eeef"
+        }
+      ],
+      "number": 266,
+      "state": "OPEN",
+      "title": "Configured capacity and healthy wrap-around",
+      "url": "https://github.com/ecochran76/auracall/issues/266"
+    }
+  },
+  {
+    "action": "create",
+    "host": "github.com",
+    "repository": "ecochran76/auracall",
+    "actor": "ecochran76",
+    "idempotencyKey": "auracall-plan0404-ticket-3-20261010",
+    "at": "2026-10-11T04:42:38.054236+00:00",
+    "readback": {
+      "author": {
+        "id": "MDQ6VXNlcjgzOTc2MTU=",
+        "is_bot": false,
+        "login": "ecochran76",
+        "name": "Eric W Cochran"
+      },
+      "body": "## Parent\n\nhttps://github.com/ecochran76/auracall/issues/264\n\n## What to build\n\nClose and guarded desktop pool shrink. Deliver this end-to-end through the runtime-profile rail and native Remote View ownership boundary.\n\n## State and owner\n\nREADY (ready-for-agent); owning lane: AuraCall desktop pool. Implementation not started.\n\n## Acceptance criteria\n\n- [ ] Exact browser close leaves the runtime profile in the rail and wakeable.\n- [ ] Maintenance retains one ready spare and returns excess owner-observed empty desktops.\n- [ ] Idle open browsers are never closed merely to shrink capacity.\n- [ ] Active viewers, controls, pending launches/recovery and ambiguous release prevent unsafe retirement.\n- [ ] Release races and restart reconciliation preserve exact assignment generations without duplicate effects.\n\n## Blocked by\n\n- https://github.com/ecochran76/auracall/issues/265\n\n## Validation\n\nExercise operator Wake/Close/inventory with injected native transport and rendered rail behavior; record source and installed evidence appropriate to this slice.\n\n<!-- auracall-plan0404-ticket-3-20261010 -->\n",
+      "labels": [
+        {
+          "id": "LA_kwDOQ0LHj88AAAACUGts8g",
+          "name": "enhancement",
+          "description": "New feature or request",
+          "color": "a2eeef"
+        }
+      ],
+      "number": 267,
+      "state": "OPEN",
+      "title": "Close and guarded desktop pool shrink",
+      "url": "https://github.com/ecochran76/auracall/issues/267"
+    }
+  },
+  {
+    "action": "create",
+    "host": "github.com",
+    "repository": "ecochran76/auracall",
+    "actor": "ecochran76",
+    "idempotencyKey": "auracall-plan0404-ticket-4-20261010",
+    "at": "2026-10-11T04:42:41.049927+00:00",
+    "readback": {
+      "author": {
+        "id": "MDQ6VXNlcjgzOTc2MTU=",
+        "is_bot": false,
+        "login": "ecochran76",
+        "name": "Eric W Cochran"
+      },
+      "body": "## Parent\n\nhttps://github.com/ecochran76/auracall/issues/264\n\n## What to build\n\nInstall pool behavior and redistribute existing browsers. Deliver this end-to-end through the runtime-profile rail and native Remote View ownership boundary.\n\n## State and owner\n\nREADY (ready-for-agent); owning lane: AuraCall desktop pool. Implementation not started.\n\n## Acceptance criteria\n\n- [ ] Integrated source and installed package identity verified before deployment.\n- [ ] Configured maximum ten verified against native pool policy.\n- [ ] Original browser routes, drafts, managed state and exact process identities captured before deliberate redistribution.\n- [ ] Existing browsers redistributed using canonical pool placement; active/unknown response gates defer only the affected browser and remain explicit.\n- [ ] Fresh process/window/display joins, screenshots and preserved conversation evidence confirm actual placement.\n- [ ] No provider prompt or scheduler wake submitted; unrelated browser processes preserved.\n\n## Blocked by\n\n- https://github.com/ecochran76/auracall/issues/266\n- https://github.com/ecochran76/auracall/issues/267\n\n## Validation\n\nExercise operator Wake/Close/inventory with injected native transport and rendered rail behavior; record source and installed evidence appropriate to this slice.\n\n<!-- auracall-plan0404-ticket-4-20261010 -->\n",
+      "labels": [
+        {
+          "id": "LA_kwDOQ0LHj88AAAACUGts8g",
+          "name": "enhancement",
+          "description": "New feature or request",
+          "color": "a2eeef"
+        }
+      ],
+      "number": 268,
+      "state": "OPEN",
+      "title": "Install pool behavior and redistribute existing browsers",
+      "url": "https://github.com/ecochran76/auracall/issues/268"
+    }
+  }
+]

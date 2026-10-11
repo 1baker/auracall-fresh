@@ -1,3 +1,18 @@
+## 2026-10-10 — Automatic desktop pool design
+
+Operator confirmed rail Wake assigns desktop capacity automatically, up to ten
+desktops with wrap-around, and authorized redistribution of existing browsers.
+Research is an arbitrary prior label, not the automatic placement default.
+Shrink semantics remain the interview frontier. No runtime changes yet.
+[Decisions](notes/2026-10-10-desktop-pool-decisions.md).
+
+## 2026-10-10 — Move outside wsl-chrome-3 to Research
+
+Authorized exact idle-browser closure and canonical Wake completed. Installed
+inventory reports ready on Research, PID5850/start31980685. Eight tab routes and
+the original canary answer were preserved; no prompt or scheduler wake submitted.
+Evidence: [placement correction](notes/2026-10-10-wsl-chrome-3-placement.md).
+
 ## 2026-10-10 — Stability runtime adoption
 
 Installed source 0df5c458e after operator approval, with exact staged parity for

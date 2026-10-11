@@ -60,7 +60,7 @@ The general desktop view available independently of the AuraCall remote-view cli
 _Avoid_: AuraCall remote-view client
 
 **AuraCall desktop**:
-A named desktop owned by AuraCall and used to display its managed browsers.
+A desktop owned by AuraCall and used to display its managed browsers. Its allocation is distinct from an AuraCall runtime profile, which remains available when no desktop is assigned.
 _Avoid_: Browser profile, AuraCall runtime profile
 
 **Control handoff**:
