@@ -1,5 +1,6 @@
 // biome-ignore-all lint/style/useNamingConvention: Native provider fixtures use fixed POSIX environment keys.
 import fs from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import os from 'node:os';
 import path from 'node:path';
 import { spawn, type ChildProcess } from 'node:child_process';
@@ -42,7 +43,12 @@ test('native browser launch needs no RDP-only family/build declarations and pres
     });
     const display = process.env.DISPLAY;
     const options = { config, userDataDir: path.join(home, 'managed-research'), logger: () => {}, launch };
+    // Input ownership must not prevent opening an independently owned browser.
+    const gateDirectory = path.join(home, 'desktop-control', createHash('sha256').update('d').digest('hex'));
+    await fs.mkdir(gateDirectory, { recursive: true });
+    await fs.writeFile(path.join(gateDirectory, 'owner.json'), '');
     const first = await launchNativeDesktopBrowser(options);
+    expect(await fs.readFile(path.join(gateDirectory, 'owner.json'), 'utf8')).toBe('');
     expect(first.port).toBe(45123);
     await expect(assertNoLiveNativeDesktopBrowser(options.userDataDir)).rejects.toThrow('still bound');
     await expect(assertNoLiveNativeDesktopBrowser(path.join(home, 'other'), { host: 'localhost', port: first.port })).rejects.toThrow('still bound');

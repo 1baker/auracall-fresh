@@ -1081,3 +1081,8 @@ permits and returns excess verified-empty desktops. Remote View owns physical
 cooldown and retirement. Open browsers, human viewers/control, unresolved recovery,
 unknown observations and ambiguous operations prevent unsafe cleanup. Inventory
 exposes the latest maintenance state. No chat is submitted by Wake or maintenance.
+
+
+## Browser opening and desktop input control
+
+Browser and new-target opening are independent of desktop input ownership. Automatic placement uses the native pool’s configured maximum, grows with demand and wraps when full; shrink remains guarded by empty-capacity custody. Desktop human-control ownership continues to protect interaction with existing pages. A retained input claim must not be used to prevent browser opening. Issue253/Plan0405 record the source and acceptance boundaries.

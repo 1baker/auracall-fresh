@@ -26,24 +26,33 @@ setCdpCommandAdmissionResolver(async ({ host, port }) => {
     const binding = native[0];
     const generation = nativeBrowserGeneration(binding);
     const gate = new DesktopControlGate(binding.assignment.desktopId);
-    return { run: async (_command, effect) => gate.withAutomation(generation, async () => {
-      const current = (await nativeStore.browsers()).filter(item => item.managedProfileDir === binding.managedProfileDir);
-      if (current.length !== 1 || !current[0] || nativeBrowserGeneration(current[0]) !== generation || !await verifyNativeBrowser(binding)) {
-        throw new Error('Native desktop browser ownership changed; reconnect before automation.');
-      }
-      return effect();
-    }) };
+    return { run: async (command, effect) => {
+      const ownedEffect = async () => {
+        const current = (await nativeStore.browsers()).filter(item => item.managedProfileDir === binding.managedProfileDir);
+        if (current.length !== 1 || !current[0] || nativeBrowserGeneration(current[0]) !== generation || !await verifyNativeBrowser(binding)) {
+          throw new Error('Native desktop browser ownership changed; reconnect before automation.');
+        }
+        return effect();
+      };
+      // Opening has acquisition custody; it must not require existing-page input ownership.
+      return command === 'Target.New' || command === 'Target.createTarget'
+        ? ownedEffect() : gate.withAutomation(generation, ownedEffect);
+    } };
   }
   if (!bindings.length) return undefined;
   if (bindings.length !== 1) throw new Error('Ambiguous AuraCall desktop endpoint ownership.');
   const binding = bindings[0];
   const generation = desktopBindingGeneration(binding);
   const gate = new DesktopControlGate(binding.displayAllocationId);
-  return { run: async (_command, effect) => gate.withAutomation(generation, async () => {
-    const current = (await store.list()).filter((item) => item.managedProfileDir === binding.managedProfileDir);
-    if (current.length !== 1 || desktopBindingGeneration(current[0]) !== generation) {
-      throw new Error('AuraCall desktop browser ownership changed; reconnect before resuming automation.');
-    }
-    return effect();
-  }) };
+  return { run: async (command, effect) => {
+    const ownedEffect = async () => {
+      const current = (await store.list()).filter((item) => item.managedProfileDir === binding.managedProfileDir);
+      if (current.length !== 1 || desktopBindingGeneration(current[0]) !== generation) {
+        throw new Error('AuraCall desktop browser ownership changed; reconnect before resuming automation.');
+      }
+      return effect();
+    };
+    return command === 'Target.New' || command === 'Target.createTarget'
+      ? ownedEffect() : gate.withAutomation(generation, ownedEffect);
+  } };
 });

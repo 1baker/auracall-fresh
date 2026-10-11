@@ -1,0 +1,29 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-issue253-triage
+
+ ❯ tests/browser/nativeDesktopRuntime.test.ts (1 test | 1 failed) 217ms
+   × native browser launch needs no RDP-only family/build declarations and preserves retained ownership and child environment 216ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/browser/nativeDesktopRuntime.test.ts > native browser launch needs no RDP-only family/build declarations and preserves retained ownership and child environment
+SyntaxError: Unexpected end of JSON input
+ ❯ DesktopControlGate.owner src/browser/service/desktopControlGate.ts:94:16
+     92|  private async owner(): Promise<GateOwner | undefined> {
+     93|   try {
+     94|    return JSON.parse(
+       |                ^
+     95|     await fs.readFile(path.join(this.lockPath, "owner.json"), "utf8"),
+     96|    ) as GateOwner;
+ ❯ DesktopControlGate.withAutomation src/browser/service/desktopControlGate.ts:132:21
+ ❯ NativeDesktopStore.exclusive src/browser/service/nativeDesktopStore.ts:100:18
+ ❯ tests/browser/nativeDesktopRuntime.test.ts:50:19
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  14:48:26
+   Duration  1.18s (transform 458ms, setup 58ms, import 694ms, tests 217ms, environment 0ms)
+

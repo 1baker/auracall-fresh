@@ -53848,3 +53848,8 @@ assertions, compiled guard and589-file parity pass. Five registered browser pare
 and27 display/provider identities persist;18 broader pre-build Chrome identities
 are missing without attributable lifecycle records. Configuration and scheduler
 pause remain intact; broader authenticated input/root acceptance remains OPEN.
+
+
+## Browser opening and desktop input control
+
+Browser and new-target opening are independent of desktop input ownership. Automatic placement uses the native pool’s configured maximum, grows with demand and wraps when full; shrink remains guarded by empty-capacity custody. Desktop human-control ownership continues to protect interaction with existing pages. A retained input claim must not be used to prevent browser opening. Issue253/Plan0405 record the source and acceptance boundaries.

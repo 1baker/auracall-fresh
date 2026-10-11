@@ -29,3 +29,9 @@ Pass full selected resolved configuration from submitChatgptDeveloperApp to Brow
 ## Non-goals and boundaries
 
 No app recreation, OAuth reset, implicit prompt retry, ownership-file edits, browser restart or bypass of gates. Do not attribute unknown exits. No memory-write authorization. LitScout selects safe existing app/account and guards its drafts; provider submission waits for the coordinated bounded acceptance handoff.
+
+## Revision | Browser opening independent of input control
+
+Operator clarified that AuraCall must grow/shrink available desktops and wrap at the configured maximum without input-control ownership blocking browser opening. Existing allocation already implements configurable growth/wrap; the downstream launch and Target.New gates incorrectly imposed input ownership on opening. This revision removes only those opening gates. Pool/profile custody, explicit target-acquisition authority and subsequent existing-page interaction gates remain intact. Installed corrupt ownership and transition files are preserved; cleanup is not this source repair.
+
+Fresh browser opening and new-target creation each failed red against a malformed input record. The six focused native/control/app files pass25 tests after separation, including configurable pool capacity2/4, wrap and shrink guards. Installed acceptance remains separate and must distinguish opening from subsequent input admission.

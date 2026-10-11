@@ -8,7 +8,6 @@ import type { BrowserLogger, ResolvedBrowserConfig } from '../types.js';
 import { RemoteViewApplication } from './remoteViewApplication.js';
 import { NativeDesktopStore, nativeDesktopKey, observeNativeBrowser, verifyNativeBrowser, type NativeDesktopBrowser } from './nativeDesktopStore.js';
 import { selectPoolDesktop } from './nativeDesktopPool.js';
-import { DesktopControlGate } from './desktopControlGate.js';
 
 interface NativeChromeHandle { pid?: number; port: number; host?: string; kill: () => Promise<unknown> }
 type NativeLaunch = (config: ResolvedBrowserConfig, directory: string, logger: BrowserLogger, options: Parameters<typeof launchChromeCore>[3]) => Promise<NativeChromeHandle>;
@@ -77,20 +76,18 @@ export async function launchNativeDesktopBrowser(input: {
       await store.recordDesktop(created);
       return created;
     });
-    const gate = new DesktopControlGate(desktop.assignment.desktopId);
-    return gate.withAutomation(`launch:${nativeDesktopKey(selected)}`, async () => {
-      input.abortSignal?.throwIfAborted();
-      const environment = await app.launchEnvironment(desktop.assignment);
-      const chrome = await (input.launch ?? launchChromeCore)({ ...config, display: environment.DISPLAY, headless: false, hideWindow: false, keepBrowser: true,
-        blockingProfileAction: 'fail', remoteChrome: null }, userDataDir, logger, { registryPath: path.join(getAuracallHomeDir(), 'browser-state.json'), launchEnvironment: environment, abortSignal: input.abortSignal });
-      try {
-        if (!chrome.pid) throw new Error('Native browser launch returned no attributable process.');
-        const observed = await (input.observe ?? observeNativeBrowser)(chrome.pid, userDataDir, environment.DISPLAY ?? '', { ...selected, assignment: desktop.assignment });
-        if (observed.executable !== expectedExecutable) throw new Error('Native browser executable does not match the selected browser build.');
-        await store.recordBrowser({ ...desktop, browserId: randomUUID(), managedProfileDir: userDataDir,
-          pid: chrome.pid, ...observed, display: environment.DISPLAY ?? '', cdpHost: chrome.host ?? '127.0.0.1', cdpPort: chrome.port });
-      } catch (error) { await chrome.kill(); throw error; }
-      return { ...chrome, kill: async () => { logger('Keeping AuraCall native desktop browser running.'); } };
-    });
+    // Allocation/profile custody owns opening; input-control ownership governs later interaction.
+    input.abortSignal?.throwIfAborted();
+    const environment = await app.launchEnvironment(desktop.assignment);
+    const chrome = await (input.launch ?? launchChromeCore)({ ...config, display: environment.DISPLAY, headless: false, hideWindow: false, keepBrowser: true,
+      blockingProfileAction: 'fail', remoteChrome: null }, userDataDir, logger, { registryPath: path.join(getAuracallHomeDir(), 'browser-state.json'), launchEnvironment: environment, abortSignal: input.abortSignal });
+    try {
+      if (!chrome.pid) throw new Error('Native browser launch returned no attributable process.');
+      const observed = await (input.observe ?? observeNativeBrowser)(chrome.pid, userDataDir, environment.DISPLAY ?? '', { ...selected, assignment: desktop.assignment });
+      if (observed.executable !== expectedExecutable) throw new Error('Native browser executable does not match the selected browser build.');
+      await store.recordBrowser({ ...desktop, browserId: randomUUID(), managedProfileDir: userDataDir,
+        pid: chrome.pid, ...observed, display: environment.DISPLAY ?? '', cdpHost: chrome.host ?? '127.0.0.1', cdpPort: chrome.port });
+    } catch (error) { await chrome.kill(); throw error; }
+    return { ...chrome, kill: async () => { logger('Keeping AuraCall native desktop browser running.'); } };
   });
 }
