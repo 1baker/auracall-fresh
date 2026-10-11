@@ -5,13 +5,13 @@ Lane: P90
 Integration: merge
 Work items: #253
 Owner: ecochran76; primary agent, serialized implementation.
-Branch: fix/issue253-current-app-mention
+Branch: fix/issue253-startup-close-settlement
 Target: main through PR merge
 Base: 9b324b3dc7d3f8f1ec50e3888f02e71c39047e02
 
 ## Current State
 
-PR285 picker repair installed; native click selects correct app. Observer captures exact canonical app:// identity on app-mention-name/path SPAN, no legacy inline-pill attrs. Native old post-selector fails, prompt unsent, finally clears editor. Public-seam captured modern post-condition red in2.75s. Modern readiness/readback now supports exact URI identity with invalid/foreign/duplicate guards and shared clear/pristine pill counting. 140 focused tests9files +final17 affected, typecheck/scoped lint/final build and serial Standards/Spec review pass; installed/native acceptance pending; full native acceptance remains open.
+PR286 current composer/picker/mention repairs installed055e69d26. Latest no-submit stops earlier at immediate startup close confirmation; replacement lease retained, no prompt. Later only replacement page remains, but original startup ID was not captured, so historical cause unproven. Public coordinator regression reproduces exact failure on acknowledged asynchronous close. One close request now followed by at most2s read-only confirmation; absent target succeeds, present/changed/stalled confirmation retains replacement idle custody.47 focused +2 production-boundary tests/typecheck/lint/build/serial review pass; installed/native acceptance pending. Original once-only prompt remains gated.
 
 ## Scope and seams
 
@@ -120,3 +120,8 @@ Native trigger22:46:04.310Z target66C68BA235702AD0CCD94FAF886FC3A8 shows exact o
 ### Installed current mention identity
 
 PR286 integrated055e69d2684c620a49ca0d8a84745dc1272043aa, validatedcb3097b4ad75ecbed4ee30d43b264969c7dba6e2. CLI/MCP/API user-runtime-issue253-mention with591files0mismatches/extra. Installed clear/readback/pre-Send boundary passes legacy/current identity and foreign rejection, no provider effects. Prior browser9470 already absent before API promotion, exit actor unknown. KillModeprocess preserved. One original no-submit test with read-only observer authorized after fresh readiness/account/empty/unsent checks; original once-only prompt remains gated.
+
+
+## Revision | Bounded startup close confirmation
+
+Latest native run holds replacement under lease9e66ce7c-cce5-406b-a04d-1a9fc7613402 after immediate old-target inspection remains present. Browser39770/start39272889 survives; later replacement4073D410C78617F45F8AFB6204FB8D8B is sole page. Startup ID was not recorded, so later state is not exact close-attribution proof. Strengthened existing public coordinator fixture goes red in372ms when close acknowledges and physical removal occurs50ms later. Wait at most2s for removal with per-read deadline and100ms poll, never resend close. Never-disappearing, changed URL and stalled inspector fail conservatively while replacement/browser custody is preserved. Native original acceptance still required.

@@ -221,18 +221,43 @@ describe("live-follow crawler tab coordinator", () => {
 		"success",
 		"open-failure",
 		"cleanup-failure",
+		"delayed-close",
+		"no-close",
+		"changed-after-close",
+		"stalled-confirmation",
 	])("retains browser custody while replacing its only startup page: %s", async (mode) => {
+		const fakeTime = [
+			"delayed-close",
+			"no-close",
+			"changed-after-close",
+			"stalled-confirmation",
+		].includes(mode);
+		if (fakeTime) vi.useFakeTimers();
 		const registry = createInMemoryBrowserTabLeaseRegistry({
 			createLeaseId: () => "lease-after-blank",
 		});
 		const pages = new Map([["startup-blank", "about:blank"]]);
 		let browserAlive = true;
+		let closeRequested = false;
 		const closeTarget = vi.fn(async ({ targetId }: { targetId: string }) => {
+			closeRequested = true;
 			if (mode === "cleanup-failure") throw new Error("fixture cleanup unavailable");
+			if (mode === "changed-after-close") {
+				pages.set(targetId, "https://chatgpt.com/c/changed");
+				return;
+			}
+			if (mode === "stalled-confirmation") return;
+			if (mode === "no-close") return;
+			if (mode === "delayed-close") {
+				setTimeout(() => pages.delete(targetId), 50);
+				return;
+			}
 			pages.delete(targetId);
 			if (!pages.size) browserAlive = false;
 		});
 		const inspectTarget = vi.fn(async (_endpoint: unknown, id: string) => {
+			if (closeRequested && mode === "stalled-confirmation" && id === "startup-blank")
+				return new Promise<never>(() => undefined);
 			const url = pages.get(id);
 			return url ? { url } : null;
 		});
@@ -261,6 +286,15 @@ describe("live-follow crawler tab coordinator", () => {
 			openTarget,
 			closeTarget,
 		});
+		if (fakeTime) {
+			// Observe the original rejection after draining deterministic close settlement.
+			void acquisition.catch(() => undefined);
+			try {
+				await vi.runAllTimersAsync();
+			} finally {
+				vi.useRealTimers();
+			}
+		}
 
 		if (mode === "open-failure") {
 			await expect(acquisition).rejects.toThrow("fixture creation unavailable");
@@ -270,13 +304,16 @@ describe("live-follow crawler tab coordinator", () => {
 			expect(await registry.list()).toEqual([]);
 			return;
 		}
-		if (mode === "cleanup-failure") {
+		if (
+			["cleanup-failure", "no-close", "changed-after-close", "stalled-confirmation"].includes(mode)
+		) {
 			await expect(acquisition).rejects.toThrow("replacement retained under lease");
 			expect(browserAlive).toBe(true);
 			expect([...pages.keys()]).toEqual(["startup-blank", "crawler-after-blank"]);
 			expect(await registry.list()).toMatchObject([
 				{ targetId: "crawler-after-blank", state: "idle", effectState: "settled" },
 			]);
+			expect(closeTarget).toHaveBeenCalledOnce();
 			return;
 		}
 		const tab = await acquisition;

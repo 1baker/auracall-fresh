@@ -320,9 +320,7 @@ async function acquireDedicatedBrowserTab(
 					port: endpoint.port,
 					targetId: coldStart.retirement.targetId,
 				});
-				if (await input.inspectTarget(endpoint, coldStart.retirement.targetId)) {
-					throw new Error("Live-follow browser startup target remained present after close.");
-				}
+				await confirmColdStartTargetRetirement(input, endpoint, coldStart.retirement);
 			}
 		} catch (error) {
 			// Retain qualified replacement custody rather than closing the browser's last window.
@@ -343,6 +341,33 @@ async function acquireDedicatedBrowserTab(
 		}
 	}
 	return { ...provisioned.value, endpoint };
+}
+
+async function confirmColdStartTargetRetirement(
+	input: DedicatedBrowserTabInput,
+	endpoint: LiveFollowBrowserEndpoint,
+	retirement: { targetId: string; url: string },
+): Promise<void> {
+	const deadline = Date.now() + 2_000;
+	while (Date.now() < deadline) {
+		let timer: ReturnType<typeof setTimeout> | undefined;
+		const current = await Promise.race([
+			input.inspectTarget(endpoint, retirement.targetId),
+			new Promise<never>((_resolve, reject) => {
+				timer = setTimeout(
+					() => reject(new Error("Startup close confirmation timed out.")),
+					Math.max(1, deadline - Date.now()),
+				);
+			}),
+		]).finally(() => clearTimeout(timer));
+		if (!current) return;
+		if (current.url !== retirement.url)
+			throw new Error("Startup target changed during close confirmation.");
+		await new Promise((resolve) =>
+			setTimeout(resolve, Math.min(100, Math.max(0, deadline - Date.now()))),
+		);
+	}
+	throw new Error("Live-follow browser startup target remained present after close.");
 }
 
 async function openPlannedPreLeaseTarget(

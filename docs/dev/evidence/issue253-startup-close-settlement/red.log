@@ -1,0 +1,48 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-issue253-triage
+
+ ❯ tests/accountMirror/liveFollowTabCoordinator.test.ts (18 tests | 1 failed | 13 skipped) 15ms
+     ↓ concurrent acquisitions in one process never open a second physical target
+     ↓ live follow and child materialization reuse one physical tab in the same process
+     ↓ adopts the only compatible cold-start target instead of opening a second page
+     ↓ fails closed when cold start exposes multiple compatible unowned targets
+     ↓ creates one governed process crawler and assigns restored pages finite deadlines
+     ✓ retains browser custody while replacing its only startup page: success 6ms
+     ✓ retains browser custody while replacing its only startup page: open-failure 1ms
+     ✓ retains browser custody while replacing its only startup page: cleanup-failure 1ms
+     × retains browser custody while replacing its only startup page: delayed-close 5ms
+     ✓ retains browser custody while replacing its only startup page: no-close 1ms
+     ↓ creates one dedicated crawler target and reuses it on the next pass
+     ↓ rejects unplanned pre-lease target creation for existing browser before opening a page
+     ↓ rejects unplanned pre-lease target creation for cold browser before opening a page
+     ↓ reconciles a retained idle crawler only with proven browser absence: true
+     ↓ reconciles a retained idle crawler only with proven browser absence: false
+     ↓ uses the same exact-target lifecycle for bounded ephemeral work
+     ↓ replaces a retained blank lease by adopting an existing exact target
+     ↓ closes and releases a new crawler when creation accounting fails
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/accountMirror/liveFollowTabCoordinator.test.ts > live-follow crawler tab coordinator > retains browser custody while replacing its only startup page: delayed-close
+Error: Cold-start retirement failed; replacement retained under lease lease-after-blank.
+ ❯ acquireDedicatedBrowserTab src/accountMirror/liveFollowTabCoordinator.ts:339:10
+    337|      "Cold-start retirement failed; replacement custody remains fenced…
+    338|     );
+    339|    throw new Error(
+       |          ^
+    340|     `Cold-start retirement failed; replacement retained under lease ${…
+    341|     { cause: error },
+ ❯ withProcessTabAcquisition packages/browser-service/src/service/processTabAcquisition.ts:18:12
+
+Caused by: Error: Live-follow browser startup target remained present after close.
+ ❯ acquireDedicatedBrowserTab src/accountMirror/liveFollowTabCoordinator.ts:324:12
+ ❯ withProcessTabAcquisition packages/browser-service/src/service/processTabAcquisition.ts:18:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 passed | 13 skipped (18)
+   Start at  18:04:08
+   Duration  372ms (transform 139ms, setup 48ms, import 133ms, tests 15ms, environment 0ms)
+

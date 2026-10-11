@@ -1100,3 +1100,5 @@ ChatGPT app tests qualify one visible enabled composer outside dialogs, supporti
 Current app-picker rows require the installed app description as well as name; a same-name custom GPT is insufficient. Missing description or duplicate matching rows stops selection. Legacy picker rows retain exact-name qualification. The selected pill must still carry the exact app identity before Send.
 
 Selected ChatGPT app mentions support current app-mention-name/path and legacy inline-pill attributes. Current app:// URI identity must match the accepted installed app before Send. Missing, malformed, foreign or multiple mentions stop submission. Clear/pristine checks include both shapes.
+
+Cold-start retirement confirms target disappearance for up to2s after one close request. Read-only polling does not resend close. Unconfirmed or changed targets retain the already-qualified replacement under an idle lease and report failure; no browser restart or implicit provider retry.

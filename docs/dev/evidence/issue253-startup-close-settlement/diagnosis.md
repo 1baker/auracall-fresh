@@ -1,0 +1,5 @@
+# Startup close confirmation
+
+Installed native PR286 run returns Cold-start retirement failed; replacement retained under exact lease. Cause: startup target remained present after close. Replacement39770/4073D... remains alive. Later exact replacement is sole page, but original startup target ID absent from retained evidence, so historical close cause/actor is unknown. Original research intent/result absent; no new prompt or cleanup.
+
+Public coordinator fixture command: pnpm vitest run tests/accountMirror/liveFollowTabCoordinator.test.ts -t 'retains browser custody while replacing'. Red372ms on delayed physical removal after acknowledged close,4passing controls. Fixture50ms delay is deterministic fake-clock reproduction, not asserted native duration. Ranked predictions shown: asynchronous disappearance, close never completes, target changes. Source uses one close request and2s read-only confirmation with bounded per-read timeout and100ms polling. Delayed removal passes; persistent target, changed URL and stalled observation retain replacement idle/settled and do not resend close. Exact process and unknown historical attribution remain separate.

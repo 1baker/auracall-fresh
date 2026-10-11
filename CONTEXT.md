@@ -95,3 +95,6 @@ A qualified visible enabled picker row for the installed app. Current rows requi
 
 **Selected app mention identity**:
 The exact installed app identifier retained by its composer pill, using legacy plugin attributes or a current complete app:// URI. Presence or display name alone does not authorize Send; malformed or multiple mentions do not qualify.
+
+**Startup close confirmation**:
+A bounded observation of the exact selected startup target disappearing after one close request. Acknowledgment is not physical-removal proof; uncertain confirmation preserves replacement custody.

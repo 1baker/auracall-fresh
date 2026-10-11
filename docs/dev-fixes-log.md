@@ -1,3 +1,7 @@
+## 2026-10-11 — Target close acknowledgment needs bounded confirmation (#253)
+
+A single immediate target-inventory read can reject a successful asynchronous startup retirement. After one close request, confirm disappearance with a2s read-only deadline. A remaining or changed target or stalled observation keeps the replacement lease idle and browser intact; never resend close or infer physical removal from acknowledgment. Missing historical target identity remains an evidence gap.
+
 ## 2026-10-11 — Current app mentions prove identity with app:// URIs (#253)
 
 Selected app pills use app-mention-name/path without old inline-selection/data-symbol attributes. Recognize semantic current attributes and parse a complete canonical app URI token. Readiness is separate from exact accepted app identity before Send; malformed, foreign and multiple mentions remain blocking. Pristine and clear guards count both current and legacy mentions.

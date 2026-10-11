@@ -1,0 +1,19 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-issue253-triage
+
+ ✓ tests/accountMirror/liveFollowTabCoordinator.test.ts (20 tests) 31ms
+ ✓ tests/browser/configuredChatgptUtilityAffinity.test.ts (8 tests) 23ms
+ ✓ tests/browser/chatgptDeveloperAppLifecycle.test.ts (19 tests) 5577ms
+     ✓ refreshes a late terminal conversation before returning committed-Send failure: {"terminalFailure":true}  809ms
+     ✓ refreshes a late terminal conversation before returning committed-Send failure: {"manualApproval":true}  778ms
+     ✓ preserves attributable WSL Windows loopback provenance through the canonical host alias  777ms
+     ✓ returns answer and refreshed terminal identity after exactly one Send  782ms
+     ✓ preserves terminal failure evidence without retry: {"terminalFailure":true,"effectState":"effect_observed"}  773ms
+     ✓ preserves terminal failure evidence without retry: {"uncertainSend":true,"effectState":"unknown"}  780ms
+     ✓ preserves terminal failure evidence without retry: {"manualApproval":true,"effectState":"effect_observed"}  774ms
+
+ Test Files  3 passed (3)
+      Tests  47 passed (47)
+   Start at  18:06:05
+   Duration  8.36s (transform 3.80s, setup 161ms, import 4.96s, tests 5.63s, environment 0ms)
+
