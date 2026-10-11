@@ -73,3 +73,7 @@ PR281 integrated cd02026d147fcfe7e1923b0532d2c4e1dbbffc63, CLI/API user-runtime-
 ## Revision | Opening custody without an existing window
 
 PR281 installed and hermetic mode deadline qualified. Fresh native no-submit and one instrumented reproduction failed at current native window/PID join; no prompt effect. A real wire fixture reproduces rejection of createTarget after an exactly retained scrubbed process has no current window. Opening now qualifies retained profile/PID/start/boot/executable and current assignment launch environment/display. Existing-page commands still require current window proof and input ownership. Reuse and root-placement interlock retain process custody even with no current window.29 tests in7 files pass, including changed process/native generation rejection. Build/install/native acceptance pending.
+
+### Installed opening custody
+
+PR282 integrated fd15308b4eba42d5c97cb4d08b499dff52afd53d,590 compiled files0 mismatches at user-runtime-issue253-custody. Installed actual-wire harness passes opening without current window, preserves interaction window requirement and rejects changed process. API PID27316 active. One native no-submit original app/account test authorized with120s outerguard; no tracer or prompt effects. Once-only original frozen Demo10 prompt waits on verified prerequisites.
