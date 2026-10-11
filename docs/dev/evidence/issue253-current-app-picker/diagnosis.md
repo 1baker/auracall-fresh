@@ -1,0 +1,7 @@
+# Current app-picker diagnosis
+
+Original installed PR284 no-submit session15675 failed before any prompt: visible legacy selector missing after @mention. Scoped observed native repro35653 terminal exit1 (not timeout124) captures app BUTTON while exact mention present. Current row has app-menu-item-height CSS marker, exact installed name/description and no role/id/tabindex. A same-name custom GPT arrives separately. Trigger screenshots and private DOM records remain under LitScout demo10/pr284-trigger-18/19; private identities/content are excluded here.
+
+Public ensure seam red: pnpm vitest run tests/browser/chatgptAppComposer.test.ts,2.24s, exact old-selector error. Fixture minimized to current row marker/text and same-name GPT; actual injected expressions execute, UI boundary consumes fixture selector membership. Ranked predictions shown: obsolete markup; name collision; delayed arrival. Source shares current-row qualification with native no-submit and submission paths; waits for one visible enabled exact name/installed-description row. No description and duplicate app rows are unqualified. Legacy exact-name rows remain supported. Exact selected pill identity remains required.
+
+No prompt/intent/result, mode change, app recreation, control bypass or automatic resubmission. Diagnostic native observer is read-only and private, not persistent production instrumentation. Historical process exits remain unattributed.

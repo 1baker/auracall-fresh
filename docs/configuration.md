@@ -1096,3 +1096,5 @@ A retained native browser can open a replacement tab/window when its existing wi
 Cold startup opens and records custody of a required replacement page before retiring its selected incompatible startup page. Closing the sole page first can terminate Chromium. If replacement creation fails, startup is preserved; if retirement fails, replacement custody is retained and the command reports the incomplete handoff.
 
 ChatGPT app tests qualify one visible enabled composer outside dialogs, supporting both legacy editor ID and the current rich Ask ChatGPT editor. Missing or ambiguous editors stop before input; a missing clear readback is not success. Exact app identity and account checks still apply.
+
+Current app-picker rows require the installed app description as well as name; a same-name custom GPT is insufficient. Missing description or duplicate matching rows stops selection. Legacy picker rows retain exact-name qualification. The selected pill must still carry the exact app identity before Send.

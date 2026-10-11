@@ -1,3 +1,5 @@
+- Captured app-picker rows (provider-free): `pnpm vitest run tests/browser/chatgptAppComposer.test.ts`. Actual ensure/lookup expressions select a delayed current app row by installed name/description, reject missing metadata and duplicate rows, and exclude a same-name custom GPT. Native UI selection remains a separate check.
+
 - Captured app composer (provider-free): `pnpm vitest run tests/browser/chatgptAppComposer.test.ts`. Real injected clear/mention expressions recognize the current rich editor without legacy ID, reject ambiguous/hidden/modal/unrelated editors and do not treat disappearing editors as cleared. Trusted-input and exact app identity remain required. Native acceptance is separate.
 
 - Developer-app affinity admission (provider-free): `pnpm vitest run tests/browser/chatgptDeveloperAppLifecycle.test.ts`. Selected full configuration survives conflicting default identity; non-affinity remains unchanged; admission stops before transport. Installed acceptance is separate.

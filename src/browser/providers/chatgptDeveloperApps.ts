@@ -347,6 +347,7 @@ export class ChatgptDeveloperAppBrowserAdapter {
 			await ensureChatgptEcosystemMention(client, {
 				label: app.name,
 				acceptedPluginIds: [app.pluginId, ...app.appIds],
+				description: app.description,
 			});
 			const selected = await readChatgptEcosystemMention(client);
 			if (!selected || !chatgptDeveloperAppSelectionMatchesForTest(selected.pluginId, app)) {

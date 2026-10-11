@@ -5,13 +5,13 @@ Lane: P90
 Integration: merge
 Work items: #253
 Owner: ecochran76; primary agent, serialized implementation.
-Branch: fix/issue253-current-app-composer
+Branch: fix/issue253-current-app-picker
 Target: main through PR merge
 Base: 9b324b3dc7d3f8f1ec50e3888f02e71c39047e02
 
 ## Current State
 
-PR283 integrated/installed with590-file parity. Original no-submit native test now preserves browser PID8872/start38966233 but exits before effect: composer editor not found. Captured DOM has one visible rich Ask ChatGPT editor without legacy ID. Actual clear seam reproduces that exact error; adding only legacy ID passes. Shared precise composer lookup now supports both shapes and protects app-pill selection/readback. 87 focused tests, typecheck, scoped lint, full build and serial Standards/Spec review pass; installation/native acceptance pending; original once-only Demo10 acceptance remains gated. Historical exit attribution remains unknown.
+Rich composer repair installed. Instrumented no-submit captures the real app picker while @LitScout is present: app BUTTON has only current app-menu CSS marker and exact installed name/description; later same-name custom GPT row appears. Legacy .popover/role/tabindex selectors do not qualify actual picker. Public-seam captured-button regression red in2.24s; current qualification waits for one matching app row using installed description and rejects missing metadata/duplicate rows before clicking. Exact app pill identity remains required.89 browser +47 CLI/capability focused tests pass; typecheck, full build, scoped lint and serial Standards/Spec review pass; installed/native acceptance pending. No original prompt/intent/result; browser53930/start39054099 last qualified alive.
 
 ## Scope and seams
 
@@ -90,3 +90,18 @@ PR283 integrated e6199c06c485484e97b03ac74bd3ff5bfb0c65b9, user-runtime-issue253
 ## Revision | Current rich app composer
 
 No-submit native fixture at2026-10-11T22:16:44Z records one empty rich DIV, contenteditable true, role textbox, aria-label Ask ChatGPT, data-composer-markdown, FORM ancestor, no id/testid, outside dialogs. Clear readiness and app mention path incorrectly require legacy prompt-textarea ID. Regression executes actual injected expressions at public clear/mention seams; adding only legacy ID is passing differential control. Share the existing precise rich selector with conversation reads. Require one visible enabled composer-owned editor outside dialogs, reject missing clear readback, preserve trusted input, exact app identity and fresh-chat guard. No new prompt, implicit retry or broad editor fallback.
+
+
+### Installed rich composer repair
+
+PR284 integrated b188ae01493209fce88f9ad3da4ce2248f078844, validated806c968c12f426531efff01684aa0ddc5e5edb49. CLI/API use user-runtime-issue253-composer;591 dist files0 mismatches/extra. Installed public clear/mention fixture verifies current no-ID shape, trusted clearing and exact app identity without provider effects. API PID50673 active, KillModeprocess preserved. Before promotion browser8872 was already absent with stale registry retained and CDP unavailable; actor unknown, retained draft unknown, last observed empty22:16:44Z. LitScout confirms original intent/result absent. One canonical no-submit native test authorized with120s guard; no manual stale-state recovery or provider submission.
+
+
+### Native rich composer outcome and picker diagnosis
+
+Original PR284 no-submit terminal exit1/session15675, JSON0bytes: Visible selector not found .popover .__menu-item[tabindex] after native @LitScout insertion. Composer clearing advanced; exact app selection remains unqualified. Fresh browser53930/start39054099 alive. Current target5B927463445DE29431D89B1CB3DE050A screenshot/DOM at22:29:27Z shows empty editor, no picker, zero app pills. Source selectForTest finally clears the native-created mention draft; current absence does not prove trigger-time absence. No original Demo10 intent/result. One scoped no-submit reproduction with bounded read-only observer authorized under active diagnosis goal after account/empty composer/prior-unsent checks; never submit or bypass control.
+
+
+## Revision | Current app-picker row qualification
+
+Trigger-time observer captured exact native mention draft plus app row at22:32:20.139Z, then same-name custom GPT22:32:21.792Z. Actual current row BUTTON has CSS --app-menu-item-height marker, no legacy menu role/id/tabindex. Source old selector deterministically cannot qualify it. Preserve current rich editor qualification; wait for exactly one visible enabled current row matching installed name+description, or one exact-label legacy row, then click only marked choice and verify app pill identity. Current row without installed description is unqualified because a same-name GPT can arrive first. Carry description through both no-submit and submission paths; never replace exact plugin identity with text proof. Browser-native acceptance still required.

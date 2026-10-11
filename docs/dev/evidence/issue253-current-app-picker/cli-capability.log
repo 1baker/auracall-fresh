@@ -1,0 +1,12 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-issue253-triage
+
+ ✓ tests/browser/chatgptComposerTool.test.ts (21 tests) 1831ms
+     ✓ brings a retained tab forward before measuring the workbench attachment trigger  1609ms
+ ✓ tests/cli/chatgptDeveloperAppsCommand.test.ts (26 tests) 50ms
+
+ Test Files  2 passed (2)
+      Tests  47 passed (47)
+   Start at  17:37:42
+   Duration  3.27s (transform 2.62s, setup 172ms, import 3.37s, tests 1.88s, environment 0ms)
+

@@ -20,7 +20,7 @@ export interface DeveloperAppSubmissionOptions {
 /** One shared lifecycle invocation; failures are evidence, never permission to resubmit. */
 export async function submitChatgptDeveloperApp(
 	userConfig: ResolvedUserConfig,
-	app: { name: string; pluginId: string; appIds: string[] },
+	app: { name: string; pluginId: string; appIds: string[]; description?: string | null },
 	prompt: string,
 	options: DeveloperAppSubmissionOptions = {},
 ): Promise<
@@ -73,7 +73,11 @@ export async function submitChatgptDeveloperApp(
 				composerTool: null,
 				timeoutMs: 120_000,
 			},
-			ecosystemMention: { label: app.name, acceptedPluginIds: [app.pluginId, ...app.appIds] },
+			ecosystemMention: {
+				label: app.name,
+				acceptedPluginIds: [app.pluginId, ...app.appIds],
+				...(app.description ? { description: app.description } : {}),
+			},
 			onProviderEffectState: (state) => {
 				effectState = state;
 			},
