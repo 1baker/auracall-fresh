@@ -1,5 +1,10 @@
 ## 2026-10-11 — Automatic desktop placement retains custody across recovery
 
+## 2026-10-11 — Explicit engineering skill configuration (#273)
+
+Matt triage requires tracker and role mappings, not inference from existing category labels. Configure docs/agents and preserve CONTEXT.md plus repository commit/integration policy when adapting generic templates. Label creation and application are distinct authorities; constrain setup creation to the four missing state labels and verify their readback.
+
+
 Automatic Wake uses the native consumer policy maximum and serializes allocation
 through browser launch. Unknown window observations or unretained local custody
 cannot justify capacity growth. Durable acquisition/release requests preserve

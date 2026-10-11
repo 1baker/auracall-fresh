@@ -44,6 +44,18 @@
         },
         "attention/help-wanted": {
           "provider_label": "help wanted"
+        },
+        "triage/needs-triage": {
+          "provider_label": "needs-triage"
+        },
+        "triage/needs-info": {
+          "provider_label": "needs-info"
+        },
+        "triage/ready-for-agent": {
+          "provider_label": "ready-for-agent"
+        },
+        "triage/ready-for-human": {
+          "provider_label": "ready-for-human"
         }
       }
     }

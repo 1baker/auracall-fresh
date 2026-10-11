@@ -1,0 +1,130 @@
+{
+  "actor": "ecochran76",
+  "host": "github.com",
+  "repository": "ecochran76/auracall",
+  "issue": 273,
+  "action": "create_labels",
+  "idempotency_key": "matt-setup-20261011",
+  "timestamp": "2026-10-11T16:05:37.048668+00:00",
+  "created": [
+    "needs-triage",
+    "needs-info",
+    "ready-for-agent",
+    "ready-for-human"
+  ],
+  "before": [
+    {
+      "color": "d73a4a",
+      "description": "Something isn't working",
+      "name": "bug"
+    },
+    {
+      "color": "0075ca",
+      "description": "Improvements or additions to documentation",
+      "name": "documentation"
+    },
+    {
+      "color": "cfd3d7",
+      "description": "This issue or pull request already exists",
+      "name": "duplicate"
+    },
+    {
+      "color": "a2eeef",
+      "description": "New feature or request",
+      "name": "enhancement"
+    },
+    {
+      "color": "7057ff",
+      "description": "Good for newcomers",
+      "name": "good first issue"
+    },
+    {
+      "color": "008672",
+      "description": "Extra attention is needed",
+      "name": "help wanted"
+    },
+    {
+      "color": "e4e669",
+      "description": "This doesn't seem right",
+      "name": "invalid"
+    },
+    {
+      "color": "d876e3",
+      "description": "Further information is requested",
+      "name": "question"
+    },
+    {
+      "color": "ffffff",
+      "description": "This will not be worked on",
+      "name": "wontfix"
+    }
+  ],
+  "after": [
+    {
+      "color": "d73a4a",
+      "description": "Something isn't working",
+      "name": "bug"
+    },
+    {
+      "color": "0075ca",
+      "description": "Improvements or additions to documentation",
+      "name": "documentation"
+    },
+    {
+      "color": "cfd3d7",
+      "description": "This issue or pull request already exists",
+      "name": "duplicate"
+    },
+    {
+      "color": "a2eeef",
+      "description": "New feature or request",
+      "name": "enhancement"
+    },
+    {
+      "color": "7057ff",
+      "description": "Good for newcomers",
+      "name": "good first issue"
+    },
+    {
+      "color": "008672",
+      "description": "Extra attention is needed",
+      "name": "help wanted"
+    },
+    {
+      "color": "e4e669",
+      "description": "This doesn't seem right",
+      "name": "invalid"
+    },
+    {
+      "color": "d876e3",
+      "description": "Further information is requested",
+      "name": "question"
+    },
+    {
+      "color": "ffffff",
+      "description": "This will not be worked on",
+      "name": "wontfix"
+    },
+    {
+      "color": "FBCA04",
+      "description": "Maintainer evaluation required",
+      "name": "needs-triage"
+    },
+    {
+      "color": "D4C5F9",
+      "description": "Waiting for reporter information",
+      "name": "needs-info"
+    },
+    {
+      "color": "0E8A16",
+      "description": "Fully specified for agent implementation",
+      "name": "ready-for-agent"
+    },
+    {
+      "color": "1D76DB",
+      "description": "Human implementation required",
+      "name": "ready-for-human"
+    }
+  ],
+  "verified": true
+}

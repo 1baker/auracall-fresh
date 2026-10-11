@@ -1,5 +1,10 @@
 ## 2026-10-11 — Plan0404 final tracker and custody reconciliation
 
+## 2026-10-11 — Matt engineering skill setup (#273)
+
+Operator approved the complete configuration draft. Branch `docs/matt-skill-setup` adds six skill references and AGENTS.md routing; GitHub remains the tracker and CONTEXT.md remains the domain authority. Label creation is restricted to four missing default triage states. Setup does not classify existing issues. Acceptance: configuration/reference checks, exact GitHub label readback and PR integration.
+
+
 PR271 closeout integrated57514aebf; all five issues264–268 are CLOSED with exact
 actor/state readbacks. Installed product remains source6e7009727; later commits
 are documentation. Catalog now distinguishes source integration receipt6e7009727
