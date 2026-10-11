@@ -16,7 +16,7 @@ Named desktop placement and remembered assignments currently concentrate browser
 on Research. Profiles already appear in the rail and support Wake. Agent Browser
 provides primary-source demand allocation, wrap-around and guarded empty-capacity
 release patterns. Operator approved equivalent allocation plus rail Wake and
-redistribution. No pool implementation or redistribution has occurred.
+redistribution. Allocation source checkpoint implements automatic Wake, growth and configured-capacity wrap-around; 22 focused tests and typecheck pass. Shrink, source review, integration, install and redistribution remain pending.
 
 ## Problem Statement
 

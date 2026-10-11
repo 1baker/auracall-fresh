@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import { setTimeout as delay } from "node:timers/promises";
 import CDP from "../cdp.js";
 import { NativeDesktopControl } from './nativeDesktopControl.js';
-import { resolveNativeDesktopLaunch } from './desktopConfig.js';
+import { resolveNativeDesktopLaunch, effectiveDesktopConfig } from './desktopConfig.js';
 import { readyNativeDesktopBrowsers, nativeDesktopObserveView } from './nativeDesktopClient.js';
 import { RemoteViewConfigSchema } from '../../schema/types.js';
 import { DesktopBindingStore, type DesktopBinding } from './desktopBindings.js';
@@ -46,8 +46,8 @@ export async function listDesktopViews(input: {
   remoteView: unknown;
   store?: DesktopBindingStore;
   runner?: AgentBrowserCommandRunner;
-}): Promise<{ defaultDesktop?: string; rootDesktopUrl?: string; desktops: DesktopView[] }> {
-  const config = RemoteViewConfigSchema.parse(input.remoteView ?? {});
+}): Promise<{ automaticPlacement?: boolean; defaultDesktop?: string; rootDesktopUrl?: string; desktops: DesktopView[] }> {
+  const config = await effectiveDesktopConfig(input.remoteView);
   const bindings = await (input.store ?? new DesktopBindingStore()).list();
   const runner = input.runner ?? runAgentBrowserCommand;
   const desktops: DesktopView[] = [];
@@ -88,7 +88,7 @@ export async function listDesktopViews(input: {
     }
     desktops.push(view);
   }
-  return { defaultDesktop: config.defaultDesktop, rootDesktopUrl: config.rootDesktopUrl, desktops };
+  return { ...(config.pool ? { automaticPlacement: true } : {}), defaultDesktop: config.defaultDesktop, rootDesktopUrl: config.rootDesktopUrl, desktops };
 }
 
 export async function captureDesktopView(input: {
@@ -98,7 +98,7 @@ export async function captureDesktopView(input: {
   store?: DesktopBindingStore;
   runner?: AgentBrowserCommandRunner;
 }): Promise<{ imageBase64: string; width: number; height: number; capturedAt?: string }> {
-  const config = RemoteViewConfigSchema.parse(input.remoteView ?? {});
+  const config = await effectiveDesktopConfig(input.remoteView);
   const desktop = Object.hasOwn(config.desktops, input.name) ? config.desktops[input.name] : undefined;
   if (!desktop) throw new Error('Unknown AuraCall desktop.');
   if (desktop.poolName) throw new Error('Use the native viewer for this desktop.');
@@ -131,25 +131,25 @@ export async function captureDesktopView(input: {
 }
 
 export async function openDesktopView(input: { remoteView: unknown; name: string; browserId: string }): Promise<{ url: string; capability: 'observe' }> {
-  const selected = resolveNativeDesktopLaunch({ remoteView: input.remoteView, desktop: input.name });
+  const selected = resolveNativeDesktopLaunch({ remoteView: await effectiveDesktopConfig(input.remoteView), desktop: input.name });
   if (!selected) throw new Error('The selected desktop does not provide a native viewer.');
   return nativeDesktopObserveView(selected, input.browserId);
 }
 
 export async function takeDesktopControl(input: { remoteView: unknown; name: string; browserId: string; token: string }): Promise<{ url: string; capability: 'control'; token: string }> {
-  const selected = resolveNativeDesktopLaunch({ remoteView: input.remoteView, desktop: input.name });
+  const selected = resolveNativeDesktopLaunch({ remoteView: await effectiveDesktopConfig(input.remoteView), desktop: input.name });
   if (!selected) throw new Error('The selected desktop does not provide native control.');
   return new NativeDesktopControl({ inactivityTimeoutMs: RemoteViewConfigSchema.parse(input.remoteView ?? {}).controlInactivitySeconds * 1000 }).take(selected, input.browserId, input.token);
 }
 
 export async function releaseDesktopControl(input: { remoteView: unknown; name: string; browserId: string; token: string }): Promise<void> {
-  const selected = resolveNativeDesktopLaunch({ remoteView: input.remoteView, desktop: input.name });
+  const selected = resolveNativeDesktopLaunch({ remoteView: await effectiveDesktopConfig(input.remoteView), desktop: input.name });
   if (!selected) throw new Error('The selected desktop does not provide native control.');
   await new NativeDesktopControl().release(selected, input.browserId, input.token);
 }
 
 export async function expireInactiveDesktopControls(remoteView: unknown): Promise<void> {
-  const config = RemoteViewConfigSchema.parse(remoteView ?? {});
+  const config = await effectiveDesktopConfig(remoteView);
   for (const [name, desktop] of Object.entries(config.desktops)) {
     if (!desktop.poolName) continue;
     const selected = resolveNativeDesktopLaunch({ remoteView: config, desktop: name });
@@ -158,14 +158,14 @@ export async function expireInactiveDesktopControls(remoteView: unknown): Promis
 }
 
 export async function desktopControlStatus(input: { remoteView: unknown; name: string; browserId: string; token: string }): Promise<{ state: 'held' | 'released' }> {
-  const selected = resolveNativeDesktopLaunch({ remoteView: input.remoteView, desktop: input.name });
+  const selected = resolveNativeDesktopLaunch({ remoteView: await effectiveDesktopConfig(input.remoteView), desktop: input.name });
   if (!selected) throw new Error('The selected desktop does not provide native control.');
   return new NativeDesktopControl().status(selected, input.browserId, input.token);
 }
 
 /** Close only the currently verified AuraCall browser; retain desktop and managed data. */
 export async function closeDesktopBrowser(input: { remoteView: unknown; name: string; browserId: string }): Promise<{ state: "closed" }> {
-  const selected = resolveNativeDesktopLaunch({remoteView:input.remoteView,desktop:input.name});
+  const selected = resolveNativeDesktopLaunch({remoteView:await effectiveDesktopConfig(input.remoteView),desktop:input.name});
   if (!selected) throw new Error("Browser close requires a configured native AuraCall desktop.");
   const matches = (await readyNativeDesktopBrowsers(selected)).filter(item => item.browserId === input.browserId);
   const binding = matches.length === 1 ? matches[0] : undefined;

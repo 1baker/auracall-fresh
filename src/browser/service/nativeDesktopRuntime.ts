@@ -7,6 +7,7 @@ import { getAuracallHomeDir } from '../../auracallHome.js';
 import type { BrowserLogger, ResolvedBrowserConfig } from '../types.js';
 import { RemoteViewApplication } from './remoteViewApplication.js';
 import { NativeDesktopStore, nativeDesktopKey, observeNativeBrowser, verifyNativeBrowser, type NativeDesktopBrowser } from './nativeDesktopStore.js';
+import { selectPoolDesktop } from './nativeDesktopPool.js';
 import { DesktopControlGate } from './desktopControlGate.js';
 
 interface NativeChromeHandle { pid?: number; port: number; host?: string; kill: () => Promise<unknown> }
@@ -30,7 +31,7 @@ export async function findNativeDesktopBrowser(config: ResolvedBrowserConfig, us
   if (!binding) return undefined;
   if (!await verifyNativeBrowser(binding)) return undefined;
   if (binding.executable !== await expectedNativeExecutable(config)) throw new Error('Native browser build reuse conflicts with the selected executable.');
-  if (nativeDesktopKey(binding) !== nativeDesktopKey(selected)) throw new Error('Managed browser is bound to a different native desktop; close it explicitly before reassignment.');
+  if (selected.automatic ? binding.origin !== selected.origin || binding.application !== selected.application || binding.poolName !== selected.poolName : nativeDesktopKey(binding) !== nativeDesktopKey(selected)) throw new Error('Managed browser is bound to a different native desktop; close it explicitly before reassignment.');
   const app = new RemoteViewApplication(selected);
   const ready = (await app.listReadyAssignments(selected.poolName)).filter(item => item.assignmentId === binding.assignment.assignmentId &&
     item.desktopId === binding.assignment.desktopId && item.generation === binding.assignment.generation);
@@ -50,6 +51,15 @@ export async function launchNativeDesktopBrowser(input: {
   const store = new NativeDesktopStore();
   const app = new RemoteViewApplication(selected);
   input.abortSignal?.throwIfAborted();
+  if (selected.automatic) {
+    return store.exclusive(`pool:${selected.origin}:${selected.application}:${selected.poolName}`, async () => {
+      const previous = await findNativeDesktopBrowser(config, userDataDir, store);
+      if (previous) return { pid: previous.pid, port: previous.cdpPort, host: previous.cdpHost, kill: async () => { logger('Keeping AuraCall native desktop browser running.'); } };
+      if (await findChromeProcessUsingUserDataDir(userDataDir)) throw new Error('A running browser has no matching native desktop receipt; refusing unverified reuse.');
+      const desktop = await selectPoolDesktop(selected, store);
+      return launchNativeDesktopBrowser({ ...input, config: { ...config, remoteViewDesktop: { ...selected, automatic: false, desktopName: desktop.desktopName } } });
+    });
+  }
   return store.exclusive(`profile:${path.resolve(userDataDir)}`, async () => {
     const previous = await findNativeDesktopBrowser(config, userDataDir, store);
     if (previous) return { pid: previous.pid, port: previous.cdpPort, host: previous.cdpHost, kill: async () => { logger('Keeping AuraCall native desktop browser running.'); } };

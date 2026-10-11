@@ -1,3 +1,13 @@
+## 2026-10-10 — Plan0404 allocation source checkpoint
+
+P87 on feat/issue264-desktop-pool delivers provider-free automatic rail Wake,
+config-driven native capacity, demand growth and wrap-around. Config and growth
+red receipts independently reproduce missing automatic resolution and desktop
+bunching. Inventory red shows dynamically allocated desktops absent from catalog.
+22 focused tests across seven files and typecheck pass. Implementation not yet
+reviewed/integrated/installed; shrink and redistribution remain pending.
+Issues #264–#268; evidence: desktop-pool-implementation.
+
 ## 2026-10-10 — Automatic desktop pool design
 
 Operator confirmed rail Wake assigns desktop capacity automatically, up to ten

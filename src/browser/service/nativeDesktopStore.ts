@@ -36,6 +36,25 @@ export class NativeDesktopStore {
     const names = await fs.readdir(this.directory).catch((error: NodeJS.ErrnoException) => { if (error.code === 'ENOENT') return []; throw error; });
     return Promise.all(names.filter(name => /^browser-[a-f0-9]{64}\.json$/.test(name)).map(async name => browserSchema.parse(JSON.parse(await fs.readFile(path.join(this.directory, name), 'utf8')))));
   }
+  async desktops(): Promise<NativeDesktop[]> {
+    const names = await fs.readdir(this.directory).catch((e: NodeJS.ErrnoException) => { if (e.code === 'ENOENT') return []; throw e; });
+    return Promise.all(names.filter(n => /^desktop-[a-f0-9]{64}\.json$/.test(n)).map(async n => desktopSchema.parse(JSON.parse(await fs.readFile(path.join(this.directory, n), 'utf8')))));
+  }
+  async pendingPoolAcquisition(config: RemoteViewDesktopConfig): Promise<{ key: string; label: string } | undefined> {
+    const name = `pool-acquire-${digest(JSON.stringify([config.origin, config.application, config.poolName]))}.json`;
+    try { return z.object({ key: z.string().min(1), label: z.string().min(1) }).parse(JSON.parse(await fs.readFile(path.join(this.directory, name), 'utf8'))); }
+    catch(e) { if ((e as NodeJS.ErrnoException).code === 'ENOENT') return undefined; throw e; }
+  }
+  async poolAcquisition(config: RemoteViewDesktopConfig): Promise<{ key: string; label: string }> {
+    const name = `pool-acquire-${digest(JSON.stringify([config.origin, config.application, config.poolName]))}.json`;
+    try { return z.object({ key: z.string().min(1), label: z.string().min(1) }).parse(JSON.parse(await fs.readFile(path.join(this.directory, name), 'utf8'))); }
+    catch(e) { if ((e as NodeJS.ErrnoException).code !== 'ENOENT') throw e; }
+    const pending = { key: `auracall-pool-${randomUUID()}`, label: 'AuraCall desktop' };
+    await this.write(name, pending); return pending;
+  }
+  async completePoolAcquisition(config: RemoteViewDesktopConfig): Promise<void> {
+    await fs.rm(path.join(this.directory, `pool-acquire-${digest(JSON.stringify([config.origin, config.application, config.poolName]))}.json`), { force: true });
+  }
   async exclusive<T>(key: string, operation: () => Promise<T>): Promise<T> {
     await fs.mkdir(this.directory, { recursive: true, mode: 0o700 });
     const lock = path.join(this.directory, `lock-${digest(key)}`);
