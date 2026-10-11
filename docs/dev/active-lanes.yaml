@@ -1763,15 +1763,15 @@ lanes:
     disposition: PR244 integrated with current main after deployed-client regression; combined package passes202 focused tests and26 rendered checks and restores desktops200. Five registered browser parents and27 display/provider identities preserved; wider census has18 unattributed Chrome exits. Scheduler remains paused; authenticated input/root acceptance stays open.
     updated_at: 2026-10-10
 
-  - id: P87
+  - id: P89
     objective: Demand-driven configurable desktop pool with rail Wake and preserved browser redistribution.
     plan: docs/dev/plans/0404-2026-10-10-demand-driven-desktop-pool.md
     plan_ref: refs/heads/feat/issue264-desktop-pool
     branch: feat/issue264-desktop-pool
     target: main
-    plan_state: OPEN
-    custody_state: ACTIVE_WORKTREE
-    checkpoint: b302210ed
+    plan_state: CLOSED
+    custody_state: INTEGRATED
+    checkpoint: 6e7009727d7f0b18ce84fb125986129360aebd59
     remote_ref: refs/remotes/origin/feat/issue264-desktop-pool
     integration: merge
     work_items: [ecochran76/auracall#264, ecochran76/auracall#265, ecochran76/auracall#266, ecochran76/auracall#267, ecochran76/auracall#268]
@@ -1779,7 +1779,9 @@ lanes:
     overlaps: [P86]
     reconciled_overlaps: [P86]
     reconciliation_note: P86 source is integrated; preserve its rail, viewer and control contracts. P87 changes automatic allocation rather than provider behavior.
-    blocker: None for provider-free implementation; installed rollout follows integrated source and exact process readback.
-    validation_status: approved-spec-implementation-pending
-    validation_ref: docs/dev/evidence/desktop-pool-planning/publication.json
-    updated_at: 2026-10-10
+    blocker: None within Plan0404; public human input remains outside this lane.
+    validation_status: integrated-installed-five-desktops-one-spare
+    validation_ref: docs/dev/evidence/desktop-pool-installed/acceptance.json
+    integration_receipt: 6e7009727d7f0b18ce84fb125986129360aebd59
+    disposition: PR270 installed; five original browsers spread with14 routes preserved and one spare; native maximum10. Corrected duplicate P87 registration to P89; Plan0393 retains P87.
+    updated_at: 2026-10-11

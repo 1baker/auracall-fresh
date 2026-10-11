@@ -1,0 +1,9 @@
+{
+  "at": "2026-10-11T05:18:38.990481+00:00",
+  "registeredBrowserParents": 5,
+  "allRegisteredExact": true,
+  "chromeProcessesObserved": 175,
+  "nativeDisplayProcessesObserved": 33,
+  "chromeRssBytes": 19425128448,
+  "scope": "Fresh host census; foreign browser trees retained without exit attribution."
+}

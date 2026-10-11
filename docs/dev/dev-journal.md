@@ -1,3 +1,24 @@
+## 2026-10-11 — Closeout audit correction
+
+The active planning audit failed with four pre-existing findings: three Plan0386
+metadata gaps and three older Runbook headings with a nonterminal date (one
+aggregate finding). Exact prior/current comparison proves this slice added no
+invalid heading. Its heading was standardized to numeric202610110404; this was
+not the cause of the aggregate failure. Seven baseline findings are accepted.
+The raw failures are retained; no repository-wide clean audit is claimed.
+Plan0404 source/installed checks and scoped planning reconciliation remain valid.
+
+## 2026-10-11 — Plan0404 installed desktop distribution accepted
+
+Integrated PR270 source6e7009727 installed and matches590 compiled files. Native
+AuraCall pool maximum10 and application-managed scale-in are effective. Five
+original browsers occupy five desktops; one ready spare and six ready rail rows
+remain. All14 original routes preserved with unchanged managed directories/builds;
+wsl-chrome-3 process untouched. No prompt or scheduler wake. Gemini delayed close
+409 reconciled against exact process absence; no close retry. Historical P87
+registration collided with Plan0393 and is corrected to P89 in current authority.
+Curated acceptance: docs/dev/evidence/desktop-pool-installed/acceptance.json.
+
 ## 2026-10-11 — Plan0404 source review and integration preparation
 
 Final primary validation: 64 tests across19 files, typecheck and production build

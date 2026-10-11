@@ -1,3 +1,17 @@
+## Turn 202610110404 | 2026-10-11
+
+PR270 integrated6e7009727 and installed in isolated user-runtime-plan0404 prefix;
+previous runtime retained. All590 compiled files match. AuraCall-only native pool
+policy maximum10, scale-intrue and lifecycle-managerapplication adopted without
+native desktop/browser restart. Four idle browsers redistributed using exact
+process/custody and route receipts; original active wsl-chrome-3 remains intact.
+Final five occupied desktops, one spare, six ready rail profiles,14 original
+routes preserved. Gemini delayed close reconciled without duplicate effect.
+Corrected this lane to P89; P87 is already Plan0393. Primary64 source tests,
+typecheck/build, scoped lint,26 rendered checks and installed readback pass.
+Plan0404 closed; wider P86 human viewer/input acceptance is not claimed.
+Memory disposition forbidden under current user authorization boundary.
+
 ## 2026-10-10 | Plan0394 memory routing
 
 Issue251 owner ecochran76 IN_PROGRESS. Canonical auracall_main route and routing-only manifest are documented; unresolved destination and actual service failure are separate causes. Shared Graphiti code and unrelated root work are preserved. Independent review passed; atlas job completed-visible and the original discovery query now returns auracall_main. Direct source-group repair retrieval passed. Plan0394 closes; remote CI reported no checks.
