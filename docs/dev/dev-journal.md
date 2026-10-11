@@ -1,3 +1,11 @@
+## 2026-10-11 — Closeout audit correction
+
+The first active planning audit failed: this slice used an unsupported hyphenated
+Turn number, corrected to numeric202610110404. Three existing Plan0386 planning
+findings remain outside Plan0404; seven baseline findings are accepted. Do not
+report repository-wide planning cleanliness from a passing shell pipeline. The
+raw first failure is retained; Plan0404 source/installed checks remain valid.
+
 ## 2026-10-11 — Plan0404 installed desktop distribution accepted
 
 Integrated PR270 source6e7009727 installed and matches590 compiled files. Native

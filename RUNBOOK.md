@@ -1,4 +1,4 @@
-## Turn 20261011-0404 | 2026-10-11
+## Turn 202610110404 | 2026-10-11
 
 PR270 integrated6e7009727 and installed in isolated user-runtime-plan0404 prefix;
 previous runtime retained. All590 compiled files match. AuraCall-only native pool
