@@ -1,10 +1,12 @@
 ## 2026-10-11 — Closeout audit correction
 
-The first active planning audit failed: this slice used an unsupported hyphenated
-Turn number, corrected to numeric202610110404. Three existing Plan0386 planning
-findings remain outside Plan0404; seven baseline findings are accepted. Do not
-report repository-wide planning cleanliness from a passing shell pipeline. The
-raw first failure is retained; Plan0404 source/installed checks remain valid.
+The active planning audit failed with four pre-existing findings: three Plan0386
+metadata gaps and three older Runbook headings with a nonterminal date (one
+aggregate finding). Exact prior/current comparison proves this slice added no
+invalid heading. Its heading was standardized to numeric202610110404; this was
+not the cause of the aggregate failure. Seven baseline findings are accepted.
+The raw failures are retained; no repository-wide clean audit is claimed.
+Plan0404 source/installed checks and scoped planning reconciliation remain valid.
 
 ## 2026-10-11 — Plan0404 installed desktop distribution accepted
 

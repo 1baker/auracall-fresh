@@ -1,0 +1,20 @@
+{
+  "scope": "Plan0404/P89",
+  "planState": "CLOSED",
+  "roadmapWired": true,
+  "runbookWired": true,
+  "catalogIdCollisionCorrected": true,
+  "globalPlanningAudit": false,
+  "remainingPreExistingFindings": [
+    "RUNBOOK.md has Turn headings without a terminal YYYY-MM-DD date",
+    "OPEN plan missing Current State section: 0386-2026-10-01-chatgpt-materialization-surface-repair.md",
+    "plan not wired in ROADMAP.md: 0386-2026-10-01-chatgpt-materialization-surface-repair.md",
+    "plan not wired in RUNBOOK.md: 0386-2026-10-01-chatgpt-materialization-surface-repair.md"
+  ],
+  "preExistingMalformedTurns": [
+    "## Turn | 2026-10-10 | Plan0393",
+    "## Turn | 2026-10-10 | Plan0399",
+    "## Turn | 2026-10-10 | Plan0401"
+  ],
+  "baselineAcceptedCount": 7
+}
