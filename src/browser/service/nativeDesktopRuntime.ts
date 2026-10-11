@@ -6,7 +6,7 @@ import { findChromeProcessUsingUserDataDir } from '../../../packages/browser-ser
 import { getAuracallHomeDir } from '../../auracallHome.js';
 import type { BrowserLogger, ResolvedBrowserConfig } from '../types.js';
 import { RemoteViewApplication } from './remoteViewApplication.js';
-import { NativeDesktopStore, nativeDesktopKey, observeNativeBrowser, verifyNativeBrowser, type NativeDesktopBrowser } from './nativeDesktopStore.js';
+import { NativeDesktopStore, nativeDesktopKey, observeNativeBrowser, verifyNativeBrowserForOpening, type NativeDesktopBrowser } from './nativeDesktopStore.js';
 import { selectPoolDesktop } from './nativeDesktopPool.js';
 
 interface NativeChromeHandle { pid?: number; port: number; host?: string; kill: () => Promise<unknown> }
@@ -28,7 +28,7 @@ export async function findNativeDesktopBrowser(config: ResolvedBrowserConfig, us
   if (bindings.length > 1) throw new Error('Native browser ownership is ambiguous.');
   const binding = bindings[0];
   if (!binding) return undefined;
-  if (!await verifyNativeBrowser(binding)) return undefined;
+  if (!await verifyNativeBrowserForOpening(binding)) return undefined;
   if (binding.executable !== await expectedNativeExecutable(config)) throw new Error('Native browser build reuse conflicts with the selected executable.');
   if (selected.automatic ? binding.origin !== selected.origin || binding.application !== selected.application || binding.poolName !== selected.poolName : nativeDesktopKey(binding) !== nativeDesktopKey(selected)) throw new Error('Managed browser is bound to a different native desktop; close it explicitly before reassignment.');
   const app = new RemoteViewApplication(selected);

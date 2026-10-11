@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { setCdpCommandAdmissionResolver } from '../../../packages/browser-service/src/guardedCdp.js';
 import { DesktopBindingStore, type DesktopBinding } from './desktopBindings.js';
-import { NativeDesktopStore, nativeBrowserGeneration, verifyNativeBrowser } from './nativeDesktopStore.js';
+import { NativeDesktopStore, nativeBrowserGeneration, verifyNativeBrowser, verifyNativeBrowserForOpening } from './nativeDesktopStore.js';
 import { DesktopControlGate } from './desktopControlGate.js';
 
 export function desktopBindingGeneration(binding: DesktopBinding): string {
@@ -19,7 +19,10 @@ setCdpCommandAdmissionResolver(async ({ host, port }) => {
   const nativeStore = new NativeDesktopStore();
   const nativeCandidates = (await nativeStore.browsers()).filter(binding => canonicalHost(binding.cdpHost) === canonicalHost(host) && binding.cdpPort === port);
   const native = [];
-  for (const candidate of nativeCandidates) if (await verifyNativeBrowser(candidate)) native.push(candidate);
+  for (const candidate of nativeCandidates) {
+    if (!await verifyNativeBrowserForOpening(candidate)) throw new Error('Native desktop browser ownership changed; reconnect before automation.');
+    native.push(candidate);
+  }
   if (native.length && bindings.length) throw new Error('Conflicting legacy and native desktop endpoint ownership.');
   if (native.length) {
     if (native.length !== 1 || !native[0]) throw new Error('Ambiguous native desktop endpoint ownership.');
@@ -27,15 +30,16 @@ setCdpCommandAdmissionResolver(async ({ host, port }) => {
     const generation = nativeBrowserGeneration(binding);
     const gate = new DesktopControlGate(binding.assignment.desktopId);
     return { run: async (command, effect) => {
+      const opening = command === 'Target.New' || command === 'Target.createTarget';
       const ownedEffect = async () => {
         const current = (await nativeStore.browsers()).filter(item => item.managedProfileDir === binding.managedProfileDir);
-        if (current.length !== 1 || !current[0] || nativeBrowserGeneration(current[0]) !== generation || !await verifyNativeBrowser(binding)) {
+        if (current.length !== 1 || !current[0] || nativeBrowserGeneration(current[0]) !== generation || !await (opening ? verifyNativeBrowserForOpening(binding) : verifyNativeBrowser(binding))) {
           throw new Error('Native desktop browser ownership changed; reconnect before automation.');
         }
         return effect();
       };
       // Opening has acquisition custody; it must not require existing-page input ownership.
-      return command === 'Target.New' || command === 'Target.createTarget'
+      return opening
         ? ownedEffect() : gate.withAutomation(generation, ownedEffect);
     } };
   }

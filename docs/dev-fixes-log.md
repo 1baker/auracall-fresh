@@ -24696,3 +24696,7 @@ An empty desktop-control owner.json reproduced the installed JSON.parse crash wi
 ### 2026-10-11 | Optional Developer-mode deadline
 
 Final evaluation timeout in optional Developer-mode observation threw instead of preserving complete inventory. Distinguish the shared bounded evaluation timeout by type; provider records unknown mode while preserving unrelated errors and strict create/refresh guards. Adapter public-seam repro and133 focused tests qualify source behavior, not native submission.
+
+### 2026-10-11 | Native opening custody
+
+Current window/PID join was imposed before replacement-tab creation on a retained scrubbed browser. Opening uses exact retained process identity and fresh desktop assignment/display; existing-page interaction retains current window proof and control handoff. Real wire red/green and29 focused tests qualify source; do not infer historical exit attribution.
