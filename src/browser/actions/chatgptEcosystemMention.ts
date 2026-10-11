@@ -1,3 +1,7 @@
+import {
+	buildChatgptAppComposerLookup,
+	CHATGPT_APP_COMPOSER_SELECTORS,
+} from "./chatgptComposer.js";
 import { dismissOpenMenus, pressButton } from "../service/ui.js";
 import type { ChromeClient } from "../types.js";
 
@@ -18,7 +22,9 @@ export async function readChatgptEcosystemMention(
 ): Promise<ChatgptEcosystemMentionSelection | null> {
 	const result = await client.Runtime.evaluate({
 		expression: `(() => {
-      const pills = Array.from(document.querySelectorAll('#prompt-textarea [data-inline-selection-pill]'));
+      const editor = ${buildChatgptAppComposerLookup()};
+      if (!editor) return null;
+      const pills = Array.from(editor.querySelectorAll('[data-inline-selection-pill]'));
       const ecosystem = pills.filter((pill) => pill.getAttribute('data-symbol') === 'ecosystemMention');
       const documents = pills.filter((pill) => pill.getAttribute('data-symbol') === 'documentReference');
       if (ecosystem.length !== 1 || documents.length !== 0) return null;
@@ -57,7 +63,7 @@ async function selectChatgptEcosystemMention(
 	const requireFreshConversation = request.requireFreshConversation !== false;
 	const pristine = await client.Runtime.evaluate({
 		expression: `(() => {
-      const editor = document.querySelector('#prompt-textarea[contenteditable="true"]');
+      const editor = ${buildChatgptAppComposerLookup()};
       if (!editor) return false;
       const text = String(editor.innerText || '').trim();
       const pills = editor.querySelectorAll('[data-inline-selection-pill]');
@@ -75,7 +81,7 @@ async function selectChatgptEcosystemMention(
 
 	await dismissOpenMenus(client.Runtime);
 	const focused = await pressButton(client.Runtime, {
-		selector: '#prompt-textarea[contenteditable="true"]',
+		selector: CHATGPT_APP_COMPOSER_SELECTORS.join(", "),
 		interactionStrategies: ["pointer"],
 		requireVisible: true,
 		timeoutMs: 5_000,
@@ -83,9 +89,9 @@ async function selectChatgptEcosystemMention(
 	if (!focused.ok) {
 		throw new Error("Unable to focus the blank ChatGPT composer for app selection.");
 	}
-	await client.Runtime.evaluate({
+	const selectionFocus = await client.Runtime.evaluate({
 		expression: `(() => {
-      const editor = document.querySelector('#prompt-textarea[contenteditable="true"]');
+      const editor = ${buildChatgptAppComposerLookup()};
       if (!editor) return false;
       editor.focus();
       const selection = document.getSelection();
@@ -100,12 +106,17 @@ async function selectChatgptEcosystemMention(
     })()`,
 		returnByValue: true,
 	});
+	if (selectionFocus.result?.value !== true) {
+		throw new Error("ChatGPT composer changed before app selection.");
+	}
 	await client.Input.insertText({ text: `@${request.label}` });
 	const selected = await pressButton(client.Runtime, {
 		selector: ".popover .__menu-item[tabindex]",
 		interactionStrategies: ["pointer"],
 		requireVisible: true,
-		postSelector: '#prompt-textarea [data-inline-selection-pill][data-symbol="ecosystemMention"]',
+		postSelector: CHATGPT_APP_COMPOSER_SELECTORS.map(
+			(selector) => `${selector} [data-inline-selection-pill][data-symbol="ecosystemMention"]`,
+		).join(", "),
 		timeoutMs: 8_000,
 	});
 	const mention = await readChatgptEcosystemMention(client);
@@ -157,7 +168,7 @@ async function readMentionPickerDiagnostic(client: ChromeClient): Promise<string
 	const result = await client.Runtime.evaluate({
 		expression: `JSON.stringify({
       url: location.href,
-      editorText: document.querySelector('#prompt-textarea')?.innerText || '',
+      editorText: (${buildChatgptAppComposerLookup()})?.innerText || '',
       activeElement: document.activeElement?.id || document.activeElement?.tagName || null,
       popovers: Array.from(document.querySelectorAll('.popover,[role="listbox"],[role="menu"]'))
         .filter((node) => {

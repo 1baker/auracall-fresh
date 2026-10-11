@@ -398,7 +398,7 @@ describe("deriveChatgptDeveloperAppState", () => {
 	it("clears an ecosystem mention that first unwraps into literal composer text", async () => {
 		let clearChecks = 0;
 		const evaluate = vi.fn(async ({ expression }: { expression: string }) => {
-			if (expression.includes("Boolean(document.querySelector")) {
+			if (expression.startsWith("Boolean(")) {
 				return { result: { value: true } };
 			}
 			if (expression.includes("editor.focus()")) {

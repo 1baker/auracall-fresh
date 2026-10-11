@@ -1,3 +1,4 @@
+import { CHATGPT_RICH_PROMPT_INPUT_SELECTOR } from "../actions/chatgptComposer.js";
 import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -238,8 +239,7 @@ const CHATGPT_CONVERSATION_PROMPT_INPUT_LABEL = resolveBundledServiceUiLabel(
 	"Chat with ChatGPT",
 );
 const CHATGPT_CONVERSATION_PROMPT_INPUT_SELECTOR = `textarea[aria-label=${JSON.stringify(CHATGPT_CONVERSATION_PROMPT_INPUT_LABEL)}]`;
-const CHATGPT_CONVERSATION_RICH_PROMPT_INPUT_SELECTOR =
-	'div[data-composer-markdown][contenteditable="true"][role="textbox"][aria-label="Ask ChatGPT"]';
+const CHATGPT_CONVERSATION_RICH_PROMPT_INPUT_SELECTOR = CHATGPT_RICH_PROMPT_INPUT_SELECTOR;
 const CHATGPT_CONVERSATION_TURN_SECTION_SELECTOR = resolveBundledServiceDomSelector(
 	"chatgpt",
 	"conversation_turn_section",

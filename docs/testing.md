@@ -1,3 +1,5 @@
+- Captured app composer (provider-free): `pnpm vitest run tests/browser/chatgptAppComposer.test.ts`. Real injected clear/mention expressions recognize the current rich editor without legacy ID, reject ambiguous/hidden/modal/unrelated editors and do not treat disappearing editors as cleared. Trusted-input and exact app identity remain required. Native acceptance is separate.
+
 - Developer-app affinity admission (provider-free): `pnpm vitest run tests/browser/chatgptDeveloperAppLifecycle.test.ts`. Selected full configuration survives conflicting default identity; non-affinity remains unchanged; admission stops before transport. Installed acceptance is separate.
 
 - Runtime browser launch precedence and stored projection (provider-free):

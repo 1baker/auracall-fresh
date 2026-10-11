@@ -1,3 +1,4 @@
+import { buildChatgptAppComposerLookup } from "../actions/chatgptComposer.js";
 import type { DevToolsConnectionOptions } from "../../../packages/browser-service/src/types.js";
 import type { ResolvedUserConfig } from "../../config.js";
 import {
@@ -1116,7 +1117,7 @@ async function selectNativeOptionByText(
 async function clearDeveloperAppComposer(client: ChromeClient): Promise<void> {
 	const ready = await waitForPredicate(
 		client.Runtime,
-		`Boolean(document.querySelector('#prompt-textarea[contenteditable="true"]'))`,
+		`Boolean(${buildChatgptAppComposerLookup()})`,
 		{ timeoutMs: 8_000, description: "ChatGPT developer-app test composer" },
 	);
 	if (!ready.ok) {
@@ -1124,7 +1125,7 @@ async function clearDeveloperAppComposer(client: ChromeClient): Promise<void> {
 	}
 	const focused = await client.Runtime.evaluate({
 		expression: `(() => {
-      const editor = document.querySelector('#prompt-textarea[contenteditable="true"]');
+      const editor = ${buildChatgptAppComposerLookup()};
       if (!editor) return false;
       editor.focus();
       return true;
@@ -1182,10 +1183,16 @@ async function clearDeveloperAppComposer(client: ChromeClient): Promise<void> {
 		});
 		await wait(250);
 		const cleared = await client.Runtime.evaluate({
-			expression: `!String(document.querySelector('#prompt-textarea')?.innerText || '').trim()`,
+			expression: `(() => {
+      const editor = ${buildChatgptAppComposerLookup()};
+      if (!editor) return null;
+      return !String(editor.innerText || '').trim()
+        && editor.querySelectorAll('[data-inline-selection-pill]').length === 0;
+    })()`,
 			returnByValue: true,
 		});
 		if (cleared.result?.value === true) return;
+		if (cleared.result?.value !== false) break;
 	}
 	throw new Error("ChatGPT composer text could not be cleared safely.");
 }

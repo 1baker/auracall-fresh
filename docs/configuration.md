@@ -1094,3 +1094,5 @@ Developer-mode visibility is an independent, optional observation during install
 A retained native browser can open a replacement tab/window when its existing window has closed. Opening verifies exact retained process identity and current desktop assignment/display. Existing-page interactions still require current desktop window proof and input ownership. A live retained process cannot be silently moved to root by changing configuration.
 
 Cold startup opens and records custody of a required replacement page before retiring its selected incompatible startup page. Closing the sole page first can terminate Chromium. If replacement creation fails, startup is preserved; if retirement fails, replacement custody is retained and the command reports the incomplete handoff.
+
+ChatGPT app tests qualify one visible enabled composer outside dialogs, supporting both legacy editor ID and the current rich Ask ChatGPT editor. Missing or ambiguous editors stop before input; a missing clear readback is not success. Exact app identity and account checks still apply.

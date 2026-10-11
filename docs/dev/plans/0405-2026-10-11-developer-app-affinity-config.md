@@ -5,13 +5,13 @@ Lane: P90
 Integration: merge
 Work items: #253
 Owner: ecochran76; primary agent, serialized implementation.
-Branch: fix/issue253-cold-start-handoff
+Branch: fix/issue253-current-app-composer
 Target: main through PR merge
 Base: 9b324b3dc7d3f8f1ec50e3888f02e71c39047e02
 
 ## Current State
 
-Prior repairs integrated/installed. PR282 native no-submit and selective process trace revealed browser becoming zombie before environment EACCES; no prompt. Default cold-start coordinator closes sole incompatible startup page before replacement, reproduced through public acquisition seam. Replacement-first handoff preserves process and lease custody on success/open failure/retirement failure.46 focused tests/typecheck/lint pass; production-boundary/build and installed/native acceptance pending. Historical exit attribution remains unknown.
+PR283 integrated/installed with590-file parity. Original no-submit native test now preserves browser PID8872/start38966233 but exits before effect: composer editor not found. Captured DOM has one visible rich Ask ChatGPT editor without legacy ID. Actual clear seam reproduces that exact error; adding only legacy ID passes. Shared precise composer lookup now supports both shapes and protects app-pill selection/readback. 87 focused tests, typecheck, scoped lint, full build and serial Standards/Spec review pass; installation/native acceptance pending; original once-only Demo10 acceptance remains gated. Historical exit attribution remains unknown.
 
 ## Scope and seams
 
@@ -81,3 +81,12 @@ PR282 integrated fd15308b4eba42d5c97cb4d08b499dff52afd53d,590 compiled files0 mi
 ## Revision | Replacement-first cold-start handoff
 
 One PR282 native run and one diagnostic repro were terminal without submission. Selective trace confirms live exact process becomes zombie before environ EACCES/exe ENOENT; no scoped nonzero kill call observed. Public coordinator fixture reproduces close-before-open browser exit. Open, reserve and account the replacement first, then revalidate/retire the selected incompatible startup target. Creation failure leaves startup intact; retirement failure retains replacement under idle settled lease. Do not interpret historical process exits as attributed to this source path without exact evidence.
+
+### Installed cold-start handoff
+
+PR283 integrated e6199c06c485484e97b03ac74bd3ff5bfb0c65b9, user-runtime-issue253-handoff CLI/API with590 compiled files0 mismatches. Installed public coordinator fixture proves replacement lease/accounting precedes startup retirement and browser remains alive. API PID7026 active. One original no-submit native acceptance authorized with120s outerguard, no trace instrumentation; once-only submission remains gated on exact app/account/composer/process qualification.
+
+
+## Revision | Current rich app composer
+
+No-submit native fixture at2026-10-11T22:16:44Z records one empty rich DIV, contenteditable true, role textbox, aria-label Ask ChatGPT, data-composer-markdown, FORM ancestor, no id/testid, outside dialogs. Clear readiness and app mention path incorrectly require legacy prompt-textarea ID. Regression executes actual injected expressions at public clear/mention seams; adding only legacy ID is passing differential control. Share the existing precise rich selector with conversation reads. Require one visible enabled composer-owned editor outside dialogs, reject missing clear readback, preserve trusted input, exact app identity and fresh-chat guard. No new prompt, implicit retry or broad editor fallback.
