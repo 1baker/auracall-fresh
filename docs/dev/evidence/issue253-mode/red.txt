@@ -1,0 +1,59 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-issue253-triage
+
+ ❯ tests/browser/chatgptDeveloperApps.test.ts (25 tests | 1 failed | 24 skipped) 17ms
+     ↓ cancels a stalled identity read before connecting to DevTools
+     ↓ cancels a stalled DevTools attachment through the shared abort signal
+     ↓ bounds stalled Runtime enablement and closes the unpublished client
+     ↓ bounds stalled Page enablement and closes the unpublished client
+     ↓ preserves the active model and routes submission through the exact app mention
+     ↓ does not claim an OAuth human gate when no app or fresh handoff exists
+     ↓ reports awaiting-human only for a fresh OAuth navigation target
+     ↓ reports completion only for one exact app in fresh complete inventory
+     ↓ preserves a bounded provider alert when create remains on the form
+     ↓ reports a still-open create dialog even without a recognized generic error phrase
+     ↓ does not treat a closed post-submit surface as provider rejection evidence
+     ↓ targets the current named server URL input rather than a volatile input type
+     ↓ selects the current Radix connection radio with trusted CDP Space input
+     ↓ clears an ecosystem mention that first unwraps into literal composer text
+     ↓ maps private user-owned installed metadata and active OAuth link state
+     ↓ does not transfer auth state from a same-name link with a different app id
+     ↓ fails closed when more than one link matches the exact app id
+     ↓ preserves reauthentication state from one exact app-id match
+     ↓ does not treat a missing installed-app response as a complete empty inventory
+     ↓ requires the installed-app plugins array before treating a 2xx payload as complete
+     ↓ preserves provider metadata needed to distinguish a private development app
+     ↓ matches a selected ecosystem mention against canonical app IDs as well as plugin IDs
+     ↓ binds replacement deletion readiness to the exact app management route and heading
+     ↓ requires one visible menu with one exact Delete item before marking the trusted target
+     × retains complete inventory as Developer mode unknown when its last bounded evaluation expires 14ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/browser/chatgptDeveloperApps.test.ts > developer-mode observation during complete inventory reads > retains complete inventory as Developer mode unknown when its last bounded evaluation expires
+AssertionError: expected Error: Timed out waiting for ChatGPT Deve… to be null
+
+- Expected: 
+null
+
++ Received: 
+Error {
+  "message": "Timed out waiting for ChatGPT Developer mode switch after 400ms.",
+}
+
+ ❯ tests/browser/chatgptDeveloperApps.test.ts:777:25
+    775|    await vi.advanceTimersByTimeAsync(10_000);
+    776|    const result = await observed;
+    777|    expect(result.error).toBeNull();
+       |                         ^
+    778|    expect(result.value).toMatchObject({developerMode:null,inventoryCom…
+    779|    expect(modeCalls).toBeGreaterThan(1);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 24 skipped (25)
+   Start at  16:52:06
+   Duration  2.30s (transform 1.39s, setup 119ms, import 1.87s, tests 17ms, environment 0ms)
+

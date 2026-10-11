@@ -53871,3 +53871,7 @@ Issue253 ownership repair merged PR279 and installed CLI/API at bdade2d5f with59
 Issue253 explicit recovery: exact unchanged corrupt control gate/transition preserved by rename under diagnostics after API quiescence and read-only activity checks. Browser unchanged, API restored. LitScout one no-submit acceptance pending. Original owner attribution remains unknown. Memory disposition: forbidden; no general memory write authorization.
 
 Recovered no-submit native app test exits1 at Developer-mode switch timeout280ms; no ownership parser failure or submission. Original targets preserved. Read-only page/deadline evidence requested; no retry. Memory disposition: forbidden, no general memory write authorization.
+
+### Issue253 optional mode observation
+
+Active goal resumes at21:50:44Z with2h/1MM-token stop boundary. Public adapter repro red; typed predicate evaluation timeout retained as unknown mode without discarding complete inventory.133 focused tests pass; build/install pending. Memory disposition: forbidden, no general memory write authorization.

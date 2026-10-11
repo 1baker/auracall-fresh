@@ -717,3 +717,112 @@ describe("deriveChatgptDeveloperAppState", () => {
 		expect(expression).toContain('"fixed-delete-marker"');
 	});
 });
+
+describe("developer-mode observation during complete inventory reads", () => {
+	it.each([
+		"timeout",
+		"absent",
+		"transport",
+	])("retains inventory for optional mode timeout/absence while propagating transport failures: %s", async (mode) => {
+		vi.useFakeTimers();
+		let url = "https://chatgpt.com/";
+		let response: (value: unknown) => void = () => undefined;
+		let finished: (value: unknown) => Promise<void> = async () => undefined;
+		const transportError = new Error("fixture transport disconnected");
+		let modeStarted = 0;
+		let modeCalls = 0;
+		const payloads: Record<string, unknown> = {
+			installed: {
+				plugins: [
+					{ plugin_id: "plugin_fixture", name: "Fixture", app_ids: ["fixture"], enabled: true },
+				],
+			},
+			linked: { links: [] },
+		};
+		const client = {
+			// biome-ignore lint/style/useNamingConvention: CDP protocol domains use canonical capitalized names.
+			Runtime: {
+				enable: async () => undefined,
+				evaluate: vi.fn(async ({ expression }: { expression: string }) => {
+					if (expression === "location.href") return { result: { value: url } };
+					if (
+						expression.startsWith("Boolean(document.querySelector") &&
+						expression.includes("Developer mode")
+					) {
+						if (!modeCalls++) modeStarted = Date.now();
+						if (mode === "transport") throw transportError;
+						if (mode === "timeout" && Date.now() - modeStarted >= 7_600)
+							return new Promise<never>(() => undefined);
+						return { result: { value: false } };
+					}
+					return { result: { value: expression.includes("document.readyState") } };
+				}),
+			},
+			// biome-ignore lint/style/useNamingConvention: CDP protocol domains use canonical capitalized names.
+			Page: {
+				enable: async () => undefined,
+				navigate: async (input: { url: string }) => {
+					url = input.url;
+					if (url === "https://chatgpt.com/plugins") {
+						for (const [kind, endpoint] of [
+							["installed", "/backend-api/ps/plugins/installed"],
+							["linked", "/backend-api/aip/connectors/links/list_accessible"],
+						]) {
+							response({ requestId: kind, response: { status: 200, url: endpoint } });
+							await finished({ requestId: kind });
+						}
+					}
+					return {};
+				},
+			},
+			// biome-ignore lint/style/useNamingConvention: CDP protocol domains use canonical capitalized names.
+			Network: {
+				enable: async () => undefined,
+				responseReceived: (callback: typeof response) => {
+					response = callback;
+				},
+				loadingFinished: (callback: typeof finished) => {
+					finished = callback;
+				},
+				getResponseBody: async ({ requestId }: { requestId: string }) => ({
+					body: JSON.stringify(payloads[requestId]),
+				}),
+			},
+			close: async () => undefined,
+		};
+		const adapter = createChatgptDeveloperAppBrowserAdapter(
+			{
+				userConfig: {} as never,
+				getUserIdentity: async () => ({ email: "fixture@example.invalid" }),
+				connectDevTools: async () => ({ client: client as never, port: 45015 }),
+			},
+			async () => {
+				throw new Error("unexpected browser launch");
+			},
+		);
+		try {
+			const observed = adapter.readState().then(
+				(value) => ({ value, error: null }),
+				(error) => ({ value: null, error }),
+			);
+			await vi.advanceTimersByTimeAsync(10_000);
+			const result = await observed;
+			if (mode === "transport") {
+				expect(result.error).toBe(transportError);
+				expect(result.value).toBeNull();
+			} else {
+				expect(result.error).toBeNull();
+				expect(result.value).toMatchObject({
+					developerMode: null,
+					inventoryComplete: true,
+					apps: [{ pluginId: "plugin_fixture" }],
+				});
+				expect(modeCalls).toBeGreaterThan(1);
+			}
+			expect(url).toBe("https://chatgpt.com/");
+		} finally {
+			await adapter.close();
+			vi.useRealTimers();
+		}
+	});
+});
