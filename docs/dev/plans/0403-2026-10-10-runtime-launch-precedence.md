@@ -64,3 +64,5 @@ installed, cancellation/crash/TTL acceptance or Issue226 closure claimed. Source
 and exact commands are bound in evidence/plan0403/validation.json.
 
 Outcome: source convergence completed under the agreed contract. Seven named launch fields and cookieSync resolve centrally; duplicate stored launch/source chains removed. Final207 tests, typecheck/lint and two-axis source review pass. Source PR delivery recorded separately; no installation or provider work.
+
+Delivery: [PR261](https://github.com/ecochran76/auracall/pull/261), source a94690a4a. Source acceptance complete; PR is open, merge and installed/live adoption remain separate. Initial remote readback reports no CI checks.
