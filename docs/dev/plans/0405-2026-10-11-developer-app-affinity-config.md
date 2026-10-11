@@ -65,3 +65,7 @@ Single original installed no-submit command terminal exit1: Developer mode switc
 Fast public adapter readState reproduction captures complete fixture inventory then times out its last Developer-mode evaluation. Treat only the shared typed predicate-evaluation timeout as unknown Developer mode, preserving inventory and transport/navigation/cancellation errors. Existing-app test still requires exact account/app and complete inventory; create/refresh still require confirmed enabled mode. Native acceptance will first verify no-submit selection, then one bounded once-only prompt with LitScout if prerequisites pass. No implicit retry or uncertain resubmission.
 
 Goal execution budget starts2026-10-11T21:50:44Z; stop with durable checkpoint before2026-10-11T23:50:44Z or1MM tokens.
+
+### Installed optional-mode repair
+
+PR281 integrated cd02026d147fcfe7e1923b0532d2c4e1dbbffc63, CLI/API user-runtime-issue253-mode,590 compiled files0 mismatches. Installed readState harness retains complete inventory/mode unknown across39 polls and restores route without provider effects. API activePID54798. Prior browser PID96300 is now absent and registry no longer binds its managed browser; exit actor unknown. LitScout confirms no pending submission intent/result. One native no-submit run authorized with fresh managed opening and120s outer guard; exact new process/receipt qualification required before once-only prompt acceptance.
