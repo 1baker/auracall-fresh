@@ -81,3 +81,7 @@ PR282 integrated fd15308b4eba42d5c97cb4d08b499dff52afd53d,590 compiled files0 mi
 ## Revision | Replacement-first cold-start handoff
 
 One PR282 native run and one diagnostic repro were terminal without submission. Selective trace confirms live exact process becomes zombie before environ EACCES/exe ENOENT; no scoped nonzero kill call observed. Public coordinator fixture reproduces close-before-open browser exit. Open, reserve and account the replacement first, then revalidate/retire the selected incompatible startup target. Creation failure leaves startup intact; retirement failure retains replacement under idle settled lease. Do not interpret historical process exits as attributed to this source path without exact evidence.
+
+### Installed cold-start handoff
+
+PR283 integrated e6199c06c485484e97b03ac74bd3ff5bfb0c65b9, user-runtime-issue253-handoff CLI/API with590 compiled files0 mismatches. Installed public coordinator fixture proves replacement lease/accounting precedes startup retirement and browser remains alive. API PID7026 active. One original no-submit native acceptance authorized with120s outerguard, no trace instrumentation; once-only submission remains gated on exact app/account/composer/process qualification.
