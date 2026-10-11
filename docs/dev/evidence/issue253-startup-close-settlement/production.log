@@ -1,0 +1,10 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-issue253-triage
+
+ ✓ tests/browser/configuredChatgptUtilityAffinity.production.test.ts (2 tests) 26ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  18:08:21
+   Duration  2.75s (transform 1.86s, setup 84ms, import 2.40s, tests 26ms, environment 0ms)
+
