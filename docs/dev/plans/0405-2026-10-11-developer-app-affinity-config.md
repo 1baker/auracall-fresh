@@ -115,3 +115,8 @@ PR285 integrated b68bec2408caa08b4694d2473ff5e9f4c131a0a5, validated284943b9b290
 ## Revision | Current app mention identity
 
 Native trigger22:46:04.310Z target66C68BA235702AD0CCD94FAF886FC3A8 shows exact original app pill SPAN with app-mention-name and canonical app:// app-mention-path; no legacy inline-selection/data-symbol. Post-terminal22:48:18.998Z proves original target retained, browser9470/start39172750 alive, empty composer and no app pills; original Demo10 intent/result absent. Captured post-selector/readback regression catches old selector despite successful exact app click. Recognize current semantic attributes, parse only a complete canonical app URI token, preserve exact accepted identity before Send and count both modern/legacy mentions in pristine/clear guards. No mixed/unknown mention acceptance or implicit retry.
+
+
+### Installed current mention identity
+
+PR286 integrated055e69d2684c620a49ca0d8a84745dc1272043aa, validatedcb3097b4ad75ecbed4ee30d43b264969c7dba6e2. CLI/MCP/API user-runtime-issue253-mention with591files0mismatches/extra. Installed clear/readback/pre-Send boundary passes legacy/current identity and foreign rejection, no provider effects. Prior browser9470 already absent before API promotion, exit actor unknown. KillModeprocess preserved. One original no-submit test with read-only observer authorized after fresh readiness/account/empty/unsent checks; original once-only prompt remains gated.
