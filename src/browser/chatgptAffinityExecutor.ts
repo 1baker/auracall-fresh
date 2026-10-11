@@ -422,6 +422,9 @@ async function settleSuccessfulLease(
 	result: PromptResult,
 	now: string,
 ): Promise<TabLeaseClaim> {
+	if (Date.parse(now) >= Date.parse(request.lease.absoluteExpiresAt)) {
+		throw new Error("ChatGPT in-flight tab lease reached its absolute deadline.");
+	}
 	if (request.lease.workload.kind === "new-conversation") {
 		if (!result.conversationId || !result.url) {
 			throw new Error("ChatGPT new-conversation binding requires exact conversation ID and URL.");

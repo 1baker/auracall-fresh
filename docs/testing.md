@@ -3370,3 +3370,8 @@ cancellation, fail-closed ownership loss and unchanged absolute deadline.
 Legacy affinity must forward the executor cancellation signal to its browser run.
 These are provider-free proofs; installed adoption and long-chat visual acceptance
 are separate gates.
+
+Absolute-deadline regression: `pnpm vitest run tests/browser/chatgptAffinityExecutor.test.ts`
+includes new/existing conversation results at and just after the deadline without
+running timer callbacks. Success must be rejected, aggregate outcome remains
+unknown, and the existing registry ownership fence remains intact.

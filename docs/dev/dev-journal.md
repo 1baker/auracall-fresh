@@ -53438,3 +53438,5 @@ packet CLOSED; installed adoption and visually watched long-chat expiry acceptan
 remain separate gates. No provider request or wake created.
 
 Plan0399: qualified model-ID defect reproduced at CLI run-option seam and real dry-run; slash-qualified exact ID now bypasses fuzzy aliases, preserving case. Focused96 tests/typecheck/targeted lint pass. Isolated fix/qualified-model-id; no provider or installed changes.
+
+Plan0401: retained new-conversation absolute deadline failure reproduced on current main; success-boundary timestamp gate repaired. Focused53 tests/typecheck/targeted lint PASS. Source only; separate installed/live gates.
