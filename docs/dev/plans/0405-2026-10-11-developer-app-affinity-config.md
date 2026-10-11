@@ -47,3 +47,7 @@ LitScout performed one original installed no-submit app test. Primary independen
 ## Revision | Ownership record validation and publication
 
 Repair raw parser crashes through the public gate seam: malformed, structurally invalid and missing-owner-in-existing-lock states preserve custody and reject with explicit recovery guidance. Publish newly acquired ownership through a private pending file and atomic rename. This prevents visible partial records; it does not attribute or recover the installed unknown owner/transition. Native app acceptance remains separate.
+
+### Installed ownership repair
+
+PR279 integrated bdade2d5f14af972b74e0b4b05157f61b804ec71, validated source212f3ef489f3574172bb1c9129b4c0698f319e47. New CLI/API runtime user-runtime-issue253-control has590 compiled files with0 mismatches. Installed isolated repro passes: explicit invalid-ownership error, effects0 and original bytes preserved. API active/running PID43910; managed browser PID96300 OS start35926802 unchanged. Live owner remains0 bytes with originalmtime and retained transition. No live app retry or provider submission performed; recovery still requires qualifying unknown ownership, so full Issue253 acceptance is open.
