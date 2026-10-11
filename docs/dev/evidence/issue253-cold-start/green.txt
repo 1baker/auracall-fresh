@@ -1,0 +1,22 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-issue253-triage
+
+ ✓ tests/accountMirror/liveFollowTabCoordinator.test.ts (16 tests) 24ms
+ ✓ tests/browser/nativeDesktopCdp.test.ts (2 tests) 536ms
+ ✓ tests/browser/nativeDesktopRuntime.test.ts (1 test) 421ms
+   ✓ native browser launch needs no RDP-only family/build declarations and preserves retained ownership and child environment  420ms
+ ✓ tests/browser/configuredChatgptUtilityAffinity.test.ts (8 tests) 23ms
+ ✓ tests/browser/chatgptDeveloperAppLifecycle.test.ts (19 tests) 5579ms
+     ✓ refreshes a late terminal conversation before returning committed-Send failure: {"terminalFailure":true}  804ms
+     ✓ refreshes a late terminal conversation before returning committed-Send failure: {"manualApproval":true}  787ms
+     ✓ preserves attributable WSL Windows loopback provenance through the canonical host alias  781ms
+     ✓ returns answer and refreshed terminal identity after exactly one Send  773ms
+     ✓ preserves terminal failure evidence without retry: {"terminalFailure":true,"effectState":"effect_observed"}  772ms
+     ✓ preserves terminal failure evidence without retry: {"uncertainSend":true,"effectState":"unknown"}  776ms
+     ✓ preserves terminal failure evidence without retry: {"manualApproval":true,"effectState":"effect_observed"}  787ms
+
+ Test Files  5 passed (5)
+      Tests  46 passed (46)
+   Start at  17:09:56
+   Duration  8.01s (transform 3.22s, setup 200ms, import 4.99s, tests 6.58s, environment 1ms)
+

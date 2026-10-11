@@ -5,13 +5,13 @@ Lane: P90
 Integration: merge
 Work items: #253
 Owner: ecochran76; primary agent, serialized implementation.
-Branch: fix/issue253-native-opening-custody
+Branch: fix/issue253-cold-start-handoff
 Target: main through PR merge
 Base: 9b324b3dc7d3f8f1ec50e3888f02e71c39047e02
 
 ## Current State
 
-Original affinity repair, opening/input separation, ownership validation/recovery and optional Developer-mode timeout repair are integrated/installed. Subsequent no-submit and instrumented reproduction fail at native current-window proof before creating the next tab. Real wire red/green isolates that dependency; source now separates exact retained process/current assignment proof for opening from current window/input proof for interaction.29 focused tests, typecheck/build/scoped lint pass. Integration/install and native account/app/submission acceptance remain. Historical browser exits remain unattributed.
+Prior repairs integrated/installed. PR282 native no-submit and selective process trace revealed browser becoming zombie before environment EACCES; no prompt. Default cold-start coordinator closes sole incompatible startup page before replacement, reproduced through public acquisition seam. Replacement-first handoff preserves process and lease custody on success/open failure/retirement failure.46 focused tests/typecheck/lint pass; production-boundary/build and installed/native acceptance pending. Historical exit attribution remains unknown.
 
 ## Scope and seams
 
@@ -77,3 +77,7 @@ PR281 installed and hermetic mode deadline qualified. Fresh native no-submit and
 ### Installed opening custody
 
 PR282 integrated fd15308b4eba42d5c97cb4d08b499dff52afd53d,590 compiled files0 mismatches at user-runtime-issue253-custody. Installed actual-wire harness passes opening without current window, preserves interaction window requirement and rejects changed process. API PID27316 active. One native no-submit original app/account test authorized with120s outerguard; no tracer or prompt effects. Once-only original frozen Demo10 prompt waits on verified prerequisites.
+
+## Revision | Replacement-first cold-start handoff
+
+One PR282 native run and one diagnostic repro were terminal without submission. Selective trace confirms live exact process becomes zombie before environ EACCES/exe ENOENT; no scoped nonzero kill call observed. Public coordinator fixture reproduces close-before-open browser exit. Open, reserve and account the replacement first, then revalidate/retire the selected incompatible startup target. Creation failure leaves startup intact; retirement failure retains replacement under idle settled lease. Do not interpret historical process exits as attributed to this source path without exact evidence.

@@ -217,18 +217,33 @@ describe("live-follow crawler tab coordinator", () => {
 		expect((await registry.list()).filter((lease) => lease.retention === "ttl")).toHaveLength(3);
 	});
 
-	test("closes and proves absence of one incompatible startup page before opening the crawler", async () => {
+	test.each([
+		"success",
+		"open-failure",
+		"cleanup-failure",
+	])("retains browser custody while replacing its only startup page: %s", async (mode) => {
 		const registry = createInMemoryBrowserTabLeaseRegistry({
 			createLeaseId: () => "lease-after-blank",
 		});
-		const closeTarget = vi.fn(async () => undefined);
-		const inspectTarget = vi.fn(async () => null);
-		const openTarget = vi.fn(async () => ({
-			targetId: "crawler-after-blank",
-			url: "https://chatgpt.com/",
-		}));
+		const pages = new Map([["startup-blank", "about:blank"]]);
+		let browserAlive = true;
+		const closeTarget = vi.fn(async ({ targetId }: { targetId: string }) => {
+			if (mode === "cleanup-failure") throw new Error("fixture cleanup unavailable");
+			pages.delete(targetId);
+			if (!pages.size) browserAlive = false;
+		});
+		const inspectTarget = vi.fn(async (_endpoint: unknown, id: string) => {
+			const url = pages.get(id);
+			return url ? { url } : null;
+		});
+		const openTarget = vi.fn(async () => {
+			if (!browserAlive) throw new Error("Browser exited after its last window closed");
+			if (mode === "open-failure") throw new Error("fixture creation unavailable");
+			pages.set("crawler-after-blank", "https://chatgpt.com/");
+			return { targetId: "crawler-after-blank", url: "https://chatgpt.com/" };
+		});
 
-		const tab = await acquireLiveFollowCrawlerTab({
+		const acquisition = acquireLiveFollowCrawlerTab({
 			registry,
 			scope,
 			operationId: "completion-after-blank",
@@ -247,6 +262,25 @@ describe("live-follow crawler tab coordinator", () => {
 			closeTarget,
 		});
 
+		if (mode === "open-failure") {
+			await expect(acquisition).rejects.toThrow("fixture creation unavailable");
+			expect(browserAlive).toBe(true);
+			expect([...pages.keys()]).toEqual(["startup-blank"]);
+			expect(closeTarget).not.toHaveBeenCalled();
+			expect(await registry.list()).toEqual([]);
+			return;
+		}
+		if (mode === "cleanup-failure") {
+			await expect(acquisition).rejects.toThrow("replacement retained under lease");
+			expect(browserAlive).toBe(true);
+			expect([...pages.keys()]).toEqual(["startup-blank", "crawler-after-blank"]);
+			expect(await registry.list()).toMatchObject([
+				{ targetId: "crawler-after-blank", state: "idle", effectState: "settled" },
+			]);
+			return;
+		}
+		const tab = await acquisition;
+
 		expect(closeTarget).toHaveBeenCalledWith({
 			host: "127.0.0.1",
 			port: 45011,
@@ -257,6 +291,8 @@ describe("live-follow crawler tab coordinator", () => {
 			"startup-blank",
 		);
 		expect(openTarget).toHaveBeenCalledOnce();
+		expect(browserAlive).toBe(true);
+		expect([...pages.keys()]).toEqual(["crawler-after-blank"]);
 		expect(tab.lease).toMatchObject({
 			targetId: "crawler-after-blank",
 			actionCounts: { targetCreations: 1, adoptions: 0, closes: 0 },

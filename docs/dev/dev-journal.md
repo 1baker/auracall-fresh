@@ -53877,3 +53877,5 @@ Recovered no-submit native app test exits1 at Developer-mode switch timeout280ms
 Active goal resumes at21:50:44Z with2h/1MM-token stop boundary. Public adapter repro red; typed predicate evaluation timeout retained as unknown mode without discarding complete inventory.133 focused tests pass; build/install pending. Memory disposition: forbidden, no general memory write authorization.
 
 Issue253 current-window gate reproduced twice natively without prompt. Real wire fixture isolates createTarget rejection after a retained scrubbed process loses current window. Separate opening process/assignment custody from interaction window proof;29 focused tests pass. No input weakening, unknown exits retained. Memory disposition: forbidden, no general memory write authorization.
+
+Issue253 next gate: traced browser turns zombie before EACCES. Default coordinator last-page close precedes new target; public-seam fixture red, replacement-first repair46tests green. Open-failure preserves startup; cleanup-failure idles replacement custody. Build/production/native pending. Memory disposition: forbidden, no general memory write authorization.
