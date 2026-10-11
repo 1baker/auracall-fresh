@@ -73,3 +73,10 @@ finds no accepted blockers: known refusal clears only the caller's non-held clai
 and refreshes observation; uncertain takeover/revoke keeps exclusion. New route
 gate probes compiled behavior before prefix replacement, never provider work.
 Source integration and final installed/public readbacks remain separate receipts.
+
+Recoverable combined-source merge checkpoint7d94af8e424a9210d854b0d6e05c19fa4f15fbc4
+contains both pinned parents. Public evidence logs normalize presentation-only
+trailing whitespace; original captures remain in private diagnostic raw-source-logs.
+Whole-merge diff hygiene reports inherited main evidence whitespace; validation
+uses origin/main comparison excluding historical evidence, plus new evidence
+normalization. Historical parent artifacts were not rewritten.

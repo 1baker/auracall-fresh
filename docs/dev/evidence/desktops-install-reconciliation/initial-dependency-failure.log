@@ -27,7 +27,7 @@ Error: Cannot find package 'ws' imported from '/home/ecochran76/workspace.local/
       2| import WebSocket from 'ws';
        | ^
       3| import { resolveCdpCommandAdmission, type CdpCommandAdmission } from '…
-      4| 
+      4|
  ❯ packages/browser-service/src/browserTools.ts:10:1
 
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
@@ -37,4 +37,3 @@ Error: Cannot find package 'ws' imported from '/home/ecochran76/workspace.local/
       Tests  72 passed (72)
    Start at  22:33:41
    Duration  11.95s (transform 29.69s, setup 6.81s, import 32.28s, tests 2.38s, environment 34ms)
-
