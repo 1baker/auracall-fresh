@@ -105,3 +105,8 @@ Original PR284 no-submit terminal exit1/session15675, JSON0bytes: Visible select
 ## Revision | Current app-picker row qualification
 
 Trigger-time observer captured exact native mention draft plus app row at22:32:20.139Z, then same-name custom GPT22:32:21.792Z. Actual current row BUTTON has CSS --app-menu-item-height marker, no legacy menu role/id/tabindex. Source old selector deterministically cannot qualify it. Preserve current rich editor qualification; wait for exactly one visible enabled current row matching installed name+description, or one exact-label legacy row, then click only marked choice and verify app pill identity. Current row without installed description is unqualified because a same-name GPT can arrive first. Carry description through both no-submit and submission paths; never replace exact plugin identity with text proof. Browser-native acceptance still required.
+
+
+### Installed current picker qualification
+
+PR285 integrated b68bec2408caa08b4694d2473ff5e9f4c131a0a5, validated284943b9b2905c928ea2ecbfbb77c65db291a3ba. CLI/API user-runtime-issue253-picker,591files0mismatches/extra. Installed public submission boundary verifies selected full config plus installed description,1invocation/0provider effects. Original browser53930 absent before API promotion, actor unknown. API KillModeprocess preserved. LitScout one original no-submit test authorized with bounded read-only trigger observer to capture selected pill before finally cleanup; no original prompt until account/app/composer/process/native receipt qualifies.
