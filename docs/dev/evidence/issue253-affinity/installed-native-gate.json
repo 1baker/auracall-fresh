@@ -1,0 +1,12 @@
+{
+  "source_commit": "90b17d24124421fce5ff5e3eabb212a0596cff7e",
+  "coordinated_with": "LitScout owner",
+  "operation": "one installed no-submit apps test",
+  "exit_code": 1,
+  "error": "DesktopControlGate.owner Unexpected end of JSON input",
+  "owner_record_bytes": 0,
+  "provider_submission": false,
+  "configuration_boundary": "not reached by live test",
+  "acceptance": "incomplete",
+  "recovery": "explicit authorization pending"
+}

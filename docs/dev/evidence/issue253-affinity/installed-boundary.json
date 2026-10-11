@@ -1,0 +1,14 @@
+{
+  "pass": true,
+  "provider_requests": 0,
+  "seen": 1,
+  "result": {
+    "status": "failed",
+    "message": "installed fixture stop before transport",
+    "conversationId": null,
+    "terminalUrl": null,
+    "currentUrl": null,
+    "effectState": "pre_effect",
+    "retrySafe": true
+  }
+}
