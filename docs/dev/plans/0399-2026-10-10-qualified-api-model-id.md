@@ -42,3 +42,27 @@ existing public helper, no new abstractions); Spec PASS (qualified identity,
 alias compatibility, browser inference untouched). No blocking findings.
 No installed runtime acceptance or provider transport call claimed.
 Memory disposition forbidden: no explicit memory-update request.
+
+## Explicit review and PR preparation
+
+Frozen comparison: git diff 97f5638ef5a75cc5c26620096cd86ea441aff2ba...a161b29e55e361e5db127c0843c628cd0240c751.
+One implementation commit; clean worktree. Primary serial review, no delegation.
+
+### Standards
+
+Architecture guardrails0008, testing policy0029, documentation control0009 and
+Fowler smell baseline reviewed separately. No accepted violations or smell
+findings. Existing resolver owns classification; no parallel registry or wrapper.
+
+### Spec
+
+Plan0399 scope is the frozen contract. Slash-qualified IDs bypass fuzzy aliases
+and lowercase normalization; single/multi-model caller regressions preserve
+transport-facing effective identity. Existing alias and schema tests stay green;
+browser-label inference is untouched. No accepted missing requirements or scope
+creep. No additional validation run: prior checks remain bound to unchanged source.
+
+Summary: Standards0 accepted findings; Spec0 accepted findings.
+Tracker setup file docs/agents/issue-tracker.md absent; skill recommends
+/setup-matt-pocock-skills. Existing explicit repo target and spec suffice here.
+No PR template present. PR preparation does not authorize merging or installation.
