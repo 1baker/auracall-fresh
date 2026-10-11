@@ -77,10 +77,12 @@ export class DesktopControlGate {
 				acquiredAt: new Date().toISOString(),
 			};
 			try {
-				await fs.writeFile(path.join(this.lockPath, "owner.json"), JSON.stringify(owner), {
+				const pendingPath = path.join(this.lockPath, `owner.${randomUUID()}.pending`);
+				await fs.writeFile(pendingPath, JSON.stringify(owner), {
 					mode: 0o600,
 					flag: "wx",
 				});
+				await fs.rename(pendingPath, path.join(this.lockPath, "owner.json"));
 				return owner;
 			} catch (error) {
 				await fs.rm(this.lockPath, { recursive: true, force: true });
@@ -90,14 +92,34 @@ export class DesktopControlGate {
 	}
 
 	private async owner(): Promise<GateOwner | undefined> {
+		const invalid = () => new Error(
+			"Desktop control ownership record is invalid or incomplete; automation remains blocked. Preserve the record and qualify an explicit control recovery.",
+		);
+		let raw: string;
 		try {
-			return JSON.parse(
-				await fs.readFile(path.join(this.lockPath, "owner.json"), "utf8"),
-			) as GateOwner;
+			raw = await fs.readFile(path.join(this.lockPath, "owner.json"), "utf8");
 		} catch (error) {
-			if ((error as NodeJS.ErrnoException).code === "ENOENT") return undefined;
-			throw error;
+			if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+			try {
+				await fs.stat(this.lockPath);
+			} catch (lockError) {
+				if ((lockError as NodeJS.ErrnoException).code === "ENOENT") return undefined;
+				throw lockError;
+			}
+			throw invalid();
 		}
+		let value: unknown;
+		try { value = JSON.parse(raw); } catch { throw invalid(); }
+		if (!value || typeof value !== "object") throw invalid();
+		const owner = value as Partial<GateOwner>;
+		if (
+			typeof owner.id !== "string" || !owner.id ||
+			(owner.role !== "automation" && owner.role !== "human") ||
+			typeof owner.binding !== "string" || !owner.binding ||
+			typeof owner.ownerPid !== "number" || !Number.isInteger(owner.ownerPid) || owner.ownerPid <= 0 ||
+			typeof owner.acquiredAt !== "string" || !Number.isFinite(Date.parse(owner.acquiredAt))
+		) throw invalid();
+		return owner as GateOwner;
 	}
 
 	async takeControl(binding: string, token: string = randomUUID()): Promise<{ token: string }> {

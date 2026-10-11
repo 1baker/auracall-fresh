@@ -35,3 +35,15 @@ No app recreation, OAuth reset, implicit prompt retry, ownership-file edits, bro
 Operator clarified that AuraCall must grow/shrink available desktops and wrap at the configured maximum without input-control ownership blocking browser opening. Existing allocation already implements configurable growth/wrap; the downstream launch and Target.New gates incorrectly imposed input ownership on opening. This revision removes only those opening gates. Pool/profile custody, explicit target-acquisition authority and subsequent existing-page interaction gates remain intact. Installed corrupt ownership and transition files are preserved; cleanup is not this source repair.
 
 Fresh browser opening and new-target creation each failed red against a malformed input record. The six focused native/control/app files pass25 tests after separation, including configurable pool capacity2/4, wrap and shrink guards. Installed acceptance remains separate and must distinguish opening from subsequent input admission.
+
+## Installed opening readback
+
+PR278 merged as ae2d56422. CLI wrappers use user-runtime-issue253-opening; compiled parity is590 files with0 mismatches. API reloaded to the new wrapper, active/running PID47468. Existing managed browser PID96300 retains OS start35926802; the zero-byte input ownership record retains its exact mtime. LitScout has begun one bounded no-submit acceptance, with opening and subsequent input admission reported separately. Full Issue253 native acceptance remains pending.
+
+### Native opening outcome
+
+LitScout performed one original installed no-submit app test. Primary independently inspected its readback and stderr: one new ChatGPT page was observed, total CDP targets4 to8, no original target removed, browser PID preserved. The command exited1 at subsequent DesktopControlGate.owner JSON parsing of the retained empty input ownership record. No submission intent/result exists. Opening accepted for this bounded check; full app automation and Issue253 remain unaccepted. No retries or ownership recovery performed.
+
+## Revision | Ownership record validation and publication
+
+Repair raw parser crashes through the public gate seam: malformed, structurally invalid and missing-owner-in-existing-lock states preserve custody and reject with explicit recovery guidance. Publish newly acquired ownership through a private pending file and atomic rename. This prevents visible partial records; it does not attribute or recover the installed unknown owner/transition. Native app acceptance remains separate.

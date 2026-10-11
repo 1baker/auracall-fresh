@@ -77,3 +77,6 @@ code identity and required application surfaces verified before promotion. Its
 source commit is distinct from browser processes, browser profiles and the
 package version, which alone cannot prove feature preservation.
 _Avoid_: Version-only runtime identity
+
+**Desktop control ownership record**:
+The retained identity and role governing desktop interaction. Invalid or incomplete ownership preserves unknown custody and blocks interaction with recovery guidance. Atomic publication prevents partially written records from being exposed. Browser opening is independent of this interaction ownership.
