@@ -53436,3 +53436,5 @@ request or installed adoption in this packet.
 Standards and Spec review PASS after fixing cancellation forwarding. Source
 packet CLOSED; installed adoption and visually watched long-chat expiry acceptance
 remain separate gates. No provider request or wake created.
+
+Plan0399: qualified model-ID defect reproduced at CLI run-option seam and real dry-run; slash-qualified exact ID now bypasses fuzzy aliases, preserving case. Focused96 tests/typecheck/targeted lint pass. Isolated fix/qualified-model-id; no provider or installed changes.

@@ -202,7 +202,12 @@ export function parseTimeoutOption(value: string | undefined): number | 'auto' |
 }
 
 export function resolveApiModel(modelValue: string): ModelName {
-  const normalized = normalizeModelOption(modelValue).toLowerCase();
+  const trimmed = normalizeModelOption(modelValue);
+  // Qualified provider IDs are exact pins, not human-readable aliases.
+  if (trimmed.includes('/')) {
+    return trimmed as ModelName;
+  }
+  const normalized = trimmed.toLowerCase();
   if (normalized in MODEL_CONFIGS) {
     return normalized as ModelName;
   }

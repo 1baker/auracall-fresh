@@ -6,6 +6,27 @@ import { estimateRequestTokens } from '../src/oracle/tokenEstimate.js';
 describe('resolveRunOptionsFromConfig', () => {
   const basePrompt = 'This prompt is comfortably above twenty characters.';
 
+  it('preserves a qualified API model ID through CLI run-option resolution', () => {
+    const model = 'vendor/claude-sonnet-custom-v1';
+    const { runOptions, resolvedEngine } = resolveRunOptionsFromConfig({
+      prompt: basePrompt, model, engine: 'api', env: {},
+    });
+    expect(resolvedEngine).toBe('api');
+    expect(runOptions.model).toBe(model);
+    expect(runOptions.effectiveModelId).toBe(model);
+  });
+
+  it('preserves qualified IDs in multi-model API runs while resolving aliases', () => {
+    const { runOptions } = resolveRunOptionsFromConfig({
+      prompt: basePrompt, engine: 'api', env: {},
+      models: ['Vendor/Model-Pro-V1', 'sonnet', 'google/gemini-custom-pro'],
+    });
+    expect(runOptions.models).toEqual([
+      'Vendor/Model-Pro-V1', 'claude-4.5-sonnet', 'google/gemini-custom-pro',
+    ]);
+    expect(runOptions.effectiveModelId).toBe('Vendor/Model-Pro-V1');
+  });
+
   it('uses config engine when none provided and env lacks OPENAI_API_KEY', () => {
     const { resolvedEngine } = resolveRunOptionsFromConfig({
       prompt: basePrompt,
