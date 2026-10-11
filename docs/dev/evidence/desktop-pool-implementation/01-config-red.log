@@ -1,0 +1,41 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-desktop-pool
+
+ ❯ tests/browser/desktopLaunch.test.ts (5 tests | 1 failed) 37ms
+     ✓ the global desktop applies and browser-profile assignment selects a distinct exact route 18ms
+     ✓ unavailable exact route is rejected before any remote-view open 5ms
+     ✓ root selection remains explicit and an unknown named desktop fails before launch 2ms
+     ✓ read-only attachment accepts the exact session/display and rejects stale placement without launching 2ms
+   × automatic desktop pool is independent of arbitrary named desktops and preserves explicit pins 8ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/browser/desktopLaunch.test.ts > automatic desktop pool is independent of arbitrary named desktops and preserves explicit pins
+AssertionError: expected undefined to match object { automatic: true, …(2) }
+
+- Expected: 
+{
+  "automatic": true,
+  "desktopName": "auto",
+  "poolName": "main",
+}
+
++ Received: 
+undefined
+
+ ❯ tests/browser/desktopLaunch.test.ts:89:52
+     87|   });
+     88|   const resolve = () => resolveBrowserLaunchPlan({ source: { kind: 'us…
+     89|   expect(resolve().launchPolicy.remoteViewDesktop).toMatchObject({ aut…
+       |                                                    ^
+     90|   const writer = config.runtimeProfiles?.writer;
+     91|   if (!writer) throw new Error('Missing writer');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 passed (5)
+   Start at  23:44:37
+   Duration  9.40s (transform 4.59s, setup 1.35s, import 5.20s, tests 37ms, environment 0ms)
+

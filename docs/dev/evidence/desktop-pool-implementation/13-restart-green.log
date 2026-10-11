@@ -1,0 +1,11 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-desktop-pool
+
+ ✓ tests/browser/nativeDesktopRestart.test.ts (1 test) 452ms
+   ✓ a fresh process reconciles a pool lock only after the original owner is proven absent  450ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  00:01:44
+   Duration  798ms (transform 85ms, setup 54ms, import 114ms, tests 452ms, environment 0ms)
+

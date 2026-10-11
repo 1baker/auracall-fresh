@@ -1,0 +1,28 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-desktop-pool
+
+ ❯ tests/browser/nativeDesktopPool.test.ts (1 test | 1 failed) 694ms
+   × independent automatic browser launches grow into separate owner-qualified desktops 693ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/browser/nativeDesktopPool.test.ts > independent automatic browser launches grow into separate owner-qualified desktops
+AssertionError: expected [] to have a length of 2 but got +0
+
+- Expected
++ Received
+
+- 2
++ 0
+
+ ❯ tests/browser/nativeDesktopPool.test.ts:31:56
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  23:47:12
+   Duration  1.49s (transform 383ms, setup 51ms, import 558ms, tests 694ms, environment 0ms)
+

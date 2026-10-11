@@ -1,0 +1,10 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-desktop-pool
+
+ ✓ tests/browser/desktopLaunch.test.ts (5 tests) 28ms
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  23:45:00
+   Duration  1.05s (transform 548ms, setup 60ms, import 745ms, tests 28ms, environment 0ms)
+

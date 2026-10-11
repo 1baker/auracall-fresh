@@ -1,0 +1,13 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-desktop-pool
+
+ ✓ tests/browser/desktopPoolMaintenance.test.ts (4 tests) 787ms
+ ✓ tests/browser/nativeDesktopPool.test.ts (2 tests) 3561ms
+   ✓ automatic rail Wake grows and wraps at configured capacity 2  1584ms
+   ✓ automatic rail Wake grows and wraps at configured capacity 4  1974ms
+
+ Test Files  2 passed (2)
+      Tests  6 passed (6)
+   Start at  23:57:51
+   Duration  4.93s (transform 1.06s, setup 155ms, import 1.52s, tests 4.35s, environment 0ms)
+

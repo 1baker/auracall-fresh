@@ -1,0 +1,14 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-desktop-pool
+
+ ✓ tests/browser/desktopPoolMaintenance.test.ts (2 tests) 493ms
+   ✓ pool maintenance retains one spare and protects a viewer: false  382ms
+ ✓ tests/browser/nativeDesktopPool.test.ts (2 tests) 4023ms
+   ✓ automatic rail Wake grows and wraps at configured capacity 2  1711ms
+   ✓ automatic rail Wake grows and wraps at configured capacity 4  2309ms
+
+ Test Files  2 passed (2)
+      Tests  4 passed (4)
+   Start at  23:56:36
+   Duration  5.78s (transform 1.70s, setup 136ms, import 2.34s, tests 4.52s, environment 0ms)
+

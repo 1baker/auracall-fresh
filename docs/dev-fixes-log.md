@@ -1,3 +1,12 @@
+## 2026-10-11 — Automatic desktop placement retains custody across recovery
+
+Automatic Wake uses the native consumer policy maximum and serializes allocation
+through browser launch. Unknown window observations or unretained local custody
+cannot justify capacity growth. Durable acquisition/release requests preserve
+idempotency after reply loss. Dead automation ownership can be recovered only
+when its recorded OS process is absent; human ownership stays protected. Remember
+only verified assigned desktops after Wake. See [Plan0404](dev/plans/0404-2026-10-10-demand-driven-desktop-pool.md).
+
 ## 2026-10-10 — Restoring desktop code does not relocate existing browsers
 
 An existing managed browser without native ownership remains outside desktops

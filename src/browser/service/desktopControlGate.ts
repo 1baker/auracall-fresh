@@ -53,6 +53,14 @@ export class DesktopControlGate {
 		id: string = randomUUID(),
 	): Promise<GateOwner> {
 		return this.transition(async () => {
+
+      const previous = await this.owner();
+      if (process.platform === 'linux' && previous?.role === 'automation' && Number.isInteger(previous.ownerPid) && previous.ownerPid > 0) {
+        let absent = false;
+        try { await fs.access(`/proc/${previous.ownerPid}`); }
+        catch(e) { if ((e as NodeJS.ErrnoException).code === 'ENOENT') absent = true; else throw e; }
+        if (absent) await fs.rm(this.lockPath, { recursive: true });
+      }
 			await fs.mkdir(path.dirname(this.lockPath), { recursive: true, mode: 0o700 });
 			try {
 				await fs.mkdir(this.lockPath, { mode: 0o700 });

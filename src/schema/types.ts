@@ -251,6 +251,7 @@ const nativePresentationOrigin = z.url().refine(value => {
 export const RemoteViewConfigSchema = z.object({
   controlInactivitySeconds: z.number().int().min(5).max(3600).default(120),
   application: z.object({ origin: nativeControlOrigin, publicOrigin: nativePresentationOrigin, appOrigin: nativePresentationOrigin, name: z.string().trim().min(1).default('auracall') }).optional(),
+  pool: z.object({ name: z.string().trim().min(1) }).optional(),
   defaultDesktop: z.string().trim().min(1).optional(),
   desktops: z.record(z.string().trim().min(1), z.object({
     runtimeProfile: z.string().trim().min(1).optional(),

@@ -20,6 +20,7 @@ export type BrowserProfileFamily = 'chrome' | 'chromium';
 export type AgentBrowserBuild = 'stock_chrome' | 'stealthcdp_chromium';
 
 export interface RemoteViewDesktopConfig {
+  automatic?: boolean;
   desktopName: string;
   origin: string;
   publicOrigin: string;

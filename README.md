@@ -12,7 +12,7 @@
 
 Aura-Call bundles your prompt and files so another AI can answer with real context. Its default API model is the durable `openai:frontier` alias, currently backed by GPT-6 Astra; exact provider model IDs remain available as explicit pins. Browser automation uses capability-oriented selectors such as `chatgpt:fast`, `chatgpt:reasoning-high`, and `chatgpt:premium`, or `--browser-model-strategy current` to preserve the active ChatGPT model. GPT-5.2 and Sol/Terra/Luna spellings remain compatibility inputs but are no longer advertised as durable configuration. API remains the most reliable path, and `--copy` is an easy manual fallback.
 
-Configured [named AuraCall desktops](docs/configuration.md#named-auracall-desktops)
+Configured [automatic desktop pools or named AuraCall desktops](docs/configuration.md#named-auracall-desktops)
 use Remote View's native viewer in the dedicated `/desktops` client. Viewing is
 passive by default; explicit takeover coordinates human input with AuraCall
 browser automation. After two minutes without external keyboard/pointer input,

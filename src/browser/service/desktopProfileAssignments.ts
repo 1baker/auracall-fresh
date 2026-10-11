@@ -40,6 +40,8 @@ export async function applyDesktopProfileAssignments<
 	T extends OracleConfig | Record<string, unknown>,
 >(config: T): Promise<T> {
 	const saved = await read();
+  // Automatic placements are runtime custody, not permanent configuration pins.
+  if ((config.remoteView as { pool?: unknown } | undefined)?.pool) return config;
 	const profiles = getCurrentRuntimeProfiles(config);
 	const valid = Object.entries(saved.bindings).filter(([id, binding]) => {
 		const origin = Object.hasOwn(profiles, id) ? profiles[id] : undefined;

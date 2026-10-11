@@ -76,3 +76,22 @@ describe('configured desktop browser launches', () => {
   });
 
 });
+
+test('automatic desktop pool is independent of arbitrary named desktops and preserves explicit pins', () => {
+  const config = ConfigSchema.parse({
+    remoteView: { pool: { name: 'main' },
+      application: { name: 'auracall', origin: 'http://127.0.0.1:19096', publicOrigin: 'https://viewer.example.test', appOrigin: 'https://aura.example.test' },
+      desktops: { research: { poolName: 'main' } } },
+    browserProfiles: { account: { chromePath: '/usr/bin/chromium' } },
+    runtimeProfiles: { writer: { engine: 'browser', defaultService: 'chatgpt', browserProfile: 'account' } },
+  });
+  const resolve = () => resolveBrowserLaunchPlan({ source: { kind: 'user-config', config }, intent: { runtimeProfileId: 'writer', provider: 'chatgpt' } });
+  expect(resolve().launchPolicy.remoteViewDesktop).toMatchObject({ automatic: true, poolName: 'main', desktopName: 'auto' });
+  const writer = config.runtimeProfiles?.writer;
+  if (!writer) throw new Error('Missing writer');
+  writer.browser = { desktop: 'research' };
+  expect(resolve().launchPolicy.remoteViewDesktop).toMatchObject({ desktopName: 'research' });
+  expect(resolve().launchPolicy.remoteViewDesktop?.automatic).not.toBe(true);
+  writer.browser = { desktop: 'root' };
+  expect(resolve().launchPolicy.remoteViewDesktop).toBeUndefined();
+});

@@ -1,0 +1,8 @@
+
+> auracall@0.1.1 typecheck /home/ecochran76/workspace.local/auracall-desktop-pool
+> tsc --noEmit
+
+tests/browser/nativeDesktopPool.test.ts(37,84): error TS7006: Parameter 'c' implicitly has an 'any' type.
+tests/browser/nativeDesktopPool.test.ts(37,86): error TS7006: Parameter 'dir' implicitly has an 'any' type.
+tests/browser/nativeDesktopPool.test.ts(37,90): error TS7006: Parameter 'logger' implicitly has an 'any' type.
+ ELIFECYCLE  Command failed with exit code 2.
