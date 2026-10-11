@@ -116,6 +116,24 @@ Avoid using plain `profile` when the meaning is ambiguous.
 - Read [docs/graphiti-memory.md](docs/graphiti-memory.md) for discovery, qualified closeout and privacy rules.
 - An unresolved atlas route is not proof of service unavailability. Prefer the explicit repo route and report the exact failed boundary.
 
+## Agent skills
+
+### Issue tracker
+
+Track issues and specs in GitHub Issues at ecochran76/auracall; preserve repo-native plan and worktree traceability. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Use the five default triage role labels. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Use the existing single-context `CONTEXT.md` authority. See `docs/agents/domain.md`.
+
+### Codex operation
+
+Follow `docs/dev/policies/` and `docs/agents/codex-stack.md`, `docs/agents/codex-code-discovery.md`, and `docs/agents/runtime-proof.md`.
+
 ## Policy Loading Contract
 
 - `AGENTS.md` is a routing surface, not a one-time pointer.

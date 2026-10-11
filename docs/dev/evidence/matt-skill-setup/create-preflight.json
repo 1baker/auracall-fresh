@@ -1,0 +1,25 @@
+{
+  "action": "create",
+  "assessment_scope": "target registry, provider capability, duplicate, security-route, and label preflight only",
+  "authenticated_actor": "ecochran76",
+  "duplicate_candidates": [],
+  "effective_role": "ADMIN",
+  "forge": "github",
+  "host": "github.com",
+  "idempotency_key": "matt-setup-20261011",
+  "label_resolution": [],
+  "live_provider_read": true,
+  "mutation_authorized": false,
+  "ok": true,
+  "operator_authority_verified": false,
+  "problems": [],
+  "relationship": "owned",
+  "repository": "ecochran76/auracall",
+  "required_actions": [
+    "create"
+  ],
+  "resolved_labels": [],
+  "security_route": "private_vulnerability_reporting",
+  "target_id": "github-ecochran76-auracall",
+  "warnings": []
+}

@@ -1,0 +1,18 @@
+{
+  "artifact_path": "/home/ecochran76/workspace.local/auracall-matt-skill-setup/docs/dev/evidence/matt-skill-setup/memory-disposition.json",
+  "command": "remember",
+  "disposition": "forbidden",
+  "graphiti_writes_attempted": 0,
+  "group_id": null,
+  "mcp_url": "http://127.0.0.1:8817/mcp",
+  "name": null,
+  "reason": "Skill configuration setup did not authorize memory writes.",
+  "recorded_at": "2026-10-11T16:05:50.183187+00:00",
+  "reference_time": null,
+  "schema_version": "graphiti_closeout_memory_receipt.v1",
+  "source_artifact": "/home/ecochran76/workspace.local/auracall-matt-skill-setup/docs/agents/issue-tracker.md",
+  "source_description": null,
+  "status": "recorded_no_write",
+  "timeout_seconds": null,
+  "warnings": []
+}
