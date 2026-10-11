@@ -1,0 +1,9 @@
+{
+  "action": "explicit_exact_control_recovery",
+  "unknown_original_owner": true,
+  "browser_pid": 96300,
+  "browser_start": "35926802",
+  "preserved_owner_inode": 10851505,
+  "retained_transition_inode": 10801107,
+  "at": "2026-10-11T21:16:21.836718+00:00"
+}

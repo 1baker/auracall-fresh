@@ -1,0 +1,14 @@
+{
+  "command": "original installed apps test, no submit",
+  "exit_code": 1,
+  "terminal": true,
+  "receipt_bytes": 0,
+  "first_failure": "Timed out waiting for ChatGPT Developer mode switch after 280ms",
+  "ownership_parser_failure": false,
+  "new_chatgpt_pages": 1,
+  "removed_original_targets": 0,
+  "submission_intent_exists": false,
+  "submission_receipt_exists": false,
+  "app_account_selection": "unverified",
+  "source": "LitScout recovered-no-submit-post.json and stderr independently inspected"
+}

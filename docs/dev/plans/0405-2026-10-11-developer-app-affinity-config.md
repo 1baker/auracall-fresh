@@ -47,3 +47,15 @@ LitScout performed one original installed no-submit app test. Primary independen
 ## Revision | Ownership record validation and publication
 
 Repair raw parser crashes through the public gate seam: malformed, structurally invalid and missing-owner-in-existing-lock states preserve custody and reject with explicit recovery guidance. Publish newly acquired ownership through a private pending file and atomic rename. This prevents visible partial records; it does not attribute or recover the installed unknown owner/transition. Native app acceptance remains separate.
+
+### Installed ownership repair
+
+PR279 integrated bdade2d5f14af972b74e0b4b05157f61b804ec71, validated source212f3ef489f3574172bb1c9129b4c0698f319e47. New CLI/API runtime user-runtime-issue253-control has590 compiled files with0 mismatches. Installed isolated repro passes: explicit invalid-ownership error, effects0 and original bytes preserved. API active/running PID43910; managed browser PID96300 OS start35926802 unchanged. Live owner remains0 bytes with originalmtime and retained transition. No live app retry or provider submission performed; recovery still requires qualifying unknown ownership, so full Issue253 acceptance is open.
+
+### Explicit installed control recovery
+
+Operator authorized continuation after identifying recovery as the remaining boundary. Fresh checks found unchanged empty owner/transition, no native control receipts or LitScout app-test process, and no visible response/tool-wait indicators on the retained page. Original human/automation owner remains unknown. Quiesced API and moved only the exact unchanged gate and transition to private diagnostics by rename, retaining original owner inode10851505 and transition inode10801107. Browser PID96300/start35926802 preserved. API resumed active/running PID18375. LitScout is running one no-submit native app acceptance; provider submission stays on hold.
+
+### Recovered native outcome
+
+Single original installed no-submit command terminal exit1: Developer mode switch timeout after280ms. Ownership parser failure is no longer the first boundary. One new ChatGPT page, no original target removed, native JSON0 bytes and no submission intent/result. Account/app selection unverified. Primary inspected stderr and postreadback independently. Read-only current UI evidence requested; no repeated native test or provider submission. Source requests8000ms at Developer-mode wait, so observed280ms remains an unqualified deadline/runtime boundary rather than proof that the setting is absent. Full Issue253 acceptance remains open.
