@@ -53859,3 +53859,7 @@ Browser and new-target opening are independent of desktop input ownership. Autom
 Installed merged PR278 opening-policy correction with590-file compiled parity. Reloaded API software; existing browser process identity and malformed ownership evidence preserved. LitScout bounded no-submit acceptance is pending; no provider submission authorized by this check. Memory disposition: forbidden; no general memory write authorization.
 
 Issue253 native opening check: one new ChatGPT page observed, existing targets preserved. Later input admission fails on empty ownership JSON; no submission. Full native acceptance remains open. Memory disposition: forbidden, no general memory write authorization.
+
+### Issue253 ownership diagnosis
+
+Fast isolated withAutomation reproduction confirms empty ownership JSON crashes before effect; missing-record control succeeds. Live ownership creation remains unattributed. Curated repro and diagnosis retained under evidence/issue253-control-diagnosis. Transition-only probe exceeded feedback budget and was interrupted. No live state changed. Memory disposition: forbidden, no write authorization.
