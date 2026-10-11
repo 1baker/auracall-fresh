@@ -90,3 +90,8 @@ PR283 integrated e6199c06c485484e97b03ac74bd3ff5bfb0c65b9, user-runtime-issue253
 ## Revision | Current rich app composer
 
 No-submit native fixture at2026-10-11T22:16:44Z records one empty rich DIV, contenteditable true, role textbox, aria-label Ask ChatGPT, data-composer-markdown, FORM ancestor, no id/testid, outside dialogs. Clear readiness and app mention path incorrectly require legacy prompt-textarea ID. Regression executes actual injected expressions at public clear/mention seams; adding only legacy ID is passing differential control. Share the existing precise rich selector with conversation reads. Require one visible enabled composer-owned editor outside dialogs, reject missing clear readback, preserve trusted input, exact app identity and fresh-chat guard. No new prompt, implicit retry or broad editor fallback.
+
+
+### Installed rich composer repair
+
+PR284 integrated b188ae01493209fce88f9ad3da4ce2248f078844, validated806c968c12f426531efff01684aa0ddc5e5edb49. CLI/API use user-runtime-issue253-composer;591 dist files0 mismatches/extra. Installed public clear/mention fixture verifies current no-ID shape, trusted clearing and exact app identity without provider effects. API PID50673 active, KillModeprocess preserved. Before promotion browser8872 was already absent with stale registry retained and CDP unavailable; actor unknown, retained draft unknown, last observed empty22:16:44Z. LitScout confirms original intent/result absent. One canonical no-submit native test authorized with120s guard; no manual stale-state recovery or provider submission.
