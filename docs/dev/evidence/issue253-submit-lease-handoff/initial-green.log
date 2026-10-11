@@ -1,0 +1,10 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-issue253-triage
+
+ ✓ tests/cli/chatgptDeveloperAppsCommand.test.ts (27 tests | 26 skipped) 11ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 26 skipped (27)
+   Start at  18:23:04
+   Duration  2.57s (transform 1.80s, setup 54ms, import 2.33s, tests 11ms, environment 0ms)
+

@@ -135,3 +135,10 @@ PR287 integrated f83205d4d1650fe600ddd7e1a25f6eeb77fc0945, validated a1d17c61f88
 ### Native no-submit qualification and original once-only acceptance
 
 Original native receipt completed app selection/clear, exact accepted URI captured before cleanup; fresh same process/account/home empty composer and zero pills verified. CLI remained alive until120s outer timeout; cause unknown, final no active app-test. Lease lost/restart-unverified with settled effects and null owners; no manual recovery. See [native no-submit evidence](../evidence/issue253-startup-close-settlement/native-no-submit.md). Primary independently verified evidence and authorized original frozen Demo10 once-only native submission with fresh governed prerequisites; monitor until completion or23:45Z and checkpoint before23:50:44Z. Full Issue253 acceptance remains open.
+
+
+## Revision | Inventory-to-submission lease handoff
+
+Original once-only native submit failed pre_effect/process-owned, null conversation and no Send; intent preserved and no retry. Public CLI/real utility/real provisioner fixture reproduces exact failure13ms with matched scope/currentTTL. Observe inventory under utility lease, close and await successful settlement, then execute shared validation/submission outside utility callback. Ownership rules unchanged; failed settlement/account/confirmation/incomplete/ambiguous gates stop submission. Original live invocation exhausted; full native completion remains open. See [diagnosis](../evidence/issue253-submit-lease-handoff/diagnosis.md).
+
+Source lease handoff verification:61tests4files pass, scoped lint/typecheck/fullbuild pass. Serial Standards and Spec review each0 accepted blockers. Original native once-only acceptance exhausted beforeSend; no retry. Installation checkpoint pending.

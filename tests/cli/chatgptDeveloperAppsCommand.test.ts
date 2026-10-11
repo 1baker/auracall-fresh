@@ -1,4 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
+import { createInMemoryProviderInteractionLedger } from "../../packages/browser-service/src/service/interactionLedger.js";
+import { createInMemoryBrowserTabLeaseRegistry } from "../../packages/browser-service/src/service/tabLeaseRegistry.js";
+import { runConfiguredChatgptUtilityOperation } from "../../src/browser/configuredChatgptUtilityAffinity.js";
+import { createChatgptTabProvisioner } from "../../src/browser/providers/chatgptTabProvisioner.js";
 import {
 	type ChatgptDeveloperAppAdapter,
 	executeChatgptDeveloperAppOperation,
@@ -50,6 +54,143 @@ function createAdapter(
 }
 
 describe("executeChatgptDeveloperAppOperation", () => {
+	it.each([
+		"success",
+		"settlement-failure",
+		"account-mismatch",
+		"unconfirmed",
+		"incomplete",
+		"ambiguous",
+	])("settles inventory utility custody before submission: %s", async (mode) => {
+		const registry = createInMemoryBrowserTabLeaseRegistry();
+		const ledger = createInMemoryProviderInteractionLedger();
+		if (mode === "settlement-failure")
+			vi.spyOn(registry, "idle").mockRejectedValue(new Error("fixture settlement failure"));
+		const config = {
+			auracallProfile: "fixture",
+			browser: { tabConcurrencyMode: "tab-affinity" },
+			profiles: {
+				fixture: { services: { chatgpt: { identity: { email: "eric.cochran@soylei.com" } } } },
+			},
+		} as never;
+		const endpoint = { host: "127.0.0.1", port: 45015, managedBrowserProfile: "/fixture/managed" };
+		const scope = {
+			runtimeProfileId: "fixture",
+			managedBrowserProfile: endpoint.managedBrowserProfile,
+			service: "chatgpt",
+			tenantKey: "service-account:chatgpt:eric.cochran@soylei.com",
+		};
+		const open = vi.fn(async () => ({ id: "utility", url: "https://chatgpt.com/" }));
+		const close = vi.fn(async () => undefined);
+		const submitTest = vi.fn(async () => {
+			const provision = createChatgptTabProvisioner({
+				registry,
+				scope,
+				workload: { kind: "new-conversation", reservationId: "submission" },
+				operationId: "submission",
+				targetUrl: "https://chatgpt.com/",
+				idleTtlMs: 300000,
+				absoluteTtlMs: 3600000,
+				resolveExistingEndpoint: async () => endpoint,
+				startBrowser: async () => {
+					throw new Error("unexpected startup");
+				},
+				inspectTarget: async () => ({ url: "https://chatgpt.com/" }),
+				openTarget: async () => {
+					throw new Error("unexpected extra target");
+				},
+				closeTarget: close,
+			});
+			await provision({ interactionReservationId: "submission" });
+			return {
+				status: "completed" as const,
+				message: "fixture Send seam reached",
+				effectState: "effect_observed" as const,
+				retrySafe: false,
+			};
+		});
+		const browserService = { resolveServiceTarget: async () => endpoint } as never;
+		const resultPromise = runChatgptDeveloperAppOperationForCli(
+			config,
+			{
+				action: "test",
+				app: "Corel33t",
+				submit: true,
+				confirmed: mode !== "unconfirmed",
+				expectedAccount:
+					mode === "account-mismatch" ? "other@example.com" : "eric.cochran@soylei.com",
+				prompt: "fixture frozen prompt",
+			},
+			{
+				createBrowser: async () =>
+					({
+						userConfig: config,
+						getUserIdentity: vi.fn(),
+						connectDevTools: vi.fn(),
+						runUtilityBrowserOperation: (
+							input: Pick<
+								Parameters<typeof runConfiguredChatgptUtilityOperation>[0],
+								"options" | "mutability" | "run"
+							>,
+						) =>
+							runConfiguredChatgptUtilityOperation({
+								...input,
+								userConfig: config,
+								browserService,
+								utilityId: "inventory",
+								buildListOptions: async (options) => options,
+								deps: {
+									createRuntime: () => ({ registry, ledger }) as never,
+									listTargets: async () => [],
+									openTarget: open as never,
+									closeTarget: close,
+								},
+							}),
+					}) as never,
+				createAdapter: () => ({
+					...createAdapter({
+						submitTest,
+						readState: async () => {
+							const state = await createAdapter().readState();
+							if (mode === "incomplete") state.inventoryComplete = false;
+							if (mode === "ambiguous")
+								state.apps.push({ ...state.apps[0], pluginId: "different", appIds: ["different"] });
+							return state;
+						},
+					}),
+					close,
+				}),
+			},
+		);
+		if (mode !== "success") {
+			await expect(resultPromise).rejects.toThrow(
+				mode === "settlement-failure"
+					? "fixture settlement failure"
+					: mode === "account-mismatch"
+						? "Expected ChatGPT account"
+						: mode === "unconfirmed"
+							? "requires --yes"
+							: mode === "incomplete"
+								? "complete installed-app inventory"
+								: "ambiguous",
+			);
+			expect(submitTest).not.toHaveBeenCalled();
+			return;
+		}
+		const result = await resultPromise;
+		expect(result.status).toBe("completed");
+		expect(submitTest).toHaveBeenCalledExactlyOnceWith(
+			expect.objectContaining({ name: "Corel33t" }),
+			"fixture frozen prompt",
+		);
+		expect(open).toHaveBeenCalledOnce();
+		expect((await registry.list()).at(-1)).toMatchObject({
+			state: "active",
+			workload: { kind: "new-conversation" },
+			actionCounts: { targetCreations: 1, adoptions: 1 },
+		});
+	});
+
 	it("binds developer-app mutations to the exact utility tab", async () => {
 		const connectDevTools = vi.fn(async () => ({ client: {}, port: 45011 }));
 		const runUtilityBrowserOperation = vi.fn(async (input) =>
