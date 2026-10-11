@@ -85,3 +85,5 @@ and repository forge policies. `/setup-matt-pocock-skills` can restore that opti
 skill-routing document separately.
 
 Memory disposition: forbidden; no explicit user request to update durable memory.
+
+Delivery: [PR260](https://github.com/ecochran76/auracall/pull/260). No CI checks reported by initial PR readback; local focused validation is the observed evidence.

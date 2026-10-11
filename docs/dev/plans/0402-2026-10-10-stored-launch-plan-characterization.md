@@ -80,3 +80,5 @@ The initial fixture expectation was corrected from Browser Source to the observe
 Global Source baseline. This is discovery evidence, not a repaired defect. No
 precedence migration was approved or implemented. Installed/live acceptance and
 Issue226 closure remain separate from this completed characterization packet.
+
+Delivery: [PR260](https://github.com/ecochran76/auracall/pull/260), open for integration. Source packet and characterization complete; merge and installed adoption are separate.
