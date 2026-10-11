@@ -1,3 +1,7 @@
+## 2026-10-11 — App composer qualification supports the current rich editor (#253)
+
+Developer-app clearing and ecosystem mentions cannot depend on legacy prompt-textarea ID. Reuse the specific rich Ask ChatGPT editor shape; qualify exactly one visible enabled composer-owned editor outside dialogs and read app pills from that root. A disappeared editor is not proof of successful clearing. Preserve trusted keyboard input and exact pre-Send app identity.
+
 ## 2026-10-11 — Developer-app submission must retain affinity configuration
 
 A launch-policy projection alone cannot satisfy legacy ChatGPT affinity admission. Preserve full selected resolved user configuration at the submission boundary; do not treat provider-free regression success as installed acceptance.

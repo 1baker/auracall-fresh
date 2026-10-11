@@ -1,0 +1,36 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-issue253-triage
+
+ ❯ tests/browser/chatgptAppComposer.test.ts (2 tests | 1 failed) 43ms
+   × clears the captured rich composer through trusted input (legacy ID: false) 35ms
+   ✓ clears the captured rich composer through trusted input (legacy ID: true) 6ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/browser/chatgptAppComposer.test.ts > clears the captured rich composer through trusted input (legacy ID: false)
+AssertionError: expected Error: Unable to clear the ChatGPT compos… to be null
+
+- Expected: 
+null
+
++ Received: 
+Error {
+  "message": "Unable to clear the ChatGPT composer because its editor was not found.",
+}
+
+ ❯ tests/browser/chatgptAppComposer.test.ts:49:24
+     47|  const pending = clearDeveloperAppComposerForTest(client as never).the…
+     48|  await vi.runAllTimersAsync();
+     49|  expect(await pending).toBeNull();
+       |                        ^
+     50|  expect(editor.focus).toHaveBeenCalledOnce();
+     51|  expect(editor.innerText).toBe("");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  17:21:30
+   Duration  1.80s (transform 1.01s, setup 61ms, import 1.49s, tests 43ms, environment 0ms)
+

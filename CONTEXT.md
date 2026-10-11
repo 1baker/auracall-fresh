@@ -86,3 +86,6 @@ The retained managed-profile process identity plus current desktop assignment th
 
 **Cold-start browser handoff**:
 The creation and lease qualification of a replacement page before retiring the selected incompatible startup page. This preserves the browser lifetime and keeps replacement custody explicit when retirement fails.
+
+**App composer qualification**:
+The unique visible enabled ChatGPT rich editor owned by the composer and outside dialogs, recognized by either legacy ID or current data-composer-markdown/Ask ChatGPT shape. Missing or ambiguous qualification blocks input; app identity is read from this editor, not an unrelated page pill.
