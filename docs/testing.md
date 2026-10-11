@@ -1,3 +1,5 @@
+- Developer-app affinity admission (provider-free): `pnpm vitest run tests/browser/chatgptDeveloperAppLifecycle.test.ts`. Selected full configuration survives conflicting default identity; non-affinity remains unchanged; admission stops before transport. Installed acceptance is separate.
+
 - Runtime browser launch precedence and stored projection (provider-free):
   `pnpm vitest run tests/runtime.configuredExecutor.test.ts tests/browser/browserLaunchPlan.test.ts tests/browser/browserLaunchPlanStructure.test.ts`.
   Runtime > browser profile > global launch-field defaults, canonical/legacy

@@ -1,0 +1,11 @@
+{
+  "base": "9b324b3dc7d3f8f1ec50e3888f02e71c39047e02",
+  "tests": 69,
+  "test_files": 3,
+  "typecheck": "pass",
+  "build": "pass",
+  "scoped_lint": "pass",
+  "provider_requests": 0,
+  "installed_acceptance": "pending",
+  "review": "serial primary Standards and Spec"
+}

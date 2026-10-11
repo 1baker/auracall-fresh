@@ -1,3 +1,7 @@
+## 2026-10-11 — Issue253 affinity repair
+
+Plan0405 implements the accepted agent brief on fix/issue253-app-affinity-config. Missing full configuration reproduced through actual guard; boundary red/green and69 focused tests pass. LitScout coordination started; installation/live acceptance pending.
+
 ## 2026-10-11 — Plan0404 final tracker and custody reconciliation
 
 ## 2026-10-11 — Matt engineering skill setup (#273)

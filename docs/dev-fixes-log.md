@@ -1,3 +1,7 @@
+## 2026-10-11 — Developer-app submission must retain affinity configuration
+
+A launch-policy projection alone cannot satisfy legacy ChatGPT affinity admission. Preserve full selected resolved user configuration at the submission boundary; do not treat provider-free regression success as installed acceptance.
+
 ## 2026-10-11 — Automatic desktop placement retains custody across recovery
 
 ## 2026-10-11 — Explicit engineering skill configuration (#273)

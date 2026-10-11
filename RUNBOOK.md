@@ -22207,3 +22207,8 @@ without matching lifecycle records; exit actor remains unknown.33/34 recorded
 state files match (browser registry bookkeeping changed), configuration is stable,
 and scheduler/17 paused completions are unchanged. Installed acceptance is bounded
 to restored application routes; no provider prompts or new wake ran.
+
+
+## Turn 405 | 2026-10-11
+
+State: OPEN. [Plan0405](docs/dev/plans/0405-2026-10-11-developer-app-affinity-config.md), issue #253. Selected resolved configuration forwarding; source validation in progress, LitScout installed acceptance pending.
