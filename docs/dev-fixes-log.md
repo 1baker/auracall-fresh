@@ -1,3 +1,7 @@
+## 2026-10-11 — App picker rows differ from same-name custom GPTs (#253)
+
+Current mention app rows are plain buttons with app-menu CSS markers, not legacy popover menu items. Wait for one visible enabled row matching installed app name and description; missing metadata or duplicate rows stops selection. Pass description through both native app paths, and retain exact app-pill identity before Send. Capture trigger-time DOM before native finally cleanup when diagnosing transient picker state.
+
 ## 2026-10-11 — App composer qualification supports the current rich editor (#253)
 
 Developer-app clearing and ecosystem mentions cannot depend on legacy prompt-textarea ID. Reuse the specific rich Ask ChatGPT editor shape; qualify exactly one visible enabled composer-owned editor outside dialogs and read app pills from that root. A disappeared editor is not proof of successful clearing. Preserve trusted keyboard input and exact pre-Send app identity.

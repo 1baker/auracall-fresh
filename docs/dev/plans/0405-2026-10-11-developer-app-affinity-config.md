@@ -5,13 +5,13 @@ Lane: P90
 Integration: merge
 Work items: #253
 Owner: ecochran76; primary agent, serialized implementation.
-Branch: fix/issue253-current-app-composer
+Branch: fix/issue253-current-app-picker
 Target: main through PR merge
 Base: 9b324b3dc7d3f8f1ec50e3888f02e71c39047e02
 
 ## Current State
 
-PR284 integrated/installed b188ae014 with591-file parity; rich composer clearing now passes native boundary. One no-submit run ends at legacy mention-picker selector not found after @LitScout insertion. No native prompt/intent/result; fresh browser53930/start39054099 alive. Post-terminal read-only screenshot shows empty composer and no picker, so trigger-time DOM remains missing. One bounded instrumented no-submit diagnosis authorized to capture exact selection-time DOM; no prompt or input outside native command. Full Issue253 acceptance remains open.
+Rich composer repair installed. Instrumented no-submit captures the real app picker while @LitScout is present: app BUTTON has only current app-menu CSS marker and exact installed name/description; later same-name custom GPT row appears. Legacy .popover/role/tabindex selectors do not qualify actual picker. Public-seam captured-button regression red in2.24s; current qualification waits for one matching app row using installed description and rejects missing metadata/duplicate rows before clicking. Exact app pill identity remains required.89 browser +47 CLI/capability focused tests pass; typecheck, full build, scoped lint and serial Standards/Spec review pass; installed/native acceptance pending. No original prompt/intent/result; browser53930/start39054099 last qualified alive.
 
 ## Scope and seams
 
@@ -100,3 +100,8 @@ PR284 integrated b188ae01493209fce88f9ad3da4ce2248f078844, validated806c968c12f4
 ### Native rich composer outcome and picker diagnosis
 
 Original PR284 no-submit terminal exit1/session15675, JSON0bytes: Visible selector not found .popover .__menu-item[tabindex] after native @LitScout insertion. Composer clearing advanced; exact app selection remains unqualified. Fresh browser53930/start39054099 alive. Current target5B927463445DE29431D89B1CB3DE050A screenshot/DOM at22:29:27Z shows empty editor, no picker, zero app pills. Source selectForTest finally clears the native-created mention draft; current absence does not prove trigger-time absence. No original Demo10 intent/result. One scoped no-submit reproduction with bounded read-only observer authorized under active diagnosis goal after account/empty composer/prior-unsent checks; never submit or bypass control.
+
+
+## Revision | Current app-picker row qualification
+
+Trigger-time observer captured exact native mention draft plus app row at22:32:20.139Z, then same-name custom GPT22:32:21.792Z. Actual current row BUTTON has CSS --app-menu-item-height marker, no legacy menu role/id/tabindex. Source old selector deterministically cannot qualify it. Preserve current rich editor qualification; wait for exactly one visible enabled current row matching installed name+description, or one exact-label legacy row, then click only marked choice and verify app pill identity. Current row without installed description is unqualified because a same-name GPT can arrive first. Carry description through both no-submit and submission paths; never replace exact plugin identity with text proof. Browser-native acceptance still required.

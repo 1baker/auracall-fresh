@@ -2,12 +2,14 @@ import {
 	buildChatgptAppComposerLookup,
 	CHATGPT_APP_COMPOSER_SELECTORS,
 } from "./chatgptComposer.js";
-import { dismissOpenMenus, pressButton } from "../service/ui.js";
+import { dismissOpenMenus, pressButton, waitForPredicate } from "../service/ui.js";
 import type { ChromeClient } from "../types.js";
 
 export interface ChatgptEcosystemMentionRequest {
 	label: string;
 	acceptedPluginIds: string[];
+	/** Current picker rows require the installed description to exclude same-name custom GPTs. */
+	description?: string | null;
 	/** Developer-app tests require a new chat; connected capabilities may use an empty composer in a bound conversation. */
 	requireFreshConversation?: boolean;
 }
@@ -110,8 +112,15 @@ async function selectChatgptEcosystemMention(
 		throw new Error("ChatGPT composer changed before app selection.");
 	}
 	await client.Input.insertText({ text: `@${request.label}` });
+	const choice = await waitForPredicate(client.Runtime, buildAppMentionChoiceExpression(request), {
+		timeoutMs: 8_000,
+		description: "exact ChatGPT app mention option",
+	});
+	if (!choice.ok) {
+		throw new Error(`No unique ChatGPT app mention option qualified for ${request.label}.`);
+	}
 	const selected = await pressButton(client.Runtime, {
-		selector: ".popover .__menu-item[tabindex]",
+		selector: '[data-auracall-app-mention-choice="true"]',
 		interactionStrategies: ["pointer"],
 		requireVisible: true,
 		postSelector: CHATGPT_APP_COMPOSER_SELECTORS.map(
@@ -131,6 +140,31 @@ async function selectChatgptEcosystemMention(
 			`Unable to select ChatGPT developer app ${request.label} from the composer mention picker: ${selected.reason ?? "exact app pill not verified"} (${diagnostic}).`,
 		);
 	}
+}
+
+function buildAppMentionChoiceExpression(request: ChatgptEcosystemMentionRequest): string {
+	return `(() => {
+    const marker = 'data-auracall-app-mention-choice';
+    document.querySelectorAll('[' + marker + ']').forEach((node) => node.removeAttribute(marker));
+    const editor = ${buildChatgptAppComposerLookup()};
+    if (!editor || String(editor.innerText || '').trim() !== ${JSON.stringify(`@${request.label}`)}) return false;
+    const normalize = (text) => String(text || '').replace(/\\s+/g, ' ').trim().toLowerCase();
+    const label = ${JSON.stringify(normalize(request.label).replace(/\s+/g, " "))};
+    const description = ${JSON.stringify(normalize(request.description).replace(/\s+/g, " "))};
+    const currentSelector = 'button[class*="--app-menu-item-height"]';
+    const candidates = Array.from(document.querySelectorAll('.popover .__menu-item[tabindex], ' + currentSelector)).filter((node) => {
+      const rect = node.getBoundingClientRect();
+      const style = window.getComputedStyle(node);
+      if (rect.width <= 0 || rect.height <= 0 || style.display === 'none' || style.visibility === 'hidden'
+        || node.hasAttribute('disabled') || node.getAttribute('aria-disabled') === 'true') return false;
+      const text = String(node.innerText || node.textContent || '');
+      if (node.matches(currentSelector)) return Boolean(description) && normalize(text) === label + ' ' + description;
+      return normalize(text.split('\\n')[0]) === label;
+    });
+    if (candidates.length !== 1) return false;
+    candidates[0].setAttribute(marker, 'true');
+    return true;
+  })()`;
 }
 
 export async function assertChatgptEcosystemMentionSelected(

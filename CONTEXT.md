@@ -89,3 +89,6 @@ The creation and lease qualification of a replacement page before retiring the s
 
 **App composer qualification**:
 The unique visible enabled ChatGPT rich editor owned by the composer and outside dialogs, recognized by either legacy ID or current data-composer-markdown/Ask ChatGPT shape. Missing or ambiguous qualification blocks input; app identity is read from this editor, not an unrelated page pill.
+
+**App mention option**:
+A qualified visible enabled picker row for the installed app. Current rows require its exact name and description to exclude same-name custom GPTs; the chosen composer pill must then prove the exact plugin identity before Send.

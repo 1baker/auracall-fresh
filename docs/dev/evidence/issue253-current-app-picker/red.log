@@ -1,0 +1,44 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-issue253-triage
+
+ ❯ tests/browser/chatgptAppComposer.test.ts (10 tests | 1 failed) 176ms
+   ✓ clears the captured rich composer through trusted input (legacy ID: false) 7ms
+   ✓ clears the captured rich composer through trusted input (legacy ID: true) 4ms
+   ✓ rejects an unqualified composer before trusted input: {"hidden":true} 33ms
+   ✓ rejects an unqualified composer before trusted input: {"dialog":true} 45ms
+   ✓ rejects an unqualified composer before trusted input: {"count":2} 37ms
+   ✓ rejects an unqualified composer before trusted input: {"label":"Unrelated editor"} 22ms
+   ✓ does not report a disappeared composer as successfully cleared 3ms
+   ✓ reads exact app identity from the captured rich composer and rejects multiple pills 2ms
+   ✓ selects and verifies the exact app through the current rich editor 4ms
+   × selects the captured app button rather than a same-name custom GPT 15ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/browser/chatgptAppComposer.test.ts > selects the captured app button rather than a same-name custom GPT
+AssertionError: expected Error: Unable to select ChatGPT developer… to be null
+
+- Expected: 
+null
+
++ Received: 
+Error {
+  "message": "Unable to select ChatGPT developer app LitScout from the composer mention picker: Visible selector not found: .popover .__menu-item[tabindex] ({\"url\":\"https://chatgpt.com/\",\"editorText\":\"@LitScout\",\"activeElement\":null,\"popovers\":[]}).",
+}
+
+ ❯ tests/browser/chatgptAppComposer.test.ts:233:24
+    231|  } as never).then(() => null, (error: unknown) => error);
+    232|  await vi.runAllTimersAsync();
+    233|  expect(await pending).toBeNull();
+       |                        ^
+    234|  expect(clicked).toEqual([app]);
+    235| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 9 passed (10)
+   Start at  17:34:42
+   Duration  2.24s (transform 1.34s, setup 95ms, import 1.74s, tests 176ms, environment 0ms)
+

@@ -1,0 +1,26 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-issue253-triage
+
+ ✓ tests/browser/chatgptEcosystemMention.test.ts (7 tests) 17ms
+ ✓ tests/browser/promptComposerExpressions.test.ts (3 tests) 8ms
+ ✓ tests/browser/promptComposer.test.ts (18 tests) 1037ms
+     ✓ checks the final pre-send guard after insertion (reject=false)  507ms
+     ✓ checks the final pre-send guard after insertion (reject=true)  501ms
+ ✓ tests/browser/chatgptSingleVisitContext.test.ts (4 tests) 93ms
+ ✓ tests/browser/chatgptAppComposer.test.ts (11 tests) 226ms
+ ✓ tests/browser/chatgptDeveloperApps.test.ts (27 tests) 613ms
+     ✓ clears an ecosystem mention that first unwraps into literal composer text  503ms
+ ✓ tests/browser/chatgptDeveloperAppLifecycle.test.ts (19 tests) 5646ms
+     ✓ refreshes a late terminal conversation before returning committed-Send failure: {"terminalFailure":true}  822ms
+     ✓ refreshes a late terminal conversation before returning committed-Send failure: {"manualApproval":true}  781ms
+     ✓ preserves attributable WSL Windows loopback provenance through the canonical host alias  805ms
+     ✓ returns answer and refreshed terminal identity after exactly one Send  786ms
+     ✓ preserves terminal failure evidence without retry: {"terminalFailure":true,"effectState":"effect_observed"}  772ms
+     ✓ preserves terminal failure evidence without retry: {"uncertainSend":true,"effectState":"unknown"}  772ms
+     ✓ preserves terminal failure evidence without retry: {"manualApproval":true,"effectState":"effect_observed"}  775ms
+
+ Test Files  7 passed (7)
+      Tests  89 passed (89)
+   Start at  17:37:13
+   Duration  9.31s (transform 5.85s, setup 509ms, import 12.35s, tests 7.64s, environment 1ms)
+

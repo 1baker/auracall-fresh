@@ -77,6 +77,7 @@ function capturedComposer(
 	const evaluate = vi.fn(async ({ expression }: { expression: string }) => ({
 		result: {
 			value: runInNewContext(expression, {
+				location: { href: "https://chatgpt.com/" },
 				document,
 				window: {
 					getComputedStyle: () => ({
@@ -93,7 +94,7 @@ function capturedComposer(
 			if (options.disappear) present = false;
 		}
 	});
-	return { editor, client: { Runtime: { evaluate }, Input: { dispatchKeyEvent } } };
+	return { editor, document, client: { Runtime: { evaluate }, Input: { dispatchKeyEvent } } };
 }
 
 test.each([
@@ -161,12 +162,77 @@ test("reads exact app identity from the captured rich composer and rejects multi
 	expect(await readChatgptEcosystemMention(client as never)).toBeNull();
 });
 
-test("selects and verifies the exact app through the current rich editor", async () => {
-	const { editor, client } = capturedComposer();
+test.each([
+	{
+		description: "Literature research with durable session provenance.",
+		duplicate: false,
+		selected: true,
+	},
+	{ description: null, duplicate: false, selected: false },
+	{
+		description: "Literature research with durable session provenance.",
+		duplicate: true,
+		selected: false,
+	},
+])("qualifies the captured app button and excludes same-name custom GPTs: %j", async ({
+	description,
+	duplicate,
+	selected,
+}) => {
+	vi.useFakeTimers();
+	const { editor, document, client } = capturedComposer();
 	editor.innerText = "";
-	const insertText = vi.fn(async () => undefined);
+	const makeButton = (text: string) => {
+		const attrs: Record<string, string> = { class: "min-h-[var(--app-menu-item-height,0px)]" };
+		return {
+			innerText: text,
+			textContent: text,
+			getAttribute: (name: string) => attrs[name] ?? null,
+			hasAttribute: (name: string) => Object.hasOwn(attrs, name),
+			setAttribute: (name: string, value: string) => {
+				attrs[name] = value;
+			},
+			removeAttribute: (name: string) => {
+				delete attrs[name];
+			},
+			getBoundingClientRect: () => ({ width: 500, height: 40 }),
+			matches: (selector: string) =>
+				selector.split(",").some((raw) => {
+					const part = raw.trim();
+					if (part === "button") return true;
+					const match = part.match(/^(?:button)?\[([\w-]+)(\*=|=)?(?:"([^"]*)")?\]$/);
+					return Boolean(
+						match &&
+							Object.hasOwn(attrs, match[1]) &&
+							(!match[2] ||
+								(match[2] === "*="
+									? attrs[match[1]].includes(match[3])
+									: attrs[match[1]] === match[3])),
+					);
+				}),
+		};
+	};
+	const app = makeButton("LitScout\nLiterature research with durable session provenance.");
+	const customGpt = makeButton("LitScout");
+	let rendered = false;
+	setTimeout(() => {
+		rendered = true;
+	}, 300);
+	const oldQuery = document.querySelectorAll;
+	document.querySelectorAll = ((selector: string) => {
+		const buttons = (
+			rendered ? [customGpt, app, ...(duplicate ? [makeButton(app.innerText)] : [])] : [customGpt]
+		).filter((node) => node.matches(selector));
+		return buttons.length ? buttons : oldQuery(selector);
+	}) as typeof document.querySelectorAll;
+	const clicked: unknown[] = [];
 	ui.pressButton.mockReset();
-	ui.pressButton.mockResolvedValueOnce({ ok: true }).mockImplementationOnce(async () => {
+	ui.pressButton.mockImplementation(async (_runtime, options) => {
+		const candidates = document.querySelectorAll(options.selector);
+		const node = candidates[0];
+		if (!node) return { ok: false, reason: `Visible selector not found: ${options.selector}` };
+		if (node === editor) return { ok: true };
+		clicked.push(node);
 		editor.pills = [
 			{
 				textContent: "LitScout",
@@ -174,12 +240,31 @@ test("selects and verifies the exact app through the current rich editor", async
 					({ "data-symbol": "ecosystemMention", "data-id": "plugin:asdk_fixture" })[name] ?? null,
 			},
 		];
-		return { ok: true, matchedLabel: "LitScout" };
+		return { ok: true, matchedLabel: node.innerText };
 	});
-	await ensureChatgptEcosystemMention({ ...client, Input: { insertText } } as never, {
+	const insertText = vi.fn(async ({ text }: { text: string }) => {
+		editor.innerText = text;
+	});
+	const pending = ensureChatgptEcosystemMention({ ...client, Input: { insertText } } as never, {
 		label: "LitScout",
 		acceptedPluginIds: ["asdk_fixture"],
-	});
-	expect(insertText).toHaveBeenCalledExactlyOnceWith({ text: "@LitScout" });
+		description,
+	}).then(
+		() => null,
+		(error: unknown) => error,
+	);
+	await vi.runAllTimersAsync();
+	if (selected) {
+		expect(await pending).toBeNull();
+		expect(clicked).toEqual([app]);
+	} else {
+		expect(await pending).toEqual(
+			expect.objectContaining({
+				message: expect.stringContaining("No unique ChatGPT app mention option"),
+			}),
+		);
+		expect(clicked).toEqual([]);
+	}
 	expect(editor.focus).toHaveBeenCalledOnce();
+	expect(insertText).toHaveBeenCalledExactlyOnceWith({ text: "@LitScout" });
 });
