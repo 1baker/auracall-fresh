@@ -1,3 +1,4 @@
+import { requireInactiveChatgptTab, type probeChatgptTabActivity } from "./chatgptTabActivity.js";
 import {
 	closeRemoteChromeTarget,
 	listChromeTargets,
@@ -58,6 +59,7 @@ export interface ConfiguredChatgptTabMaintenanceDeps {
 	createBrowserService?: (config: ResolvedUserConfig) => MaintenanceBrowserService;
 	listTargets?: typeof listChromeTargets;
 	closeTarget?: typeof closeRemoteChromeTarget;
+	probeActivity?: typeof probeChatgptTabActivity;
 	currentOwner?: { processId: number; instanceId: string };
 	isOwnerAlive?: (processId: number) => boolean;
 }
@@ -288,6 +290,7 @@ export async function runConfiguredChatgptTabMaintenance(input: {
 					nowMs >= Date.parse(lostLease.idleExpiresAt) ||
 					nowMs >= Date.parse(lostLease.absoluteExpiresAt);
 				if (expired && endpoint && !isTabLeaseTtlExempt(lostLease)) {
+					await requireInactiveChatgptTab(endpoint, lostLease.targetId, deps.probeActivity);
 					await closeTarget(endpoint.host, endpoint.port, lostLease.targetId, () => undefined);
 					const remainingTargets = await listTargets(endpoint.port, endpoint.host);
 					const stillLive = remainingTargets.some((candidate) => {
@@ -314,6 +317,7 @@ export async function runConfiguredChatgptTabMaintenance(input: {
 			}
 			const outcomes = await retireExpiredChatgptTabLeases({
 				retireAllExpiredPages: true,
+				probeActivity: deps.probeActivity,
 				registry: runtime.registry,
 				scope,
 				endpoint,

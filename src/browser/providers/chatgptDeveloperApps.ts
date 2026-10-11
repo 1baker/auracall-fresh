@@ -28,7 +28,7 @@ import type { BrowserProviderListOptions, ProviderUserIdentity } from "./types.j
 
 export interface ChatgptDeveloperAppStateInput {
 	identity: ProviderUserIdentity | null;
-	developerMode: boolean;
+	developerMode: boolean | null;
 	featureSignature: string | null | undefined;
 	observedAt: string;
 }
@@ -38,7 +38,7 @@ export interface ChatgptDeveloperAppBrowserState {
 		email: string | null;
 		plan: string | null;
 	};
-	developerMode: boolean;
+	developerMode: boolean | null;
 	inventoryComplete: boolean;
 	apps: ChatgptDeveloperAppBrowserEntry[];
 	observedAt: string;
@@ -867,28 +867,21 @@ function isCompleteChatgptInstalledAppsPayload(value: unknown): boolean {
 
 export const isCompleteChatgptInstalledAppsPayloadForTest = isCompleteChatgptInstalledAppsPayload;
 
-async function readChatgptDeveloperMode(client: ChromeClient): Promise<boolean> {
+async function readChatgptDeveloperMode(client: ChromeClient): Promise<boolean | null> {
 	const originalUrl = await readCurrentUrl(client);
 	try {
 		await dismissEmptyNewAppDialog(client);
 		await navigateChatgpt(client, "https://chatgpt.com/plugins#settings/Security");
-		let ready = await waitForPredicate(
+		const ready = await waitForPredicate(
 			client.Runtime,
 			`Boolean(document.querySelector('button[role="switch"][aria-label="Developer mode"]'))`,
 			{ timeoutMs: 8_000, description: "ChatGPT Developer mode switch" },
 		);
 		if (!ready.ok) {
-			await navigateChatgpt(client, "https://chatgpt.com/plugins#settings/Plugins");
-			await navigateChatgpt(client, "https://chatgpt.com/plugins#settings/Security");
-			ready = await waitForPredicate(
-				client.Runtime,
-				`Boolean(document.querySelector('button[role="switch"][aria-label="Developer mode"]'))`,
-				{ timeoutMs: 8_000, description: "ChatGPT Developer mode switch after settings reset" },
-			);
-		}
-		if (!ready.ok) {
-			const diagnostic = await readDeveloperModeDiagnostic(client);
-			throw new Error(`ChatGPT Developer mode switch was not found (${diagnostic}).`);
+			// Inventory and current Developer-mode settings are independent observations.
+			// An absent control must never establish permission to create or replace apps.
+			debugDeveloperApps("Developer mode unavailable in current settings UI");
+			return null;
 		}
 		const result = await client.Runtime.evaluate({
 			expression: `document.querySelector('button[role="switch"][aria-label="Developer mode"]')?.getAttribute('aria-checked')`,
@@ -925,23 +918,6 @@ async function dismissEmptyNewAppDialog(client: ChromeClient): Promise<void> {
 	if (!closed.ok) {
 		throw new Error("An empty ChatGPT New App dialog blocked inventory and could not be closed.");
 	}
-}
-
-async function readDeveloperModeDiagnostic(client: ChromeClient): Promise<string> {
-	const result = await client.Runtime.evaluate({
-		expression: `JSON.stringify({
-      url: location.href,
-      dialogs: Array.from(document.querySelectorAll('[role="dialog"]'))
-        .map((dialog) => String(dialog.textContent || '').trim().slice(0, 160)),
-      switches: Array.from(document.querySelectorAll('button[role="switch"]'))
-        .map((button) => ({
-          label: button.getAttribute('aria-label'),
-          checked: button.getAttribute('aria-checked'),
-        })),
-    })`,
-		returnByValue: true,
-	});
-	return readString(result.result?.value) ?? "no DOM diagnostic available";
 }
 
 async function waitForChatgptDeveloperAppSettingsForDelete(

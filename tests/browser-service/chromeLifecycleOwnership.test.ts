@@ -131,6 +131,47 @@ async function importChromeLifecycleWithMocks(options: {
 }
 
 describe("chromeLifecycle ownership", () => {
+	test("persists owned shutdown and exit attribution for the same browser generation", async () => {
+		const root = await mkdtemp(path.join(os.tmpdir(), "chrome-exit-attribution-"));
+		try {
+			const registryPath = path.join(root, "registry.json");
+			const { chromeLifecycle, chromeProcess } = await importChromeLifecycleWithMocks({});
+			const chrome = await chromeLifecycle.launchChrome(
+				{ chromeProfile: "Default" } as never,
+				path.join(root, "managed"), () => undefined, { registryPath },
+			);
+			await chrome.kill();
+			chromeProcess.emit("exit", null, "SIGTERM");
+			const events = (await readFile(`${registryPath}.lifecycle.jsonl`, "utf8"))
+				.trim().split("\n").map(line => JSON.parse(line));
+			expect(events.map(event => event.event)).toEqual([
+				"owned-browser-launched", "owned-shutdown-requested", "owned-shutdown-returned", "owned-child-exit",
+			]);
+			expect(events[3]).toMatchObject({ pid: 44567, exitCode: null, exitSignal: "SIGTERM", ownerPid: process.pid });
+			expect(events[0].launchedAt).toBe(events[3].launchedAt);
+			expect(events[0].profileFingerprint).toBe(events[3].profileFingerprint);
+			expect(events[0].profileFingerprint).toMatch(/^[a-f0-9]{64}$/);
+			expect(events[0]).not.toHaveProperty("profilePath");
+		} finally {
+			await rm(root, { recursive: true, force: true });
+		}
+	});
+	test("keeps owned shutdown working when durable observations cannot be written", async () => {
+		const root = await mkdtemp(path.join(os.tmpdir(), "chrome-attribution-failure-"));
+		try {
+			const messages: string[] = [];
+			const { chromeLifecycle, unregisterInstanceIfMatches } = await importChromeLifecycleWithMocks({});
+			const chrome = await chromeLifecycle.launchChrome(
+				{ chromeProfile: "Default" } as never, path.join(root, "managed"),
+				message => messages.push(message), { registryPath: path.join(root, "absent", "registry.json") },
+			);
+			await expect(chrome.kill()).resolves.toBeUndefined();
+			expect(unregisterInstanceIfMatches).toHaveBeenCalledOnce();
+			expect(messages).toContain("[browser-lifecycle] durable observation write failed");
+		} finally {
+			await rm(root, { recursive: true, force: true });
+		}
+	});
 	test.each([
 		true,
 		false,

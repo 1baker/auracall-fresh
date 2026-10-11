@@ -360,3 +360,7 @@ This mode is ideal when you have a macOS VM (or spare Mac mini) logged into Chat
 - Gemini web (cookie) smoke: `AURACALL_LIVE_TEST=1 pnpm vitest run tests/live/gemini-web-live.test.ts` (requires a signed-in Chrome profile at `gemini.google.com`)
 - `pnpm test --filter browser` does not exist yet; manual runs with `--engine browser -v` are the current validation path.
 - Most of the heavy lifting lives in `src/browserMode.ts`. If you change selectors or the mutation observer logic, run a local `auracall --engine browser --browser-keep-browser` session so you can inspect DevTools before cleanup.
+
+### Developer-app inventory and current settings
+
+`auracall --profile <runtime-profile> apps list --json` reports installed apps independently of the Developer-mode settings control. When that control is unavailable, JSON reports `developerMode: null` and text reports `Developer mode: unknown`. This does not mean disabled or enabled. Existing-app operations retain exact account/inventory guards; creating or replacing an app still requires an affirmative enabled observation. Real navigation, attachment and incomplete inventory failures remain visible.

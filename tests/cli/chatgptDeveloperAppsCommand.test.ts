@@ -284,7 +284,10 @@ describe("executeChatgptDeveloperAppOperation", () => {
 		});
 	});
 
-	it("fails closed when two Developer mode observations remain false", async () => {
+	it.each([
+		false,
+		null,
+	])("fails closed when two Developer mode observations remain %s", async (developerMode) => {
 		const baseAdapter = createAdapter();
 		let reads = 0;
 		let createCalled = false;
@@ -305,7 +308,7 @@ describe("executeChatgptDeveloperAppOperation", () => {
 						reads += 1;
 						return {
 							...(await baseAdapter.readState()),
-							developerMode: false,
+							developerMode,
 						};
 					},
 					create: async () => {
@@ -317,6 +320,31 @@ describe("executeChatgptDeveloperAppOperation", () => {
 		).rejects.toThrow("Developer mode must be enabled");
 		expect(reads).toBe(2);
 		expect(createCalled).toBe(false);
+	});
+
+	it("rejects replacement when Developer mode is unknown without deleting the existing app", async () => {
+		const baseAdapter = createAdapter();
+		const deleteApp = vi.fn(async () => {
+			throw new Error("unexpected deletion");
+		});
+		await expect(
+			executeChatgptDeveloperAppOperation(
+				{
+					action: "refresh",
+					app: "Corel33t",
+					serverUrl: "https://fixture.example.test/mcp",
+					auth: "oauth",
+					connection: "server-url",
+					confirmed: true,
+					expectedAccount: "eric.cochran@soylei.com",
+				},
+				createAdapter({
+					readState: async () => ({ ...(await baseAdapter.readState()), developerMode: null }),
+					delete: deleteApp,
+				}),
+			),
+		).rejects.toThrow("Developer mode must be enabled");
+		expect(deleteApp).not.toHaveBeenCalled();
 	});
 
 	it("rejects create when the exact normalized app name already exists", async () => {

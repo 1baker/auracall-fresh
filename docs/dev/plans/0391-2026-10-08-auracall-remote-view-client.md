@@ -9,6 +9,16 @@ Branch: feat/issue240-named-desktops
 Base: origin/main at 591a118245cafbc54c34cd0bc179c4b380308ef6
 Work items: ecochran76/auracall#240, ecochran76/auracall#241, ecochran76/auracall#242
 
+## Installed route regression recovery: 2026-10-10
+
+The later Plan0403 installation replaced the off-main desktop client, causing
+GET /desktops HTTP404. Recovery reconciles PR244 checkpoint4fd905b39 with main
+8aa11f18a, preserving both intents in one validated build. The installer now
+requires the compiled /desktops contract before prefix replacement. Evidence,
+source review, dependency failure disposition and adoption gates are in
+[the recovery note](../notes/2026-10-10-desktops-install-reconciliation.md).
+This recovery does not erase outstanding authenticated input/root acceptance.
+
 ## Passive grant renewal correction: 2026-10-10
 
 The ready-view retention guard also skipped the scheduled four-minute refresh,

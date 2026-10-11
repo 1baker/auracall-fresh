@@ -1,0 +1,65 @@
+{
+  "manifest_version": "memory_cloud_manifest.v0",
+  "group_id": "auracall_main",
+  "cloud_type": "repo",
+  "display_name": "AuraCall Main",
+  "owner_scope": "local_user",
+  "sensitivity": "internal",
+  "export_policy": "local_user_only",
+  "allowed_audiences": [
+    "local_user_agents"
+  ],
+  "source_authority": [
+    "/home/ecochran76/workspace.local/auracall/AGENTS.md",
+    "/home/ecochran76/workspace.local/auracall/docs/graphiti-memory.md",
+    "/home/ecochran76/workspace.local/auracall/ROADMAP.md",
+    "/home/ecochran76/workspace.local/auracall/RUNBOOK.md"
+  ],
+  "topic_labels": [
+    "AuraCall",
+    "ChatGPT browser automation",
+    "developer app inventory",
+    "provider acceptance",
+    "MCP connector tooling"
+  ],
+  "safe_aliases": [
+    "auracall",
+    "Aura-Call",
+    "AuraCall repository memory"
+  ],
+  "atlas_summary": "AuraCall repository memory for source-backed browser/API orchestration decisions, provider acceptance and installed repair summaries. Route AuraCall app inventory and connector automation work here. Repository and current runtime receipts remain authoritative.",
+  "privacy_notes": [
+    "Store compact source-backed summaries only.",
+    "Exclude credentials, cookies, OAuth state, browser profiles, screenshots, private tenant messages and raw logs."
+  ],
+  "retrieval_policy": {
+    "atlas_only": false,
+    "requires_group_permission": true,
+    "allowed_tools": [
+      "search_memory_facts",
+      "get_episodes",
+      "get_episode"
+    ],
+    "forbidden_content": [
+      "secrets",
+      "credentials",
+      "cookies",
+      "OAuth state",
+      "browser profiles",
+      "screenshots",
+      "private tenant messages",
+      "raw logs"
+    ]
+  },
+  "review_status": "approved_for_seed",
+  "provenance": {
+    "created_by": "local_user_agents",
+    "reviewed_by": "local_user_authorized_workflow",
+    "reviewed_at": "2026-10-10",
+    "work_item": "https://github.com/ecochran76/auracall/issues/251"
+  },
+  "refresh_policy": {
+    "refresh_trigger": "routing_or_privacy_contract_change",
+    "last_reviewed_at": "2026-10-10"
+  }
+}

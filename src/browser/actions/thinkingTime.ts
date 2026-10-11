@@ -32,14 +32,15 @@ const CHATGPT_POWER_SLIDER_TARGETS = {
   standard: { value: 1, label: 'Medium' },
   extended: { value: 2, label: 'High' },
   heavy: { value: 3, label: 'Extra High' },
-} satisfies Record<ThinkingTimeLevel, { value: number; label: string }>;
+  pro: { value: 4, label: 'Pro' },
+} satisfies Record<ThinkingTimeLevel | 'pro', { value: number; label: string }>;
 
 export class ThinkingTierUnavailableError extends BrowserAutomationError {
-  readonly requestedLevel: ThinkingTimeLevel;
+  readonly requestedLevel: ThinkingTimeLevel | 'pro';
   readonly optionLabel: string | null;
   readonly notice: string | null;
 
-  constructor(level: ThinkingTimeLevel, optionLabel: string | null, notice: string | null) {
+  constructor(level: ThinkingTimeLevel | 'pro', optionLabel: string | null, notice: string | null) {
     const requestedLabel = level.charAt(0).toUpperCase() + level.slice(1);
     super(
       `Thinking time: ${optionLabel ?? requestedLabel} is unavailable on this account (${notice ?? 'no reason given'}); refusing to submit without confirmed ${requestedLabel}.`,
@@ -63,7 +64,7 @@ export class ThinkingTierUnavailableError extends BrowserAutomationError {
  */
 export async function ensureThinkingTime(
   Runtime: ChromeClient['Runtime'],
-  level: ThinkingTimeLevel,
+  level: ThinkingTimeLevel | 'pro',
   logger: BrowserLogger,
 ): Promise<boolean> {
   const result = await evaluateThinkingTimeSelection(Runtime, level);
@@ -115,7 +116,7 @@ export async function ensureThinkingTime(
  */
 export async function ensureThinkingTimeIfAvailable(
   Runtime: ChromeClient['Runtime'],
-  level: ThinkingTimeLevel,
+  level: ThinkingTimeLevel | 'pro',
   logger: BrowserLogger,
 ): Promise<boolean> {
   return ensureThinkingTime(Runtime, level, logger);
@@ -123,7 +124,7 @@ export async function ensureThinkingTimeIfAvailable(
 
 async function evaluateThinkingTimeSelection(
   Runtime: ChromeClient['Runtime'],
-  level: ThinkingTimeLevel,
+  level: ThinkingTimeLevel | 'pro',
 ): Promise<ThinkingTimeOutcome | undefined> {
   const outcome = await withStageTimeout(
     Runtime.evaluate({
@@ -150,7 +151,7 @@ function withStageTimeout<T>(task: Promise<T>, timeoutMs: number, message: strin
   });
 }
 
-function buildThinkingTimeExpression(level: ThinkingTimeLevel): string {
+function buildThinkingTimeExpression(level: ThinkingTimeLevel | 'pro'): string {
   const menuContainerLiteral = JSON.stringify(MENU_CONTAINER_SELECTOR);
   const menuItemLiteral = JSON.stringify(MENU_ITEM_SELECTOR);
   const targetLevelsLiteral = JSON.stringify(resolveThinkingTimeCandidates(level));
@@ -180,6 +181,7 @@ function buildThinkingTimeExpression(level: ThinkingTimeLevel): string {
     const CHIP_SELECTORS = [
       '[data-testid="composer-footer-actions"] button[aria-haspopup="menu"]',
       'button.__composer-pill[aria-haspopup="menu"]',
+      'button[aria-label="Select ChatGPT model"]',
       '.__composer-pill-composite button[aria-haspopup="menu"]',
     ];
 
@@ -222,7 +224,7 @@ function buildThinkingTimeExpression(level: ThinkingTimeLevel): string {
           if (btn.getAttribute?.('aria-haspopup') !== 'menu') continue;
           const aria = normalize(btn.getAttribute?.('aria-label') ?? '');
           const text = normalize(btn.textContent ?? '');
-          if (aria.includes('thinking') || text.includes('thinking')) {
+          if (aria === 'select chatgpt model' || aria.includes('thinking') || text.includes('thinking')) {
             return btn;
           }
 
@@ -279,6 +281,8 @@ function buildThinkingTimeExpression(level: ThinkingTimeLevel): string {
       let effortOpened = false;
 
       const findMenu = () => {
+        const modernPicker = document.querySelector('[data-model-picker-view="simple"]');
+        if (visible(modernPicker)) return modernPicker;
         const intelligencePicker = document.querySelector('[data-testid="composer-intelligence-picker-content"]');
         if (visible(intelligencePicker)) {
           return intelligencePicker;
@@ -396,6 +400,32 @@ function buildThinkingTimeExpression(level: ThinkingTimeLevel): string {
       let attempt;
 
       const attemptPowerSlider = () => {
+        const modern = document.querySelector('[data-model-picker-view="simple"]');
+        const modernSlider = modern?.querySelector?.('[role="slider"]');
+        const power = modern?.querySelector?.('[data-reasoning-slider="true"]');
+        if (visible(modern) && modernSlider instanceof HTMLElement && power instanceof HTMLElement) {
+          const maximum = Number(modernSlider.getAttribute('aria-valuemax'));
+          let remaining = 5;
+          const started = performance.now();
+          const verify = () => {
+            const value = Number(modernSlider.getAttribute('aria-valuenow'));
+            const announcement = modern.querySelector('[role="status"]')?.textContent ?? '';
+            if (value === TARGET_SLIDER_VALUE && normalize(announcement) === normalize(TARGET_SLIDER_LABEL) + ' ' + (value + 1) + ' of ' + (maximum + 1)) {
+              resolve({ status: value === initialValue ? 'already-selected' : 'switched', label: TARGET_SLIDER_LABEL });
+              return;
+            }
+            if (!Number.isFinite(value) || value === TARGET_SLIDER_VALUE || TARGET_SLIDER_VALUE > maximum || remaining-- <= 0 || performance.now() - started > 1200) {
+              resolve({ status: 'option-not-found' });
+              return;
+            }
+            const key = value < TARGET_SLIDER_VALUE ? 'ArrowRight' : 'ArrowLeft';
+            for (const type of ['keydown', 'keyup']) power.dispatchEvent(new KeyboardEvent(type, { key, code: key, bubbles: true, cancelable: true }));
+            setTimeout(verify, 100);
+          };
+          const initialValue = Number(modernSlider.getAttribute('aria-valuenow'));
+          verify();
+          return true;
+        }
         const view = document.querySelector('[data-testid="composer-model-picker-slider-simple-view"]');
         const slider = view?.querySelector?.('[role="slider"]') ?? null;
         if (!(view instanceof HTMLElement) || !(slider instanceof HTMLElement)) return false;
@@ -555,16 +585,16 @@ function buildThinkingTimeExpression(level: ThinkingTimeLevel): string {
   })()`;
 }
 
-export function buildThinkingTimeExpressionForTest(level: ThinkingTimeLevel = 'extended'): string {
+export function buildThinkingTimeExpressionForTest(level: ThinkingTimeLevel | 'pro' = 'extended'): string {
   return buildThinkingTimeExpression(level);
 }
 
-export function resolveChatgptProModeFromThinkingTime(level: ThinkingTimeLevel): ChatgptProMode {
+export function resolveChatgptProModeFromThinkingTime(level: ThinkingTimeLevel | 'pro'): ChatgptProMode {
   return level === 'extended' || level === 'heavy' ? 'extended' : 'standard';
 }
 
 export function resolveChatgptPowerSliderTarget(
-  level: ThinkingTimeLevel,
+  level: ThinkingTimeLevel | 'pro',
 ): { value: number; label: string } {
   return CHATGPT_POWER_SLIDER_TARGETS[level];
 }
@@ -575,7 +605,7 @@ export function isChatgptProModelTarget(desiredModel: string | null | undefined)
 }
 
 export function evaluateChatgptProModeGate(
-  level: ThinkingTimeLevel,
+  level: ThinkingTimeLevel | 'pro',
   identity: ProviderUserIdentity | null | undefined,
 ): ChatgptProModeGate {
   const proMode = resolveChatgptProModeFromThinkingTime(level);
@@ -612,9 +642,11 @@ export function formatChatgptProModeGateError(gate: ChatgptProModeGate): string 
   return `ChatGPT Pro mode "${gate.proMode}" requires a Pro account.${suffix} Use a Pro-bound AuraCall runtime profile or omit --browser-thinking-time.`;
 }
 
-function resolveThinkingTimeCandidates(level: ThinkingTimeLevel): string[] {
+function resolveThinkingTimeCandidates(level: ThinkingTimeLevel | 'pro'): string[] {
   const normalized = level.toLowerCase();
   switch (normalized) {
+    case 'pro':
+      return ['pro'];
     case 'light':
       return ['light', 'standard', 'instant'];
     case 'heavy':

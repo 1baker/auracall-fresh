@@ -44,7 +44,7 @@ import {
 	verifyChatgptLibraryFileAttachments,
 } from "../actions/chatgptLibraryFiles.js";
 import { ensureChatgptWorkModelSelection } from "../actions/chatgptWorkModelSelection.js";
-import { ensureModelSelection } from "../actions/modelSelection.js";
+import { ensureModelSelection, shouldApplyChatgptThinkingTime } from "../actions/modelSelection.js";
 import { ensurePromptReady } from "../actions/navigation.js";
 import { submitPrompt } from "../actions/promptComposer.js";
 import { ensureThinkingTime } from "../actions/thinkingTime.js";
@@ -13341,10 +13341,7 @@ async function prepareChatgptPromptWorkbenchInClient(
 	if (
 		chatgptMode === "chat" &&
 		thinkingTime &&
-		(modelStrategy === "current" ? selectedModel : desiredModel) &&
-		/\b(sol|thinking|pro)\b/i.test(
-			(modelStrategy === "current" ? selectedModel : desiredModel) ?? "",
-		)
+		shouldApplyChatgptThinkingTime(modelStrategy === "current" ? selectedModel : desiredModel, selectedModel)
 	) {
 		await ensureThinkingTime(Runtime, thinkingTime, logger);
 	}

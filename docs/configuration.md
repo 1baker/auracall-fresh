@@ -108,6 +108,33 @@ The dashboard also exposes an API-key issue control for selected agent/team
 scopes. It calls `POST /v1/config/api-keys/issue`, writes the selected
 user-scoped env file, and returns the new secret once for the operator to store.
 
+## Browser launch field precedence
+
+For user-config browser launch plans, executable, source browser profile root/name,
+source cookie path, bootstrap cookie path, display and managed browser profile root
+use this order:
+
+1. The selected AuraCall runtime profile's `browser` override.
+2. The explicitly selected browser profile's settings.
+3. The configured root `browser` defaults.
+
+Blank strings are absent; canonical source fields (`sourceProfileName`,
+`sourceCookiePath`, `sourceProfilePath`) precede compatibility aliases within each
+layer. `cookieSync` uses the same order, including an explicit `false` override.
+A source cookie path alone does not authorize copying: derived bootstrap cookies
+require `cookieSync: true`. A separately configured `bootstrapCookiePath` is an
+explicit bootstrap request. Source root can derive a cookie path when none is
+configured; it remains separate from the managed browser directory.
+
+Stored execution uses the same immutable plan for emitted launch options, affinity
+configuration, managed directory and source authorization identity. Runtime
+`chromeProfile` aliases now supply authorization's source name too. An explicit
+runtime/service managed directory is honored, while a stale directory belonging to
+another runtime/browser selection or provider is discarded. With no explicit
+directory, the managed directory derives from the winning managed root plus the
+selected browser profile and provider. Model/tool/workflow preferences remain
+separate. Already explicit session-config launch options retain their precedence.
+
 ## Local API and dashboard
 
 Use the top-level `api` block to pin the local API binding and operator-facing

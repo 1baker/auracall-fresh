@@ -1,0 +1,47 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-issue226-premium
+
+ ❯ tests/browser/thinkingTime.test.ts (20 tests | 1 failed) 33ms
+     ✓ uses centralized menu selectors and normalized matching 6ms
+     ✓ maps AuraCall effort levels onto the live five-position Power slider 1ms
+     ✓ targets the requested thinking time level 2ms
+     ✓ reports exact control absence for a composer without a Thinking chip 2ms
+     ✓ opens the exact Configure control on the integrated Pro selector 9ms
+     ✓ opens the current compact EffortPro submenu without requiring Configure 1ms
+     ✓ reports an unavailable tier without clicking its disabled row 1ms
+     ✓ uses the provider default when Instant intent has no separate effort control 1ms
+     ✓ fails closed when explicit standard effort has no separate control 1ms
+     ✓ fails closed when explicit extended effort has no separate control 0ms
+     ✓ fails closed when explicit heavy effort has no separate control 0ms
+     ✓ fails closed when Instant intent finds an ambiguous effort surface 0ms
+     ✓ fails closed with a typed browser automation error for strict selection 1ms
+     ✓ does not weaken unavailable explicit effort through the compatibility helper 0ms
+     ✓ maps thinking-time aliases to ChatGPT Pro modes 0ms
+     ✓ treats Pro as a model-picker lane, not a Standard/Extended depth selector 0ms
+     ✓ allows Pro accounts to use standard and extended Pro modes 0ms
+     ✓ blocks Business accounts before selecting a Pro mode 0ms
+     ✓ blocks unverified accounts instead of guessing the quota lane 0ms
+   × selects Pro on the current five-position Power control and verifies its label 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/browser/thinkingTime.test.ts > selects Pro on the current five-position Power control and verifies its label
+TypeError: Cannot read properties of undefined (reading 'value')
+ ❯ buildThinkingTimeExpression src/browser/actions/thinkingTime.ts:158:64
+    156|   const targetLevelsLiteral = JSON.stringify(resolveThinkingTimeCandid…
+    157|   const sliderTarget = resolveChatgptPowerSliderTarget(level);
+    158|   const sliderTargetValueLiteral = JSON.stringify(sliderTarget.value);
+       |                                                                ^
+    159|   const sliderTargetLabelLiteral = JSON.stringify(sliderTarget.label);
+    160| 
+ ❯ buildThinkingTimeExpressionForTest src/browser/actions/thinkingTime.ts:559:10
+ ❯ tests/browser/thinkingTime.test.ts:482:42
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 19 passed (20)
+   Start at  13:31:59
+   Duration  786ms (transform 178ms, setup 71ms, import 450ms, tests 33ms, environment 0ms)
+

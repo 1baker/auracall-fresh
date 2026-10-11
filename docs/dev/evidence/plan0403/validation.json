@@ -1,0 +1,60 @@
+{
+  "baseline": "813651d951c6560b3d0c74cb370a45db618239bd",
+  "tier": "focused_and_adjacent",
+  "checks": [
+    {
+      "command": "pnpm vitest run tests/runtime.configuredExecutor.test.ts tests/browser/browserLaunchPlan.test.ts tests/browser/browserLaunchPlanStructure.test.ts tests/browser/config.test.ts tests/browser/profileResolution.test.ts tests/browser/profileConfig.test.ts tests/browser/browserService.test.ts tests/browser/reattach.test.ts tests/browser/profileDoctor.test.ts tests/browser/sessionRunner.test.ts tests/cli/browserConfig.test.ts tests/browser/chatgptAffinityExecutor.test.ts tests/browser/legacyChatgptAffinityRuntime.test.ts",
+      "exitCode": 0,
+      "passed": 207,
+      "files": 13,
+      "durationSeconds": 7.34,
+      "output": "acceptance-tests.txt"
+    },
+    {
+      "command": "pnpm exec tsc --noEmit",
+      "exitCode": 0,
+      "output": "acceptance-typecheck.txt"
+    },
+    {
+      "command": "pnpm exec biome lint src/browser/service/browserLaunchPlan.ts src/runtime/configuredExecutor.ts tests/browser/browserLaunchPlan.test.ts tests/runtime.configuredExecutor.test.ts",
+      "exitCode": 0,
+      "output": "acceptance-lint.txt"
+    },
+    {
+      "command": "git diff --check",
+      "exitCode": 0
+    }
+  ],
+  "sourceSha256": {
+    "src/browser/service/browserLaunchPlan.ts": "85917535417ab49aa1c676d7a7204678fd656cc4e4c4d937b98ce06dee4d63f2",
+    "src/runtime/configuredExecutor.ts": "968247540247ad9e3604ce49b3a08ac687284c2add4bb889fd14a9dcedf7cb93",
+    "tests/browser/browserLaunchPlan.test.ts": "8943975fc5ee69da38f00f5d134d86f62dbeea7ebb95646a761625b4576bc443",
+    "tests/runtime.configuredExecutor.test.ts": "e624d431a88c8a3652728126f78aefac535046a29bacd0a677c89ead117049b1"
+  },
+  "environment": {
+    "node": "v24.18.0",
+    "dependencies": "existing shared node_modules symlink",
+    "providerFree": true
+  },
+  "redCases": {
+    "resolverPrecedence": 1,
+    "storedProjection": 3,
+    "runtimeDirectory": 1,
+    "cookieOptIn": 2,
+    "manualLoginPreference": 1
+  },
+  "review": {
+    "standardsAccepted": 0,
+    "specBlockingResolved": 1,
+    "unresolvedBlocking": 0,
+    "mode": "serial_primary"
+  },
+  "retries": 0,
+  "providerSubmissions": 0,
+  "installedChanges": 0,
+  "excluded": [
+    "comprehensive",
+    "live_or_soak"
+  ],
+  "acceptance": "passed"
+}

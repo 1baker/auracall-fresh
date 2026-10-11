@@ -1,0 +1,15 @@
+{"fixtureRecoveryFailure":{"state":"unavailable","capability":"observe","error":"Another controller owns this desktop.","claims":"{}"},"errors":[]}
+{"freshOsReadback":true,"remainingOwnedProcesses":0}
+/home/ecochran76/workspace.local/auracall-desktops-reconciliation/node_modules/.pnpm/puppeteer-core@24.34.0/node_modules/puppeteer-core/src/common/WaitTask.ts:77
+      this.#timeoutError = new TimeoutError(
+                           ^
+
+TimeoutError: Waiting failed: 30000ms exceeded
+    at new WaitTask (/home/ecochran76/workspace.local/auracall-desktops-reconciliation/node_modules/.pnpm/puppeteer-core@24.34.0/node_modules/puppeteer-core/src/common/WaitTask.ts:77:28)
+    at IsolatedWorld.waitForFunction (/home/ecochran76/workspace.local/auracall-desktops-reconciliation/node_modules/.pnpm/puppeteer-core@24.34.0/node_modules/puppeteer-core/src/api/Realm.ts:74:22)
+    at CdpFrame.waitForFunction (/home/ecochran76/workspace.local/auracall-desktops-reconciliation/node_modules/.pnpm/puppeteer-core@24.34.0/node_modules/puppeteer-core/src/api/Frame.ts:789:36)
+    at CdpFrame.<anonymous> (/home/ecochran76/workspace.local/auracall-desktops-reconciliation/node_modules/.pnpm/puppeteer-core@24.34.0/node_modules/puppeteer-core/src/util/decorators.ts:63:21)
+    at CdpPage.waitForFunction (/home/ecochran76/workspace.local/auracall-desktops-reconciliation/node_modules/.pnpm/puppeteer-core@24.34.0/node_modules/puppeteer-core/src/api/Page.ts:3126:29)
+    at <anonymous> (/home/ecochran76/workspace.local/auracall-desktops-reconciliation/scripts/smoke-desktop-client.ts:558:13)
+
+Node.js v24.18.0

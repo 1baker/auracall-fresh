@@ -1,3 +1,4 @@
+import { requireInactiveChatgptTab, type probeChatgptTabActivity } from "./chatgptTabActivity.js";
 import type {
 	BrowserTabLease,
 	BrowserTabLeaseRegistry,
@@ -21,6 +22,7 @@ export function retireExpiredChatgptTabLeases(input: {
 	) => Promise<{ url: string } | null>;
 	closeTarget: (endpoint: TabLeaseRetirementEndpoint, targetId: string) => Promise<void>;
 	endpointAbsenceProvesTargetsMissing?: boolean;
+	probeActivity?: typeof probeChatgptTabActivity;
 	retireAllExpiredPages?: boolean;
 }): Promise<TabLeaseRetirementOutcome[]> {
 	return retireExpiredTabLeases({
@@ -29,7 +31,10 @@ export function retireExpiredChatgptTabLeases(input: {
 		now: input.now,
 		resolveEndpoint: async () => input.endpoint,
 		inspectTarget: input.inspectTarget,
-		closeTarget: input.closeTarget,
+		closeTarget: async (endpoint, targetId) => {
+			await requireInactiveChatgptTab(endpoint, targetId, input.probeActivity);
+			await input.closeTarget(endpoint, targetId);
+		},
 		endpointAbsenceProvesTargetsMissing: input.endpointAbsenceProvesTargetsMissing,
 		targetMatchesLease: input.retireAllExpiredPages ? () => true : chatgptTargetMatchesLease,
 	});

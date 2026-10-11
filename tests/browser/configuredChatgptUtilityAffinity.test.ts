@@ -1,3 +1,8 @@
+import { vi as activityMock } from "vitest";
+activityMock.mock("../../src/browser/chatgptTabActivity.js", async (importOriginal) => {
+	const original = await importOriginal<typeof import("../../src/browser/chatgptTabActivity.js")>();
+	return { ...original, requireInactiveChatgptTab: activityMock.fn(async () => {}) };
+});
 import { describe, expect, test, vi } from "vitest";
 
 import { createInMemoryProviderInteractionLedger } from "../../packages/browser-service/src/service/interactionLedger.js";

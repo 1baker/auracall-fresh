@@ -1,0 +1,62 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-issue226-heartbeat
+
+ ❯ tests/browser/legacyChatgptAffinityRuntime.test.ts (1 test | 1 failed) 17ms
+     × runs the full legacy executor only on the exact provisioned target 16ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/browser/legacyChatgptAffinityRuntime.test.ts > legacy ChatGPT affinity runtime > runs the full legacy executor only on the exact provisioned target
+AssertionError: expected "vi.fn()" to be called with arguments: [ ObjectContaining{…} ]
+
+Received: 
+
+  1st vi.fn() call:
+
+  [
+-   ObjectContaining {
+-     "abortSignal": Any<AbortSignal>,
++   {
+      "host": "127.0.0.1",
+      "port": 45100,
+-     "providerTrafficGovernor": ObjectContaining {
+-       "attribution": ObjectContaining {
+-         "operationId": Any<String>,
+-         "tabLeaseId": Any<String>,
++     "providerTrafficGovernor": {
++       "attribution": {
++         "managedBrowserProfile": "/tmp/managed-chatgpt",
++         "operationId": "30683094-38f6-4577-884d-97f65bbfbc31",
++         "provider": "chatgpt",
++         "runtimeProfileId": "research",
++         "tabLeaseId": "2be07b5c-1460-4ae0-aa47-038839be41ef",
++         "workloadId": "new-conversation:30683094-38f6-4577-884d-97f65bbfbc31:conversation",
+        },
++       "begin": [Function begin],
++       "checkWarning": [Function checkWarning],
++       "snapshotAdmissionState": [Function snapshotAdmissionState],
+      },
+      "targetId": "target-1",
+      "targetUrl": "https://chatgpt.com/",
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ tests/browser/legacyChatgptAffinityRuntime.test.ts:63:21
+     61|   });
+     62| 
+     63|   expect(runLeased).toHaveBeenCalledWith(expect.objectContaining({
+       |                     ^
+     64|    host: "127.0.0.1",
+     65|    port: 45100,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  17:28:46
+   Duration  1.61s (transform 999ms, setup 56ms, import 1.36s, tests 17ms, environment 0ms)
+

@@ -1,3 +1,11 @@
+## 2026-10-10 | Plan0394 memory routing
+
+Issue251 owner ecochran76 IN_PROGRESS. Canonical auracall_main route and routing-only manifest are documented; unresolved destination and actual service failure are separate causes. Shared Graphiti code and unrelated root work are preserved. Independent review passed; atlas job completed-visible and the original discovery query now returns auracall_main. Direct source-group repair retrieval passed. Plan0394 closes; remote CI reported no checks.
+
+## 2026-10-10 | Plan0393 installed inventory accepted
+
+PR248 integrated c629aeb0. Original installed apps list succeeds with complete 26-app inventory and unknown Developer mode; exact account and enabled Im Receipts identity qualified privately. Two compiled modules promoted with rollback custody. 79 focused/adjacent tests and independent source/installed review pass; GitHub CI reported no checks. Bounded Plan0393 closes; create/replace live acceptance remains untested. See docs/dev/notes/2026-10-10-plan0393-inventory-acceptance.md.
+
 # RUNBOOK
 
 ## Turn 631 | 2026-09-28
@@ -22128,3 +22136,51 @@ original process identities and markers survive; one real browser remains owned
 and available. Native full-toolbar restoration and a single coordinated native
 mode switch remain OPEN. Receipt:
 docs/dev/notes/2026-10-09-plan0391-native-wake-repair.json.
+
+## Turn | 2026-10-10 | Plan0393
+
+Issue225 installed apps list reproduces45second timeout and missing-switch failure. Complete app data precedes settings failure. Minimal public adapter replay RED2.26seconds, then GREEN when missing control reports unknown; affirmative mutation guards retained. Private live evidence stays outside Git. Isolated worktree preserves unrelated root changes; source/build/review and installed acceptance remain distinct.
+
+## Turn | 2026-10-10 | Plan0399
+
+Qualified API model-ID repair in isolated fix/qualified-model-id from97f5638ef.
+CLI dry-run baseline selected claude-4.5-sonnet for vendor-qualified ID; repaired
+resolution preserves the exact ID. Focused96 tests, typecheck and targeted lint
+passed. No provider submissions, installed runtime changes or lease acceptance.
+
+## Turn | 2026-10-10 | Plan0401
+
+Provider-free deadline repair: retained red reproduced, both workloads reject at
+and after hard expiry without timer execution. Focused53 tests/typecheck/lint pass.
+No provider request, installed change or new wake.
+
+## Turn 634 | 2026-10-10
+
+Plan0402 characterization in isolated refactor/stored-browser-launch-plan from
+e3d6d94c1. Explicit ChatGPT/default Grok, canonical/legacy source fields and browser
+fallback expose incompatible precedence for all proposed projected fields. Preserve
+current behavior; park the refactor under the stopping rule, with retained public
+fixtures and field map. Review and PR delivery are separate from integration and
+installed/live adoption. Memory forbidden; no durable-memory update requested.
+
+## Turn 635 | 2026-10-10
+
+Plan0403 follows operator's agreed launch precedence after PR260 merge813651d95.
+Retained public red/green fixtures for precedence, affinity/authorization alignment,
+explicit runtime directory and cookie opt-in. Resolver owns canonical/legacy fields;
+stored executor consumes one projection. Final focused/adjacent207 tests pass.
+No provider/installed/live changes. Source review/PR and integration remain distinct.
+Memory forbidden; no durable-memory update requested.
+
+
+## 2026-10-10 | Desktop route deployment regression recovery
+
+The operator reported public /desktops404. Initial wrong-host diagnosis was
+corrected against PR244 and installed Plan0391 receipts. Plan0403's later complete
+main package replaced the off-main desktop application. Read-only PR/ref/custody
+reconciliation pinned desktop4fd905b39 and main8aa11f18a; a dedicated recovery
+worktree combines both with independent documentation histories retained. The
+compiled /desktops contract is now a pre-replacement installer gate. Focused
+desktop, launch and lease checks pass; staged parity covers589 dist files.
+Rendered refused-takeover recovery is being diagnosed; first failures retained.
+See docs/dev/notes/2026-10-10-desktops-install-reconciliation.md.

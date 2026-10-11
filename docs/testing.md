@@ -1,3 +1,11 @@
+- Runtime browser launch precedence and stored projection (provider-free):
+  `pnpm vitest run tests/runtime.configuredExecutor.test.ts tests/browser/browserLaunchPlan.test.ts tests/browser/browserLaunchPlanStructure.test.ts`.
+  Runtime > browser profile > global launch-field defaults, canonical/legacy
+  aliases, blanks, explicit selected browser identity, stale managed directories,
+  runtime cookie opt-in and mutable authorization are exercised through public
+  seams. Plan0402 preserves historical characterization; Plan0403 implements the
+  agreed convergence. No browser launch or provider request.
+
 - Captured rich ChatGPT composer readiness (provider-free):
   `pnpm vitest run tests/browser/chatgptSingleVisitContext.test.ts`.
   Executes actual readiness expression against captured editor attributes; rich
@@ -3385,3 +3393,36 @@ uses isolated provider-free Chrome and verifies compact rows, grouping persisten
 SVG collapse, dormant Wake, and existing observe/control/release behavior. It
 prints fresh owned-process cleanup evidence. Installed catalog and served-byte
 readbacks qualify adoption separately from authenticated viewer interaction.
+
+- GPT-6 premium Power and downgrade protection: `pnpm vitest run tests/browser/modelSelection.test.ts tests/browser/thinkingTime.test.ts tests/browser/chatgptDeveloperAppLifecycle.test.ts tests/browser/browserModeExports.test.ts tests/browser/pageActions.test.ts`. Captured DOM fixtures cover checked GPT-6 recognition and available/unavailable Pro slot; source live selector-and-restore proof does not establish provider execution or lease-expiry acceptance.
+
+
+### In-flight ChatGPT lease renewal
+
+Run `pnpm vitest run tests/browser/chatgptAffinityExecutor.test.ts
+tests/browser/legacyChatgptAffinityRuntime.test.ts
+tests/browser/chatgptAffinityRuntime.test.ts tests/browser/activeChatRetirement.test.ts
+tests/browser/configuredChatgptTabMaintenance.test.ts
+tests/browser-service/tabLeaseRestartReconciliation.test.ts` for the focused gate.
+Fake-clock executor tests keep the original prompt pending past its initial
+15-minute idle expiry while maintenance reconciles the same registry. They verify
+updated-claim settlement, provider admission after renewal, stop on success/error/
+cancellation, fail-closed ownership loss and unchanged absolute deadline.
+Legacy affinity must forward the executor cancellation signal to its browser run.
+These are provider-free proofs; installed adoption and long-chat visual acceptance
+are separate gates.
+
+Absolute-deadline regression: `pnpm vitest run tests/browser/chatgptAffinityExecutor.test.ts`
+includes new/existing conversation results at and just after the deadline without
+running timer callbacks. Success must be rejected, aggregate outcome remains
+unknown, and the existing registry ownership fence remains intact.
+
+
+### Required installed runtime surface
+
+Before package adoption, run `node dist/scripts/verify-runtime-contract.js <runtime-root>`
+to verify required /desktops HTML in an isolated temporary home with all background
+execution disabled. The user-runtime installer executes this gate before prefix
+replacement. Run it against the staged package as well, then verify dist byte parity,
+installed identity, live local routes and existing browser/configuration preservation.
+The route probe does not replace active-lane/PR/ancestry reconciliation.

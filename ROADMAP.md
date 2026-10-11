@@ -1,3 +1,7 @@
+- Completed P88: [Plan0394](docs/dev/plans/0394-2026-10-10-memory-routing.md) makes AuraCall Graphiti routing discoverable and distinguishes unresolved routes from service failure; atlas publication and original-query retrieval verified.
+
+- Completed P87: [Plan0393](docs/dev/plans/0393-2026-10-10-developer-app-inventory.md) repairs issue225 app inventory independently of missing Developer-mode UI; PR248 integrated; original installed inventory passes with 26 apps and independent review.
+
 # Aura-Call Roadmap
 
 - OPEN P86: [Plan 0391](docs/dev/plans/0391-2026-10-08-auracall-remote-view-client.md)
@@ -4488,3 +4492,17 @@ Plan0391 inactivity handoff revision: operator chose 120 seconds. The source
 packet depends on Remote View PR346's gateway input tracking and conditional
 revocation. Source checks are green; installed wall-clock handoff and independent
 root viewing remain acceptance gates. This revision does not close P86.
+
+## Plan0402 | Stored browser launch precedence
+
+[Characterization](docs/dev/plans/0402-2026-10-10-stored-launch-plan-characterization.md)
+completed provider-free. Convergence is parked: every proposed field has a known
+precedence/normalization difference, and managed directory already consumes the
+plan. A future migration needs an explicit precedence contract; no runtime change.
+
+## Plan0403 | Agreed browser launch precedence
+
+[Plan0403](docs/dev/plans/0403-2026-10-10-runtime-launch-precedence.md) implements the
+operator's runtime > browser profile > global decision following Plan0402. The
+launch plan owns resolution and stored execution consumes it. Provider-free source
+acceptance is separate from source integration and installed/live adoption.

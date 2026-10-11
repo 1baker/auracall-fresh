@@ -21,6 +21,16 @@ resume. A compact, collapsible rail groups real runtime profiles by account or
 profile; **Wake** opens dormant local browser profiles on the selected desktop.
 Connected embedded viewers stay mounted during routine refreshes and when returning to the tab. Switching interaction capability replaces the viewer. Root desktop access remains independently available.
 
+API model IDs containing `/` (for example, `vendor/claude-sonnet-custom-v1`)
+are exact pins: AuraCall trims surrounding whitespace and preserves their spelling
+and case rather than interpreting provider words as shorthand aliases.
+
+On the current GPT-6 Chat picker, `chatgpt:premium` selects GPT-6 and verifies
+its **Pro** Power setting. Existing standalone **6 Pro** pickers remain supported.
+The verified premium choice takes precedence over ordinary thinking-time settings;
+`--browser-model-strategy current` continues to preserve the current model.
+If Pro cannot be verified, AuraCall fails before prompt submission.
+
 ## Quick start
 
 Primary local install: `pnpm run install:user-runtime` builds the current
@@ -845,6 +855,12 @@ Terminology note:
   provider-unavailable evidence, and `materialized` identifies verified local
   output. A repair-prompt candidate is diagnostic only; AuraCall does not send
   a repair prompt automatically.
+  While a ChatGPT tab-affinity prompt is in flight, AuraCall renews its active
+  lease at intervals of at most 30 seconds. Renewal stops when the request
+  completes, fails, is cancelled, loses ownership, or reaches its absolute
+  deadline. A result arriving at or after that hard deadline is rejected even
+  when a delayed timer callback has not run. The separate provider-activity check still prevents cleanup from
+  closing a tab with an active or uncertain response.
 
   A completion-owned failed job with zero verified materializations blocks its live-follow
   operation before another provider pass; inspect and correct the

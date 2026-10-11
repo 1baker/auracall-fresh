@@ -1,0 +1,23 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-issue226-premium
+
+ ✓ tests/browser/modelSelection.test.ts (26 tests) 283ms
+ ✓ tests/browser/thinkingTime.test.ts (21 tests) 282ms
+ ✓ tests/browser/browserModeExports.test.ts (31 tests) 217ms
+ ✓ tests/browser/pageActions.test.ts (36 tests | 1 skipped) 2784ms
+     ✓ returns captured assistant payload  902ms
+     ✓ emits passive DOM probe while waiting for assistant text  1555ms
+ ✓ tests/browser/chatgptDeveloperAppLifecycle.test.ts (18 tests) 5828ms
+     ✓ refreshes a late terminal conversation before returning committed-Send failure: {"terminalFailure":true}  858ms
+     ✓ refreshes a late terminal conversation before returning committed-Send failure: {"manualApproval":true}  803ms
+     ✓ preserves attributable WSL Windows loopback provenance through the canonical host alias  803ms
+     ✓ returns answer and refreshed terminal identity after exactly one Send  814ms
+     ✓ preserves terminal failure evidence without retry: {"terminalFailure":true,"effectState":"effect_observed"}  794ms
+     ✓ preserves terminal failure evidence without retry: {"uncertainSend":true,"effectState":"unknown"}  809ms
+     ✓ preserves terminal failure evidence without retry: {"manualApproval":true,"effectState":"effect_observed"}  790ms
+
+ Test Files  5 passed (5)
+      Tests  131 passed | 1 skipped (132)
+   Start at  13:40:45
+   Duration  9.32s (transform 4.19s, setup 729ms, import 8.09s, tests 9.39s, environment 1ms)
+

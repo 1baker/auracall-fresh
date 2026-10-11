@@ -1,0 +1,12 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-launch-plan
+
+ ✓ tests/browser/browserLaunchPlanStructure.test.ts (4 tests) 31ms
+ ✓ tests/browser/browserLaunchPlan.test.ts (11 tests) 88ms
+ ✓ tests/runtime.configuredExecutor.test.ts (24 tests) 186ms
+
+ Test Files  3 passed (3)
+      Tests  39 passed (39)
+   Start at  20:40:18
+   Duration  6.79s (transform 5.71s, setup 551ms, import 7.87s, tests 305ms, environment 0ms)
+

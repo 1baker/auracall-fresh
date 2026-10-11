@@ -110,6 +110,12 @@ Avoid using plain `profile` when the meaning is ambiguous.
 - Windows-specific work:
   - `docs/windows-work.md`
 
+## Graphiti memory routing
+
+- Canonical repository group: `auracall_main`; local user agents only, local-user-only export.
+- Read [docs/graphiti-memory.md](docs/graphiti-memory.md) for discovery, qualified closeout and privacy rules.
+- An unresolved atlas route is not proof of service unavailability. Prefer the explicit repo route and report the exact failed boundary.
+
 ## Policy Loading Contract
 
 - `AGENTS.md` is a routing surface, not a one-time pointer.
@@ -163,6 +169,38 @@ Read and follow:
 - `docs/dev/policies/0032-collaborative-development-workflow.md`
 - `docs/dev/policies/0033-forge-issue-reporting.md`
 - `docs/dev/policies/0034-github-issue-operations.md`
+- `docs/dev/policies/0035-policy-management.md`
+- `docs/dev/policies/0036-policy-upgrade-management.md`
+- `docs/dev/policies/0037-policy-adoption-feedback-loop.md`
+- `docs/dev/policies/0038-notes-and-memories.md`
+- `docs/dev/policies/0039-graph-backed-memory-usage.md`
+- `docs/dev/policies/0040-codegraph-usage.md`
+- `docs/dev/policies/0041-code-testing-discipline.md`
+- `docs/dev/policies/0042-planning-discipline.md`
+- `docs/dev/policies/0043-model-selection-and-calibration.md`
+- `docs/dev/policies/0044-goal-execution-governance.md`
+- `docs/dev/policies/0045-parallel-plan-design.md`
+- `docs/dev/policies/0046-git-worktree-hygiene.md`
+- `docs/dev/policies/0047-commit-history-discipline.md`
+- `docs/dev/policies/0048-branch-and-integration-strategy.md`
+- `docs/dev/policies/0049-commit-and-push-cadence.md`
+- `docs/dev/policies/0050-multi-agent-reconciliation.md`
+- `docs/dev/policies/0051-subagent-workflow-optimization.md`
+- `docs/dev/policies/0052-versioning-and-release.md`
+- `docs/dev/policies/0053-turn-closeout.md`
+- `docs/dev/policies/0054-policy-harvest-loop.md`
+- `docs/dev/policies/0055-validation-and-handoff.md`
+- `docs/dev/policies/0056-subagent-runtime-governance.md`
+- `docs/dev/policies/0057-memory-service-runtime-governance.md`
+- `docs/dev/policies/0058-architecture-guardrails.md`
+- `docs/dev/policies/0059-documentation-change-control.md`
+- `docs/dev/policies/0060-preview-artifact-review.md`
+- `docs/dev/policies/0061-active-lane-coordination.md`
+- `docs/dev/policies/0062-work-item-traceability.md`
+- `docs/dev/policies/0063-collaborative-development-workflow.md`
+- `docs/dev/policies/0064-forge-issue-reporting.md`
+- `docs/dev/policies/0065-github-issue-operations.md`
+- `docs/dev/policies/0066-upstream-fork-maintenance.md`
 
 ## Scope
 

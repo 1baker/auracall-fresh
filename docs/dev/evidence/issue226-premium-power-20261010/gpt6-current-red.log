@@ -1,0 +1,67 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-issue226-premium
+
+ ❯ tests/browser/modelSelection.test.ts (26 tests | 1 failed) 40ms
+     ✓ targets the current ChatGPT model picker button 2ms
+     ✓ admits the current animated 6 Pro model trigger without admitting Power controls 1ms
+     ✓ opens the model trigger and reads the checked '6 Pro' current model 5ms
+     × opens the model trigger and reads the checked 'GPT-6' current model 15ms
+     ✓ opens the model trigger and reads the checked 'Latest' current model 3ms
+     ✓ settles explicit select after clicking the current unmarked 6 Pro row 3ms
+     ✓ waits for the current model picker to mount before failing closed 0ms
+     ✓ includes rich tokens for gpt-5.1 base selection 1ms
+     ✓ includes pro/research tokens for gpt-5.2-pro 0ms
+     ✓ includes pro + 5.2 tokens for gpt-5.2-pro 0ms
+     ✓ includes thinking tokens for gpt-5.2-thinking 0ms
+     ✓ includes Sol family tokens for gpt-5.6-sol 0ms
+     ✓ classifies the current Latest model-family row 1ms
+     ✓ classifies the current GPT-5.6 Sol model-family row 0ms
+     ✓ classifies the current GPT-5.6 Terra model-family row 0ms
+     ✓ classifies the current GPT-5.6 Luna model-family row 0ms
+     ✓ classifies the current GPT-5.5 model-family row 0ms
+     ✓ rejects a different GPT-5.6 family even though the version token matches 0ms
+     ✓ plans the provider-free compact to advanced to model submenu path 1ms
+     ✓ embeds semantic advanced-menu navigation in the browser expression 1ms
+     ✓ includes instant tokens for gpt-5.2-instant 0ms
+     ✓ does not satisfy a Pro request with an Instant row that mentions Pro 0ms
+     ✓ recognizes updated Pro label variants without falling back to Instant 0ms
+     ✓ keeps effort labels separate from GPT-5.6 Sol model-family options 1ms
+   ✓ resolves premium through GPT-6 then Pro Power and protects the combined choice 2ms
+   ✓ preserves the current model without selecting premium Power 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/browser/modelSelection.test.ts > browser model selection matchers > opens the model trigger and reads the checked 'GPT-6' current model
+AssertionError: expected { status: 'option-not-found', …(1) } to deeply equal { status: 'already-selected', …(1) }
+
+- Expected
++ Received
+
+  {
+-   "label": "GPT-6",
+-   "status": "already-selected",
++   "hint": {
++     "availableOptions": [
++       "GPT-6",
++     ],
++     "temporaryChat": false,
++   },
++   "status": "option-not-found",
+  }
+
+ ❯ tests/browser/modelSelection.test.ts:137:22
+    135|    await vi.advanceTimersByTimeAsync(25_000);
+    136|       const result = await pending;
+    137|       expect(result).toEqual({ status: 'already-selected', label: sele…
+       |                      ^
+    138|       expect(triggerClicks).toBe(2);
+    139|       expect(menuOpen).toBe(false);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 25 passed (26)
+   Start at  13:40:14
+   Duration  650ms (transform 201ms, setup 72ms, import 331ms, tests 40ms, environment 0ms)
+

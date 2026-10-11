@@ -1,0 +1,51 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-issue226-premium
+
+ ❯ tests/browser/modelSelection.test.ts (25 tests | 1 failed) 43ms
+     ✓ targets the current ChatGPT model picker button 1ms
+     ✓ admits the current animated 6 Pro model trigger without admitting Power controls 1ms
+     ✓ opens the model trigger and reads the checked '6 Pro' current model 5ms
+     ✓ opens the model trigger and reads the checked 'Latest' current model 3ms
+     ✓ settles explicit select after clicking the current unmarked 6 Pro row 3ms
+     ✓ waits for the current model picker to mount before failing closed 0ms
+     ✓ includes rich tokens for gpt-5.1 base selection 1ms
+     ✓ includes pro/research tokens for gpt-5.2-pro 1ms
+     ✓ includes pro + 5.2 tokens for gpt-5.2-pro 0ms
+     ✓ includes thinking tokens for gpt-5.2-thinking 1ms
+     ✓ includes Sol family tokens for gpt-5.6-sol 0ms
+     ✓ classifies the current Latest model-family row 1ms
+     ✓ classifies the current GPT-5.6 Sol model-family row 0ms
+     ✓ classifies the current GPT-5.6 Terra model-family row 0ms
+     ✓ classifies the current GPT-5.6 Luna model-family row 0ms
+     ✓ classifies the current GPT-5.5 model-family row 0ms
+     ✓ rejects a different GPT-5.6 family even though the version token matches 0ms
+     ✓ plans the provider-free compact to advanced to model submenu path 0ms
+     ✓ embeds semantic advanced-menu navigation in the browser expression 1ms
+     ✓ includes instant tokens for gpt-5.2-instant 0ms
+     ✓ does not satisfy a Pro request with an Instant row that mentions Pro 0ms
+     ✓ recognizes updated Pro label variants without falling back to Instant 0ms
+     ✓ keeps effort labels separate from GPT-5.6 Sol model-family options 1ms
+   × resolves premium through GPT-6 then Pro Power and protects the combined choice 17ms
+   ✓ preserves the current model without selecting premium Power 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/browser/modelSelection.test.ts > resolves premium through GPT-6 then Pro Power and protects the combined choice
+Error: Unable to find model option matching "6 Pro" in the model switcher. Available: Medium, GPT-6, GPT-5.6 Sol.
+ ❯ ensureModelSelection src/browser/actions/modelSelection.ts:80:13
+     78|           ? ' You are in Temporary Chat mode; Pro models are not avail…
+     79|           : '';
+     80|       throw new Error(`Unable to find model option matching "${desired…
+       |             ^
+     81|     }
+     82|     default: {
+ ❯ tests/browser/modelSelection.test.ts:404:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 24 passed (25)
+   Start at  13:33:34
+   Duration  557ms (transform 168ms, setup 63ms, import 209ms, tests 43ms, environment 0ms)
+

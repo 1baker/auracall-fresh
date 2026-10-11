@@ -1,5 +1,6 @@
 import { rm, mkdir } from 'node:fs/promises';
-import { readFileSync, existsSync, mkdtempSync } from 'node:fs';
+import { appendFileSync, readFileSync, existsSync, mkdtempSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import os from 'node:os';
 import path from 'node:path';
 import { execFile } from 'node:child_process';
@@ -494,8 +495,16 @@ export async function launchChrome(
   const runtimeHost = await ensurePersistentDevToolsEndpoint(launcher.port, probeHost ?? '127.0.0.1', logger);
 
   let registeredGeneration: BrowserInstanceGeneration | null = null;
+  const lifecycleLaunchedAt = new Date().toISOString();
+  const recordLifecycle = createOwnedBrowserLifecycleRecorder({
+    registryPath: options.registryPath, profilePath: userDataDir,
+    pid: launcher.pid, port: launcher.port, launchedAt: lifecycleLaunchedAt, logger,
+  });
+  launcher.process?.once('exit', (exitCode: number | null, exitSignal: string | null) => {
+    recordLifecycle('owned-child-exit', { exitCode, exitSignal });
+  });
   if (launcher.pid && registryOptions) {
-    const launchedAt = new Date().toISOString();
+    const launchedAt = lifecycleLaunchedAt;
     const generation = {
       pid: launcher.pid,
       port: launcher.port,
@@ -527,9 +536,11 @@ export async function launchChrome(
     });
     await registration;
   }
+  recordLifecycle('owned-browser-launched');
 
   const originalKill = launcher.kill;
   const kill = async () => {
+    recordLifecycle('owned-shutdown-requested', { reason: 'managed-handle.kill' });
     if (registryOptions && registeredGeneration) {
       await unregisterInstanceIfMatches(
         registryOptions,
@@ -538,7 +549,14 @@ export async function launchChrome(
         registeredGeneration,
       );
     }
-    return originalKill();
+    try {
+      const result = await originalKill();
+      recordLifecycle('owned-shutdown-returned');
+      return result;
+    } catch (error) {
+      recordLifecycle('owned-shutdown-rejected');
+      throw error;
+    }
   };
 
   return Object.assign(launcher, { kill, host: runtimeHost, launchedByAuracall: true }) as ManagedChromeHandle;
@@ -710,10 +728,16 @@ function createAdoptedChromeHandle(options: {
     } as unknown as ManagedChromeHandle;
   }
 
+  const recordLifecycle = createOwnedBrowserLifecycleRecorder({
+    registryPath: registryOptions?.registryPath, profilePath, pid, port,
+    launchedAt: registeredGeneration?.launchedAt ?? null, logger,
+  });
+
   return {
     pid,
     port,
     kill: async () => {
+      recordLifecycle('adopted-owned-shutdown-requested', { reason: 'owned-adopted-handle.kill' });
       if (registryOptions && registeredGeneration) {
         await unregisterInstanceIfMatches(
           registryOptions,
@@ -723,11 +747,43 @@ function createAdoptedChromeHandle(options: {
         );
       }
       await terminateOwnedChromeProcess(pid, logger, { windowsChromeFromWsl });
+      recordLifecycle('adopted-owned-shutdown-returned');
     },
     process: undefined,
     host,
     launchedByAuracall: false,
   } as unknown as ManagedChromeHandle;
+}
+
+/** Diagnostic observations, not proof that a returned shutdown killed Chrome. */
+function createOwnedBrowserLifecycleRecorder(input: {
+  registryPath?: string; profilePath: string; pid?: number; port: number;
+  launchedAt: string | null; logger: BrowserLogger;
+}) {
+  let processStartTicks: string | null = null;
+  if (process.platform === 'linux' && input.pid) {
+    try {
+      const stat = readFileSync(`/proc/${input.pid}/stat`, 'utf8');
+      processStartTicks = stat.slice(stat.lastIndexOf(')') + 2).trim().split(/\s+/)[19] ?? null;
+    } catch { /* Unavailable process identity must remain unknown. */ }
+  }
+  const identity = {
+    schemaVersion: 1, ownerPid: process.pid, pid: input.pid ?? null,
+    processStartTicks, port: input.port, launchedAt: input.launchedAt,
+    profileFingerprint: createHash('sha256').update(path.resolve(input.profilePath)).digest('hex'),
+  };
+  return (event: string, detail: { exitCode?: number | null; exitSignal?: string | null; reason?: string } = {}) => {
+    const observation = { ...identity, observedAt: new Date().toISOString(), event, ...detail };
+    const line = JSON.stringify(observation);
+    input.logger(`[browser-lifecycle] ${line}`);
+    if (input.registryPath) {
+      try {
+        appendFileSync(`${input.registryPath}.lifecycle.jsonl`, `${line}\n`, { mode: 0o600 });
+      } catch {
+        input.logger('[browser-lifecycle] durable observation write failed');
+      }
+    }
+  };
 }
 
 function isCurrentRunOwnedChrome(

@@ -1,6 +1,39 @@
 schema_version: 1
 work_item_tracking: optional
 lanes:
+  - id: P88
+    objective: Make AuraCall memory routing discoverable with precise closeout evidence
+    work_items: [ecochran76/auracall#251]
+    plan: docs/dev/plans/0394-2026-10-10-memory-routing.md
+    plan_ref: refs/heads/docs/auracall-memory-routing
+    branch: docs/auracall-memory-routing
+    target: main
+    plan_state: CLOSED
+    custody_state: ACTIVE_WORKTREE
+    dependencies: []
+    overlaps: []
+    validation_status: atlas-published-and-retrieved
+    validation_ref: docs/dev/plans/0394-2026-10-10-memory-routing.md
+    disposition: Repo route reviewed; single atlas manifest write completed-visible and original discovery query returned auracall_main
+    updated_at: 2026-10-10
+  - id: P87
+    objective: Repair app inventory without inferring Developer-mode mutation authority
+    work_items: [ecochran76/auracall#225]
+    plan: docs/dev/plans/0393-2026-10-10-developer-app-inventory.md
+    plan_ref: refs/heads/fix/issue225-app-inventory
+    branch: fix/issue225-app-inventory
+    target: main
+    plan_state: CLOSED
+    custody_state: INTEGRATED
+    dependencies: []
+    overlaps: []
+    checkpoint: 4d50ec8c0d798c25c1ddf7207926e1d68b812d8d
+    remote_ref: refs/remotes/origin/fix/issue225-app-inventory
+    integration_receipt: c629aeb0ca666ee633bd7ff0e1475e6cf29f00b8
+    validation_status: installed-inventory-accepted
+    validation_ref: docs/dev/notes/2026-10-10-plan0393-inventory-acceptance.md
+    disposition: PR248 integrated; scoped two-module install and original inventory command accepted; mutation guards retained
+    updated_at: 2026-10-10
   - id: P01
     objective: Reconcile AuraCall Git custody and review Oracle only as a separate reference project.
     plan: docs/dev/plans/0308-2026-08-22-repository-git-true-up-oracle-reference-review.md
@@ -1715,7 +1748,7 @@ lanes:
     target: main
     plan_state: OPEN
     custody_state: ACTIVE_WORKTREE
-    checkpoint: d6d047f8697f584e9e6f0ca20917feb2e96e6d36
+    checkpoint: 4fd905b39648a2078163bff1c24eb014ff028942
     remote_ref: refs/remotes/origin/feat/issue240-named-desktops
     integration: merge
     work_items: [ecochran76/auracall#240, ecochran76/auracall#241, ecochran76/auracall#242]
@@ -1728,4 +1761,4 @@ lanes:
     validation_ref: docs/dev/notes/2026-10-09-plan0391-native-wake-repair.json
     integration_receipt: null
     disposition: Compact real runtime-profile rail installed at 48704e08d; seven profiles catalogued, six wakeable and Windows unavailable; 87 focused checks and rendered fixture pass; 37 process identities and both markers preserved. Real default/Grok Wake passes after native RDP-validation repair at d6d047f86; full native toolbar, single native mode-switch coordination, actual input renewal, rendered idle transition, root visual acceptance and PR244 integration remain open.
-    updated_at: 2026-10-09
+    updated_at: 2026-10-10

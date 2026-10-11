@@ -1,3 +1,8 @@
+import { vi as activityMock } from "vitest";
+activityMock.mock("../../src/browser/chatgptTabActivity.js", async (importOriginal) => {
+	const original = await importOriginal<typeof import("../../src/browser/chatgptTabActivity.js")>();
+	return { ...original, requireInactiveChatgptTab: activityMock.fn(async () => {}) };
+});
 import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";

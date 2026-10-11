@@ -1,0 +1,15 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-issue226-heartbeat
+
+ ✓ tests/browser-service/tabLeaseRestartReconciliation.test.ts (5 tests) 5ms
+ ✓ tests/browser/chatgptAffinityExecutor.test.ts (18 tests) 30ms
+ ✓ tests/browser/activeChatRetirement.test.ts (5 tests) 8ms
+ ✓ tests/browser/configuredChatgptTabMaintenance.test.ts (10 tests) 21ms
+ ✓ tests/browser/legacyChatgptAffinityRuntime.test.ts (1 test) 11ms
+ ✓ tests/browser/chatgptAffinityRuntime.test.ts (6 tests) 261ms
+
+ Test Files  6 passed (6)
+      Tests  45 passed (45)
+   Start at  17:32:26
+   Duration  1.33s (transform 2.53s, setup 252ms, import 3.39s, tests 336ms, environment 1ms)
+

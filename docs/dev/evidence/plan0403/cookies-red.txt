@@ -1,0 +1,68 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-launch-plan
+
+ ❯ tests/browser/browserLaunchPlan.test.ts (17 tests | 2 failed | 15 skipped) 39ms
+     ↓ gives explicit runtime launch overrides priority over browser-profile and global defaults
+     ↓ uses 'browser settings after blank runtime …' while honoring explicit browser selection
+     ↓ uses 'global defaults after blank runtime a…' while honoring explicit browser selection
+     ↓ retains an explicit runtime managed directory instead of a stale global provider directory
+     × copies the selected source cookies only with runtime opt-in false 23ms
+     × copies the selected source cookies only with runtime opt-in true 11ms
+     ↓ returns an immutable browser launch plan without mutating user configuration
+     ↓ resolves explicit AuraCall runtime and browser profile intent without caller-side merging
+     ↓ does not let stale flattened browser fields override an explicitly selected browser profile
+     ↓ resolves session provider intent into the same managed browser launch plan
+     ↓ keeps runtime provider-session authorization outside the immutable launch snapshot
+     ↓ binds the selected session provider to its resolved launch URL
+     ↓ uses the selected AuraCall runtime profile default and deep-freezes nested arrays
+     ↓ produces field-for-field equivalent plans for equivalent user and session sources
+     ↓ selects the active signed-in managed browser subprofile without changing the configured profile
+     ↓ does not expose a source browser profile for copying unless cookie sync is enabled
+     ↓ preserves browser launch validation errors at the public seam
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/browser/browserLaunchPlan.test.ts > resolveBrowserLaunchPlan > copies the selected source cookies only with runtime opt-in false
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/browser/browserLaunchPlan.test.ts:72:44
+     70|         intent: { provider: 'chatgpt', runtimeProfileId: 'selected' },
+     71|       });
+     72|       expect(plan.launchPolicy.cookieSync).toBe(cookieSync);
+       |                                            ^
+     73|       expect(plan.sourceBrowserProfile.cookiePath).toBe(cookieSync ? s…
+     74|       expect(plan.sourceBrowserProfile.bootstrapCookiePath).toBe(cooki…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/browser/browserLaunchPlan.test.ts > resolveBrowserLaunchPlan > copies the selected source cookies only with runtime opt-in true
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/browser/browserLaunchPlan.test.ts:72:44
+     70|         intent: { provider: 'chatgpt', runtimeProfileId: 'selected' },
+     71|       });
+     72|       expect(plan.launchPolicy.cookieSync).toBe(cookieSync);
+       |                                            ^
+     73|       expect(plan.sourceBrowserProfile.cookiePath).toBe(cookieSync ? s…
+     74|       expect(plan.sourceBrowserProfile.bootstrapCookiePath).toBe(cooki…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 15 skipped (17)
+   Start at  21:01:30
+   Duration  962ms (transform 467ms, setup 60ms, import 643ms, tests 39ms, environment 0ms)
+

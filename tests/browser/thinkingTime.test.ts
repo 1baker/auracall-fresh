@@ -45,7 +45,7 @@ class FixtureElement extends EventTarget {
 
   override dispatchEvent(event: Event): boolean {
     if (event.type === 'click') this.onClick?.();
-    return true;
+    return super.dispatchEvent(event);
   }
 }
 
@@ -453,4 +453,34 @@ describe('ChatGPT Pro mode account gate', () => {
     });
     expect(formatChatgptProModeGateError(gate)).toContain('could not verify');
   });
+});
+
+
+it.each([4, 3])('requires an available verified Pro position on a Power control with max %s', async (maximum) => {
+  vi.useFakeTimers();
+  const chip = new FixtureElement('Thinking effort', { 'aria-haspopup': 'menu', 'aria-label': 'Select ChatGPT model' });
+  const slider = new FixtureElement('', { role: 'slider', 'aria-valuenow': '1', 'aria-valuemin': '0', 'aria-valuemax': String(maximum) });
+  const announcement = new FixtureElement('Medium, 2 of 5.');
+  const power = new FixtureElement('', { 'data-reasoning-slider': 'true' });
+  power.addEventListener('keydown', (event) => {
+    if ((event as KeyboardEvent).key === 'ArrowRight') {
+      const value = Number(slider.getAttribute('aria-valuenow')) + 1;
+      slider.setAttribute('aria-valuenow', String(value));
+      announcement.textContent = value === 4 ? 'Pro, 5 of 5.' : 'Other';
+    }
+  });
+  const view = new FixtureElement('Medium');
+  view.queryAll = (selector) => selector.includes('[role="slider"]') ? [slider] : selector.includes('[role="status"]') ? [announcement] : selector.includes('data-reasoning-slider') ? [power] : [];
+  let opened = false;
+  chip.onClick = () => { opened = true; };
+  vi.stubGlobal('KeyboardEvent', class extends Event { key: string; constructor(type: string, options: KeyboardEventInit) { super(type, options); this.key = options.key ?? ''; } });
+  installFixtureDocument((selector) => {
+    if (selector.includes('Select ChatGPT model') || selector.includes('button.__composer-pill')) return [chip];
+    if (opened && (selector.includes('data-model-picker') || selector.includes('[role="menu"]'))) return [view];
+    return [];
+  });
+  const pending = new Function(`return ${buildThinkingTimeExpressionForTest('pro')}`)();
+  await vi.advanceTimersByTimeAsync(11_000);
+  await expect(pending).resolves.toEqual(maximum === 4 ? { status: 'switched', label: 'Pro' } : { status: 'option-not-found' });
+  expect(slider.getAttribute('aria-valuenow')).toBe(maximum === 4 ? '4' : '1');
 });

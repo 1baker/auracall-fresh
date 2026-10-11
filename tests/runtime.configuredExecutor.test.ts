@@ -4,6 +4,7 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { setAuracallHomeDirOverrideForTest } from '../src/auracallHome.js';
 import type { BrowserPassiveObservation, BrowserRunOptions } from '../src/browser/types.js';
+import { resolveBrowserLaunchPlan } from '../src/browser/service/browserLaunchPlan.js';
 import { createConfiguredStoredStepExecutor } from '../src/runtime/configuredExecutor.js';
 import {
   readLiveRuntimeRunServiceState,
@@ -109,6 +110,167 @@ describe('configured stored-step executor', () => {
       },
     });
     expect(JSON.stringify(options)).not.toContain(`${managedRoot}/default/grok`);
+  });
+
+  it.each([
+    {
+      label: 'canonical source fields',
+      sourceFields: {
+        sourceProfileName: 'Runtime Source',
+        sourceCookiePath: '/runtime/Cookies',
+        chromeProfile: 'Ignored Legacy Source',
+        chromeCookiePath: '/ignored/legacy/Cookies',
+      },
+      expectedSource: 'Runtime Source',
+      expectedCookie: '/runtime/Cookies',
+      expectedAuthoritySource: 'Runtime Source',
+    },
+    {
+      label: 'legacy source aliases',
+      sourceFields: {
+        chromeProfile: 'Runtime Legacy',
+        chromeCookiePath: '/runtime/legacy/Cookies',
+      },
+      expectedSource: 'Runtime Legacy',
+      expectedCookie: '/runtime/legacy/Cookies',
+      expectedAuthoritySource: 'Runtime Legacy',
+    },
+    {
+      label: 'browser-profile source fallback',
+      sourceFields: {},
+      expectedSource: 'Browser Source',
+      expectedCookie: '/browser/Cookies',
+      expectedAuthoritySource: 'Browser Source',
+    },
+  ])('uses the launch plan for $label in stored execution and affinity configuration', async ({
+    sourceFields,
+    expectedSource,
+    expectedCookie,
+    expectedAuthoritySource,
+  }) => {
+    const runBrowserModeImpl = vi.fn(async (_options: BrowserRunOptions) => ({
+      answerText: 'LAUNCH_CHARACTERIZATION_OK',
+      answerMarkdown: 'LAUNCH_CHARACTERIZATION_OK',
+      tookMs: 1,
+      answerTokens: 1,
+      answerChars: 26,
+      tabUrl: 'https://chatgpt.com/c/launch-characterization',
+      conversationId: 'launch-characterization',
+    }));
+    const execute = createConfiguredStoredStepExecutor(
+      {
+        auracallProfile: 'default',
+        browser: {
+          target: 'grok',
+          chromePath: '/global/chrome',
+          chromeProfile: 'Global Source',
+          chromeCookiePath: '/global/Cookies',
+          bootstrapCookiePath: '/global/bootstrap',
+          display: ':71',
+          managedProfileRoot: '/global/managed',
+          manualLoginProfileDir: '/global/managed/default/grok',
+        },
+        runtimeProfiles: {
+          default: { browserProfile: 'default', defaultService: 'grok' },
+          selected: {
+            engine: 'browser',
+            defaultService: 'chatgpt',
+            browserProfile: 'selected-browser',
+            browser: {
+              tabConcurrencyMode: 'tab-affinity',
+              chromePath: '/runtime/chrome',
+              ...sourceFields,
+              bootstrapCookiePath: '/runtime/bootstrap',
+              display: ':72',
+              managedProfileRoot: '/runtime/managed',
+            },
+          },
+        },
+        browserProfiles: {
+          'selected-browser': {
+            chromePath: '/browser/chrome',
+            sourceProfilePath: '/browser/source',
+            sourceProfileName: 'Browser Source',
+            sourceCookiePath: '/browser/Cookies',
+            bootstrapCookiePath: '/browser/bootstrap',
+            display: ':73',
+            managedProfileRoot: '/browser/managed',
+          },
+        },
+      },
+      { runBrowserModeImpl },
+    );
+    await execute?.({
+      record: {
+        runId: 'launch-characterization',
+        bundle: { run: { id: 'launch-characterization' } },
+      } as never,
+      step: {
+        id: 'launch-characterization:1',
+        agentId: 'launch-characterization',
+        runtimeProfileId: 'selected',
+        browserProfileId: 'selected-browser',
+        service: 'chatgpt',
+        input: {
+          prompt: 'Characterize launch options',
+          artifacts: [],
+          structuredData: {},
+          notes: [],
+        },
+      } as never,
+    });
+    const options = runBrowserModeImpl.mock.calls[0]?.[0];
+    expect(options?.config).toMatchObject({
+      chromePath: '/runtime/chrome',
+      chromeProfile: expectedSource,
+      chromeCookiePath: expectedCookie,
+      bootstrapCookiePath: '/runtime/bootstrap',
+      display: ':72',
+      managedProfileRoot: '/runtime/managed',
+      manualLoginProfileDir: '/runtime/managed/selected-browser/chatgpt',
+      providerSessionAuthorization: {
+        context: {
+          providerId: 'chatgpt',
+          auracallRuntimeProfile: 'selected',
+          browserProfile: 'selected-browser',
+          sourceBrowserProfile: expectedAuthoritySource,
+          managedBrowserProfile: '/runtime/managed/selected-browser/chatgpt',
+        },
+      },
+    });
+    expect(options?.tabAffinityUserConfig?.browser).toMatchObject({
+      chromePath: '/runtime/chrome', chromeProfile: expectedSource,
+      chromeCookiePath: expectedCookie, bootstrapCookiePath: '/runtime/bootstrap',
+      display: ':72', managedProfileRoot: '/runtime/managed',
+      manualLoginProfileDir: '/runtime/managed/selected-browser/chatgpt',
+      cookieSync: false,
+    });
+    const plan = resolveBrowserLaunchPlan({
+      source: { kind: 'user-config', config: options?.tabAffinityUserConfig as never },
+      intent: {
+        provider: 'chatgpt',
+        runtimeProfileId: 'selected',
+        browserProfileId: 'selected-browser',
+        agentId: 'launch-characterization',
+      },
+    });
+    expect(plan.launchPolicy).toMatchObject({
+      chromePath: '/runtime/chrome',
+      chromeProfile: expectedSource,
+      chromeCookiePath: expectedCookie,
+      bootstrapCookiePath: '/runtime/bootstrap',
+      display: ':72',
+      managedProfileRoot: '/runtime/managed',
+    });
+    expect(plan.sourceBrowserProfile).toEqual({
+      rootPath: '/browser/source',
+      name: expectedSource,
+      cookiePath: null,
+      bootstrapCookiePath: null,
+    });
+    expect(options?.config).not.toHaveProperty('sourceProfilePath');
+    expect(plan.launchPolicy.providerSessionAuthorization).toBeUndefined();
+    expect(Object.isFrozen(options?.config?.providerSessionAuthorization)).toBe(false);
   });
 
   it('executes a Grok browser-backed step from runtime-profile config and returns response output', async () => {

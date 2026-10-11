@@ -1,0 +1,91 @@
+{
+  "target": "D0ED4C9C911543BB5ADCA0872BC58679",
+  "initial": {
+    "now": "1",
+    "max": "4",
+    "labels": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "Medium, 2 of 5."
+    ],
+    "dialogs": []
+  },
+  "rows": [
+    {
+      "now": "1",
+      "max": "4",
+      "labels": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "Medium, 2 of 5."
+      ],
+      "dialogs": []
+    },
+    {
+      "now": "2",
+      "max": "4",
+      "labels": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "High, 3 of 5."
+      ],
+      "dialogs": []
+    },
+    {
+      "now": "3",
+      "max": "4",
+      "labels": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "Extra High, 4 of 5."
+      ],
+      "dialogs": []
+    },
+    {
+      "now": "4",
+      "max": "4",
+      "labels": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "Pro, 5 of 5."
+      ],
+      "dialogs": []
+    },
+    {
+      "restored": {
+        "now": "1",
+        "max": "4",
+        "labels": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Medium, 2 of 5."
+        ],
+        "dialogs": []
+      }
+    }
+  ]
+}

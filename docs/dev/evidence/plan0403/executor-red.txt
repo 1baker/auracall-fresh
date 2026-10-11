@@ -1,0 +1,133 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-launch-plan
+
+ ❯ tests/runtime.configuredExecutor.test.ts (24 tests | 3 failed | 21 skipped) 68ms
+     ↓ binds explicit ChatGPT runtime provenance instead of the default Grok managed profile
+     × uses the launch plan for 'canonical source fields' in stored execution and affinity configuration 51ms
+     × uses the launch plan for 'legacy source aliases' in stored execution and affinity configuration 9ms
+     × uses the launch plan for 'browser-profile source fallback' in stored execution and affinity configuration 4ms
+     ↓ executes a Grok browser-backed step from runtime-profile config and returns response output
+     ↓ spills large API prompts to a browser attachment without truncating caller input
+     ↓ extracts one bounded local shell action request from a JSON tool envelope
+     ↓ enforces opt-in AuraCall step output contract for browser-backed steps
+     ↓ executes a Gemini browser-backed step through the Gemini web executor path
+     ↓ publishes transient Gemini live thinking state while the browser-backed executor is in flight
+     ↓ publishes transient Grok live thinking state while the browser-backed executor is in flight
+     ↓ persists ChatGPT passive observations from browser execution metadata
+     ↓ converts ChatGPT passive runtime evidence into lease heartbeats and live service state
+     ↓ reattaches recovered stranded ChatGPT steps to the submitted tab instead of replaying the prompt
+     ↓ replays recovered ChatGPT steps when only pre-submit project evidence was recorded
+     ↓ resolves ChatGPT semantic agent model selectors into browser model and thinking controls
+     ↓ resolves agents from an effective registry-backed config provider
+     ↓ materializes declared browser response artifacts into step and shared state
+     ↓ fails declared browser response artifact runs when only status text is returned
+     ↓ retries once in the same ChatGPT conversation when a required artifact reply is status-only
+     ↓ keeps exact ChatGPT agent model pins ahead of semantic selector defaults
+     ↓ persists Gemini passive observations from browser execution metadata
+     ↓ persists Grok passive observations from browser execution metadata
+     ↓ fails browser-backed steps that complete without assistant output
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/runtime.configuredExecutor.test.ts > configured stored-step executor > uses the launch plan for 'canonical source fields' in stored execution and affinity configuration
+AssertionError: expected { target: 'chatgpt', …(8) } to match object { chromePath: '/runtime/chrome', …(7) }
+(3 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "bootstrapCookiePath": "/runtime/bootstrap",
+-   "chromeCookiePath": "/runtime/Cookies",
+-   "chromePath": "/runtime/chrome",
+-   "chromeProfile": "Runtime Source",
+-   "cookieSync": false,
+-   "display": ":72",
+-   "managedProfileRoot": "/runtime/managed",
+-   "manualLoginProfileDir": "/runtime/managed/selected-browser/chatgpt",
++   "bootstrapCookiePath": "/browser/bootstrap",
++   "chromeCookiePath": "/browser/Cookies",
++   "chromePath": "/browser/chrome",
++   "chromeProfile": "Global Source",
++   "display": ":73",
++   "managedProfileRoot": "/browser/managed",
+  }
+
+ ❯ tests/runtime.configuredExecutor.test.ts:241:53
+    239|       },
+    240|     });
+    241|     expect(options?.tabAffinityUserConfig?.browser).toMatchObject({
+       |                                                     ^
+    242|       chromePath: '/runtime/chrome', chromeProfile: expectedSource,
+    243|       chromeCookiePath: expectedCookie, bootstrapCookiePath: '/runtime…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/runtime.configuredExecutor.test.ts > configured stored-step executor > uses the launch plan for 'legacy source aliases' in stored execution and affinity configuration
+AssertionError: expected { …(33) } to match object { chromePath: '/runtime/chrome', …(7) }
+(37 matching properties omitted from actual)
+
+- Expected
++ Received
+
+@@ -10,9 +10,9 @@
+      "context": {
+        "auracallRuntimeProfile": "selected",
+        "browserProfile": "selected-browser",
+        "managedBrowserProfile": "/runtime/managed/selected-browser/chatgpt",
+        "providerId": "chatgpt",
+-       "sourceBrowserProfile": "Runtime Legacy",
++       "sourceBrowserProfile": "Browser Source",
+      },
+    },
+  }
+
+ ❯ tests/runtime.configuredExecutor.test.ts:223:29
+    221|     });
+    222|     const options = runBrowserModeImpl.mock.calls[0]?.[0];
+    223|     expect(options?.config).toMatchObject({
+       |                             ^
+    224|       chromePath: '/runtime/chrome',
+    225|       chromeProfile: expectedSource,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  tests/runtime.configuredExecutor.test.ts > configured stored-step executor > uses the launch plan for 'browser-profile source fallback' in stored execution and affinity configuration
+AssertionError: expected { target: 'chatgpt', …(8) } to match object { chromePath: '/runtime/chrome', …(7) }
+(3 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "bootstrapCookiePath": "/runtime/bootstrap",
++   "bootstrapCookiePath": "/browser/bootstrap",
+    "chromeCookiePath": "/browser/Cookies",
+-   "chromePath": "/runtime/chrome",
+-   "chromeProfile": "Browser Source",
+-   "cookieSync": false,
+-   "display": ":72",
+-   "managedProfileRoot": "/runtime/managed",
+-   "manualLoginProfileDir": "/runtime/managed/selected-browser/chatgpt",
++   "chromePath": "/browser/chrome",
++   "chromeProfile": "Global Source",
++   "display": ":73",
++   "managedProfileRoot": "/browser/managed",
+  }
+
+ ❯ tests/runtime.configuredExecutor.test.ts:241:53
+    239|       },
+    240|     });
+    241|     expect(options?.tabAffinityUserConfig?.browser).toMatchObject({
+       |                                                     ^
+    242|       chromePath: '/runtime/chrome', chromeProfile: expectedSource,
+    243|       chromeCookiePath: expectedCookie, bootstrapCookiePath: '/runtime…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 21 skipped (24)
+   Start at  20:57:47
+   Duration  4.90s (transform 3.31s, setup 73ms, import 4.49s, tests 68ms, environment 0ms)
+

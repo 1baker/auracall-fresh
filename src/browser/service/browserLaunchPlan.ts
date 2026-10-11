@@ -1,6 +1,7 @@
-import { resolveRuntimeSelection } from '../../config/model.js';
+import { getRuntimeProfileBrowserProfile, resolveRuntimeSelection } from '../../config/model.js';
 import type { ResolvedUserConfig } from '../../config.js';
-import { resolveBrowserConfig } from '../config.js';
+import { DEFAULT_BROWSER_CONFIG, resolveBrowserConfig } from '../config.js';
+import { resolveCookiePath } from './profile.js';
 import {
   resolveBootstrapSourceCookiePath,
   resolveManagedProfileDir,
@@ -269,28 +270,89 @@ export function resolveBrowserLaunchPlan(input: Readonly<{
     })
       ? withoutStaleBrowserProfileFields(configuredBrowser)
       : configuredBrowser;
+    if (intent.provider && configuredBrowser.target && intent.provider !== configuredBrowser.target) {
+      delete selectedBrowser.manualLoginProfileDir;
+    }
     provider =
       intent.provider ??
       configuredBrowser.target ??
       runtimeSelection.defaultService ??
       'chatgpt';
     runtimeProfileId = runtimeSelection.runtimeProfileId ?? userConfig.auracallProfile ?? null;
-    const runtimeProfile = {
+    const runtimeProfile: Record<string, unknown> = {
       ...(runtimeSelection.runtimeProfile ?? {}),
       ...(intent.browserProfileId ? { browserProfile: intent.browserProfileId } : {}),
     };
+    const runtimeServices = runtimeProfile.services as ResolvedUserConfig['services'] | undefined;
+    const manualLogin = selectedBrowser.manualLogin ??
+      runtimeServices?.[provider]?.manualLogin ?? userConfig.services?.[provider]?.manualLogin ??
+      DEFAULT_BROWSER_CONFIG.manualLogin;
     const selected = resolveSelectedBrowserProfileResolution({
       merged: userConfig,
-      browser: { ...selectedBrowser, target: provider },
+      browser: {
+        ...selectedBrowser, target: provider,
+        manualLogin,
+      },
       explicitProfileName: runtimeProfileId,
       explicitAgentId: intent.agentId ?? null,
       runtimeProfile,
     });
     resolution = selected.resolution;
+    // Resolve launch-owned fields here, before normalization, rather than letting
+    // flattened global browser values or browser-profile defaults mask runtime intent.
+    const runtimeBrowser = runtimeProfile.browser && typeof runtimeProfile.browser === 'object'
+      ? runtimeProfile.browser as Record<string, unknown>
+      : {};
+    const browserProfile = getRuntimeProfileBrowserProfile(userConfig, runtimeProfile) ?? {};
+    const launchFields = {
+      chromePath: ['chromePath'],
+      chromeProfile: ['sourceProfileName', 'profileName', 'chromeProfile'],
+      chromeCookiePath: ['sourceCookiePath', 'cookiePath', 'chromeCookiePath'],
+      bootstrapCookiePath: ['bootstrapCookiePath'],
+      display: ['display'],
+      managedProfileRoot: ['managedProfileRoot'],
+      sourceProfilePath: ['sourceProfilePath', 'profilePath'],
+    };
+    const launchLayers = [runtimeBrowser, browserProfile, configuredBrowser as Record<string, unknown>];
+    const launchOverrides: Record<string, string> = {};
+    for (const [field, aliases] of Object.entries(launchFields)) {
+      for (const layer of launchLayers) {
+        const value = aliases.map((alias) => layer[alias]).find(
+          (candidate): candidate is string => typeof candidate === 'string' && candidate.trim().length > 0,
+        );
+        if (value !== undefined) {
+          launchOverrides[field] = value.trim();
+          break;
+        }
+      }
+    }
+    if (!launchOverrides.chromeCookiePath && launchOverrides.sourceProfilePath) {
+      const derivedCookiePath = resolveCookiePath(
+        launchOverrides.sourceProfilePath, launchOverrides.chromeProfile ?? 'Default',
+      );
+      if (derivedCookiePath) launchOverrides.chromeCookiePath = derivedCookiePath;
+    }
+    const cookieSync = launchLayers
+      .map((layer) => layer.cookieSync)
+      .find((value): value is boolean => typeof value === 'boolean');
+    const runtimeDirectory = runtimeBrowser.manualLoginProfileDir;
+    if (typeof runtimeDirectory === 'string' && runtimeDirectory.trim().length > 0) {
+      launchOverrides.manualLoginProfileDir = runtimeDirectory.trim();
+    }
+    resolution.browserProfile = {
+      ...resolution.browserProfile,
+      sourceProfilePath: launchOverrides.sourceProfilePath ?? resolution.browserProfile.sourceProfilePath,
+      sourceProfileName: launchOverrides.chromeProfile ?? resolution.browserProfile.sourceProfileName,
+    };
     const binding = resolution.serviceBinding;
     resolvedConfig = resolveBrowserConfig({
       ...selectedBrowser,
       ...withoutUndefined(resolution.launchProfile),
+      ...launchOverrides,
+      cookieSync: cookieSync ?? selectedBrowser.cookieSync,
+      // A derived profile cookie path is not an explicit bootstrap request.
+      // Normalization derives bootstrap from the chosen source only after opt-in.
+      bootstrapCookiePath: launchOverrides.bootstrapCookiePath,
       target: provider,
       url: binding.serviceUrl ?? selectedBrowser.url,
       projectId: binding.projectId ?? selectedBrowser.projectId,

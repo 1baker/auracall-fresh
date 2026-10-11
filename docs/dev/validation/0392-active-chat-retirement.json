@@ -1,0 +1,89 @@
+{
+  "scope": "ChatGPT active/unknown tab protection; browser-disappearance attribution remains open",
+  "work_item": 226,
+  "source_base": "c430938b0",
+  "red": {
+    "passed": 0,
+    "failed": 2,
+    "failure": "active and unknown expired unowned response invoked production close callback"
+  },
+  "selected": {
+    "passed": 40,
+    "failed": 0
+  },
+  "typecheck_exit": 0,
+  "build_exit": 0,
+  "evidence_root": "/home/ecochran76/workspace.local/auracall-issue226-active-chat/build/issue226",
+  "installation": {
+    "source_commit": "575076e29",
+    "installed_as": "three-module overlay preserving unrelated runtime modules",
+    "backup": "/home/ecochran76/.auracall/backups/issue226-active-chat-575076e29",
+    "files": {
+      "chatgptTabActivity": {
+        "before_sha256": null,
+        "after_sha256": "d787d75b690288840855ece622bf1b2cf686a75507ae2a6a49fbd4a8d5e3128a"
+      },
+      "chatgptTabRetirement": {
+        "before_sha256": "eea5163b4a90960410b87b025e44b7ea615a2a85b15bf9a6b6212ee152c224e9",
+        "after_sha256": "eb0a78aefa521b4ef4ee418764d739c5791cc5f02a9a20882d2285589299f36f"
+      },
+      "configuredChatgptTabMaintenance": {
+        "before_sha256": "97977339a2c6a90cea8c4cc2ca5d10d86220da5496e674abba1528be6eaa1a98",
+        "after_sha256": "7ec982f9bc5a41d388b6533e287c3ab2243eda29e4c530190680bdbb44a2d88e"
+      }
+    }
+  },
+  "runtime_base_parity": {
+    "configuredChatgptTabMaintenance": true,
+    "chatgptTabRetirement": true
+  },
+  "live_research": {
+    "status": "answer_observed",
+    "conversation_url": "https://chatgpt.com/c/6aca6b7e-97f8-83ea-87f4-7975f1bbefd9",
+    "source_gap": "WO original numeric tables remain unresolved",
+    "session152_unchanged": true,
+    "workflow": {
+      "workflow_id": "cwf_2196d2a882e34467bc2837e6f932e963",
+      "max_tool_calls": 40,
+      "admitted_tool_calls": 6,
+      "status": "active"
+    }
+  },
+  "source_commit": "575076e29",
+  "api_pid_after_restart": 30054,
+  "api_pre_restart": {
+    "activeRequestCount": 0,
+    "scheduler": "paused",
+    "backgroundDrain": "idle"
+  },
+  "installed_active_guard": {
+    "url": "https://chatgpt.com/c/6aca6b7e-97f8-83ea-87f4-7975f1bbefd9",
+    "targetId": "DBB21D59529B4B76A22F01975680251C",
+    "activity": "active",
+    "guard": "tab-retirement-deferred: provider-activity-active",
+    "observedAt": "2026-10-10T16:44:56.582Z"
+  },
+  "installed_live_maintenance": {
+    "url": "https://chatgpt.com/c/6aca6b7e-97f8-83ea-87f4-7975f1bbefd9",
+    "closeCalls": 0,
+    "errors": [],
+    "leaseDisposition": "preserved",
+    "leaseCloses": 0,
+    "passed": true,
+    "observationOnly": true,
+    "canonicalRegistryModified": false
+  },
+  "wake_id": "wake_20261010_164603_0d11",
+  "wake_trigger": "/home/ecochran76/.local/share/litscout/research-notes/3hp-retirement-smoke/recovery-attention.json",
+  "integration_selected": {
+    "passed": 40,
+    "failed": 0,
+    "source_commit": "5fc4b69c4"
+  },
+  "wake_disposition": "cancelled after foreground completion review; automatic delivery unproven",
+  "integration": {
+    "pr": 250,
+    "merge_commit": "f9c5d675466df7c46b367c576f5ccefe9680d0bd",
+    "state": "merged"
+  }
+}

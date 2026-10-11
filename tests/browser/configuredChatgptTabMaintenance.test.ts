@@ -6,6 +6,15 @@ import {
 	runConfiguredChatgptTabMaintenance,
 } from "../../src/browser/configuredChatgptTabMaintenance.js";
 
+vi.mock("../../src/browser/chatgptTabActivity.js", async (importOriginal) => {
+	const original = await importOriginal<typeof import("../../src/browser/chatgptTabActivity.js")>();
+	return {
+		...original,
+		probeChatgptTabActivity: vi.fn(async () => "inactive"),
+		requireInactiveChatgptTab: vi.fn(async () => {}),
+	};
+});
+
 describe("configured ChatGPT tab maintenance", () => {
 	test("expires every extra physical page while retaining the live-follow tab", async () => {
 		const registry = createInMemoryBrowserTabLeaseRegistry();

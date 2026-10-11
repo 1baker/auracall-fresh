@@ -1,0 +1,32 @@
+{
+  "status": "PASS_SOURCE_BOUNDED",
+  "parents": {
+    "desktop": "4fd905b39648a2078163bff1c24eb014ff028942",
+    "main": "8aa11f18a4bba84e9ba67c88e69f4ed3916d3588"
+  },
+  "tier": "focused",
+  "tests": 202,
+  "testFiles": 27,
+  "renderedFunctionalChecks": 26,
+  "renderedPageErrors": 0,
+  "remainingSmokeOwnedProcesses": 0,
+  "requiredRouteRed": 404,
+  "requiredRouteGreen": 200,
+  "typecheck": "PASS",
+  "build": "PASS",
+  "installerLint": "PASS",
+  "review": {
+    "mode": "serial-primary-bounded-reconciliation",
+    "standards": "PASS",
+    "spec": "PASS",
+    "remainingFullFeatureGate": "Authenticated public input/root acceptance remains separate"
+  },
+  "memoryDisposition": "forbidden",
+  "sourceHashes": {
+    "scripts/install-user-runtime.ts": "5f3cc86435ae1860716e16a08dfcaa7c1287d48e12e28cb90448048ebbac8933",
+    "scripts/verify-runtime-contract.ts": "be266e39af31cb30e104b0c7bb5a9770b651f2095cd5bec8171063fcaa3ed901",
+    "src/http/desktopClientPage.ts": "07296e952973fb099515eeed740b93bba5d8afe859638d66d3e0f693191ba7af",
+    "src/browser/service/browserLaunchPlan.ts": "ba251bca82fb47b836d0c417a366635c97faf974fb9900cf504e43886c3b94ea",
+    "src/runtime/configuredExecutor.ts": "968247540247ad9e3604ce49b3a08ac687284c2add4bb889fd14a9dcedf7cb93"
+  }
+}

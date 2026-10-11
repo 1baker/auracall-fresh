@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   buildModelMatchersLiteralForTest,
+  ensureModelSelection,
+  shouldApplyChatgptThinkingTime,
   buildModelSelectionExpressionForTest,
   chooseModelPickerNavigationActionForTest,
   scoreModelPickerOptionForTest,
@@ -62,6 +64,7 @@ describe('browser model selection matchers', () => {
 
   it.each([
     { desiredModel: '6 Pro', selectedLabel: '6 Pro' },
+    { desiredModel: 'GPT-6', selectedLabel: 'GPT-6' },
     { desiredModel: 'gpt-5.6-sol', selectedLabel: 'Latest' },
   ])('opens the model trigger and reads the checked $selectedLabel current model', async ({
     desiredModel,
@@ -391,4 +394,23 @@ describe('browser model selection matchers', () => {
     ).toBeGreaterThan(0);
     expect(scoreModelPickerOptionForTest('gpt-5.6-sol', { text: 'Pro' }).score).toBe(0);
   });
+});
+
+
+it('resolves premium through GPT-6 then Pro Power and protects the combined choice', async () => {
+  const evaluate = vi.fn()
+    .mockResolvedValueOnce({ result: { value: { status: 'option-not-found', hint: { availableOptions: ['Medium', 'GPT-6', 'GPT-5.6 Sol'] } } } })
+    .mockResolvedValueOnce({ result: { value: { status: 'already-selected', label: 'GPT-6' } } })
+    .mockResolvedValueOnce({ result: { value: { status: 'switched', label: 'Pro' } } });
+  const selected = await ensureModelSelection({ evaluate } as never, '6 Pro', () => {}, 'select');
+  expect(selected).toBe('GPT-6 Pro');
+  expect(evaluate).toHaveBeenCalledTimes(3);
+  expect(shouldApplyChatgptThinkingTime('6 Pro', selected)).toBe(false);
+  expect(shouldApplyChatgptThinkingTime('GPT-5.6 Sol', 'GPT-5.6 Sol')).toBe(true);
+});
+
+it('preserves the current model without selecting premium Power', async () => {
+  const evaluate = vi.fn().mockResolvedValue({ result: { value: { status: 'already-selected', label: 'GPT-6' } } });
+  await expect(ensureModelSelection({ evaluate } as never, '6 Pro', () => {}, 'current')).resolves.toBe('GPT-6');
+  expect(evaluate).toHaveBeenCalledTimes(1);
 });

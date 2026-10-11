@@ -1,0 +1,7 @@
+src/browser/service/browserLaunchPlan.ts(293,43): error TS2339: Property 'browser' does not exist on type '{ browserProfile?: string | undefined; }'.
+src/browser/service/browserLaunchPlan.ts(293,76): error TS2339: Property 'browser' does not exist on type '{ browserProfile?: string | undefined; }'.
+src/browser/service/browserLaunchPlan.ts(294,24): error TS2339: Property 'browser' does not exist on type '{ browserProfile?: string | undefined; }'.
+src/runtime/configuredExecutor.ts(825,7): error TS2322: Type '{ chromePath: string | null | undefined; chromeProfile: string | null; chromeCookiePath: string | null | undefined; bootstrapCookiePath: string | null | undefined; display: string | null; ... 51 more ...; sessionOpen?: { ...; } | undefined; }' is not assignable to type '{ tabConcurrencyMode?: "serialized" | "tab-affinity" | undefined; target?: "chatgpt" | "gemini" | "grok" | undefined; projectId?: string | undefined; projectName?: string | undefined; ... 52 more ...; sessionOpen?: { ...; } | undefined; }'.
+  Types of property 'chromeProfile' are incompatible.
+    Type 'string | null' is not assignable to type 'string | undefined'.
+      Type 'null' is not assignable to type 'string | undefined'.

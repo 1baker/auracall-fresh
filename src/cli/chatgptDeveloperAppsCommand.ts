@@ -35,7 +35,7 @@ export interface ChatgptDeveloperApp {
 
 export interface ChatgptDeveloperAppState {
 	account: ChatgptDeveloperAppAccount;
-	developerMode: boolean;
+	developerMode: boolean | null;
 	inventoryComplete: boolean;
 	apps: ChatgptDeveloperApp[];
 	observedAt: string;
@@ -416,7 +416,7 @@ export function formatChatgptDeveloperAppOperationResult(
 	const account = result.state.account.email ?? "unknown";
 	const header = [
 		`ChatGPT developer apps (${account})`,
-		`Developer mode: ${result.state.developerMode ? "enabled" : "disabled"}`,
+		`Developer mode: ${result.state.developerMode === null ? "unknown" : result.state.developerMode ? "enabled" : "disabled"}`,
 		`Inventory complete: ${result.state.inventoryComplete ? "yes" : "no"}`,
 	];
 	if (result.action !== "list") {

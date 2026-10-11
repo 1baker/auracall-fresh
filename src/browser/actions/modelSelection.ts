@@ -5,6 +5,7 @@ import {
   MODEL_BUTTON_SELECTORS,
 } from '../constants.js';
 import { logDomFailure } from '../domDebug.js';
+import { ensureThinkingTime } from './thinkingTime.js';
 import { buildClickDispatcher } from './domEvents.js';
 
 const MODEL_SELECTION_EVALUATE_TIMEOUT_MS = 35_000;
@@ -69,6 +70,12 @@ export async function ensureModelSelection(
       return label;
     }
     case 'option-not-found': {
+      if (strategy === 'select' && /^6\s*pro$/i.test(desiredModel.trim()) &&
+          result.hint?.availableOptions?.some((label) => label.trim() === 'GPT-6')) {
+        await ensureModelSelection(Runtime, 'GPT-6', logger, 'select');
+        await ensureThinkingTime(Runtime, 'pro', logger);
+        return 'GPT-6 Pro';
+      }
       await logDomFailure(Runtime, logger, 'model-switcher-option');
       const isTemporary = result.hint?.temporaryChat ?? false;
       const available = (result.hint?.availableOptions ?? []).filter(Boolean);
@@ -98,7 +105,7 @@ function withStageTimeout<T>(task: Promise<T>, timeoutMs: number, message: strin
   });
 }
 
-type ModelOptionKind = 'instant' | 'thinking' | 'pro' | 'sol' | 'terra' | 'luna' | 'legacy' | null;
+type ModelOptionKind = 'instant' | 'thinking' | 'pro' | 'sol' | 'terra' | 'luna' | 'legacy' | 'gpt6' | null;
 
 type ModelPickerNavigationItem = {
   text: string;
@@ -130,7 +137,7 @@ function chooseModelPickerNavigationAction(
   const isModelControl = (item: ModelPickerNavigationItem) =>
     labels(item).some(
       (label) =>
-        label === 'model' ||
+        label === 'model' || label === 'select model' ||
         label.startsWith('model ') ||
         label.startsWith('modelgpt ') ||
         label.startsWith('modelchatgpt '),
@@ -168,6 +175,7 @@ function normalizeModelPickerText(value: string | null | undefined): string {
 
 function classifyModelPickerOption(normalizedText: string, normalizedTestId = ''): ModelOptionKind {
   const text = normalizedText.trim();
+  if (text === 'gpt 6') return 'gpt6';
   const testId = normalizedTestId.toLowerCase();
   if (text === 'latest' || testId.includes('latest')) {
     return 'instant';
@@ -367,7 +375,7 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
 
     let button = null;
     const visible = (node) => {
-      if (!(node instanceof HTMLElement)) return false;
+      if (!(node instanceof HTMLElement) || node.closest?.('[inert], [aria-hidden="true"]')) return false;
       const rect = node.getBoundingClientRect();
       const style = window.getComputedStyle(node);
       return rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden';
@@ -430,6 +438,7 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
     const getOptionLabel = (node) => node?.textContent?.trim() ?? '';
     const classifyOption = (normalizedText, normalizedTestId) => {
       const text = normalizedText.trim();
+      if (text === 'gpt 6') return 'gpt6';
       const testId = (normalizedTestId ?? '').toLowerCase();
       if (text === 'latest' || testId.includes('latest')) {
         return 'instant';
@@ -521,9 +530,9 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
     const collectOptionNodes = () => {
       const menus = Array.from(document.querySelectorAll(${menuContainerLiteral}));
       if (menus.length > 0) {
-        return menus.flatMap((menu) => Array.from(menu.querySelectorAll(${menuItemLiteral})));
+        return menus.flatMap((menu) => Array.from(menu.querySelectorAll(${menuItemLiteral}))).filter(visible);
       }
-      return Array.from(document.querySelectorAll(${menuItemLiteral}));
+      return Array.from(document.querySelectorAll(${menuItemLiteral})).filter(visible);
     };
     const hasVisibleMenu = () => Array.from(
       document.querySelectorAll(${menuContainerLiteral})
@@ -558,7 +567,7 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
       );
       const isModelControl = (node) => labelsForNode(node).some(
         (label) =>
-          label === 'model' ||
+          label === 'model' || label === 'select model' ||
           label.startsWith('model ') ||
           label.startsWith('modelgpt ') ||
           label.startsWith('modelchatgpt ')
@@ -681,7 +690,7 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
         const score = scoreOption(normalizedText, testid);
         const label = getOptionLabel(option);
         const optionKind = classifyOption(normalizedText, testid);
-        if (!['sol', 'terra', 'luna', 'legacy', 'instant', 'thinking', 'pro'].includes(optionKind)) {
+        if (!['sol', 'terra', 'luna', 'legacy', 'instant', 'thinking', 'pro', 'gpt6'].includes(optionKind)) {
           continue;
         }
         if (!selected || score > selected.score) {
@@ -771,7 +780,7 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
           // Keep scanning once the submenu opens instead of treating the submenu click as a final switch.
           const matchKind = classifyOption(match.normalizedText, match.testid);
           const isTerminalModelFamily =
-            ['sol', 'terra', 'luna', 'legacy', 'instant', 'thinking', 'pro'].includes(matchKind);
+            ['sol', 'terra', 'luna', 'legacy', 'instant', 'thinking', 'pro', 'gpt6'].includes(matchKind);
           const isSubmenu =
             match.normalizedText.startsWith('model ') ||
             (!isTerminalModelFamily && (
@@ -789,7 +798,11 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
         }
         const navigation = findNavigationAction();
         if (navigation) {
-          dispatchClickSequence(navigation.node);
+          if (navigation.node.hasAttribute?.('data-model-picker-view-toggle') && typeof navigation.node.click === 'function') {
+            navigation.node.click();
+          } else {
+            dispatchClickSequence(navigation.node);
+          }
           setTimeout(attempt, REOPEN_INTERVAL_MS / 2);
           return;
         }
@@ -812,7 +825,7 @@ function buildModelMatchersLiteral(targetModel: string): {
   const base = targetModel.trim().toLowerCase();
   const labelTokens = new Set<string>();
   const testIdTokens = new Set<string>();
-  const semanticTarget: ModelOptionKind = base.includes('terra')
+  const semanticTarget: ModelOptionKind = base === 'gpt-6' ? 'gpt6' : base.includes('terra')
     ? 'terra'
     : base.includes('luna')
       ? 'luna'
@@ -1020,4 +1033,9 @@ export function buildModelSelectionExpressionForTest(
   strategy: BrowserModelStrategy = 'select',
 ): string {
   return buildModelSelectionExpression(targetModel, strategy);
+}
+
+/** Premium Power is already verified as part of model selection. */
+export function shouldApplyChatgptThinkingTime(desiredModel: string | null | undefined, observedModel?: string | null): boolean {
+  return observedModel !== 'GPT-6 Pro' && !!desiredModel && /\b(sol|thinking|pro)\b/i.test(desiredModel);
 }

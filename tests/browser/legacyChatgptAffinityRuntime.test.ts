@@ -65,6 +65,7 @@ describe("legacy ChatGPT affinity runtime", () => {
 			port: 45100,
 			targetId: "target-1",
 			targetUrl: "https://chatgpt.com/",
+			abortSignal: expect.any(AbortSignal),
 			providerTrafficGovernor: expect.objectContaining({
 				attribution: expect.objectContaining({
 					tabLeaseId: expect.any(String),

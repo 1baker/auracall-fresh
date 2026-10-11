@@ -95,6 +95,14 @@ cover both seams and validate exact service session/display ownership before
 reattachment. Provider-free tests caught both bypasses; this source checkpoint
 is not installed or live desktop acceptance.
 
+## 2026-10-10 | Plan0394 memory routing
+
+Issue251 owner ecochran76 IN_PROGRESS. Canonical auracall_main route and routing-only manifest are documented; unresolved destination and actual service failure are separate causes. Shared Graphiti code and unrelated root work are preserved. Independent review passed; atlas job completed-visible and the original discovery query now returns auracall_main. Direct source-group repair retrieval passed. Plan0394 closes; remote CI reported no checks.
+
+## 2026-10-10 | Missing Developer-mode switch must not erase app inventory
+
+Issue225: current ChatGPT settings redirects omit the labeled switch while installed apps remain available. Requiring that independent UI signal discarded valid inventory and could exhaust the command deadline. Report null/unknown after one bounded observation; do not retry stale settings routes or infer mutation permission. Creation/replacement still fail closed without affirmative enabled state. Public adapter replay retains unknown/true/false coverage and CLI guard regressions. PR248 and scoped two-module installation are accepted in Plan0393: original inventory command exits 0 with 26 apps; independent review passes.
+
 ## 2026-10-08 — Recognize the captured rich ChatGPT composer for reads
 
 Conversation readiness must recognize the observed DIV with data-composer-markdown,
@@ -24479,6 +24487,9 @@ follow/child/follow same target, three extras closed after five real minutes,
 retained follow survives, native shutdown and zero fences verified. Durable
 receipts are under docs/dev/evidence/plan0390/. No provider journey consumed.
 
+## 2026-10-10 | Prevent TTL cleanup from treating external ChatGPT activity as settled
+
+Issue226: lease bookkeeping can remain settled while an externally submitted response is active. A read-only provider activity probe now guards ChatGPT close operations, including lost-lease maintenance. Probe errors preserve tabs. Original incident browser loss remains unproven; local protection tests are not incident attribution or live continuation proof.
 ### 2026-10-07 — reconcile live monitor recovery separately from provider restart
 
 A private journey monitor can read partially written observer JSON. Reattach to
@@ -24572,3 +24583,69 @@ access; recovery must establish transport before restoring control input.
 Keeping a ready iframe must not suppress the timer that renews its expiring
 passive grant. Use the existing same-iframe grant handoff on scheduled observation
 refresh; ordinary visibility return should retain the connected native viewer.
+
+## 2026-10-10 — Preserve owned-browser exit attribution (#226)
+
+An owned child exit previously removed its registry generation without retaining
+exit code/signal. Shutdown handles similarly lacked durable generation-bound
+request observations. Append structured lifecycle rows beside the registry and
+keep shutdown request/return distinct from actual child exit. Regression fails
+with missing journal before repair, then verifies exact generation and signal;
+write-failure coverage ensures instrumentation cannot prevent cleanup. This does
+not attribute prior incidents or cover every possible close actor.
+
+## 2026-10-10 | GPT-6 premium Power selection
+
+When6 Pro disappears from the Chat model rows, premium requires exact GPT-6 plus verified Pro Power, not merely a model-label alias. Model family recognition must admit the checked GPT-6 row; hidden inert lists cannot establish current selection. A later ordinary effort selection must not downgrade a verified premium composite. Real source UI proof selected Pro and restored Medium without sending a prompt. Plan0396 retains initial fixture/live failures.
+
+
+## 2026-10-10 | Pending ChatGPT lease renewal (Issue226, Plan0397)
+
+A pending prompt left its lease heartbeat fixed, allowing reconciliation to mark
+a live owner's active lease lost at idle expiry. Renew while the original prompt
+is in flight, serialize claim checks with renewal, and drain renewal before
+settlement. Stop on cancellation/error/ownership loss and preserve the absolute
+deadline; forward cancellation through the legacy browser affinity path.
+Pre-close active/unknown DOM protection remains independent. This source repair
+does not attribute the previous browser exit or prove live elapsed acceptance.
+
+## 2026-10-10 | Qualified API model identity (Plan0399)
+
+Fuzzy provider aliases rewrote slash-qualified custom IDs before passthrough.
+Classify slash-qualified IDs before alias resolution and preserve trimmed case.
+CLI dry-run reproduced wrong Sonnet selection before repair; caller regressions
+retain exact single/multi-model identities alongside existing shorthand coverage.
+
+## 2026-10-10 | Absolute deadline completion ordering (Plan0401)
+
+A deferred provider result can win before a queued renewal callback executes.
+Check the lease hard deadline at successful completion before conversation binding
+or heartbeat mutation. Preserve existing failure settlement and unknown fencing.
+
+## 2026-10-10 | Characterize launch precedence before extracting it
+
+Stored browser options and BrowserLaunchPlan look duplicated but choose different
+runtime/browser/global values. Cookie-copy paths also depend on cookieSync, while
+mutable authorization has its own source-name provenance. Characterize both public
+seams with conflicting literal fixtures before replacing raw options with resolved
+policy. Plan0402 parks convergence under the preserve-behavior decision; production
+code is unchanged. See docs/dev/evidence/plan0402/characterization.md.
+
+## 2026-10-10 | Own launch precedence and cookie authority in the launch plan
+
+Plan0403 resolves runtime browser overrides before browser-profile and configured
+root defaults, then normalizes once. Stored launch options, affinity config and
+source authorization share that plan, deleting the independent executor chains.
+Raw user-config resolution must apply the manual-login default before binding an
+explicit service managed directory; otherwise scoped cookies and reattachment
+lose custody. A derived profile cookie path is not an explicit bootstrap request:
+respect cookieSync, including runtime false. Public regressions retain both risks.
+
+
+## 2026-10-10 | Desktop deployment reconciliation
+
+Plan0403 adoption dropped the installed off-main PR244 desktop client. Reconcile
+all installed capabilities, published lane checkpoints and target ancestry before
+replacement; a green bounded change is insufficient. Combined desktop/launch
+source and a required compiled /desktops installation gate recover the route.
+See [recovery evidence](dev/notes/2026-10-10-desktops-install-reconciliation.md).

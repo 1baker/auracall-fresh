@@ -171,6 +171,37 @@ Installed AuraCall consumer configuration, native two-desktop/input acceptance,
 broad review and integration remain OPEN. No provider prompts or infrastructure
 changes occurred. Continue from the execution ledger and draft PR244.
 
+## 2026-10-10 | Plan0403 launch precedence implemented
+
+Operator accepted runtime browser overrides > browser-profile settings > global
+defaults. BrowserLaunchPlan now owns the launch-field policy; stored options and
+ChatGPT affinity share its projection and selected source identity. Legacy source
+aliases affect authorization consistently. Explicit runtime/service managed
+bindings survive; derived source cookies require opt-in. Final focused/adjacent207
+checks pass; typecheck/lint and source review recorded in Plan0403 evidence.
+No provider request, installation or live acceptance; source integration separate.
+
+## 2026-10-10 | Plan0402 characterized; convergence parked
+
+Isolated refactor/stored-browser-launch-plan from e3d6d94c1. Three public-seam
+fixtures expose runtime-versus-browser/global differences across every proposed
+launch field. Keep behavior unchanged; no equivalent duplicate can be deleted
+through the existing plan. Evidence: docs/dev/evidence/plan0402/characterization.md.
+Focused39 tests, mutation sensitivity, typecheck/lint and source review constitute
+this bounded packet; no installed/live claim or renewed Issue226 acceptance.
+
+## 2026-10-10 | Plan0395 memory routing
+
+Issue251 owner ecochran76 IN_PROGRESS. Canonical auracall_main route and routing-only manifest are documented; unresolved destination and actual service failure are separate causes. Shared Graphiti code and unrelated root work are preserved. Independent review passed; atlas job completed-visible and the original discovery query now returns auracall_main. Direct source-group repair retrieval passed. Plan0395 closes; remote CI reported no checks.
+
+## 2026-10-10 | Plan0393 installed inventory accepted
+
+PR248 integrated c629aeb0. Original installed apps list succeeds with complete 26-app inventory and unknown Developer mode; exact account and enabled Im Receipts identity qualified privately. Two compiled modules promoted with rollback custody. 79 focused/adjacent tests and independent source/installed review pass; GitHub CI reported no checks. Bounded Plan0393 closes; create/replace live acceptance remains untested. See docs/dev/notes/2026-10-10-plan0393-inventory-acceptance.md.
+
+## 2026-10-10 | Plan0393 developer-app inventory repair
+
+Issue225 owner ecochran76 IN_PROGRESS, branch fix/issue225-app-inventory from591a11824. Reproduced installed45second timeout and missing-switch error; diagnostic stages establish complete installed inventory before settings failure. Public readState replay RED2.26seconds then GREEN; missing switch becomes unknown without mutation authority. Source checks and installed read-only acceptance remain separately tracked in Plan0393. Unrelated root work preserved.
+
 ## 2026-10-08 | Plan 0391 publication validation
 
 All three live tickets and their exact dependency links read back successfully.
@@ -53448,6 +53479,9 @@ background drain is unpaused. No provider journey consumed, one remains.
 Plan 0390 CLOSED; Plan 0386 broader asset acceptance remains OPEN.
 Memory disposition unavailable: no qualified AuraCall Graphiti destination.
 
+## 2026-10-10 | Issue226 active chat retirement
+
+Isolated fix/issue226-active-chat-retirement worktree; root dirty edits preserved. Production maintenance red replay closes an expired unowned active/unknown response. Provider activity guard now covers maintenance's lost path and shared ChatGPT retirement, preserving active and unknown while cleaning inactive pages.40 selected checks pass; typecheck and compilation pass. Actual prior disappearance remains unattributed (already-missing, zero recorded closes). Runtime qualification and live continuation remain pending. Plan0392 owns the bounded repair.
 ### 2026-10-07T11:00Z — endpoint denial repair installed
 
 PR227 merged as873ad09bffb and installed with worker SHA256 parity. API53966,
@@ -53664,3 +53698,57 @@ control implementation. Software adoption and public stability follow separately
 ### 2026-10-10 — Aura favicon and desktop discovery
 
 Create one canonical SVG favicon: crisp mint A with glowing violet halo and soft aura, visually checked at 16/32/64px. Root opens the configured console; console and operator navigation link to Desktops. Preserve installed passive-grant renewal and existing iframe handoff changes. Integration build and targeted HTTP regression pass. Installed a0ec3d5a; root console navigation, SVG GET/HEAD and asset byte parity verified, all36 non-API identities preserved and both Grok aliases ready. See favicon receipt; public authenticated acceptance remains separate.
+
+## 2026-10-10 — Plan 0395 lifecycle attribution source slice
+
+Asked LitScout exact tab for current evidence; received direct handoff at
+/tmp/litscout-issue226-evidence-readout.md. Latest run remained alive through
+answer capture, then browser disappeared after observation ended. Original
+event wake delivered after scheduler-version repair; historical active loss
+remains unattributed. Isolated branch fix/issue226-lifecycle-attribution starts
+from merged active-chat guard f9c5d6754. Launcher regression red: missing durable
+journal. Added owned launch/shutdown/child-exit observations and persistence-failure
+coverage; focused validation and typecheck recorded in Plan0395. Source only;
+no runtime installation or live provider effect.
+Memory disposition: not_durable until source qualification completes.
+
+Plan0395 final source qualification:31 focused checks, typecheck, full build
+and diff hygiene pass; scoped lint has two existing mock naming warnings.
+Serial source review has zero blocking findings; installation remains unrun.
+## 2026-10-10 | Issue226 active-response protection qualified
+
+PR250 mergedf9c5d6754; installed narrow overlay and API guard qualified. Live active ChatGPT response refused cleanup; isolated expired-lease maintenance on that real tab made zero closes. Post-repair research completed with numeric-table access limitation and unchanged Session152. Automatic wake delivery and original disappearance attribution remain unproven. Plan0392 closed for bounded protection repair.
+
+## 2026-10-10 | Plan0396 GPT-6 premium mapping
+
+Current UI selection-and-restore proved GPT-6 Power4 Pro. Added fallback from absent6 Pro row, exact GPT-6 family recognition, non-inert model-list navigation and verified fifth-slot selection. Shared post-model effort guard protects premium across CLI and workbench. Live source selector now selects GPT-6 Pro and restores Medium; zero provider sends. Root dirty work preserved. Source acceptance separate from installation and active-chat TTL. Memory disposition forbidden.
+
+
+## 2026-10-10 | Plan0397 in-flight lease renewal
+
+Executor fake-clock regression reproduced active->lost during pending response
+maintenance, then passed after renewal/claim serialization. Added error, cancel,
+ownership-loss, absolute-deadline and provider-admission gates; legacy abort
+forwarding red/green. Focused validation, build and review in progress; no live
+request or installed adoption in this packet.
+
+
+### Plan0397 source qualification
+
+45 focused tests PASS, typecheck/build/scoped lint/diff checks PASS. Serial
+Standards and Spec review PASS after fixing cancellation forwarding. Source
+packet CLOSED; installed adoption and visually watched long-chat expiry acceptance
+remain separate gates. No provider request or wake created.
+
+Plan0399: qualified model-ID defect reproduced at CLI run-option seam and real dry-run; slash-qualified exact ID now bypasses fuzzy aliases, preserving case. Focused96 tests/typecheck/targeted lint pass. Isolated fix/qualified-model-id; no provider or installed changes.
+
+Plan0401: retained new-conversation absolute deadline failure reproduced on current main; success-boundary timestamp gate repaired. Focused53 tests/typecheck/targeted lint PASS. Source only; separate installed/live gates.
+
+
+## 2026-10-10 | Desktop deployment reconciliation
+
+Plan0403 adoption dropped the installed off-main PR244 desktop client. Reconcile
+all installed capabilities, published lane checkpoints and target ancestry before
+replacement; a green bounded change is insufficient. Combined desktop/launch
+source and a required compiled /desktops installation gate recover the route.
+See [recovery evidence](notes/2026-10-10-desktops-install-reconciliation.md).

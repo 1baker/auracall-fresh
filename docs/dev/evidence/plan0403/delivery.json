@@ -1,0 +1,11 @@
+{
+  "baseRefName": "main",
+  "headRefName": "refactor/runtime-launch-precedence",
+  "headRefOid": "a94690a4a18e8d200a38bab9bf46e6405af67f5b",
+  "mergeStateStatus": "CLEAN",
+  "number": 261,
+  "state": "OPEN",
+  "statusCheckRollup": [],
+  "url": "https://github.com/ecochran76/auracall/pull/261",
+  "receiptScope": "PR creation readback; subsequent documentation-only delivery commit updates head"
+}
