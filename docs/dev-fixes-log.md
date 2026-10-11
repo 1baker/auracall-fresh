@@ -24688,3 +24688,7 @@ pause remain intact; broader authenticated input/root acceptance remains OPEN.
 ## Browser opening and desktop input control
 
 Browser and new-target opening are independent of desktop input ownership. Automatic placement uses the native pool’s configured maximum, grows with demand and wraps when full; shrink remains guarded by empty-capacity custody. Desktop human-control ownership continues to protect interaction with existing pages. A retained input claim must not be used to prevent browser opening. Issue253/Plan0405 record the source and acceptance boundaries.
+
+### 2026-10-11 | Issue253 desktop ownership
+
+An empty desktop-control owner.json reproduced the installed JSON.parse crash without browser/provider dependencies. Validate record shape and report unknown custody explicitly, preserving bytes. Publish via pending file plus atomic rename rather than direct write. This prevents partial visibility but does not prove the origin of the historical empty record or authorize deleting its lock/transition.

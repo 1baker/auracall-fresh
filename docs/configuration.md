@@ -1086,3 +1086,5 @@ exposes the latest maintenance state. No chat is submitted by Wake or maintenanc
 ## Browser opening and desktop input control
 
 Browser and new-target opening are independent of desktop input ownership. Automatic placement uses the native pool’s configured maximum, grows with demand and wraps when full; shrink remains guarded by empty-capacity custody. Desktop human-control ownership continues to protect interaction with existing pages. A retained input claim must not be used to prevent browser opening. Issue253/Plan0405 record the source and acceptance boundaries.
+
+Desktop input-control ownership records are validated before automation. An invalid or incomplete record blocks interaction with an explicit recovery error and is preserved for diagnosis. Ownership is published by atomic rename so readers cannot observe a partially written owner.json. Browser opening remains independent of input ownership. Recovery of existing unknown ownership requires qualifying the retained control state; no automatic deletion is performed.

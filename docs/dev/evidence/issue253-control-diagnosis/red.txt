@@ -1,0 +1,55 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-issue253-triage
+
+ ❯ tests/browser/desktopControlGate.test.ts (3 tests | 2 failed) 55ms
+   ✓ real CDP send admission excludes takeover during an in-flight command and excludes writes until explicit fresh release 34ms
+   × invalid or unpublished ownership blocks effects with an actionable error and preserves custody 11ms
+   × owner publication never exposes a partial owner.json 8ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/browser/desktopControlGate.test.ts > invalid or unpublished ownership blocks effects with an actionable error and preserves custody
+AssertionError: expected [Function] to throw error including 'ownership record is invalid' but got 'Unexpected end of JSON input'
+
+Expected: "ownership record is invalid"
+Received: "Unexpected end of JSON input"
+
+ ❯ tests/browser/desktopControlGate.test.ts:50:7
+     48|     for (const raw of ['', '{', 'null', '{}', JSON.stringify({id:'x',r…
+     49|       await fs.writeFile(path.join(lock, 'owner.json'), raw);
+     50|       await expect(gate.withAutomation('b', effect)).rejects.toThrow('…
+       |       ^
+     51|       expect(await fs.readFile(path.join(lock, 'owner.json'), 'utf8'))…
+     52|     }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/browser/desktopControlGate.test.ts > owner publication never exposes a partial owner.json
+AssertionError: promise resolved "Buffer[]" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "data": [],
++   "type": "Buffer",
+  }
+
+ ❯ Object.<anonymous> tests/browser/desktopControlGate.test.ts:68:60
+     66|     destination = String(args[0]);
+     67|     await original(args[0], '', args[2]);
+     68|     await expect(fs.readFile(path.join(lock, 'owner.json'))).rejects.t…
+       |                                                            ^
+     69|     await original(...args);
+     70|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 1 passed (3)
+   Start at  15:34:21
+   Duration  418ms (transform 93ms, setup 63ms, import 74ms, tests 55ms, environment 0ms)
+

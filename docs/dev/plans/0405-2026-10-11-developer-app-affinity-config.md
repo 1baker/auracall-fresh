@@ -43,3 +43,7 @@ PR278 merged as ae2d56422. CLI wrappers use user-runtime-issue253-opening; compi
 ### Native opening outcome
 
 LitScout performed one original installed no-submit app test. Primary independently inspected its readback and stderr: one new ChatGPT page was observed, total CDP targets4 to8, no original target removed, browser PID preserved. The command exited1 at subsequent DesktopControlGate.owner JSON parsing of the retained empty input ownership record. No submission intent/result exists. Opening accepted for this bounded check; full app automation and Issue253 remain unaccepted. No retries or ownership recovery performed.
+
+## Revision | Ownership record validation and publication
+
+Repair raw parser crashes through the public gate seam: malformed, structurally invalid and missing-owner-in-existing-lock states preserve custody and reject with explicit recovery guidance. Publish newly acquired ownership through a private pending file and atomic rename. This prevents visible partial records; it does not attribute or recover the installed unknown owner/transition. Native app acceptance remains separate.

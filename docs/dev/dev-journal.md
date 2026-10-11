@@ -53863,3 +53863,5 @@ Issue253 native opening check: one new ChatGPT page observed, existing targets p
 ### Issue253 ownership diagnosis
 
 Fast isolated withAutomation reproduction confirms empty ownership JSON crashes before effect; missing-record control succeeds. Live ownership creation remains unattributed. Curated repro and diagnosis retained under evidence/issue253-control-diagnosis. Transition-only probe exceeded feedback budget and was interrupted. No live state changed. Memory disposition: forbidden, no write authorization.
+
+Issue253 ownership repair: red public-gate regressions caught invalid-record errors and partial publication; implementation adds validation and atomic rename. Live unknown control records untouched. Validation and installation pending. Memory disposition: forbidden; no general memory write authorization.
