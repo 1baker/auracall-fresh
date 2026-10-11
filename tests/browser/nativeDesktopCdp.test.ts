@@ -1,5 +1,6 @@
 // biome-ignore-all lint/style/useNamingConvention: Native provider fixtures use fixed POSIX environment keys.
 import fs from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import os from 'node:os';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
@@ -30,9 +31,16 @@ test('native desktop ownership excludes actual wire commands and rejects reused 
     expect(await client.Page.reload()).toMatchObject({ sequence: 1 });
     const gate = new DesktopControlGate(binding.assignment.desktopId);
     const human = await gate.takeControl(nativeBrowserGeneration(binding));
+    await expect(client.send('Target.createTarget', { url: 'about:blank' })).resolves.toMatchObject({ sequence: 2 });
     await expect(client.Page.reload()).rejects.toThrow('paused');
     await gate.releaseControl(human.token, nativeBrowserGeneration(binding));
-    expect(await client.Page.reload()).toMatchObject({ sequence: 2 });
+    expect(await client.Page.reload()).toMatchObject({ sequence: 3 });
+    const gateOwnerPath = path.join(home, 'desktop-control', createHash('sha256').update(binding.assignment.desktopId).digest('hex'), 'owner.json');
+    await fs.mkdir(path.dirname(gateOwnerPath), { recursive: true }); await fs.writeFile(gateOwnerPath, '');
+    await expect(client.send('Target.createTarget', { url: 'about:blank' })).resolves.toMatchObject({ sequence: 4 });
+    await expect(client.Page.reload()).rejects.toThrow();
+    expect(await fs.readFile(gateOwnerPath, 'utf8')).toBe('');
+    await fs.rm(path.dirname(gateOwnerPath), { recursive: true });
     await new NativeDesktopStore().recordBrowser({ ...binding, processStart: 'replaced-process' });
     await expect(client.Page.reload()).rejects.toThrow('ownership changed');
   } finally {

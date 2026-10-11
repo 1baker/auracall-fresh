@@ -1,0 +1,30 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-issue253-triage
+
+ ❯ tests/browser/nativeDesktopCdp.test.ts (1 test | 1 failed) 289ms
+   × native desktop ownership excludes actual wire commands and rejects reused process receipts 287ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/browser/nativeDesktopCdp.test.ts > native desktop ownership excludes actual wire commands and rejects reused process receipts
+AssertionError: promise rejected "Error: AuraCall automation is paused whil…" instead of resolving
+ ❯ tests/browser/nativeDesktopCdp.test.ts:34:76
+     32|     const gate = new DesktopControlGate(binding.assignment.desktopId);
+     33|     const human = await gate.takeControl(nativeBrowserGeneration(bindi…
+     34|     await expect(client.send('Target.createTarget', { url: 'about:blan…
+       |                                                                            ^
+     35|     await expect(client.Page.reload()).rejects.toThrow('paused');
+     36|     await gate.releaseControl(human.token, nativeBrowserGeneration(bin…
+
+Caused by: Error: AuraCall automation is paused while a human controls this desktop.
+ ❯ DesktopControlGate.withAutomation src/browser/service/desktopControlGate.ts:134:12
+ ❯ tests/browser/nativeDesktopCdp.test.ts:34:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  14:51:08
+   Duration  779ms (transform 153ms, setup 65ms, import 218ms, tests 289ms, environment 0ms)
+

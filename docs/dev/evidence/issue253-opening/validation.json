@@ -1,0 +1,11 @@
+{
+  "base": "9ef680de2",
+  "test_files": 6,
+  "tests": 25,
+  "typecheck": "pass",
+  "build": "pass",
+  "scoped_lint": "pass",
+  "operator_spec": "Browser opening independent of input ownership; pool capacity grows/shrinks/wraps",
+  "installed_acceptance": "pending",
+  "ownership_records_modified": false
+}
