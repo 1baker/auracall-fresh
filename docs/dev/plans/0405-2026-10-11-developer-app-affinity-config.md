@@ -142,3 +142,8 @@ Original native receipt completed app selection/clear, exact accepted URI captur
 Original once-only native submit failed pre_effect/process-owned, null conversation and no Send; intent preserved and no retry. Public CLI/real utility/real provisioner fixture reproduces exact failure13ms with matched scope/currentTTL. Observe inventory under utility lease, close and await successful settlement, then execute shared validation/submission outside utility callback. Ownership rules unchanged; failed settlement/account/confirmation/incomplete/ambiguous gates stop submission. Original live invocation exhausted; full native completion remains open. See [diagnosis](../evidence/issue253-submit-lease-handoff/diagnosis.md).
 
 Source lease handoff verification:61tests4files pass, scoped lint/typecheck/fullbuild pass. Serial Standards and Spec review each0 accepted blockers. Original native once-only acceptance exhausted beforeSend; no retry. Installation checkpoint pending.
+
+
+### Installed handoff and bounded checkpoint
+
+PR288 integrated87a779dac/validatedf4b0b8282; CLI/MCP/API user-runtime-issue253-submit-handoff,591files exactparity; installed real CLI/utility/provisioner fixture0provider effects. API56928 active/processKillMode/argv binds prefix. Browser95651 absent before restart, actorunknown. Finallease released/settled with restart-unverified reason; no manualtransition. Scoped Session152–163 membership unchanged, not wholeDB equivalence. Original once-only submit exhaustedpre_effect; full native completion OPEN. See [restart-safe checkpoint](../handoffs/2026-10-11-issue253-native-submit-checkpoint.md).
