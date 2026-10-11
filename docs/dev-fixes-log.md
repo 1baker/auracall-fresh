@@ -24454,3 +24454,9 @@ Fuzzy provider aliases rewrote slash-qualified custom IDs before passthrough.
 Classify slash-qualified IDs before alias resolution and preserve trimmed case.
 CLI dry-run reproduced wrong Sonnet selection before repair; caller regressions
 retain exact single/multi-model identities alongside existing shorthand coverage.
+
+## 2026-10-10 | Absolute deadline completion ordering (Plan0401)
+
+A deferred provider result can win before a queued renewal callback executes.
+Check the lease hard deadline at successful completion before conversation binding
+or heartbeat mutation. Preserve existing failure settlement and unknown fencing.

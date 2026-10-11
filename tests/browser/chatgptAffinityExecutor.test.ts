@@ -778,3 +778,79 @@ test("failure settlement waits for an outstanding renewal write and uses its cla
 		vi.useRealTimers();
 	}
 });
+
+
+test.each([
+	{ kind: "new-conversation", lateMs: 0 },
+	{ kind: "new-conversation", lateMs: 1 },
+	{ kind: "conversation", lateMs: 0 },
+	{ kind: "conversation", lateMs: 1 },
+] as const)("reject $kind completion $lateMs ms after unscheduled absolute deadline", async ({
+	kind,
+	lateMs,
+}) => {
+	vi.useFakeTimers();
+	vi.setSystemTime(new Date("2026-10-10T12:00:00Z"));
+	try {
+		const registry = createInMemoryBrowserTabLeaseRegistry();
+		const ledger = createInMemoryProviderInteractionLedger();
+		const reserved = await registry.reserve({
+			scope,
+			targetId: "pending",
+			workload:
+				kind === "new-conversation"
+					? { kind, reservationId: "fixture" }
+					: { kind, conversationId: "fixture" },
+			operationId: "pending",
+			now: new Date().toISOString(),
+			idleTtlMs: 60000,
+			absoluteTtlMs: 60000,
+		});
+		if (!reserved.ok) throw Error("reserve failed");
+		let complete!: (result: import("../../src/browser/llmService/types.js").PromptResult) => void;
+		let started!: () => void;
+		const ready = new Promise<void>((r) => {
+			started = r;
+		});
+		const pending = executeChatgptConversation({
+			mode: "tab-affinity",
+			registry,
+			ledger,
+			lease: reserved.value.lease,
+			claim: reserved.value.claim,
+			operationId: "pending",
+			endpoint: { host: "127.0.0.1", port: 9222 },
+			input: { prompt: "fixture", conversationId: kind === "conversation" ? "fixture" : undefined },
+			policy,
+			reservationTtlMs: 3600000,
+			idleTtlMs: 60000,
+			runPrompt: async () => {
+				started();
+				return new Promise((r) => {
+					complete = r;
+				});
+			},
+		});
+		void pending.catch(() => undefined);
+		await ready;
+		// Jump the clock without executing the renewal callback: event-loop ordering gate.
+		vi.setSystemTime(new Date(Date.parse("2026-10-10T12:01:00Z") + lateMs));
+		complete({
+			text: "done",
+			conversationId: "fixture",
+			url: "https://chatgpt.com/c/fixture",
+			tabTargetId: "pending",
+		});
+		await expect(pending).rejects.toThrow("absolute deadline");
+		expect(await ledger.list()).toEqual([
+			expect.objectContaining({ effectState: "outcome-unknown", outcome: "failed" }),
+		]);
+		expect(await registry.list()).toEqual([
+			expect.objectContaining(lateMs === 0
+          ? { state: "idle", effectState: "outcome-unknown", ownerOperationId: null }
+          : { state: "active", ownerOperationId: "pending" }),
+		]);
+	} finally {
+		vi.useRealTimers();
+	}
+});

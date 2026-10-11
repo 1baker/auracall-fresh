@@ -22008,3 +22008,9 @@ Qualified API model-ID repair in isolated fix/qualified-model-id from97f5638ef.
 CLI dry-run baseline selected claude-4.5-sonnet for vendor-qualified ID; repaired
 resolution preserves the exact ID. Focused96 tests, typecheck and targeted lint
 passed. No provider submissions, installed runtime changes or lease acceptance.
+
+## Turn | 2026-10-10 | Plan0401
+
+Provider-free deadline repair: retained red reproduced, both workloads reject at
+and after hard expiry without timer execution. Focused53 tests/typecheck/lint pass.
+No provider request, installed change or new wake.

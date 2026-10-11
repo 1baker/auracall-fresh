@@ -849,7 +849,8 @@ Terminology note:
   While a ChatGPT tab-affinity prompt is in flight, AuraCall renews its active
   lease at intervals of at most 30 seconds. Renewal stops when the request
   completes, fails, is cancelled, loses ownership, or reaches its absolute
-  deadline. The separate provider-activity check still prevents cleanup from
+  deadline. A result arriving at or after that hard deadline is rejected even
+  when a delayed timer callback has not run. The separate provider-activity check still prevents cleanup from
   closing a tab with an active or uncertain response.
 
   A completion-owned failed job with zero verified materializations blocks its live-follow
