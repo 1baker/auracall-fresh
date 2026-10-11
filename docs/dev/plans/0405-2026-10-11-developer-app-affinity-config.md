@@ -11,7 +11,7 @@ Base: 9b324b3dc7d3f8f1ec50e3888f02e71c39047e02
 
 ## Current State
 
-PR283 integrated/installed with590-file parity. Original no-submit native test now preserves browser PID8872/start38966233 but exits before effect: composer editor not found. Captured DOM has one visible rich Ask ChatGPT editor without legacy ID. Actual clear seam reproduces that exact error; adding only legacy ID passes. Shared precise composer lookup now supports both shapes and protects app-pill selection/readback. 87 focused tests, typecheck, scoped lint, full build and serial Standards/Spec review pass; installation/native acceptance pending; original once-only Demo10 acceptance remains gated. Historical exit attribution remains unknown.
+PR284 integrated/installed b188ae014 with591-file parity; rich composer clearing now passes native boundary. One no-submit run ends at legacy mention-picker selector not found after @LitScout insertion. No native prompt/intent/result; fresh browser53930/start39054099 alive. Post-terminal read-only screenshot shows empty composer and no picker, so trigger-time DOM remains missing. One bounded instrumented no-submit diagnosis authorized to capture exact selection-time DOM; no prompt or input outside native command. Full Issue253 acceptance remains open.
 
 ## Scope and seams
 
@@ -95,3 +95,8 @@ No-submit native fixture at2026-10-11T22:16:44Z records one empty rich DIV, cont
 ### Installed rich composer repair
 
 PR284 integrated b188ae01493209fce88f9ad3da4ce2248f078844, validated806c968c12f426531efff01684aa0ddc5e5edb49. CLI/API use user-runtime-issue253-composer;591 dist files0 mismatches/extra. Installed public clear/mention fixture verifies current no-ID shape, trusted clearing and exact app identity without provider effects. API PID50673 active, KillModeprocess preserved. Before promotion browser8872 was already absent with stale registry retained and CDP unavailable; actor unknown, retained draft unknown, last observed empty22:16:44Z. LitScout confirms original intent/result absent. One canonical no-submit native test authorized with120s guard; no manual stale-state recovery or provider submission.
+
+
+### Native rich composer outcome and picker diagnosis
+
+Original PR284 no-submit terminal exit1/session15675, JSON0bytes: Visible selector not found .popover .__menu-item[tabindex] after native @LitScout insertion. Composer clearing advanced; exact app selection remains unqualified. Fresh browser53930/start39054099 alive. Current target5B927463445DE29431D89B1CB3DE050A screenshot/DOM at22:29:27Z shows empty editor, no picker, zero app pills. Source selectForTest finally clears the native-created mention draft; current absence does not prove trigger-time absence. No original Demo10 intent/result. One scoped no-submit reproduction with bounded read-only observer authorized under active diagnosis goal after account/empty composer/prior-unsent checks; never submit or bypass control.
