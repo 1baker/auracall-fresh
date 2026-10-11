@@ -1,0 +1,45 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-issue253-triage
+
+ ❯ tests/browser/chatgptAppComposer.test.ts (11 tests | 1 failed) 271ms
+   ✓ clears the captured rich composer through trusted input (legacy ID: false) 10ms
+   ✓ clears the captured rich composer through trusted input (legacy ID: true) 3ms
+   ✓ rejects an unqualified composer before trusted input: {"hidden":true} 38ms
+   ✓ rejects an unqualified composer before trusted input: {"dialog":true} 33ms
+   ✓ rejects an unqualified composer before trusted input: {"count":2} 46ms
+   ✓ rejects an unqualified composer before trusted input: {"label":"Unrelated editor"} 27ms
+   ✓ does not report a disappeared composer as successfully cleared 3ms
+   ✓ reads exact app identity from the captured rich composer and rejects multiple pills 2ms
+   × qualifies the captured app button and excludes same-name custom GPTs: {"description":"Literature research with durable session provenance.","duplicate":false,"selected":true} 17ms
+   ✓ qualifies the captured app button and excludes same-name custom GPTs: {"description":null,"duplicate":false,"selected":false} 35ms
+   ✓ qualifies the captured app button and excludes same-name custom GPTs: {"description":"Literature research with durable session provenance.","duplicate":true,"selected":false} 55ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/browser/chatgptAppComposer.test.ts > qualifies the captured app button and excludes same-name custom GPTs: {"description":"Literature research with durable session provenance.","duplicate":false,"selected":true}
+AssertionError: expected Error: Unable to select ChatGPT developer… to be null
+
+- Expected: 
+null
+
++ Received: 
+Error {
+  "message": "Unable to select ChatGPT developer app LitScout from the composer mention picker: Post selector not found: #prompt-textarea[contenteditable=\"true\"] [data-inline-selection-pill][data-symbol=\"ecosystemMention\"], div[data-composer-markdown][contenteditable=\"true\"][role=\"textbox\"][aria-label=\"Ask ChatGPT\"] [data-inline-selection-pill][data-symbol=\"ecosystemMention\"] ({\"url\":\"https://chatgpt.com/\",\"editorText\":\"@LitScout\",\"activeElement\":null,\"popovers\":[]}).",
+}
+
+ ❯ tests/browser/chatgptAppComposer.test.ts:267:25
+    265|  await vi.runAllTimersAsync();
+    266|  if (selected) {
+    267|   expect(await pending).toBeNull();
+       |                         ^
+    268|   expect(clicked).toEqual([app]);
+    269|  } else {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 10 passed (11)
+   Start at  17:48:36
+   Duration  2.75s (transform 1.47s, setup 105ms, import 2.08s, tests 271ms, environment 0ms)
+

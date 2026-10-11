@@ -1,0 +1,32 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-issue253-triage
+
+ ✓ tests/browser/chatgptEcosystemMention.test.ts (7 tests) 167ms
+ ✓ tests/browser/promptComposerExpressions.test.ts (3 tests) 192ms
+ ✓ tests/browser/chatgptComposerTool.test.ts (21 tests) 2499ms
+     ✓ filters the open drawer and verifies the selected connector object  448ms
+     ✓ brings a retained tab forward before measuring the workbench attachment trigger  1587ms
+ ✓ tests/browser/promptComposer.test.ts (18 tests) 1485ms
+     ✓ checks the final pre-send guard after insertion (reject=false)  551ms
+     ✓ checks the final pre-send guard after insertion (reject=true)  503ms
+ ✓ tests/browser/chatgptSingleVisitContext.test.ts (4 tests) 535ms
+ ✓ tests/browser/chatgptDeveloperApps.test.ts (27 tests) 725ms
+     ✓ clears an ecosystem mention that first unwraps into literal composer text  544ms
+ ✓ tests/browser/chatgptAppComposer.test.ts (15 tests) 2044ms
+   ✓ rejects an unqualified composer before trusted input: {"dialog":true}  377ms
+   ✓ qualifies the captured app button and excludes same-name custom GPTs: {"description":"Literature research with durable session provenance.","duplicate":true,"selected":false}  503ms
+ ✓ tests/cli/chatgptDeveloperAppsCommand.test.ts (26 tests) 250ms
+ ✓ tests/browser/chatgptDeveloperAppLifecycle.test.ts (19 tests) 7028ms
+     ✓ refreshes a late terminal conversation before returning committed-Send failure: {"terminalFailure":true}  1298ms
+     ✓ refreshes a late terminal conversation before returning committed-Send failure: {"manualApproval":true}  933ms
+     ✓ preserves attributable WSL Windows loopback provenance through the canonical host alias  877ms
+     ✓ returns answer and refreshed terminal identity after exactly one Send  844ms
+     ✓ preserves terminal failure evidence without retry: {"terminalFailure":true,"effectState":"effect_observed"}  886ms
+     ✓ preserves terminal failure evidence without retry: {"uncertainSend":true,"effectState":"unknown"}  878ms
+     ✓ preserves terminal failure evidence without retry: {"manualApproval":true,"effectState":"effect_observed"}  871ms
+
+ Test Files  9 passed (9)
+      Tests  140 passed (140)
+   Start at  17:50:18
+   Duration  231.18s (transform 473.98s, setup 6.15s, import 1117.13s, tests 14.93s, environment 16ms)
+

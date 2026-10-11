@@ -1098,3 +1098,5 @@ Cold startup opens and records custody of a required replacement page before ret
 ChatGPT app tests qualify one visible enabled composer outside dialogs, supporting both legacy editor ID and the current rich Ask ChatGPT editor. Missing or ambiguous editors stop before input; a missing clear readback is not success. Exact app identity and account checks still apply.
 
 Current app-picker rows require the installed app description as well as name; a same-name custom GPT is insufficient. Missing description or duplicate matching rows stops selection. Legacy picker rows retain exact-name qualification. The selected pill must still carry the exact app identity before Send.
+
+Selected ChatGPT app mentions support current app-mention-name/path and legacy inline-pill attributes. Current app:// URI identity must match the accepted installed app before Send. Missing, malformed, foreign or multiple mentions stop submission. Clear/pristine checks include both shapes.

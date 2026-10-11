@@ -92,3 +92,6 @@ The unique visible enabled ChatGPT rich editor owned by the composer and outside
 
 **App mention option**:
 A qualified visible enabled picker row for the installed app. Current rows require its exact name and description to exclude same-name custom GPTs; the chosen composer pill must then prove the exact plugin identity before Send.
+
+**Selected app mention identity**:
+The exact installed app identifier retained by its composer pill, using legacy plugin attributes or a current complete app:// URI. Presence or display name alone does not authorize Send; malformed or multiple mentions do not qualify.

@@ -5,13 +5,13 @@ Lane: P90
 Integration: merge
 Work items: #253
 Owner: ecochran76; primary agent, serialized implementation.
-Branch: fix/issue253-current-app-picker
+Branch: fix/issue253-current-app-mention
 Target: main through PR merge
 Base: 9b324b3dc7d3f8f1ec50e3888f02e71c39047e02
 
 ## Current State
 
-Rich composer repair installed. Instrumented no-submit captures the real app picker while @LitScout is present: app BUTTON has only current app-menu CSS marker and exact installed name/description; later same-name custom GPT row appears. Legacy .popover/role/tabindex selectors do not qualify actual picker. Public-seam captured-button regression red in2.24s; current qualification waits for one matching app row using installed description and rejects missing metadata/duplicate rows before clicking. Exact app pill identity remains required.89 browser +47 CLI/capability focused tests pass; typecheck, full build, scoped lint and serial Standards/Spec review pass; installed/native acceptance pending. No original prompt/intent/result; browser53930/start39054099 last qualified alive.
+PR285 picker repair installed; native click selects correct app. Observer captures exact canonical app:// identity on app-mention-name/path SPAN, no legacy inline-pill attrs. Native old post-selector fails, prompt unsent, finally clears editor. Public-seam captured modern post-condition red in2.75s. Modern readiness/readback now supports exact URI identity with invalid/foreign/duplicate guards and shared clear/pristine pill counting. 140 focused tests9files +final17 affected, typecheck/scoped lint/final build and serial Standards/Spec review pass; installed/native acceptance pending; full native acceptance remains open.
 
 ## Scope and seams
 
@@ -105,3 +105,13 @@ Original PR284 no-submit terminal exit1/session15675, JSON0bytes: Visible select
 ## Revision | Current app-picker row qualification
 
 Trigger-time observer captured exact native mention draft plus app row at22:32:20.139Z, then same-name custom GPT22:32:21.792Z. Actual current row BUTTON has CSS --app-menu-item-height marker, no legacy menu role/id/tabindex. Source old selector deterministically cannot qualify it. Preserve current rich editor qualification; wait for exactly one visible enabled current row matching installed name+description, or one exact-label legacy row, then click only marked choice and verify app pill identity. Current row without installed description is unqualified because a same-name GPT can arrive first. Carry description through both no-submit and submission paths; never replace exact plugin identity with text proof. Browser-native acceptance still required.
+
+
+### Installed current picker qualification
+
+PR285 integrated b68bec2408caa08b4694d2473ff5e9f4c131a0a5, validated284943b9b2905c928ea2ecbfbb77c65db291a3ba. CLI/API user-runtime-issue253-picker,591files0mismatches/extra. Installed public submission boundary verifies selected full config plus installed description,1invocation/0provider effects. Original browser53930 absent before API promotion, actor unknown. API KillModeprocess preserved. LitScout one original no-submit test authorized with bounded read-only trigger observer to capture selected pill before finally cleanup; no original prompt until account/app/composer/process/native receipt qualifies.
+
+
+## Revision | Current app mention identity
+
+Native trigger22:46:04.310Z target66C68BA235702AD0CCD94FAF886FC3A8 shows exact original app pill SPAN with app-mention-name and canonical app:// app-mention-path; no legacy inline-selection/data-symbol. Post-terminal22:48:18.998Z proves original target retained, browser9470/start39172750 alive, empty composer and no app pills; original Demo10 intent/result absent. Captured post-selector/readback regression catches old selector despite successful exact app click. Recognize current semantic attributes, parse only a complete canonical app URI token, preserve exact accepted identity before Send and count both modern/legacy mentions in pristine/clear guards. No mixed/unknown mention acceptance or implicit retry.

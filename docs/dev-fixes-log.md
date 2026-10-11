@@ -1,3 +1,7 @@
+## 2026-10-11 — Current app mentions prove identity with app:// URIs (#253)
+
+Selected app pills use app-mention-name/path without old inline-selection/data-symbol attributes. Recognize semantic current attributes and parse a complete canonical app URI token. Readiness is separate from exact accepted app identity before Send; malformed, foreign and multiple mentions remain blocking. Pristine and clear guards count both current and legacy mentions.
+
 ## 2026-10-11 — App picker rows differ from same-name custom GPTs (#253)
 
 Current mention app rows are plain buttons with app-menu CSS markers, not legacy popover menu items. Wait for one visible enabled row matching installed app name and description; missing metadata or duplicate rows stops selection. Pass description through both native app paths, and retain exact app-pill identity before Send. Capture trigger-time DOM before native finally cleanup when diagnosing transient picker state.
