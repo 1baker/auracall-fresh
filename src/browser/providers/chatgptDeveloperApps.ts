@@ -17,6 +17,7 @@ import {
 	reloadAndSettle,
 	setInputValue,
 	waitForPredicate,
+	PredicateEvaluationTimeoutError,
 } from "../service/ui.js";
 import type { ChromeClient } from "../types.js";
 import {
@@ -876,7 +877,11 @@ async function readChatgptDeveloperMode(client: ChromeClient): Promise<boolean |
 			client.Runtime,
 			`Boolean(document.querySelector('button[role="switch"][aria-label="Developer mode"]'))`,
 			{ timeoutMs: 8_000, description: "ChatGPT Developer mode switch" },
-		);
+		).catch((error: unknown) => {
+			if (!(error instanceof PredicateEvaluationTimeoutError)) throw error;
+			debugDeveloperApps("Developer mode observation timed out; retaining unknown state");
+			return { ok: false };
+		});
 		if (!ready.ok) {
 			// Inventory and current Developer-mode settings are independent observations.
 			// An absent control must never establish permission to create or replace apps.

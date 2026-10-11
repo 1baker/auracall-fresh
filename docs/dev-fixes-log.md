@@ -24692,3 +24692,7 @@ Browser and new-target opening are independent of desktop input ownership. Autom
 ### 2026-10-11 | Issue253 desktop ownership
 
 An empty desktop-control owner.json reproduced the installed JSON.parse crash without browser/provider dependencies. Validate record shape and report unknown custody explicitly, preserving bytes. Publish via pending file plus atomic rename rather than direct write. This prevents partial visibility but does not prove the origin of the historical empty record or authorize deleting its lock/transition.
+
+### 2026-10-11 | Optional Developer-mode deadline
+
+Final evaluation timeout in optional Developer-mode observation threw instead of preserving complete inventory. Distinguish the shared bounded evaluation timeout by type; provider records unknown mode while preserving unrelated errors and strict create/refresh guards. Adapter public-seam repro and133 focused tests qualify source behavior, not native submission.

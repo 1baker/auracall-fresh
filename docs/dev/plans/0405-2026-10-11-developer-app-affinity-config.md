@@ -5,13 +5,13 @@ Lane: P90
 Integration: merge
 Work items: #253
 Owner: ecochran76; primary agent, serialized implementation.
-Branch: fix/issue253-app-affinity-config
+Branch: fix/issue253-developer-mode-observation
 Target: main through PR merge
 Base: 9b324b3dc7d3f8f1ec50e3888f02e71c39047e02
 
 ## Current State
 
-Maintainer accepted the Issue253 agent brief. Actual runBrowserMode guard reproduced the exact reported missing-configuration failure before transport. The submission boundary regression failed red; the minimal forwarding repair passes 69 focused tests. PR276 integrated source at90b17d24124421fce5ff5e3eabb212a0596cff7e. Installed CLI matches590 compiled files and installed hermetic boundary passes. LitScout executed one native no-submit test; it failed at DesktopControlGate.owner on a persistently zero-byte ownership record before reaching submission. Demo10 remains unsent. Explicit bounded unknown-ownership recovery authorization is pending; no gate files changed.
+Original affinity forwarding repair integrated/installed. Browser opening is independently accepted. Ownership validation/publication repair integrated/installed; exact operator-authorized unknown ownership recovery preserved both original paths. Recovered no-submit acceptance reached Developer-mode evaluation timeout after280ms, with no app/account selection or prompt effect established. Current packet repairs optional mode-observation timeout through a typed shared timeout and provider-local unknown result.133 focused tests pass; build/install/native qualification pending. Full Issue253 closure requires coordinated native submission evidence.
 
 ## Scope and seams
 
@@ -59,3 +59,9 @@ Operator authorized continuation after identifying recovery as the remaining bou
 ### Recovered native outcome
 
 Single original installed no-submit command terminal exit1: Developer mode switch timeout after280ms. Ownership parser failure is no longer the first boundary. One new ChatGPT page, no original target removed, native JSON0 bytes and no submission intent/result. Account/app selection unverified. Primary inspected stderr and postreadback independently. Read-only current UI evidence requested; no repeated native test or provider submission. Source requests8000ms at Developer-mode wait, so observed280ms remains an unqualified deadline/runtime boundary rather than proof that the setting is absent. Full Issue253 acceptance remains open.
+
+## Revision | Optional Developer-mode observation timeout
+
+Fast public adapter readState reproduction captures complete fixture inventory then times out its last Developer-mode evaluation. Treat only the shared typed predicate-evaluation timeout as unknown Developer mode, preserving inventory and transport/navigation/cancellation errors. Existing-app test still requires exact account/app and complete inventory; create/refresh still require confirmed enabled mode. Native acceptance will first verify no-submit selection, then one bounded once-only prompt with LitScout if prerequisites pass. No implicit retry or uncertain resubmission.
+
+Goal execution budget starts2026-10-11T21:50:44Z; stop with durable checkpoint before2026-10-11T23:50:44Z or1MM tokens.

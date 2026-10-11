@@ -974,6 +974,14 @@ async function dispatchMatchedTrigger(
   };
 }
 
+/** A bounded predicate evaluation expired; this does not establish a false predicate. */
+export class PredicateEvaluationTimeoutError extends Error {
+  constructor(description: string, timeoutMs: number) {
+    super(`Timed out waiting for ${description} after ${timeoutMs}ms.`);
+    this.name = 'PredicateEvaluationTimeoutError';
+  }
+}
+
 export async function waitForPredicate(
   Runtime: ChromeClient['Runtime'],
   expression: string,
@@ -1004,9 +1012,7 @@ export async function waitForPredicate(
         if (settled) return;
         settled = true;
         reject(
-          new Error(
-            `Timed out waiting for ${options.description ?? 'predicate'} after ${evaluationTimeoutMs}ms.`,
-          ),
+          new PredicateEvaluationTimeoutError(options.description ?? 'predicate', evaluationTimeoutMs),
         );
       }, evaluationTimeoutMs);
       evaluation.then(
