@@ -22014,3 +22014,12 @@ passed. No provider submissions, installed runtime changes or lease acceptance.
 Provider-free deadline repair: retained red reproduced, both workloads reject at
 and after hard expiry without timer execution. Focused53 tests/typecheck/lint pass.
 No provider request, installed change or new wake.
+
+## Turn 634 | 2026-10-10
+
+Plan0402 characterization in isolated refactor/stored-browser-launch-plan from
+e3d6d94c1. Explicit ChatGPT/default Grok, canonical/legacy source fields and browser
+fallback expose incompatible precedence for all proposed projected fields. Preserve
+current behavior; park the refactor under the stopping rule, with retained public
+fixtures and field map. Review and PR delivery are separate from integration and
+installed/live adoption. Memory forbidden; no durable-memory update requested.

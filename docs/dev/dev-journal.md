@@ -1,3 +1,12 @@
+## 2026-10-10 | Plan0402 characterized; convergence parked
+
+Isolated refactor/stored-browser-launch-plan from e3d6d94c1. Three public-seam
+fixtures expose runtime-versus-browser/global differences across every proposed
+launch field. Keep behavior unchanged; no equivalent duplicate can be deleted
+through the existing plan. Evidence: docs/dev/evidence/plan0402/characterization.md.
+Focused39 tests, mutation sensitivity, typecheck/lint and source review constitute
+this bounded packet; no installed/live claim or renewed Issue226 acceptance.
+
 ## 2026-10-10 | Plan0395 memory routing
 
 Issue251 owner ecochran76 IN_PROGRESS. Canonical auracall_main route and routing-only manifest are documented; unresolved destination and actual service failure are separate causes. Shared Graphiti code and unrelated root work are preserved. Independent review passed; atlas job completed-visible and the original discovery query now returns auracall_main. Direct source-group repair retrieval passed. Plan0395 closes; remote CI reported no checks.

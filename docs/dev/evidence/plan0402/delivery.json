@@ -1,0 +1,11 @@
+{
+  "baseRefName": "main",
+  "headRefName": "refactor/stored-browser-launch-plan",
+  "headRefOid": "3044ca6dded455ed7c5a751a08d7378364a708d3",
+  "mergeStateStatus": "CLEAN",
+  "number": 260,
+  "state": "OPEN",
+  "statusCheckRollup": [],
+  "url": "https://github.com/ecochran76/auracall/pull/260",
+  "receiptScope": "PR creation readback; subsequent docs-only delivery commit updates head"
+}

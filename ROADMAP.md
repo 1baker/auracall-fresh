@@ -4480,3 +4480,10 @@ See [docs/dev/browser-service-upgrade-backlog.md](docs/dev/browser-service-upgra
   cadence.
 
 - P18 remains paused: [Plan 0325](docs/dev/plans/0325-2026-09-01-installed-history-materialization-fairness-canary.md), now held on a stable published operational branch; no live allowance was used by maintenance.
+
+## Plan0402 | Stored browser launch precedence
+
+[Characterization](docs/dev/plans/0402-2026-10-10-stored-launch-plan-characterization.md)
+completed provider-free. Convergence is parked: every proposed field has a known
+precedence/normalization difference, and managed directory already consumes the
+plan. A future migration needs an explicit precedence contract; no runtime change.
