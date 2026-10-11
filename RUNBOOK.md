@@ -22001,3 +22001,10 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
 ## Turn | 2026-10-10 | Plan0393
 
 Issue225 installed apps list reproduces45second timeout and missing-switch failure. Complete app data precedes settings failure. Minimal public adapter replay RED2.26seconds, then GREEN when missing control reports unknown; affirmative mutation guards retained. Private live evidence stays outside Git. Isolated worktree preserves unrelated root changes; source/build/review and installed acceptance remain distinct.
+
+## Turn | 2026-10-10 | Plan0399
+
+Qualified API model-ID repair in isolated fix/qualified-model-id from97f5638ef.
+CLI dry-run baseline selected claude-4.5-sonnet for vendor-qualified ID; repaired
+resolution preserves the exact ID. Focused96 tests, typecheck and targeted lint
+passed. No provider submissions, installed runtime changes or lease acceptance.

@@ -24447,3 +24447,10 @@ settlement. Stop on cancellation/error/ownership loss and preserve the absolute
 deadline; forward cancellation through the legacy browser affinity path.
 Pre-close active/unknown DOM protection remains independent. This source repair
 does not attribute the previous browser exit or prove live elapsed acceptance.
+
+## 2026-10-10 | Qualified API model identity (Plan0399)
+
+Fuzzy provider aliases rewrote slash-qualified custom IDs before passthrough.
+Classify slash-qualified IDs before alias resolution and preserve trimmed case.
+CLI dry-run reproduced wrong Sonnet selection before repair; caller regressions
+retain exact single/multi-model identities alongside existing shorthand coverage.

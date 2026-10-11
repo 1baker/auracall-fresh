@@ -198,6 +198,16 @@ describe('resolveApiModel', () => {
     expect(() => resolveApiModel('gpt-5.1-codex-max')).toThrow('gpt-5.1-codex-max is not available yet');
   });
 
+  test.each([
+    'vendor/claude-sonnet-custom-v1',
+    'google/gemini-custom-pro',
+    'x-ai/grok-custom',
+    'vendor/gpt-5.1-codex-max-custom',
+    'Vendor/Model-Pro-V1',
+  ])('preserves the exact qualified API ID %s', (model) => {
+    expect(resolveApiModel(`  ${model}  `)).toBe(model);
+  });
+
   test('passes through unknown names (OpenRouter/custom)', () => {
     expect(resolveApiModel('instant')).toBe('instant');
   });
