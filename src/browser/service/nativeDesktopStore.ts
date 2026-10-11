@@ -105,7 +105,7 @@ export class NativeDesktopStore {
   }
 }
 
-export async function observeNativeBrowser(pid: number, managedProfileDir: string, display: string, context?: { origin: string; application: string; assignment: RemoteViewAssignment }): Promise<Pick<NativeDesktopBrowser, 'processStart' | 'bootId' | 'executable'>> {
+async function readNativeBrowserProcess(pid: number, managedProfileDir: string, display: string) {
   const [stat, command, environment, bootId, executable] = await Promise.all([
     fs.readFile(`/proc/${pid}/stat`, 'utf8'), fs.readFile(`/proc/${pid}/cmdline`, 'utf8'), fs.readFile(`/proc/${pid}/environ`, 'utf8'),
     fs.readFile('/proc/sys/kernel/random/boot_id', 'utf8'), fs.realpath(`/proc/${pid}/exe`),
@@ -114,17 +114,40 @@ export async function observeNativeBrowser(pid: number, managedProfileDir: strin
   const argv = command.split('\0').filter(Boolean);
   const escapedDirectory = managedProfileDir.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   // Chromium can replace argv with a flattened process title and erase environ.
-  // That representation requires a separate current native window/PID join.
+  // Interaction requires a current window join; opening uses retained process and assignment custody.
   const flattened = argv.length === 1 && new RegExp(`(?:^| )--user-data-dir=${escapedDirectory}(?= (?:--[A-Za-z0-9-]+(?:[= ]|$)|about:blank(?: |$))|$)`).test(argv[0] ?? '');
   const exactArgument = argv.some(arg => arg === `--user-data-dir=${managedProfileDir}`);
   if (!processStart || (!exactArgument && !flattened)) throw new Error('Native browser process/profile/desktop ownership mismatch.');
   const displayRetained = environment.split('\0').includes(`DISPLAY=${display}`);
-  if (flattened || !displayRetained) {
+  return { identity: { processStart, bootId: bootId.trim(), executable },
+    requiresWindow: flattened || !displayRetained,
+    observedDisplay: environment.split('\0').find(item => item.startsWith('DISPLAY=')) };
+}
+
+export async function observeNativeBrowser(pid: number, managedProfileDir: string, display: string, context?: { origin: string; application: string; assignment: RemoteViewAssignment }): Promise<Pick<NativeDesktopBrowser, 'processStart' | 'bootId' | 'executable'>> {
+  const observed = await readNativeBrowserProcess(pid, managedProfileDir, display);
+  if (observed.requiresWindow) {
     if (!context || !await new RemoteViewApplication(context).hasBrowserWindow(context.assignment, pid)) {
       throw new Error('Native browser process/profile/desktop ownership mismatch.');
     }
   }
-  return { processStart, bootId: bootId.trim(), executable };
+  return observed.identity;
+}
+
+/** Retained launch custody permits opening a window; current windows qualify later interaction. */
+export async function verifyNativeBrowserForOpening(binding: NativeDesktopBrowser): Promise<boolean> {
+  try {
+    const observed = await readNativeBrowserProcess(binding.pid, binding.managedProfileDir, binding.display);
+    const current = observed.identity;
+    if (current.processStart !== binding.processStart || current.bootId !== binding.bootId ||
+      current.executable !== binding.executable ||
+      (observed.observedDisplay && observed.observedDisplay !== `DISPLAY=${binding.display}`)) return false;
+    if (observed.requiresWindow) {
+      const environment = await new RemoteViewApplication(binding).launchEnvironment(binding.assignment);
+      if (environment.DISPLAY !== binding.display) throw new Error('Native browser desktop display ownership changed.');
+    }
+    return true;
+  } catch (error) { if ((error as NodeJS.ErrnoException).code === 'ENOENT') return false; throw error; }
 }
 
 export async function verifyNativeBrowser(binding: NativeDesktopBrowser): Promise<boolean> {
@@ -143,6 +166,6 @@ export async function assertNoLiveNativeDesktopBrowser(managedProfileDir: string
     path.resolve(binding.managedProfileDir) === path.resolve(managedProfileDir) ||
     (endpoint?.port === binding.cdpPort && canonical(endpoint.host ?? '127.0.0.1') === canonical(binding.cdpHost)));
   for (const binding of candidates) {
-    if (await verifyNativeBrowser(binding)) throw new Error('This browser is still bound to a native desktop. Close it explicitly before selecting root or changing desktop placement.');
+    if (await verifyNativeBrowserForOpening(binding)) throw new Error('This browser is still bound to a native desktop. Close it explicitly before selecting root or changing desktop placement.');
   }
 }

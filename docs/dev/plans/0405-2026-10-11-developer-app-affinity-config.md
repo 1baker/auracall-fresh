@@ -5,13 +5,13 @@ Lane: P90
 Integration: merge
 Work items: #253
 Owner: ecochran76; primary agent, serialized implementation.
-Branch: fix/issue253-developer-mode-observation
+Branch: fix/issue253-native-opening-custody
 Target: main through PR merge
 Base: 9b324b3dc7d3f8f1ec50e3888f02e71c39047e02
 
 ## Current State
 
-Original affinity forwarding repair integrated/installed. Browser opening is independently accepted. Ownership validation/publication repair integrated/installed; exact operator-authorized unknown ownership recovery preserved both original paths. Recovered no-submit acceptance reached Developer-mode evaluation timeout after280ms, with no app/account selection or prompt effect established. Current packet repairs optional mode-observation timeout through a typed shared timeout and provider-local unknown result.133 focused tests pass; build/install/native qualification pending. Full Issue253 closure requires coordinated native submission evidence.
+Original affinity repair, opening/input separation, ownership validation/recovery and optional Developer-mode timeout repair are integrated/installed. Subsequent no-submit and instrumented reproduction fail at native current-window proof before creating the next tab. Real wire red/green isolates that dependency; source now separates exact retained process/current assignment proof for opening from current window/input proof for interaction.29 focused tests, typecheck/build/scoped lint pass. Integration/install and native account/app/submission acceptance remain. Historical browser exits remain unattributed.
 
 ## Scope and seams
 
@@ -65,3 +65,11 @@ Single original installed no-submit command terminal exit1: Developer mode switc
 Fast public adapter readState reproduction captures complete fixture inventory then times out its last Developer-mode evaluation. Treat only the shared typed predicate-evaluation timeout as unknown Developer mode, preserving inventory and transport/navigation/cancellation errors. Existing-app test still requires exact account/app and complete inventory; create/refresh still require confirmed enabled mode. Native acceptance will first verify no-submit selection, then one bounded once-only prompt with LitScout if prerequisites pass. No implicit retry or uncertain resubmission.
 
 Goal execution budget starts2026-10-11T21:50:44Z; stop with durable checkpoint before2026-10-11T23:50:44Z or1MM tokens.
+
+### Installed optional-mode repair
+
+PR281 integrated cd02026d147fcfe7e1923b0532d2c4e1dbbffc63, CLI/API user-runtime-issue253-mode,590 compiled files0 mismatches. Installed readState harness retains complete inventory/mode unknown across39 polls and restores route without provider effects. API activePID54798. Prior browser PID96300 is now absent and registry no longer binds its managed browser; exit actor unknown. LitScout confirms no pending submission intent/result. One native no-submit run authorized with fresh managed opening and120s outer guard; exact new process/receipt qualification required before once-only prompt acceptance.
+
+## Revision | Opening custody without an existing window
+
+PR281 installed and hermetic mode deadline qualified. Fresh native no-submit and one instrumented reproduction failed at current native window/PID join; no prompt effect. A real wire fixture reproduces rejection of createTarget after an exactly retained scrubbed process has no current window. Opening now qualifies retained profile/PID/start/boot/executable and current assignment launch environment/display. Existing-page commands still require current window proof and input ownership. Reuse and root-placement interlock retain process custody even with no current window.29 tests in7 files pass, including changed process/native generation rejection. Build/install/native acceptance pending.

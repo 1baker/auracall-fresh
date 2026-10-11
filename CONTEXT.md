@@ -80,3 +80,6 @@ _Avoid_: Version-only runtime identity
 
 **Desktop control ownership record**:
 The retained identity and role governing desktop interaction. Invalid or incomplete ownership preserves unknown custody and blocks interaction with recovery guidance. Atomic publication prevents partially written records from being exposed. Browser opening is independent of this interaction ownership.
+
+**Browser opening custody**:
+The retained managed-profile process identity plus current desktop assignment that qualifies creation of a new tab/window. A current window cannot be a prerequisite for creating its replacement. Existing-page interaction separately requires current window proof and desktop input ownership.

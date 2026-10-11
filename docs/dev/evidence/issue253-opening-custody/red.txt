@@ -1,0 +1,33 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-issue253-triage
+
+ ❯ tests/browser/nativeDesktopCdp.test.ts (2 tests | 1 failed | 1 skipped) 232ms
+   ↓ native desktop ownership excludes actual wire commands and rejects reused process receipts
+   × a retained scrubbed process can create its next window while existing-page commands require current window proof 231ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/browser/nativeDesktopCdp.test.ts > a retained scrubbed process can create its next window while existing-page commands require current window proof
+AssertionError: promise rejected "Error: Native browser process/profile/des…" instead of resolving
+ ❯ tests/browser/nativeDesktopCdp.test.ts:78:72
+     76|     client=await CDP({target:`ws://127.0.0.1:${wire.port}`,protocol:{v…
+     77|     visible=false;
+     78|     await expect(client.send('Target.createTarget',{url:'about:blank'}…
+       |                                                                        ^
+     79|     await expect(client.send('Page.reload')).rejects.toThrow('ownershi…
+     80|     visible=true;
+
+Caused by: Error: Native browser process/profile/desktop ownership mismatch.
+ ❯ observeNativeBrowser src/browser/service/nativeDesktopStore.ts:124:13
+ ❯ verifyNativeBrowser src/browser/service/nativeDesktopStore.ts:134:21
+ ❯ ownedEffect src/browser/service/desktopControlRuntime.ts:32:107
+ ❯ tests/browser/nativeDesktopCdp.test.ts:78:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 skipped (2)
+   Start at  16:59:19
+   Duration  702ms (transform 133ms, setup 59ms, import 211ms, tests 232ms, environment 0ms)
+

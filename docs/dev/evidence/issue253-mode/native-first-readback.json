@@ -1,0 +1,10 @@
+{
+  "installed_source": "cd02026d147fcfe7e1923b0532d2c4e1dbbffc63",
+  "no_submit_exit": 1,
+  "first_failure": "Native browser process/profile/desktop ownership mismatch",
+  "native_receipt_bytes": 0,
+  "browser_registry_matching_entries_after": 0,
+  "provider_submission": false,
+  "old_browser_exit_actor": "unknown",
+  "next_probe": "one retained-browser no-submit with selective process-read trace"
+}
