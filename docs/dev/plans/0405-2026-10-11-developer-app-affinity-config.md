@@ -125,3 +125,20 @@ PR286 integrated055e69d2684c620a49ca0d8a84745dc1272043aa, validatedcb3097b4ad75e
 ## Revision | Bounded startup close confirmation
 
 Latest native run holds replacement under lease9e66ce7c-cce5-406b-a04d-1a9fc7613402 after immediate old-target inspection remains present. Browser39770/start39272889 survives; later replacement4073D410C78617F45F8AFB6204FB8D8B is sole page. Startup ID was not recorded, so later state is not exact close-attribution proof. Strengthened existing public coordinator fixture goes red in372ms when close acknowledges and physical removal occurs50ms later. Wait at most2s for removal with per-read deadline and100ms poll, never resend close. Never-disappearing, changed URL and stalled inspector fail conservatively while replacement/browser custody is preserved. Native original acceptance still required.
+
+
+### Installed bounded close confirmation
+
+PR287 integrated f83205d4d1650fe600ddd7e1a25f6eeb77fc0945, validated a1d17c61f88ab9a061f6393e644ac694858bc90e. CLI/MCP/API use user-runtime-issue253-settlement;591 compiled files match exactly, no extras. Installed public coordinator boundary verifies50ms asynchronous removal, one close request, replacement leased/accounted before retirement, browser alive and zero provider effects. API active/running PID93031, KillMode=process after software-only restart. Browser39770 was already absent before promotion/restart; exit actor unknown. One original native no-submit acceptance with120s guard and bounded read-only observer handed to LitScout at23:15Z. Original frozen once-only submission remains gated on primary verification; no resubmission or new wakes. Stop/checkpoint before23:50:44Z.
+
+
+### Native no-submit qualification and original once-only acceptance
+
+Original native receipt completed app selection/clear, exact accepted URI captured before cleanup; fresh same process/account/home empty composer and zero pills verified. CLI remained alive until120s outer timeout; cause unknown, final no active app-test. Lease lost/restart-unverified with settled effects and null owners; no manual recovery. See [native no-submit evidence](../evidence/issue253-startup-close-settlement/native-no-submit.md). Primary independently verified evidence and authorized original frozen Demo10 once-only native submission with fresh governed prerequisites; monitor until completion or23:45Z and checkpoint before23:50:44Z. Full Issue253 acceptance remains open.
+
+
+## Revision | Inventory-to-submission lease handoff
+
+Original once-only native submit failed pre_effect/process-owned, null conversation and no Send; intent preserved and no retry. Public CLI/real utility/real provisioner fixture reproduces exact failure13ms with matched scope/currentTTL. Observe inventory under utility lease, close and await successful settlement, then execute shared validation/submission outside utility callback. Ownership rules unchanged; failed settlement/account/confirmation/incomplete/ambiguous gates stop submission. Original live invocation exhausted; full native completion remains open. See [diagnosis](../evidence/issue253-submit-lease-handoff/diagnosis.md).
+
+Source lease handoff verification:61tests4files pass, scoped lint/typecheck/fullbuild pass. Serial Standards and Spec review each0 accepted blockers. Original native once-only acceptance exhausted beforeSend; no retry. Installation checkpoint pending.

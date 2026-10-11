@@ -280,6 +280,9 @@ or app registry to configuration.
 - `test <app>` without `--submit` selects the app in a blank composer, verifies
   the resulting ecosystem-mention app ID, sends nothing, and clears the
   composer.
+- Submitted `test` observes app inventory under utility custody and waits for
+  that custody to settle before the shared submission lifecycle acquires the
+  browser tab. Failed settlement stops the command before submission.
 - OAuth sign-in, MFA, consent, CAPTCHA, and other human-verification surfaces
   are returned as operator gates. Aura-Call does not enter credentials or
   override those surfaces.

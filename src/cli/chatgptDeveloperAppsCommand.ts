@@ -140,7 +140,14 @@ export async function executeChatgptDeveloperAppOperation(
 	input: ChatgptDeveloperAppOperationInput,
 	adapter: ChatgptDeveloperAppAdapter,
 ): Promise<ChatgptDeveloperAppOperationResult> {
-	let state = await adapter.readState();
+	return executeChatgptDeveloperAppOperationWithState(input, adapter, await adapter.readState());
+}
+
+async function executeChatgptDeveloperAppOperationWithState(
+	input: ChatgptDeveloperAppOperationInput,
+	adapter: ChatgptDeveloperAppAdapter,
+	state: ChatgptDeveloperAppState,
+): Promise<ChatgptDeveloperAppOperationResult> {
 	if (input.action === "list") {
 		return {
 			action: "list",
@@ -317,23 +324,53 @@ export async function runChatgptDeveloperAppOperationForCli(
 			);
 			abortController?.signal.throwIfAborted();
 			try {
+				if (input.action === "test" && input.submit) {
+					return {
+						action: "list" as const,
+						status: "observed" as const,
+						state: await active.adapter.readState(),
+					};
+				}
 				return await executeChatgptDeveloperAppOperation(input, active.adapter);
 			} finally {
 				await active.adapter.close().catch(() => undefined);
 				active.adapter = null;
 			}
 		};
-		if (!browser.runUtilityBrowserOperation) {
-			if (userConfig.browser?.tabConcurrencyMode === "tab-affinity") {
-				throw new Error("ChatGPT developer-app affinity requires utility-operation support.");
-			}
-			return run({});
+		if (
+			!browser.runUtilityBrowserOperation &&
+			userConfig.browser?.tabConcurrencyMode === "tab-affinity"
+		) {
+			throw new Error("ChatGPT developer-app affinity requires utility-operation support.");
 		}
-		return browser.runUtilityBrowserOperation({
-			options: { abortSignal: abortController?.signal },
-			mutability: input.action === "list" ? "read-only" : "provider-mutating",
-			run,
-		});
+		const submitting = input.action === "test" && input.submit;
+		const observed = browser.runUtilityBrowserOperation
+			? await browser.runUtilityBrowserOperation({
+					options: { abortSignal: abortController?.signal },
+					mutability: input.action === "list" || submitting ? "read-only" : "provider-mutating",
+					run,
+				})
+			: await run({});
+		if (!submitting) return observed;
+		// Inventory custody must settle before the shared submission lifecycle
+		// acquires this process's tab. It revalidates account/app identity before Send.
+		active.adapter = createAdapter(
+			browser,
+			(config) => createBrowser(config, { target: "chatgpt" }),
+			{
+				browserOperationOwned: dependencies.browserOperationOwned,
+			},
+		);
+		try {
+			return await executeChatgptDeveloperAppOperationWithState(
+				input,
+				active.adapter,
+				observed.state,
+			);
+		} finally {
+			await active.adapter.close().catch(() => undefined);
+			active.adapter = null;
+		}
 	};
 	try {
 		if (input.action !== "list") return await operation();

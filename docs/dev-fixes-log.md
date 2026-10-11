@@ -24720,3 +24720,7 @@ Current window/PID join was imposed before replacement-tab creation on a retaine
 ### 2026-10-11 | Cold-start last-page lifetime
 
 Closing the only incompatible startup page before creating its replacement can exit Chromium; a subsequent proc environment EACCES may be a zombie-state symptom. Qualify replacement custody before retiring startup, preserve startup on creation failure, and retain replacement lease if retirement fails. The original fixture missed browser lifetime; strengthened public coordinator regression detects it. Historical exit actors remain unknown.
+
+### 2026-10-11 | Issue253 nested inventory/submission custody
+
+Developer-app submitted test attempted shared process-tab acquisition while its outer exact inventory utility lease was active. A13ms real-seam fixture reproduces process-owned. Read inventory, close and settle utility custody before shared submission; preserve full config, confirmation/account/exact app/live before-Send checks and ownership gates. Failed settlement stops effects. Original native invocation was pre_effect and unrepeated; full acceptance remains open.

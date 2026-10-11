@@ -1,0 +1,54 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-issue253-triage
+
+ ❯ tests/cli/chatgptDeveloperAppsCommand.test.ts (27 tests | 1 failed | 26 skipped) 13ms
+     × settles inventory utility custody before the same process acquires the submission tab 12ms
+     ↓ binds developer-app mutations to the exact utility tab
+     ↓ exposes terminal completed evidence in JSON and text without resubmission
+     ↓ exposes terminal failed evidence in JSON and text without resubmission
+     ↓ bounds a stalled list operation and closes its adapter
+     ↓ does not let a stalled adapter close retain the outer list operation
+     ↓ lists the account-bound developer-app state without mutation
+     ↓ rejects app creation before any browser mutation without explicit confirmation
+     ↓ confirms a false Developer mode observation once before guarded create
+     ↓ fails closed when two Developer mode observations remain false
+     ↓ fails closed when two Developer mode observations remain null
+     ↓ rejects replacement when Developer mode is unknown without deleting the existing app
+     ↓ rejects create when the exact normalized app name already exists
+     ↓ fails closed when the live ChatGPT account does not match the expected account
+     ↓ replaces one exact app after confirmation, account verification, and absence proof
+     ↓ validates replacement inputs before deleting the exact app
+     ↓ refuses to recreate while the old app identity or name remains installed
+     ↓ does not recreate when exact-app deletion fails
+     ↓ fails before delete when a same-name sibling already makes replacement unsafe
+     ↓ returns structured create recovery when post-delete inventory is incomplete
+     ↓ returns structured create recovery when recreation throws after verified deletion
+     ↓ fails closed when an app name is ambiguous
+     ↓ returns an OAuth human gate from confirmed app creation
+     ↓ select-tests an exact app without submitting a prompt or requiring mutation confirmation
+     ↓ requires a second explicit confirmation before a test prompt is submitted
+     ↓ uninstalls only the exact resolved app after confirmation
+     ↓ rejects non-HTTPS remote MCP endpoints before opening the create form
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/cli/chatgptDeveloperAppsCommand.test.ts > executeChatgptDeveloperAppOperation > settles inventory utility custody before the same process acquires the submission tab
+Error: ChatGPT process tab acquisition failed: process-owned.
+ ❯ src/browser/providers/chatgptTabProvisioner.ts:96:13
+     94|      });
+     95|      if (!acquired.ok)
+     96|       throw new Error(`ChatGPT process tab acquisition failed: ${acqui…
+       |             ^
+     97|      const adopted = await input.registry.recordTargetAction({
+     98|       claim: acquired.value.claim,
+ ❯ withProcessTabAcquisition packages/browser-service/src/service/processTabAcquisition.ts:18:12
+ ❯ Object.<anonymous> tests/cli/chatgptDeveloperAppsCommand.test.ts:67:4
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 26 skipped (27)
+   Start at  18:22:30
+   Duration  2.68s (transform 1.75s, setup 67ms, import 2.38s, tests 13ms, environment 0ms)
+
