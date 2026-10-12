@@ -1,0 +1,13 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-issue253-triage
+
+ ✓ tests/browser/issue253InstalledDeadline.temp.test.ts (26 tests | 23 skipped) 2156ms
+     ✓ honors the selected response deadline through the shared lifecycle  742ms
+     ✓ uses the canonical browser default when no response deadline is configured  706ms
+     ✓ retains a shorter selected response deadline and never retries after Send  706ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed | 23 skipped (26)
+   Start at  21:59:00
+   Duration  7.08s (transform 3.54s, setup 51ms, import 4.69s, tests 2.16s, environment 0ms)
+

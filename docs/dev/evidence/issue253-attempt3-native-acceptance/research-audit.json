@@ -1,0 +1,47 @@
+{
+  "observedAt": "2026-10-12T03:01:32.922715+00:00",
+  "primaryInspected": {
+    "auditReceiptSha256": "1480e0180d1cfd1b2ec89bf4cac2e07a3e499f961c2957da6e652a097d6f4eea",
+    "candidateIndexSha256": "5177720fd3536bbacd70e01a81745f340267b63c4ce806219c6a8adb4321e07f",
+    "retainedCandidates": 39,
+    "candidateHashMismatches": 0,
+    "byService": {
+      "serpapi": 18,
+      "repec": 20,
+      "arxiv": 1
+    }
+  },
+  "litScoutReadOnlyAuditReported": {
+    "importedCandidateMatches": 6,
+    "session165": {
+      "workCount": 6,
+      "allKeep": true,
+      "allSelectionReasonsPresent": true
+    },
+    "sessionBaselineMatches": {
+      "152": true,
+      "153": true,
+      "154": true,
+      "155": true,
+      "156": true,
+      "157": true,
+      "158": true,
+      "159": true,
+      "160": true,
+      "161": true,
+      "162": true,
+      "163": true
+    },
+    "sourceNumericQualification": "Costs/MSPs/capacity/sensitivity modeled downstream scenarios; recovery/purity laboratory; not demonstrated commercial integrated costs",
+    "nativeArxiv": "exact native query yielded a matching retained candidate"
+  },
+  "coverage": "Prior20 checkpoint plus new2 exercised services, not22 useful outcomes; four unavailable remain unavailable. Prior20 not independently replayed.",
+  "limits": [
+    "Time-window cache provenance plus exact imported candidate IDs and submitted queries, not complete original tool response payload",
+    "No independent supporting-information audit; five originals remain unavailable per answer",
+    "No new provider requests/browser actions/memory writes"
+  ],
+  "nativeCliCollection": "failed; repaired installed collection requires new once-only authority",
+  "providerEffectsInAudit": 0,
+  "memoryDisposition": "forbidden"
+}
