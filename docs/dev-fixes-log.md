@@ -1,3 +1,7 @@
+## 2026-10-11 — Leased endpoints must retain browser process provenance (#253)
+
+Service discovery knew the browser PID but affinity/provisioner projections dropped it before remote authorization. Preserve qualified endpoint process/directory and bind existing account authorization to the exact leased target. CLI lease ownership is not browser identity. Regression must traverse app submission and real remote preflight, with absent legacy PID metadata; account mismatch and unknown process remain blocking.
+
 ## 2026-10-11 — Target close acknowledgment needs bounded confirmation (#253)
 
 A single immediate target-inventory read can reject a successful asynchronous startup retirement. After one close request, confirm disappearance with a2s read-only deadline. A remaining or changed target or stalled observation keeps the replacement lease idle and browser intact; never resend close or infer physical removal from acknowledgment. Missing historical target identity remains an evidence gap.

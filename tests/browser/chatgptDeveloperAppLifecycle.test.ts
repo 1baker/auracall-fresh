@@ -5,6 +5,8 @@ import { createChatgptDeveloperAppBrowserAdapter } from "../../src/browser/provi
 import { runBrowserMode } from "../../src/browser/index.js";
 import { submitChatgptDeveloperApp } from "../../src/browser/chatgptDeveloperAppSubmission.js";
 import { BrowserAutomationError } from "../../src/oracle/errors.js";
+import { BrowserService } from "../../src/browser/service/browserService.js";
+import { resolveBrowserLaunchPlan } from "../../src/browser/service/browserLaunchPlan.js";
 import { readChromePid } from "../../src/browser/profileState.js";
 import { WINDOWS_LOOPBACK_REMOTE_HOST } from "../../packages/browser-service/src/windowsLoopbackRelay.js";
 
@@ -82,6 +84,33 @@ vi.mock("../../src/browser/profileStore.js", async (original) => ({
 vi.mock("../../src/browser/processCheck.js", async (original) => ({
 	...(await original<typeof import("../../src/browser/processCheck.js")>()),
 	isChromeAlive: vi.fn(async () => true),
+}));
+
+vi.mock("../../src/browser/tabConcurrencyRuntime.js", async (original) => {
+	const actual = await original<typeof import("../../src/browser/tabConcurrencyRuntime.js")>();
+	const { createInMemoryBrowserTabLeaseRegistry } = await import(
+		"../../packages/browser-service/src/service/tabLeaseRegistry.js"
+	);
+	const { createInMemoryProviderInteractionLedger } = await import(
+		"../../packages/browser-service/src/service/interactionLedger.js"
+	);
+	return {
+		...actual,
+		createBrowserTabConcurrencyRuntime: () => ({
+			mode: "tab-affinity",
+			enabled: true,
+			storageRoot: null,
+			registry: createInMemoryBrowserTabLeaseRegistry(),
+			ledger: createInMemoryProviderInteractionLedger(),
+			readStatus: vi.fn(),
+		}),
+	};
+});
+vi.mock("../../packages/browser-service/src/chromeLifecycle.js", async (original) => ({
+	...(await original<typeof import("../../packages/browser-service/src/chromeLifecycle.js")>()),
+	openChromeTarget: fixture.localOpen,
+	listChromeTargets: vi.fn(async () => []),
+	closeRemoteChromeTarget: fixture.closeTarget,
 }));
 
 const app = { name: "Fixture App", pluginId: "plugin_fixture", appIds: ["fixture"] };
@@ -217,6 +246,63 @@ describe("developer app to real shared local lifecycle", () => {
 });
 
 describe("developer app to real shared remote lifecycle", () => {
+	it.each([
+		{ browserProcessId: 1234, wrongIdentity: false, originalConfig: false, completed: true },
+		{ browserProcessId: 1234, wrongIdentity: false, originalConfig: true, completed: true },
+		{ browserProcessId: null, wrongIdentity: false, originalConfig: false, completed: false },
+		{ browserProcessId: 1234, wrongIdentity: true, originalConfig: false, completed: false },
+	])("carries managed browser provenance through affinity without a legacy PID file: %j", async (scenario) => {
+		setup({ wrongIdentity: scenario.wrongIdentity });
+		const minimalConfig = {
+			auracallProfile: "fixture",
+			model: "current",
+			services: config.services,
+			browser: {
+				tabConcurrencyMode: "tab-affinity" as const,
+				remoteChrome: { host: "127.0.0.1", port: 12345 },
+			},
+		};
+		const affinityConfig = scenario.originalConfig
+			? {
+					...config,
+					model: "current",
+					browser: { ...config.browser, tabConcurrencyMode: "tab-affinity" as const },
+				}
+			: minimalConfig;
+		const plan = resolveBrowserLaunchPlan({
+			source: { kind: "user-config", config: affinityConfig as never },
+			intent: { provider: "chatgpt" },
+		});
+		const resolveTarget = vi
+			.spyOn(BrowserService.prototype, "resolveServiceTarget")
+			.mockResolvedValue({
+				host: "127.0.0.1",
+				port: 12345,
+				managedBrowserProfile: plan.managedBrowserProfile.directory,
+				browserProcessId: scenario.browserProcessId,
+			} as never);
+		fixture.localOpen.mockResolvedValue({ id: "fixture-target", url: "https://chatgpt.com/" });
+		vi.mocked(readChromePid).mockResolvedValue(null);
+		try {
+			const result = await submitChatgptDeveloperApp(affinityConfig as never, app, "Use app", {
+				browserOperationOwned: true,
+			});
+			expect(result, result.message).toMatchObject({
+				status: scenario.completed ? "completed" : "failed",
+				effectState: scenario.completed ? "effect_observed" : "pre_effect",
+			});
+			expect(fixture.submit).toHaveBeenCalledTimes(scenario.completed ? 1 : 0);
+			if (scenario.completed) {
+				expect(readChromePid).not.toHaveBeenCalled();
+				expect(assertProviderSessionAuthorization).toHaveBeenCalledWith(expect.anything(), expect.anything(), { browserProcessId: 1234, browserTargetId: "fixture-target" });
+			} else {
+				expect(result.message).toContain(scenario.wrongIdentity ? "provider_session_dimension_conflict" : "provider_session_provenance_missing");
+			}
+		} finally {
+			resolveTarget.mockRestore();
+		}
+	});
+
 	it("preserves attributable WSL Windows loopback provenance through the canonical host alias", async () => {
 		setup();
 		const windowsConfig = { ...config, model: "current", browser: { ...config.browser, remoteChrome: { host: WINDOWS_LOOPBACK_REMOTE_HOST, port: 12345 } } };

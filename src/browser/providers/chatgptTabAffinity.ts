@@ -13,6 +13,8 @@ export interface RunChatgptPromptOnLeasedTabInput {
 	endpoint: {
 		host: string;
 		port: number;
+		browserProcessId?: number | null;
+		managedBrowserProfile?: string;
 	};
 	options?: BrowserProviderListOptions;
 	input: PromptInput;
@@ -48,6 +50,23 @@ export function buildChatgptLeasedPromptOptions(
 		preserveActiveTab: !lease.processBinding,
 		tabLifecycle: "retain",
 		tabTargetId: lease.targetId,
+		...(request.options?.providerSessionAuthorization
+			? {
+					providerSessionAuthorization: {
+						...request.options.providerSessionAuthorization,
+						context: {
+							...request.options.providerSessionAuthorization.context,
+							browserProcessId: endpoint.browserProcessId ?? null,
+							managedBrowserProfile:
+								endpoint.managedBrowserProfile ??
+								request.options.providerSessionAuthorization.context.managedBrowserProfile,
+							browserTargetId: lease.targetId,
+							devtoolsHost: endpoint.host,
+							devtoolsPort: endpoint.port,
+						},
+					},
+				}
+			: {}),
 	};
 }
 

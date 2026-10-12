@@ -156,3 +156,7 @@ User explicitly authorized one new attempt after the Matt original-scenario reco
 New native attempt failedpre_effect/provider_session_provenance_missing, nullCID/noSend. Fresh samebrowser/account/empty screenshot and leaseadoption1 independently inspected; PR288 acquisition advanced, provenance gate remains. CLIterminal pending outerguard. [Renewed native evidence](../evidence/issue253-renewed-native-acceptance/analysis.md). No retry or sourcechange.
 
 Final native terminal01:02:21.401Z/exit124; failedJSON and observer-completion timestamps recorded separately. Fresh final samebrowser/account/empty and lease lost/restart-unverified/effectnone/adoption1 verified. Scoped Session152–163 membership unchanged. Both intents preserved/exhausted; no retry. Issue253 native completion remains OPEN.
+
+## Revision | Qualified browser process handoff
+
+Resumed goal: provider-free real app/affinity/remote authority loop reproduced processunknown/provenance_missing. Preserve service-resolved PID and managed directory through provisioned endpoint and bind existing authorization to exact leased target. Original/reduced fixtures pass; absent process and wrong account block.44tests5files, scopedlint/typecheck/fullbuild pass; Standards/Spec0 accepted source blockers. Installed runtime unchanged; both native intents exhausted and full native acceptance OPEN. Evidence: [process handoff diagnosis](../evidence/issue253-provider-process-handoff/diagnosis.md).
