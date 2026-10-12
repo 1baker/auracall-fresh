@@ -11,6 +11,11 @@
   "standardsReview": "no accepted blockers",
   "specReview": "no accepted blockers",
   "nativeAttempt3": "failed receipt despite completed provider answer",
-  "installedPromotion": "pending",
-  "memoryDisposition": "forbidden"
+  "installedPromotion": "passed",
+  "memoryDisposition": "forbidden",
+  "sourceCommit": "158b3b667a070cbd8b11eeea2251fb3966001d96",
+  "integratedCommit": "a8ad10a236e607ef928bec4b09eab9218e761564",
+  "pr": "https://github.com/ecochran76/auracall/pull/295",
+  "installedCompiledTests": 3,
+  "nativeCollection": "unproven; original attempt exhausted"
 }

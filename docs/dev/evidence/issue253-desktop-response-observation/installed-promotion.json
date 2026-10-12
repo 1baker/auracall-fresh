@@ -1,0 +1,26 @@
+{
+  "observedAt": "2026-10-12T02:20:14.425148+00:00",
+  "service": {
+    "MainPID": "83056",
+    "KillMode": "process",
+    "ActiveState": "active",
+    "SubState": "running"
+  },
+  "argv": [
+    "node",
+    "/home/ecochran76/.auracall/user-runtime-issue253-response-observation/node_modules/auracall/dist/bin/auracall.js",
+    "api",
+    "serve",
+    ""
+  ],
+  "httpDesktops": 200,
+  "desktopClientPresent": true,
+  "compiledBoundary": {
+    "tests": 3,
+    "passed": 3,
+    "providerEffects": 0
+  },
+  "sourceCommit": "a8ad10a236e607ef928bec4b09eab9218e761564",
+  "validatedSourceCommit": "158b3b667a070cbd8b11eeea2251fb3966001d96",
+  "originalBrowserExitActor": "unknown"
+}
