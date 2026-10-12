@@ -1,3 +1,4 @@
+import { hasCdpCommandAdmission } from '../../../packages/browser-service/src/guardedCdp.js';
 import {
   ANSWER_SELECTORS,
   ASSISTANT_ROLE_SELECTOR,
@@ -187,6 +188,16 @@ export async function waitForAssistantResponse(
     },
   };
   logger('Waiting for ChatGPT response');
+  // An awaited renderer observer holds coordinated desktop admission until it
+  // finishes. Its parallel watchdog then cannot read progress. Keep each
+  // coordinated observation short and retain the existing ownership checks.
+  if (hasCdpCommandAdmission(Runtime)) {
+    const response = await pollAssistantCompletion(Runtime, timeoutMs, responseBoundary, undefined, waitOptions);
+    if (!response) throw new Error(ASSISTANT_POLL_TIMEOUT_ERROR);
+    await waitOptions.onResponseIncoming?.();
+    return response;
+  }
+
   // Learned: two paths are needed:
   // 1) DOM observer (fast when mutations fire),
   // 2) snapshot poller (fallback when observers miss or JS stalls).

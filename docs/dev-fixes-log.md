@@ -1,3 +1,7 @@
+## 2026-10-12 — Response observers must release desktop command admission (#253)
+
+A long awaited renderer observer can hold automation custody while its parallel watchdog attempts to read the same display. Reproduce through the real response wait and command gate, rather than relaxing ownership checks. Use bounded snapshot polling when the actual transport has coordinated admission; retain ordinary observer behavior and human exclusion. A completed native answer does not convert a failed CLI receipt into successful collection.
+
 ## 2026-10-11 — Leased endpoints must retain browser process provenance (#253)
 
 Service discovery knew the browser PID but affinity/provisioner projections dropped it before remote authorization. Preserve qualified endpoint process/directory and bind existing account authorization to the exact leased target. CLI lease ownership is not browser identity. Regression must traverse app submission and real remote preflight, with absent legacy PID metadata; account mismatch and unknown process remain blocking.

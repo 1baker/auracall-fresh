@@ -21,3 +21,5 @@ Build a deterministic provider-free reproducer at real CDP/desktop-control/respo
 Private locators: original demo10 attempt3-submission-intent.json, attempt3-instrumented-no-submit.json, attempt3-instrumented-timeline-private.jsonl, attempt3-conversation-private.json, attempt3-bounded-reconciliation.json. Primary diagnostics ~/.auracall/diagnostics/issue253-process-handoff-installed/attempt3-primary-{visual,final-visual,final-proof,final-conversation-private,prompt-binding,control-readback} artifacts. Preserve both previous intents.
 
 Memory disposition forbidden: no general memory-write authorization,0writes.
+
+Actual terminal correction: native-terminal02:00:24.660Z/exit124/signalnull; observer completion02:00:24.976Z. Earlier than planned02:01:19.181Z guard, timing unexplained. Preserve actual event and do not substitute planned deadline. Source missing-provenance gate passed in actualnative; collection acceptance remains failed.

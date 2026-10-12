@@ -1,0 +1,16 @@
+{
+  "tests": {
+    "files": 6,
+    "passed": 103,
+    "skipped": 1,
+    "providerEffects": 0
+  },
+  "typecheck": "passed",
+  "scopedLint": "passed",
+  "fullBuild": "passed",
+  "standardsReview": "no accepted blockers",
+  "specReview": "no accepted blockers",
+  "nativeAttempt3": "failed receipt despite completed provider answer",
+  "installedPromotion": "pending",
+  "memoryDisposition": "forbidden"
+}

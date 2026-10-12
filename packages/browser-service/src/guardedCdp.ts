@@ -5,6 +5,13 @@ export interface CdpCommandAdmission {
 }
 export interface CdpEndpoint { host: string; port: number }
 let resolveAdmission: ((endpoint: CdpEndpoint) => Promise<CdpCommandAdmission | undefined>) | undefined;
+const coordinatedSubjects = new WeakSet<object>();
+
+/** Observation code can choose bounded commands without weakening admission. */
+export function hasCdpCommandAdmission(subject: unknown): boolean {
+  return typeof subject === 'object' && subject !== null && coordinatedSubjects.has(subject);
+}
+
 
 /** The embedding application owns coordination policy; the shared transport owns enforcement. */
 export function setCdpCommandAdmissionResolver(resolver: typeof resolveAdmission): void {
@@ -51,6 +58,8 @@ const guardedCdp: typeof CDP = new Proxy(CDP, {
       try { admission = await resolveAdmission?.(requestedEndpoint); }
       catch (error) { await client.close?.(); throw error; }
       if (!admission || typeof client.send !== 'function') return client;
+      coordinatedSubjects.add(client);
+      if (client.Runtime && typeof client.Runtime === 'object') coordinatedSubjects.add(client.Runtime);
       const send = client.send.bind(client);
       client.send = (...commandArgs: unknown[]) => admittedCall(admission, String(commandArgs[0]), send, commandArgs);
       return client;
