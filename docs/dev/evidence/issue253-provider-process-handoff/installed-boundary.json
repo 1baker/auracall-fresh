@@ -1,0 +1,1 @@
+{"installedAffinityAuthorityHandoffPassed":true,"cases":[{"browserProcessPresent":true,"accountMatches":true,"authorized":true,"providerEffects":0},{"browserProcessPresent":false,"accountMatches":true,"authorized":false,"providerEffects":0},{"browserProcessPresent":true,"accountMatches":false,"authorized":false,"providerEffects":0}],"providerEffects":0}
