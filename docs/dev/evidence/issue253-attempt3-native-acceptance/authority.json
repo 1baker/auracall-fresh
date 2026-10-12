@@ -1,0 +1,12 @@
+{
+  "observedAt": "2026-10-12T01:51:06.638707+00:00",
+  "authority": "User ok go authorizes ONE new native Instant acceptance following explicit question; no retries/wakes",
+  "sourceCommit": "c4ec9c8bf7432defdc8e331f830100cc6ad0bf45",
+  "validatedSourceCommit": "3303b51a609e06588583c6dd812fa296a7de5c7a",
+  "compiledParityFiles": 591,
+  "mismatches": [],
+  "priorNativeIntents": "both exhausted; preserve; do not reuse",
+  "promptSha256": "5bf4cb111938e09d449836ad186dcc5544a0acc980888120207dcd4072b63b58",
+  "newIntentRequired": true,
+  "providerEffects": 0
+}
