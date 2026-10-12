@@ -1,0 +1,67 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-issue253-triage
+
+ ✓ tests/browser/browserLaunchPlanStructure.test.ts (4 tests) 18ms
+ ✓ tests/browser/assistantResponseStatus.test.ts (8 tests) 4ms
+ ✓ tests/browser/browserLaunchPlan.test.ts (19 tests) 86ms
+ ✓ tests/browser/desktopControlObservation.test.ts (3 tests) 7990ms
+   ✓ collects through actual admission while retaining human exclusion: {"coordinated":true,"human":false}  3569ms
+   ✓ collects through actual admission while retaining human exclusion: {"coordinated":false,"human":false}  4405ms
+ ❯ tests/browser/chatgptDeveloperAppLifecycle.test.ts (25 tests | 1 failed) 7848ms
+     ✓ refreshes a late terminal conversation before returning committed-Send failure: {"terminalFailure":true}  747ms
+     ✓ refreshes a late terminal conversation before returning committed-Send failure: {"manualApproval":true}  708ms
+     × carries managed browser provenance through affinity without a legacy PID file: {"browserProcessId":1234,"wrongIdentity":false,"originalConfig":false,"completed":true} 724ms
+     ✓ carries managed browser provenance through affinity without a legacy PID file: {"browserProcessId":1234,"wrongIdentity":false,"originalConfig":true,"completed":true}  710ms
+     ✓ carries managed browser provenance through affinity without a legacy PID file: {"browserProcessId":null,"wrongIdentity":false,"originalConfig":false,"completed":false} 4ms
+     ✓ carries managed browser provenance through affinity without a legacy PID file: {"browserProcessId":1234,"wrongIdentity":true,"originalConfig":false,"completed":false} 4ms
+     ✓ preserves attributable WSL Windows loopback provenance through the canonical host alias  705ms
+     ✓ fails closed without a matching managed process and never authorizes arbitrary remote hosts from a local PID 4ms
+     ✓ returns answer and refreshed terminal identity after exactly one Send  705ms
+     ✓ preserves terminal failure evidence without retry: {"terminalFailure":true,"effectState":"effect_observed"}  704ms
+     ✓ preserves terminal failure evidence without retry: {"uncertainSend":true,"effectState":"unknown"}  705ms
+     ✓ preserves terminal failure evidence without retry: {"manualApproval":true,"effectState":"effect_observed"}  704ms
+     ✓ does not send after selection changes or account preflight fails 4ms
+     ✓ honors the selected response deadline through the shared lifecycle  704ms
+     ✓ retains a shorter selected response deadline and never retries after Send  706ms
+     ✓ preserves full selected runtime configuration at affinity admission without provider effects 2ms
+     ✓ preserves the selected AuraCall runtime profile across the shared submit lifecycle 1ms
+     ✓ upgrades unknown to structured observed effect without retry 1ms
+     ✓ forces per-run Chat/current and removes inherited Work/composer settings 1ms
+     ✓ rejects unsupported high-level input before transport: {"attachments":[{"path":"/unused","displayPath":"unused"}]} 1ms
+     ✓ rejects unsupported high-level input before transport: {"fallbackSubmission":{"prompt":"retry","attachments":[]}} 0ms
+     ✓ rejects unsupported high-level input before transport: {"config":{"composerTool":"other"}} 0ms
+     ✓ rejects unsupported high-level input before transport: {"config":{"projectId":"project"}} 0ms
+     ✓ rejects unsupported high-level input before transport: {"config":{"conversationId":"conversation"}} 0ms
+     ✓ rejects unsupported high-level input before transport: {"config":{"chatgptMode":"work"}} 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/browser/chatgptDeveloperAppLifecycle.test.ts > developer app to real shared remote lifecycle > carries managed browser provenance through affinity without a legacy PID file: {"browserProcessId":1234,"wrongIdentity":false,"originalConfig":false,"completed":true}
+AssertionError: settledAt cannot be earlier than startedAt: expected { status: 'failed', …(6) } to match object { status: 'completed', …(1) }
+(5 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "effectState": "effect_observed",
+-   "status": "completed",
++   "status": "failed",
+  }
+
+ ❯ tests/browser/chatgptDeveloperAppLifecycle.test.ts:290:35
+    288|     browserOperationOwned: true,
+    289|    });
+    290|    expect(result, result.message).toMatchObject({
+       |                                   ^
+    291|     status: scenario.completed ? "completed" : "failed",
+    292|     effectState: scenario.completed ? "effect_observed" : "pre_effect",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 4 passed (5)
+      Tests  1 failed | 58 passed (59)
+   Start at  21:53:56
+   Duration  11.02s (transform 3.25s, setup 1.07s, import 4.25s, tests 15.95s, environment 1ms)
+

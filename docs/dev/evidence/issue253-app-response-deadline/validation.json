@@ -1,0 +1,24 @@
+{
+  "base": "0f5a1c9d9cd404c8d7aee0970d0adf46946ab20d",
+  "tests": {
+    "finalFiles": 5,
+    "passed": 60,
+    "providerEffects": 0,
+    "firstSuite": {
+      "passed": 58,
+      "failed": 1,
+      "error": "settledAt cannot be earlier than startedAt",
+      "disposition": "pre-existing provenance case; cause unknown; retained, rerun green"
+    }
+  },
+  "typecheck": "passed",
+  "scopedLint": "passed",
+  "fullBuild": "passed",
+  "review": {
+    "standardsAcceptedBlockers": 0,
+    "specAcceptedBlockers": 0,
+    "mode": "primary serial frozen patch"
+  },
+  "nativeAcceptance": "unproven; original attempts exhausted; no new prompt authorized",
+  "installed": "pending"
+}

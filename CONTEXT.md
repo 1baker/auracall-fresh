@@ -102,3 +102,5 @@ A bounded observation of the exact selected startup target disappearing after on
 Developer-app submitted tests have two custody phases: exact utility inventory read and settlement, then shared submission lifecycle tab acquisition. The app/account observation crosses this local handoff; shared lifecycle still checks live account and canonical app identity before Send. Never nest submission acquisition under active inventory ownership or relax process ownership to permit it.
 
 Leased browser endpoints retain service-qualified browser process identity and managed browser directory into provider-session authorization, bound to the exact leased target. The process owning a tab lease can be the CLI and is not evidence of the browser process.
+
+Developer-app response collection uses the resolved browser launch policy deadline. Fresh-root Chat/current app-test posture does not replace the selected browser.timeoutMs. A timeout after Send preserves effect evidence and forbids automatic resubmission.

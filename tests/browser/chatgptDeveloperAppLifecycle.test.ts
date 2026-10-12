@@ -389,6 +389,39 @@ describe("developer app to real shared remote lifecycle", () => {
 });
 
 describe("bounded submission contract", () => {
+	it("honors the selected response deadline through the shared lifecycle", async () => {
+		setup();
+		fixture.wait.mockImplementation(async (_runtime, timeoutMs) => {
+			if (timeoutMs <= 221_000) throw new Error("Fixture response remains active beyond deadline");
+			return { text: "App terminal answer", meta: { messageId: "answer-1" } };
+		});
+		const selected = { ...config, browser: { ...config.browser, timeoutMs: 300_000 } };
+		expect(resolveBrowserLaunchPlan({ source: { kind: "user-config", config: selected as never }, intent: { provider: "chatgpt" } }).launchPolicy.timeoutMs).toBe(300_000);
+		const outcome = await submitChatgptDeveloperApp(selected as never, app, "Fixture prompt", { browserOperationOwned: true });
+		expect(outcome, outcome.message).toMatchObject({ status: "completed", answerText: "App terminal answer" });
+		expect(fixture.wait.mock.calls[0]?.[1]).toBe(300_000);
+		expect(fixture.submit).toHaveBeenCalledTimes(1);
+		expect(fixture.forbiddenLaunch).not.toHaveBeenCalled();
+	});
+
+	it("uses the canonical browser default when no response deadline is configured", async () => {
+		setup();
+		expect(await submitChatgptDeveloperApp(config as never, app, "Fixture prompt", { browserOperationOwned: true })).toMatchObject({ status: "completed" });
+		expect(fixture.wait.mock.calls[0]?.[1]).toBe(7_200_000);
+	});
+
+	it("retains a shorter selected response deadline and never retries after Send", async () => {
+		setup();
+		fixture.wait.mockImplementation(async (_runtime, timeoutMs) => {
+			expect(timeoutMs).toBe(60_000);
+			throw new Error("Fixture response remains active beyond deadline");
+		});
+		const selected = { ...config, browser: { ...config.browser, timeoutMs: 60_000 } };
+		const outcome = await submitChatgptDeveloperApp(selected as never, app, "Fixture prompt", { browserOperationOwned: true });
+		expect(outcome).toMatchObject({ status: "failed", effectState: "effect_observed", retrySafe: false });
+		expect(fixture.submit).toHaveBeenCalledTimes(1);
+	});
+
 	it("preserves full selected runtime configuration at affinity admission without provider effects", async () => {
 		const selectedConfig = {
 			...config,

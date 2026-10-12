@@ -71,7 +71,6 @@ export async function submitChatgptDeveloperApp(
 				chatgptMode: "chat",
 				thinkingTime: undefined,
 				composerTool: null,
-				timeoutMs: 120_000,
 			},
 			ecosystemMention: {
 				label: app.name,

@@ -1,3 +1,7 @@
+## 2026-10-12 — App tests inherit the selected browser response deadline (#253)
+
+Fresh-root Chat/current overrides must not replace browser.timeoutMs with an app-local120s constant. Carry the canonical launch policy into the shared response lifecycle. A shorter configured deadline still fails after Send with observed-effect/nonretryable evidence; a timeout does not authorize a replacement prompt.
+
 ## 2026-10-12 — Response observers must release desktop command admission (#253)
 
 A long awaited renderer observer can hold automation custody while its parallel watchdog attempts to read the same display. Reproduce through the real response wait and command gate, rather than relaxing ownership checks. Use bounded snapshot polling when the actual transport has coordinated admission; retain ordinary observer behavior and human exclusion. A completed native answer does not convert a failed CLI receipt into successful collection.
