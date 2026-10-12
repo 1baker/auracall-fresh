@@ -3432,3 +3432,5 @@ execution disabled. The user-runtime installer executes this gate before prefix
 replacement. Run it against the staged package as well, then verify dist byte parity,
 installed identity, live local routes and existing browser/configuration preservation.
 The route probe does not replace active-lane/PR/ancestry reconciliation.
+
+Issue253 process provenance regression: `pnpm vitest run tests/browser/chatgptDeveloperAppLifecycle.test.ts -t "carries managed browser provenance"` exercises actual app/affinity/remote preflight with hermetic transport/storage, including missing legacy PID metadata, unknown process and wrong account. It produces no provider effects.

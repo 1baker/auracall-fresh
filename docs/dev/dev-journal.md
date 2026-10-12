@@ -1,3 +1,7 @@
+## 2026-10-11 — Issue253 process provenance handoff
+
+Resumed goal reproduced native processunknown symptom through actual app/affinity/remote lifecycle. Source repair carries qualified service PID instead of relying on legacy metadata.44 focused tests5files, scoped lint/typecheck/fullbuild pass. Installed/live acceptance remains separate, both prior intents exhausted. See evidence/issue253-provider-process-handoff/diagnosis.md.
+
 ## 2026-10-11 — Issue253 affinity repair
 
 Plan0405 implements the accepted agent brief on fix/issue253-app-affinity-config. Missing full configuration reproduced through actual guard; boundary red/green and69 focused tests pass. LitScout coordination started; installation/live acceptance pending.

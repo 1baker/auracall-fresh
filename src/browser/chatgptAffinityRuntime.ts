@@ -25,6 +25,7 @@ import type { BrowserProviderListOptions } from "./providers/types.js";
 import type { BrowserTabConcurrencyRuntime } from "./tabConcurrencyRuntime.js";
 
 export interface ChatgptServiceTargetResolution {
+	browserProcessId?: number | null;
 	host?: string;
 	port?: number;
 	managedBrowserProfile?: string | null;
@@ -115,6 +116,7 @@ export async function runChatgptPromptWithConfiguredAffinity(input: {
 		return {
 			host: target.host,
 			port: target.port,
+			browserProcessId: target.browserProcessId ?? null,
 			managedBrowserProfile,
 		};
 	};

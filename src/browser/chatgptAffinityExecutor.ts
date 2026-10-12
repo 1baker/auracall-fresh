@@ -40,7 +40,12 @@ type ChatgptTabAffinityExecutionInput = {
 	lease: BrowserTabLease;
 	claim: TabLeaseClaim;
 	operationId: string;
-	endpoint: { host: string; port: number };
+	endpoint: {
+		host: string;
+		port: number;
+		browserProcessId?: number | null;
+		managedBrowserProfile?: string;
+	};
 	input: PromptInput;
 	options?: BrowserProviderListOptions;
 	runPrompt: ChatgptLeasedPromptRunner;

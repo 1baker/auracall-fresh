@@ -2,8 +2,8 @@ import {
 	isProcessAlive,
 	verifyChromeProcessAbsent,
 } from "../../../packages/browser-service/src/processCheck.js";
-import { releaseAbsentBrowserTabLeases } from "../../../packages/browser-service/src/service/tabInventory.js";
 import { withProcessTabAcquisition } from "../../../packages/browser-service/src/service/processTabAcquisition.js";
+import { releaseAbsentBrowserTabLeases } from "../../../packages/browser-service/src/service/tabInventory.js";
 import type {
 	BrowserProfileControlClaim,
 	BrowserTabLease,
@@ -14,6 +14,7 @@ import type {
 import type { ProvisionedChatgptTab } from "../chatgptAffinityExecutor.js";
 
 export interface ChatgptManagedBrowserEndpoint {
+	browserProcessId?: number | null;
 	host: string;
 	port: number;
 	managedBrowserProfile: string;
@@ -102,7 +103,7 @@ export function createChatgptTabProvisioner(input: {
 					});
 					if (!adopted.ok)
 						throw new Error(`ChatGPT process tab adoption failed: ${adopted.conflict.kind}.`);
-					return { ...adopted.value, endpoint: { host: endpoint.host, port: endpoint.port } };
+					return { ...adopted.value, endpoint: { ...endpoint } };
 				}
 			}
 			const reused = await acquireVerifiedExistingLease(input, endpoint, now);
@@ -216,7 +217,7 @@ export function createChatgptTabProvisioner(input: {
 			return {
 				lease,
 				claim,
-				endpoint: { host: endpoint.host, port: endpoint.port },
+				endpoint: { ...endpoint },
 			};
 		});
 }
@@ -342,7 +343,7 @@ async function acquireVerifiedExistingLease(
 	return {
 		lease: adopted.value.lease,
 		claim: adopted.value.claim,
-		endpoint: { host: endpoint.host, port: endpoint.port },
+		endpoint: { ...endpoint },
 	};
 }
 

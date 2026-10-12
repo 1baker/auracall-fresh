@@ -100,3 +100,5 @@ The exact installed app identifier retained by its composer pill, using legacy p
 A bounded observation of the exact selected startup target disappearing after one close request. Acknowledgment is not physical-removal proof; uncertain confirmation preserves replacement custody.
 
 Developer-app submitted tests have two custody phases: exact utility inventory read and settlement, then shared submission lifecycle tab acquisition. The app/account observation crosses this local handoff; shared lifecycle still checks live account and canonical app identity before Send. Never nest submission acquisition under active inventory ownership or relax process ownership to permit it.
+
+Leased browser endpoints retain service-qualified browser process identity and managed browser directory into provider-session authorization, bound to the exact leased target. The process owning a tab lease can be the CLI and is not evidence of the browser process.

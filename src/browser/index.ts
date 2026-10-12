@@ -1824,13 +1824,14 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 			userConfig: options.tabAffinityUserConfig,
 			browserOptions: options,
 			resolvedConfig: config,
-			runLeased: ({ host, port, targetId, targetUrl, providerTrafficGovernor, abortSignal }) =>
+			runLeased: ({ host, port, targetId, targetUrl, providerTrafficGovernor, abortSignal, providerSessionAuthorization }) =>
 				runRemoteBrowserMode(
 					promptText,
 					attachments,
 					{
 						...config,
 						remoteChrome: { host, port },
+						providerSessionAuthorization,
 						url: targetUrl,
 					},
 					logger,

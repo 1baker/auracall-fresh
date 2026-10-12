@@ -13,6 +13,7 @@ import type {
 	ChatgptManagedBrowserEndpoint,
 	ChatgptOpenedTarget,
 } from "./providers/chatgptTabProvisioner.js";
+import type { ProviderSessionAuthorization } from "./providers/providerSessionAuthority.js";
 import { BrowserService } from "./service/browserService.js";
 import {
 	type BrowserTabConcurrencyRuntime,
@@ -21,6 +22,7 @@ import {
 import type { BrowserRunOptions, BrowserRunResult, ResolvedBrowserConfig } from "./types.js";
 
 export interface LegacyChatgptLeasedTarget {
+	providerSessionAuthorization?: ProviderSessionAuthorization;
 	abortSignal?: AbortSignal;
 	host: string;
 	port: number;
@@ -69,7 +71,11 @@ export async function runLegacyChatgptWithConfiguredAffinity(input: {
 			workModel: input.resolvedConfig.workModel,
 			timeoutMs: input.resolvedConfig.timeoutMs,
 		},
-		options: { abortSignal: input.browserOptions.abortSignal, configuredUrl },
+		options: {
+			abortSignal: input.browserOptions.abortSignal,
+			configuredUrl,
+			providerSessionAuthorization: input.resolvedConfig.providerSessionAuthorization,
+		},
 		runSerialized: async () => {
 			throw new Error("Legacy ChatGPT affinity unexpectedly selected serialized execution.");
 		},
@@ -87,6 +93,7 @@ export async function runLegacyChatgptWithConfiguredAffinity(input: {
 					)
 				: (promptInput.configuredUrl ?? configuredUrl);
 			const legacyResult = await input.runLeased({
+				providerSessionAuthorization: options.providerSessionAuthorization,
 				abortSignal: options.abortSignal,
 				host: options.host,
 				port: options.port,

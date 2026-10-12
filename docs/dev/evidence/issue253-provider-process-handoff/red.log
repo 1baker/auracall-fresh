@@ -1,0 +1,57 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-issue253-triage
+
+ ❯ tests/browser/chatgptDeveloperAppLifecycle.test.ts (20 tests | 1 failed | 19 skipped) 30ms
+     ↓ refreshes a late terminal conversation before returning committed-Send failure: {"terminalFailure":true}
+     ↓ refreshes a late terminal conversation before returning committed-Send failure: {"manualApproval":true}
+     × carries managed browser provenance through affinity when no legacy PID file exists 28ms
+     ↓ preserves attributable WSL Windows loopback provenance through the canonical host alias
+     ↓ fails closed without a matching managed process and never authorizes arbitrary remote hosts from a local PID
+     ↓ returns answer and refreshed terminal identity after exactly one Send
+     ↓ preserves terminal failure evidence without retry: {"terminalFailure":true,"effectState":"effect_observed"}
+     ↓ preserves terminal failure evidence without retry: {"uncertainSend":true,"effectState":"unknown"}
+     ↓ preserves terminal failure evidence without retry: {"manualApproval":true,"effectState":"effect_observed"}
+     ↓ does not send after selection changes or account preflight fails
+     ↓ preserves full selected runtime configuration at affinity admission without provider effects
+     ↓ preserves the selected AuraCall runtime profile across the shared submit lifecycle
+     ↓ upgrades unknown to structured observed effect without retry
+     ↓ forces per-run Chat/current and removes inherited Work/composer settings
+     ↓ rejects unsupported high-level input before transport: {"attachments":[{"path":"/unused","displayPath":"unused"}]}
+     ↓ rejects unsupported high-level input before transport: {"fallbackSubmission":{"prompt":"retry","attachments":[]}}
+     ↓ rejects unsupported high-level input before transport: {"config":{"composerTool":"other"}}
+     ↓ rejects unsupported high-level input before transport: {"config":{"projectId":"project"}}
+     ↓ rejects unsupported high-level input before transport: {"config":{"conversationId":"conversation"}}
+     ↓ rejects unsupported high-level input before transport: {"config":{"chatgptMode":"work"}}
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/browser/chatgptDeveloperAppLifecycle.test.ts > developer app to real shared remote lifecycle > carries managed browser provenance through affinity when no legacy PID file exists
+AssertionError: chatgpt provider-session authorization failed (provider_session_provenance_missing). Required configured or observed provider-account evidence is missing. AuraCall runtime profile=fixture, browser profile=none, managed browser profile=/tmp/auracall-vitest-FIXTURE/browser-profiles/fixture/chatgpt, browser process=unknown, browser target=fixture-target: expected { status: 'failed', …(6) } to match object { status: 'completed', …(1) }
+(5 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "effectState": "effect_observed",
+-   "status": "completed",
++   "effectState": "pre_effect",
++   "status": "failed",
+  }
+
+ ❯ tests/browser/chatgptDeveloperAppLifecycle.test.ts:252:35
+    250|   try {
+    251|    const result = await submitChatgptDeveloperApp(affinityConfig as ne…
+    252|    expect(result, result.message).toMatchObject({ status: "completed",…
+       |                                   ^
+    253|    expect(fixture.submit).toHaveBeenCalledTimes(1);
+    254|   } finally { resolveTarget.mockRestore(); }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 19 skipped (20)
+   Start at  20:18:17
+   Duration  3.58s (transform 2.39s, setup 58ms, import 3.27s, tests 30ms, environment 0ms)
+
