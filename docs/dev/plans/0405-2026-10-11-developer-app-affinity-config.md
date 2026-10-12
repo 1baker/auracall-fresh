@@ -11,7 +11,7 @@ Base: 9b324b3dc7d3f8f1ec50e3888f02e71c39047e02
 
 ## Current State
 
-PR295 collector admission repair and PR297 canonical response deadline repair are integrated and installed. Current prefix user-runtime-issue253-response-deadline, source048ac2591c1f9feeb4517936d356af2996e173e6 /validatedc2458d307649ace514ae5ee70da6ba409d5856ea;591compiledparity,3installed deadline checks andAPI9944 /desktops200. Original attempt3 completed provider research but CLI receipt failed/effect_observed, terminalexit124; original browser absent/exitactorunknown. Retained research audit verified candidate hashes and reported6keeps/baseline12unchanged with explicit provenance limits. All earlier attempts exhausted. Full native collection acceptance remainsOPEN; Plan0406-1 prepares one fresh unchanged-prompt run awaiting explicit authorization, no retry/wake.
+PR295 collector admission, PR297 response deadline, and PR299 durable lease-expiry close auditing are integrated and installed. Current prefix user-runtime-issue253-retirement-audit, source e953a877146d1f92d98a2c46c19c957abb52ba91 / validated 6cc7ae97ef10ce9b2851d300dc7107c82a95f79f; 592 compiled files match, 41 source tests and five installed audit cases pass. API PID15114, /desktops200. Plan0407 is CLOSED. Historical lease retirement reports already-missing with zero recorded closes, so its closer remains unproven; no historical close attribution was fabricated. Original attempt3 completed provider research but its CLI receipt failed. All earlier attempts remain exhausted. Full native collection acceptance remains OPEN; Plan0406-1 awaits explicit once-only authorization. No new provider request, wake, or forced live closure.
 
 ## Scope and seams
 

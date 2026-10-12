@@ -1,0 +1,24 @@
+{
+  "observedAt": "2026-10-12T10:34:37.792922+00:00",
+  "service": {
+    "MainPID": "15114",
+    "KillMode": "process",
+    "ActiveState": "active",
+    "SubState": "running"
+  },
+  "argv": [
+    "node",
+    "/home/ecochran76/.auracall/user-runtime-issue253-retirement-audit/node_modules/auracall/dist/bin/auracall.js",
+    "api",
+    "serve",
+    ""
+  ],
+  "httpDesktops": 200,
+  "desktopClientPresent": true,
+  "compiledMaintenanceAuditCases": 5,
+  "compiledParityFiles": 592,
+  "sourceCommit": "e953a877146d1f92d98a2c46c19c957abb52ba91",
+  "validatedSourceCommit": "6cc7ae97ef10ce9b2851d300dc7107c82a95f79f",
+  "scopedBrowserProcessesBeforePromotion": 0,
+  "originalBrowserExitActor": "unproven"
+}
