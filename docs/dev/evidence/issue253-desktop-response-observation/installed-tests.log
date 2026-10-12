@@ -1,0 +1,12 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-issue253-triage
+
+ ✓ tests/browser/issue253InstalledObservation.temp.test.ts (3 tests) 6779ms
+   ✓ collects through actual admission while retaining human exclusion: {"coordinated":true,"human":false}  3555ms
+   ✓ collects through actual admission while retaining human exclusion: {"coordinated":false,"human":false}  3210ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  21:19:40
+   Duration  7.84s (transform 628ms, setup 51ms, import 829ms, tests 6.78s, environment 0ms)
+
