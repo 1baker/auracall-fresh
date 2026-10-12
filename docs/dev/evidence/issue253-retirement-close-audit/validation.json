@@ -15,7 +15,11 @@
     "specAcceptedBlockers": 0,
     "mode": "primary serial frozen patch"
   },
-  "installed": "pending",
+  "installed": "passed",
   "historicalClosureActor": "unproven; no fabricated event",
-  "nativeAcceptance": "not run; prior once-only attempts remain exhausted"
+  "nativeAcceptance": "not run; prior once-only attempts remain exhausted",
+  "sourceCommit": "6cc7ae97ef10ce9b2851d300dc7107c82a95f79f",
+  "integratedCommit": "e953a877146d1f92d98a2c46c19c957abb52ba91",
+  "pr": "https://github.com/ecochran76/auracall/pull/299",
+  "installedCompiledMaintenanceCases": 5
 }
