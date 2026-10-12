@@ -1,3 +1,7 @@
+## 2026-10-11 — Attempt3 completed provider response, failed native collection
+
+One newly authorized Instant run completed actual backend response, independently screenshot/active-path/endturn verified. Frozen prompt preserved; no retry/wake. AuraCall CLI failed Desktop control busy/effect_observed; further source diagnosis required. Exact evidence: docs/dev/evidence/issue253-attempt3-native-acceptance/analysis.md. Native process terminal pending original outerguard02:01:19Z.
+
 ## 2026-10-11 — Installed Issue253 process handoff
 
 User requested resource reset and continuation. Promoted c4ec9c8bf/validated3303b51a6 with591fileparity; CLI/MCP/API verified. Installed provider-free handoff and inventory fixtures and /desktops contract pass. No browser processes before/after APIsoftware restart; exitactorunknown. Native once-only acceptance awaits fresh authorization, old intents exhausted. Evidence: docs/dev/evidence/issue253-provider-process-handoff/installed.md.

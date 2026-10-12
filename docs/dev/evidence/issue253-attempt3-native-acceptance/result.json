@@ -1,0 +1,58 @@
+{
+  "installedSourceCommit": "c4ec9c8bf7432defdc8e331f830100cc6ad0bf45",
+  "validatedSourceCommit": "3303b51a609e06588583c6dd812fa296a7de5c7a",
+  "nativeInvocationBudget": 1,
+  "nativeInvocationCount": 1,
+  "resubmissions": 0,
+  "wakes": 0,
+  "nativeStatus": "failed",
+  "effectState": "effect_observed",
+  "retrySafe": false,
+  "failureMessage": "Desktop control is busy; automation or another human owns the display.",
+  "nativeReceiptSha256": "d86d19cd1ddbafd35e914254676e2052c58a4a0212ebd2c5a73d23596f30209e",
+  "newIntentSha256": "2931eec8ec62a18f6751bbd19196b0c27a66bede88cda02a6cc4254e9732ee6b",
+  "conversationIdRecordedPrivately": true,
+  "conversationIdSha256": "9c46ecc96a8c9b0f5161e96ccf69142d9ba2ad2f51cf5dccabcc05c99a7ee35c",
+  "primaryProof": {
+    "observedAt": "2026-10-12T01:57:45.478Z",
+    "browserPid": 54050,
+    "startTimeTicks": "40400834",
+    "targetId": "CCBB65F08A246064C4942CE33D974294",
+    "httpStatus": 200,
+    "userMessagesInActivePath": 1,
+    "currentMessage": {
+      "id": "dd169a6c-70a3-4799-b42d-cdaff533bd78",
+      "role": "assistant",
+      "status": "finished_successfully",
+      "endTurn": true,
+      "channel": "final"
+    },
+    "stopGeneratingVisible": false,
+    "answerCharacters": 12435,
+    "answerSha256": "bd17ccd9e1e2486402a39b64e92b9c220eb162b881a398ea78382f70819beb67",
+    "finalSegments": 2
+  },
+  "promptBinding": {
+    "observedAt": 1791770008.950885,
+    "frozenPromptAppearsVerbatim": true,
+    "prefixCharacters": 60,
+    "suffixCharacters": 0,
+    "bodyCharacters": 1521,
+    "frozenCharacters": 1461,
+    "frozenSha256": "5bf4cb111938e09d449836ad186dcc5544a0acc980888120207dcd4072b63b58",
+    "nativeAppMentionPrefix": false
+  },
+  "litScoutReportedResearch": {
+    "calls": 33,
+    "outcomes": {
+      "success": 32,
+      "error": 1
+    },
+    "oneNewSession": 165,
+    "retainedReferences": 6,
+    "preservedSessions152to163": true
+  },
+  "nativeCliCompletion": "not proven; desktop control failed after effect; process terminal pending outer guard",
+  "issue253": "OPEN",
+  "memoryDisposition": "forbidden"
+}
