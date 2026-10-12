@@ -1,3 +1,4 @@
+import type { TabLeaseRetirementAuditSink } from "../../packages/browser-service/src/service/tabLeaseRetirementAudit.js";
 import { requireInactiveChatgptTab, type probeChatgptTabActivity } from "./chatgptTabActivity.js";
 import type {
 	BrowserTabLease,
@@ -13,6 +14,7 @@ import { UNOWNED_TAB_WORKLOAD_PREFIX } from "../../packages/browser-service/src/
 
 export function retireExpiredChatgptTabLeases(input: {
 	registry: BrowserTabLeaseRegistry;
+	audit?: TabLeaseRetirementAuditSink;
 	scope: TabLeaseScope;
 	endpoint: TabLeaseRetirementEndpoint | null;
 	now?: () => Date;
@@ -27,6 +29,7 @@ export function retireExpiredChatgptTabLeases(input: {
 }): Promise<TabLeaseRetirementOutcome[]> {
 	return retireExpiredTabLeases({
 		registry: input.registry,
+		audit: input.audit,
 		scope: input.scope,
 		now: input.now,
 		resolveEndpoint: async () => input.endpoint,

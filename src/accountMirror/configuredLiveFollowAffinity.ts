@@ -96,7 +96,7 @@ export async function createConfiguredLiveFollowAffinity(input: {
 		if (!target.host || !target.port || target.managedBrowserProfile !== managedBrowserProfile) {
 			return null;
 		}
-		return { host: target.host, port: target.port, managedBrowserProfile };
+		return { host: target.host, port: target.port, browserProcessId: target.browserProcessId ?? null, managedBrowserProfile };
 	};
 	const scope = {
 		runtimeProfileId: input.runtimeProfileId,
@@ -116,6 +116,7 @@ export async function createConfiguredLiveFollowAffinity(input: {
 		closeRemoteChromeTarget(endpoint.host, endpoint.port, targetId, () => undefined);
 	await retireExpiredChatgptTabLeases({
 		registry: runtime.registry,
+		audit: runtime.retirementAudit,
 		scope,
 		endpoint: toEndpoint(initialTarget),
 		now: input.now,

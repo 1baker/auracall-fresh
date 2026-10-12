@@ -103,7 +103,7 @@ export async function runConfiguredChatgptUtilityOperation<TResult>(input: {
 		if (!target.host || !target.port || target.managedBrowserProfile !== managedBrowserProfile) {
 			return null;
 		}
-		return { host: target.host, port: target.port, managedBrowserProfile };
+		return { host: target.host, port: target.port, browserProcessId: target.browserProcessId ?? null, managedBrowserProfile };
 	};
 	const inspectTarget = async (endpoint: { host: string; port: number }, targetId: string) => {
 		const targets = await (input.deps?.listTargets ?? listChromeTargets)(
@@ -165,6 +165,7 @@ export async function runConfiguredChatgptUtilityOperation<TResult>(input: {
 	recordLibraryInventoryStage(input.options, "affinity-retire-leases");
 	await retireExpiredChatgptTabLeases({
 		registry: runtime.registry,
+		audit: runtime.retirementAudit,
 		scope,
 		endpoint: toEndpoint(initialTarget),
 		now,

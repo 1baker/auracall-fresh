@@ -395,6 +395,7 @@ describe("configured ChatGPT tab maintenance", () => {
 			managedBrowserProfile: "/managed/affinity/chatgpt",
 		});
 		let targetLive = true;
+		const retirementAudit = vi.fn(async () => undefined);
 		const closeTarget = vi.fn(async () => {
 			targetLive = false;
 		});
@@ -410,7 +411,7 @@ describe("configured ChatGPT tab maintenance", () => {
 			} as never,
 			now: () => new Date("2026-09-24T12:02:00.000Z"),
 			deps: {
-				createRuntime: () => ({ registry }),
+				createRuntime: () => ({ registry, retirementAudit }),
 				createBrowserService: () => ({ resolveServiceTarget }),
 				listTargets: vi.fn(async () => {
 					return targetLive
@@ -431,6 +432,7 @@ describe("configured ChatGPT tab maintenance", () => {
 			closedCount: 1,
 			errors: [],
 		});
+		expect(retirementAudit).toHaveBeenCalledWith(expect.objectContaining({ phase: "close-requested", targetId: "target-1", reason: "idle-expired" }));
 	});
 
 	test("revisits and releases a previously lost lease when the managed browser is absent", async () => {
@@ -518,6 +520,7 @@ describe("configured ChatGPT tab maintenance", () => {
 		});
 		if (!lost.ok) throw new Error("expected lost lease");
 		let targetLive = true;
+		const retirementAudit = vi.fn(async () => undefined);
 		const closeTarget = vi.fn(async () => {
 			targetLive = false;
 		});
@@ -534,7 +537,7 @@ describe("configured ChatGPT tab maintenance", () => {
 			} as never,
 			now: () => new Date("2026-09-24T12:02:00.000Z"),
 			deps: {
-				createRuntime: () => ({ registry }),
+				createRuntime: () => ({ registry, retirementAudit }),
 				createBrowserService: () => ({
 					resolveServiceTarget: vi.fn().mockResolvedValue({
 						host: "127.0.0.1",
@@ -562,6 +565,7 @@ describe("configured ChatGPT tab maintenance", () => {
 			state: "released",
 			finalDisposition: "closed",
 		});
+		expect(retirementAudit).toHaveBeenCalledWith(expect.objectContaining({ phase: "close-requested", targetId: "target-lost", reason: "idle-expired" }));
 	});
 
 	test("retires expired uncertain leases when the managed browser endpoint is absent", async () => {

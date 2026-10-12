@@ -1105,3 +1105,9 @@ Current app-picker rows require the installed app description as well as name; a
 Selected ChatGPT app mentions support current app-mention-name/path and legacy inline-pill attributes. Current app:// URI identity must match the accepted installed app before Send. Missing, malformed, foreign or multiple mentions stop submission. Clear/pristine checks include both shapes.
 
 Cold-start retirement confirms target disappearance for up to2s after one close request. Read-only polling does not resend close. Unconfirmed or changed targets retain the already-qualified replacement under an idle lease and report failure; no browser restart or implicit provider retry.
+
+### Lease-expiry close records
+
+AuraCall records expiry cleanup in `~/.auracall/browser-coordination/tab-leases/retirement-events.v1.jsonl`. Each `close-requested` event records the actor process, exact lease and target, expiry reason and deadlines before entering the existing guarded close path. A `retirement-finished` event distinguishes confirmed `closed`, `already-missing`, `preserved` and `deferred` outcomes; physical target observation and registry finalization are separate fields. A request alone does not prove a close.
+
+The journal is append-only, created with mode600, and hashes managed browser/account scope. It does not contain prompts, responses or account identifiers. Failure to write the pre-close record preserves the tab. Existing activity, target and ownership checks remain in force. These records describe future instrumented actions; they cannot establish an earlier unrecorded close actor.

@@ -1,0 +1,21 @@
+{
+  "baseCommit": "89fe733d43bd2e0e1df47745ac0aa524f7850a6b",
+  "tests": {
+    "tier": "focused",
+    "files": 7,
+    "passed": 41,
+    "providerEffects": 0,
+    "liveCloses": 0
+  },
+  "typecheck": "passed",
+  "scopedLint": "passed; packages excluded by root lint configuration, checked by typecheck/build and manual review",
+  "fullBuild": "passed",
+  "review": {
+    "standardsAcceptedBlockers": 0,
+    "specAcceptedBlockers": 0,
+    "mode": "primary serial frozen patch"
+  },
+  "installed": "pending",
+  "historicalClosureActor": "unproven; no fabricated event",
+  "nativeAcceptance": "not run; prior once-only attempts remain exhausted"
+}

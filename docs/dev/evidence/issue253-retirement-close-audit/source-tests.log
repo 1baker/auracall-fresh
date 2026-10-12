@@ -1,0 +1,16 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-issue253-triage
+
+ ✓ tests/browser-service/tabLeaseRetirement.test.ts (4 tests) 16ms
+ ✓ tests/browser/chatgptTabRetirement.test.ts (2 tests) 9ms
+ ✓ tests/browser/activeChatRetirement.test.ts (5 tests) 19ms
+ ✓ tests/browser/configuredChatgptTabMaintenance.test.ts (10 tests) 40ms
+ ✓ tests/browser/configuredChatgptUtilityAffinity.test.ts (8 tests) 44ms
+ ✓ tests/browser/chatgptAffinityRuntime.test.ts (6 tests) 400ms
+ ✓ tests/browser/tabConcurrencyRuntime.test.ts (6 tests) 593ms
+
+ Test Files  7 passed (7)
+      Tests  41 passed (41)
+   Start at  05:28:13
+   Duration  4.38s (transform 9.69s, setup 1.40s, import 13.68s, tests 1.12s, environment 1ms)
+

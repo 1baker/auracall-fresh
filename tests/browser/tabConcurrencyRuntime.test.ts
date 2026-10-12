@@ -1,4 +1,5 @@
-import { access, mkdtemp, rm } from "node:fs/promises";
+import { retireExpiredTabLeases } from "../../packages/browser-service/src/service/tabLeaseRetirement.js";
+import { access, mkdtemp, rm, readFile, stat } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, test } from "vitest";
@@ -12,6 +13,32 @@ afterEach(() => {
 });
 
 describe("browser tab concurrency runtime", () => {
+	test("durably records the expiry request before close and its confirmed result", async () => {
+		const directory = await mkdtemp(path.join(os.tmpdir(), "auracall-retirement-audit-"));
+		try {
+			const runtime = createBrowserTabConcurrencyRuntime({ browser: { tabConcurrencyMode: "tab-affinity" } } as never, { storageRoot: directory });
+			if (!runtime.registry) throw new Error("fixture registry missing");
+			const scope = { runtimeProfileId: "fixture", managedBrowserProfile: "/private/managed", service: "chatgpt", tenantKey: "private-account@example.invalid" };
+			const reserved = await runtime.registry.reserve({ scope, targetId: "fixture-tab", workload: { kind: "conversation", conversationId: "fixture-conversation" }, operationId: "fixture-operation", now: "2026-10-12T12:00:00.000Z", idleTtlMs: 1000, absoluteTtlMs: 60000 });
+			if (!reserved.ok) throw new Error("fixture reserve failed");
+			await runtime.registry.idle({ claim: reserved.value.claim, now: "2026-10-12T12:00:00.500Z", effectState: "settled" });
+			const journal = path.join(directory, "tab-leases", "retirement-events.v1.jsonl");
+			let live = true;
+			await retireExpiredTabLeases({ registry: runtime.registry, audit: runtime.retirementAudit, scope, now: () => new Date("2026-10-12T12:00:02.000Z"), resolveEndpoint: async () => ({ host: "127.0.0.1", port: 9222 }), inspectTarget: async () => live ? { url: "https://chatgpt.com/c/fixture-conversation" } : null, targetMatchesLease: () => true, closeTarget: async () => {
+				const request = JSON.parse((await readFile(journal, "utf8")).trim());
+				expect(request).toMatchObject({ phase: "close-requested", actorPid: process.pid, reason: "idle-expired", targetId: "fixture-tab", leaseId: reserved.value.lease.leaseId });
+				live = false;
+			} });
+			const text = await readFile(journal, "utf8");
+			const events = text.trim().split("\n").map(line => JSON.parse(line));
+			expect(events).toHaveLength(2);
+			expect(events[1]).toMatchObject({ phase: "retirement-finished", disposition: "closed", targetDisposition: "closed", reason: "idle-expired", idleExpiresAt: "2026-10-12T12:00:01.000Z" });
+			expect(text).not.toContain(scope.tenantKey);
+			expect(text).not.toContain(scope.managedBrowserProfile);
+			if (process.platform !== "win32") expect((await stat(journal)).mode & 0o777).toBe(0o600);
+		} finally { await rm(directory, { recursive: true, force: true }); }
+	});
+
 	test("keeps serialized execution while enabling durable traffic safety stores", async () => {
 		const directory = await mkdtemp(path.join(os.tmpdir(), "auracall-tab-runtime-"));
 		try {

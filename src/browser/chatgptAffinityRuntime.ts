@@ -123,6 +123,7 @@ export async function runChatgptPromptWithConfiguredAffinity(input: {
 	if (input.inspectTarget) {
 		await retireExpiredChatgptTabLeases({
 			registry: input.runtime.registry,
+			audit: input.runtime.retirementAudit,
 			scope,
 			endpoint: toEndpoint(initialTarget),
 			now: input.now,

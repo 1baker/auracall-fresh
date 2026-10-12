@@ -1,3 +1,7 @@
+## 2026-10-12 — Record the expiry close before requesting it (#253)
+
+Mutable lease snapshots and aggregate cleanup counts cannot attribute a physical close. Persist append-only close-request and confirmed outcome events with actor process, lease/target identity and expiry reason. Already-missing must remain an observation; keep actual close intent separate from successful target disappearance and registry finalization. Preserve the tab if pre-close recording fails and never fabricate historical close events.
+
 ## 2026-10-12 — App tests inherit the selected browser response deadline (#253)
 
 Fresh-root Chat/current overrides must not replace browser.timeoutMs with an app-local120s constant. Carry the canonical launch policy into the shared response lifecycle. A shorter configured deadline still fails after Send with observed-effect/nonretryable evidence; a timeout does not authorize a replacement prompt.
