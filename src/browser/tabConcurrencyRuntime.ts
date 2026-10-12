@@ -1,3 +1,4 @@
+import { createFileBackedTabLeaseRetirementAudit, type TabLeaseRetirementAuditSink } from "../../packages/browser-service/src/service/tabLeaseRetirementAudit.js";
 import path from "node:path";
 
 import {
@@ -94,6 +95,7 @@ export interface BrowserTabConcurrencyRuntime {
 	enabled: boolean;
 	storageRoot: string | null;
 	registry: BrowserTabLeaseRegistry | null;
+	retirementAudit?: TabLeaseRetirementAuditSink;
 	ledger: ProviderInteractionLedger | null;
 	readStatus(): Promise<BrowserTabConcurrencyStatus>;
 }
@@ -116,6 +118,7 @@ export function createBrowserTabConcurrencyRuntime(
 		enabled: mode === "tab-affinity",
 		storageRoot,
 		registry,
+		retirementAudit: createFileBackedTabLeaseRetirementAudit(path.join(storageRoot, "tab-leases", "retirement-events.v1.jsonl")),
 		ledger,
 		readStatus: async () => {
 			const now = (options.now ?? (() => new Date()))();

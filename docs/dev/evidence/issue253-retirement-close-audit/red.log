@@ -1,0 +1,43 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-issue253-triage
+
+ ❯ tests/browser-service/tabLeaseRetirement.test.ts (3 tests | 1 failed | 2 skipped) 9ms
+     × closes only an expired idle attributable target and proves it disappeared 7ms
+     ↓ preserves an expired target when its current identity does not match the lease
+     ↓ retires an expired outcome-unknown lease when its target is already missing
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/browser-service/tabLeaseRetirement.test.ts > tab lease retirement > closes only an expired idle attributable target and proves it disappeared
+AssertionError: expected last "vi.fn()" call to have been called with [ ObjectContaining{…} ]
+
+- Expected: 
+[
+  ObjectContaining {
+    "disposition": "closed",
+    "leaseId": "lease-1",
+    "phase": "retirement-finished",
+    "reason": "idle-expired",
+    "targetId": "target-1",
+  },
+]
+
++ Received: 
+undefined
+
+ ❯ tests/browser-service/tabLeaseRetirement.test.ts:53:17
+     51| 
+     52|   expect(closeTarget).toHaveBeenCalledWith({ host: "127.0.0.1", port: …
+     53|   expect(audit).toHaveBeenLastCalledWith(expect.objectContaining({ pha…
+       |                 ^
+     54|   expect(outcomes).toEqual([
+     55|    expect.objectContaining({ leaseId: "lease-1", disposition: "closed"…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 skipped (3)
+   Start at  05:16:41
+   Duration  365ms (transform 121ms, setup 61ms, import 103ms, tests 9ms, environment 0ms)
+

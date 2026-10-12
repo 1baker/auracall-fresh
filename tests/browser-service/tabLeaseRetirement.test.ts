@@ -13,7 +13,7 @@ const scope: TabLeaseScope = {
 };
 
 describe("tab lease retirement", () => {
-	test("closes only an expired idle attributable target and proves it disappeared", async () => {
+	test.each([false, true])("records an expiry close and preserves the target on pre-close audit failure: %s", async (auditFails) => {
 		const registry = createInMemoryBrowserTabLeaseRegistry({ createLeaseId: () => "lease-1" });
 		const reserved = await registry.reserve({
 			scope,
@@ -31,12 +31,17 @@ describe("tab lease retirement", () => {
 			now: "2026-09-24T12:00:01.000Z",
 			effectState: "settled",
 		});
+		const audit = vi.fn(async (event) => {
+			if (auditFails && event.phase === "close-requested") throw new Error("Fixture journal unavailable");
+		});
 		let live = true;
 		const closeTarget = vi.fn(async () => {
+			expect(audit).toHaveBeenCalledWith(expect.objectContaining({ phase: "close-requested", reason: "idle-expired", leaseId: "lease-1", targetId: "target-1", actorPid: process.pid }));
 			live = false;
 		});
 
 		const outcomes = await retireExpiredTabLeases({
+			audit,
 			registry,
 			scope,
 			now: () => new Date("2026-09-24T12:00:02.000Z"),
@@ -46,15 +51,17 @@ describe("tab lease retirement", () => {
 			closeTarget,
 		});
 
-		expect(closeTarget).toHaveBeenCalledWith({ host: "127.0.0.1", port: 45100 }, "target-1");
+		if (auditFails) expect(closeTarget).not.toHaveBeenCalled();
+		else expect(closeTarget).toHaveBeenCalledWith({ host: "127.0.0.1", port: 45100 }, "target-1");
+		expect(audit).toHaveBeenLastCalledWith(expect.objectContaining({ phase: "retirement-finished", reason: "idle-expired", disposition: auditFails ? "preserved" : "closed", leaseId: "lease-1", targetId: "target-1" }));
 		expect(outcomes).toEqual([
-			expect.objectContaining({ leaseId: "lease-1", disposition: "closed" }),
+			expect.objectContaining({ leaseId: "lease-1", disposition: auditFails ? "preserved" : "closed" }),
 		]);
 		expect(await registry.list()).toEqual([
 			expect.objectContaining({
-				state: "released",
-				finalDisposition: "closed",
-				actionCounts: expect.objectContaining({ closes: 1 }),
+				state: auditFails ? "lost" : "released",
+				finalDisposition: auditFails ? "preserved" : "closed",
+				actionCounts: expect.objectContaining({ closes: auditFails ? 0 : 1 }),
 			}),
 		]);
 	});
@@ -122,7 +129,9 @@ describe("tab lease retirement", () => {
 		});
 		const closeTarget = vi.fn();
 
+		const audit = vi.fn(async () => undefined);
 		const outcomes = await retireExpiredTabLeases({
+			audit,
 			registry,
 			scope,
 			now: () => new Date("2026-09-24T12:00:02.000Z"),
@@ -132,6 +141,8 @@ describe("tab lease retirement", () => {
 			closeTarget,
 		});
 
+		expect(audit).toHaveBeenCalledTimes(1);
+		expect(audit).toHaveBeenCalledWith(expect.objectContaining({ phase: "retirement-finished", disposition: "already-missing" }));
 		expect(closeTarget).not.toHaveBeenCalled();
 		expect(outcomes).toEqual([
 			expect.objectContaining({

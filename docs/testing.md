@@ -1,3 +1,5 @@
+- Lease-expiry close records (provider-free): `pnpm vitest run tests/browser-service/tabLeaseRetirement.test.ts tests/browser/tabConcurrencyRuntime.test.ts tests/browser/configuredChatgptTabMaintenance.test.ts tests/browser/activeChatRetirement.test.ts`. Verifies durable intent before close, confirmed outcome afterward, no synthetic close for already-missing, pre-close audit failure preservation and activity protection. No live tab is closed.
+
 - Desktop response observation (provider-free): `pnpm vitest run tests/browser/desktopControlObservation.test.ts`. Real response wait, guarded CDP and desktop control gate exercise coordinated polling, ordinary observation and human exclusion. Mocked transport completion is separate from native provider/CLI acceptance.
 
 - Captured app-picker rows (provider-free): `pnpm vitest run tests/browser/chatgptAppComposer.test.ts`. Actual ensure/lookup expressions select a delayed current app row by installed name/description, reject missing metadata and duplicate rows, and exclude a same-name custom GPT. Native UI selection remains a separate check.

@@ -104,3 +104,5 @@ Developer-app submitted tests have two custody phases: exact utility inventory r
 Leased browser endpoints retain service-qualified browser process identity and managed browser directory into provider-session authorization, bound to the exact leased target. The process owning a tab lease can be the CLI and is not evidence of the browser process.
 
 Developer-app response collection uses the resolved browser launch policy deadline. Fresh-root Chat/current app-test posture does not replace the selected browser.timeoutMs. A timeout after Send preserves effect evidence and forbids automatic resubmission.
+
+**Lease retirement audit**: durable history of AuraCall expiry-close intent and outcome, distinct from the mutable final lease snapshot. Acting process identity is distinct from browser process identity; already-missing is an observation, not proof of an AuraCall close.

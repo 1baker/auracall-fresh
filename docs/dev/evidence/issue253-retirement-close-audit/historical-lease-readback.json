@@ -1,0 +1,15 @@
+{
+  "observedAt": "2026-10-12T10:27:13.567843+00:00",
+  "targetId": "CCBB65F08A246064C4942CE33D974294",
+  "leaseId": "4b40d574-2ce6-4a15-95e2-0ea02b32b7f0",
+  "state": "released",
+  "retirementReason": "idle-expired",
+  "finalDisposition": "already-missing",
+  "heartbeatAt": "2026-10-12T02:08:32.070Z",
+  "idleExpiresAt": "2026-10-12T02:07:27.984Z",
+  "closes": 0,
+  "ownedBrowserLifecycleEvents": [
+    "owned-browser-launched"
+  ],
+  "closureActor": "unproven; no synthetic historical close record"
+}

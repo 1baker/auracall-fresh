@@ -1,3 +1,4 @@
+import { recordTabLeaseRetirementAudit, type TabLeaseRetirementAuditSink } from "../../packages/browser-service/src/service/tabLeaseRetirementAudit.js";
 import { requireInactiveChatgptTab, type probeChatgptTabActivity } from "./chatgptTabActivity.js";
 import {
 	closeRemoteChromeTarget,
@@ -48,6 +49,7 @@ interface MaintenanceBrowserService {
 	}): Promise<{
 		host?: string;
 		port?: number;
+		browserProcessId?: number | null;
 		managedBrowserProfile?: string | null;
 	}>;
 }
@@ -55,6 +57,7 @@ interface MaintenanceBrowserService {
 export interface ConfiguredChatgptTabMaintenanceDeps {
 	createRuntime?: (config: ResolvedUserConfig) => {
 		registry: BrowserTabLeaseRegistry | null;
+		retirementAudit?: TabLeaseRetirementAuditSink;
 	};
 	createBrowserService?: (config: ResolvedUserConfig) => MaintenanceBrowserService;
 	listTargets?: typeof listChromeTargets;
@@ -221,7 +224,7 @@ export async function runConfiguredChatgptTabMaintenance(input: {
 			summary.visitedScopeCount += 1;
 			const endpoint =
 				target.host && target.port
-					? { host: target.host, port: target.port, managedBrowserProfile }
+					? { host: target.host, port: target.port, browserProcessId: target.browserProcessId ?? null, managedBrowserProfile }
 					: null;
 			const listTargets = deps.listTargets ?? listChromeTargets;
 			const closeTarget = deps.closeTarget ?? closeRemoteChromeTarget;
@@ -291,12 +294,20 @@ export async function runConfiguredChatgptTabMaintenance(input: {
 					nowMs >= Date.parse(lostLease.absoluteExpiresAt);
 				if (expired && endpoint && !isTabLeaseTtlExempt(lostLease)) {
 					await requireInactiveChatgptTab(endpoint, lostLease.targetId, deps.probeActivity);
-					await closeTarget(endpoint.host, endpoint.port, lostLease.targetId, () => undefined);
-					const remainingTargets = await listTargets(endpoint.port, endpoint.host);
-					const stillLive = remainingTargets.some((candidate) => {
-						const record = candidate as { id?: string; targetId?: string };
-						return (record.targetId ?? record.id) === lostLease.targetId;
-					});
+					const reason = nowMs >= Date.parse(lostLease.absoluteExpiresAt) ? "absolute-expired" : "idle-expired";
+					await recordTabLeaseRetirementAudit(runtime.retirementAudit, { phase: "close-requested", lease: lostLease, reason, endpoint, observedAt: new Date(nowMs).toISOString() });
+					let stillLive: boolean;
+					try {
+						await closeTarget(endpoint.host, endpoint.port, lostLease.targetId, () => undefined);
+						const remainingTargets = await listTargets(endpoint.port, endpoint.host);
+						stillLive = remainingTargets.some((candidate) => {
+							const record = candidate as { id?: string; targetId?: string };
+							return (record.targetId ?? record.id) === lostLease.targetId;
+						});
+					} catch (error) {
+						await recordTabLeaseRetirementAudit(runtime.retirementAudit, { phase: "retirement-finished", lease: lostLease, reason, endpoint, observedAt: (input.now ?? (() => new Date()))().toISOString(), disposition: "deferred", detail: error instanceof Error ? error.message : String(error) });
+						throw error;
+					}
 					if (!stillLive) {
 						const released = await runtime.registry.releaseLost({
 							leaseId: lostLease.leaseId,
@@ -304,10 +315,12 @@ export async function runConfiguredChatgptTabMaintenance(input: {
 							now: new Date(nowMs).toISOString(),
 							disposition: "closed",
 						});
+						await recordTabLeaseRetirementAudit(runtime.retirementAudit, { phase: "retirement-finished", lease: lostLease, reason, endpoint, observedAt: (input.now ?? (() => new Date()))().toISOString(), disposition: released.ok ? "closed" : "deferred", targetDisposition: "closed", detail: released.ok ? undefined : released.conflict.kind });
 						if (released.ok) summary.closedCount += 1;
 						else summary.deferredScopeCount += 1;
 						continue;
 					}
+					await recordTabLeaseRetirementAudit(runtime.retirementAudit, { phase: "retirement-finished", lease: lostLease, reason, endpoint, observedAt: (input.now ?? (() => new Date()))().toISOString(), disposition: "preserved", targetDisposition: "preserved", detail: "target-still-live-after-close" });
 					if (!chatgptTargetMatchesLease(lostLease, { url: target.url ?? "" })) {
 						summary.restartIdentityMismatchCount += 1;
 						continue;
@@ -319,6 +332,7 @@ export async function runConfiguredChatgptTabMaintenance(input: {
 				retireAllExpiredPages: true,
 				probeActivity: deps.probeActivity,
 				registry: runtime.registry,
+				audit: runtime.retirementAudit,
 				scope,
 				endpoint,
 				now: input.now,

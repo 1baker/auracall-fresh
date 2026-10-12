@@ -1,3 +1,4 @@
+import { recordTabLeaseRetirementAudit, type TabLeaseRetirementAuditSink } from "./tabLeaseRetirementAudit.js";
 import { isTabLeaseTtlExempt } from "./tabLeaseRegistry.js";
 import type {
 	BrowserTabLease,
@@ -10,6 +11,7 @@ import type {
 export interface TabLeaseRetirementEndpoint {
 	host: string;
 	port: number;
+	browserProcessId?: number | null;
 }
 
 export interface TabLeaseRetirementOutcome {
@@ -22,6 +24,7 @@ export interface TabLeaseRetirementOutcome {
 
 export async function retireExpiredTabLeases(input: {
 	registry: BrowserTabLeaseRegistry;
+	audit?: TabLeaseRetirementAuditSink;
 	scope: TabLeaseScope;
 	now?: () => Date;
 	resolveEndpoint: () => Promise<TabLeaseRetirementEndpoint | null>;
@@ -103,6 +106,7 @@ export async function retireExpiredTabLeases(input: {
 					disposition = "preserved";
 					detail = "target-identity-mismatch";
 				} else {
+					await recordTabLeaseRetirementAudit(input.audit, { phase: "close-requested", lease, reason, endpoint, observedAt: now().toISOString() });
 					await input.closeTarget(endpoint, lease.targetId);
 					const afterClose = await input.inspectTarget(endpoint, lease.targetId);
 					disposition = afterClose ? "preserved" : "closed";
@@ -119,6 +123,11 @@ export async function retireExpiredTabLeases(input: {
 			retirementRevision,
 			now: now().toISOString(),
 			disposition,
+		});
+		await recordTabLeaseRetirementAudit(input.audit, {
+			phase: "retirement-finished", lease, reason, endpoint, observedAt: now().toISOString(),
+			disposition: finished.ok ? disposition : "deferred", targetDisposition: disposition,
+			detail: finished.ok ? detail : finished.conflict.kind,
 		});
 		outcomes.push({
 			leaseId: lease.leaseId,
