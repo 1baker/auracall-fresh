@@ -1,0 +1,60 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-issue253-triage
+
+ ❯ tests/browser/chatgptDeveloperAppLifecycle.test.ts (24 tests | 1 failed | 23 skipped) 739ms
+     ↓ refreshes a late terminal conversation before returning committed-Send failure: {"terminalFailure":true}
+     ↓ refreshes a late terminal conversation before returning committed-Send failure: {"manualApproval":true}
+     ↓ carries managed browser provenance through affinity without a legacy PID file: {"browserProcessId":1234,"wrongIdentity":false,"originalConfig":false,"completed":true}
+     ↓ carries managed browser provenance through affinity without a legacy PID file: {"browserProcessId":1234,"wrongIdentity":false,"originalConfig":true,"completed":true}
+     ↓ carries managed browser provenance through affinity without a legacy PID file: {"browserProcessId":null,"wrongIdentity":false,"originalConfig":false,"completed":false}
+     ↓ carries managed browser provenance through affinity without a legacy PID file: {"browserProcessId":1234,"wrongIdentity":true,"originalConfig":false,"completed":false}
+     ↓ preserves attributable WSL Windows loopback provenance through the canonical host alias
+     ↓ fails closed without a matching managed process and never authorizes arbitrary remote hosts from a local PID
+     ↓ returns answer and refreshed terminal identity after exactly one Send
+     ↓ preserves terminal failure evidence without retry: {"terminalFailure":true,"effectState":"effect_observed"}
+     ↓ preserves terminal failure evidence without retry: {"uncertainSend":true,"effectState":"unknown"}
+     ↓ preserves terminal failure evidence without retry: {"manualApproval":true,"effectState":"effect_observed"}
+     ↓ does not send after selection changes or account preflight fails
+     × honors the selected response deadline through the shared lifecycle 738ms
+     ↓ preserves full selected runtime configuration at affinity admission without provider effects
+     ↓ preserves the selected AuraCall runtime profile across the shared submit lifecycle
+     ↓ upgrades unknown to structured observed effect without retry
+     ↓ forces per-run Chat/current and removes inherited Work/composer settings
+     ↓ rejects unsupported high-level input before transport: {"attachments":[{"path":"/unused","displayPath":"unused"}]}
+     ↓ rejects unsupported high-level input before transport: {"fallbackSubmission":{"prompt":"retry","attachments":[]}}
+     ↓ rejects unsupported high-level input before transport: {"config":{"composerTool":"other"}}
+     ↓ rejects unsupported high-level input before transport: {"config":{"projectId":"project"}}
+     ↓ rejects unsupported high-level input before transport: {"config":{"conversationId":"conversation"}}
+     ↓ rejects unsupported high-level input before transport: {"config":{"chatgptMode":"work"}}
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/browser/chatgptDeveloperAppLifecycle.test.ts > bounded submission contract > honors the selected response deadline through the shared lifecycle
+AssertionError: Fixture response remains active beyond deadline: expected { status: 'failed', …(6) } to match object { status: 'completed', …(1) }
+(6 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "answerText": "App terminal answer",
+-   "status": "completed",
++   "status": "failed",
+  }
+
+ ❯ tests/browser/chatgptDeveloperAppLifecycle.test.ts:401:36
+    399|   expect(resolveBrowserLaunchPlan({ source: { kind: "user-config", con…
+    400|   const outcome = await submitChatgptDeveloperApp(selected as never, a…
+    401|   expect(outcome, outcome.message).toMatchObject({ status: "completed"…
+       |                                    ^
+    402|   expect(fixture.wait.mock.calls[0]?.[1]).toBe(300_000);
+    403|   expect(fixture.submit).toHaveBeenCalledTimes(1);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 23 skipped (24)
+   Start at  21:52:11
+   Duration  3.50s (transform 1.86s, setup 68ms, import 2.48s, tests 739ms, environment 0ms)
+

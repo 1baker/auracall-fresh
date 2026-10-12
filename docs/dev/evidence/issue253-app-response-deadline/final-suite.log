@@ -1,0 +1,28 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-issue253-triage
+
+ ✓ tests/browser/browserLaunchPlanStructure.test.ts (4 tests) 16ms
+ ✓ tests/browser/assistantResponseStatus.test.ts (8 tests) 5ms
+ ✓ tests/browser/browserLaunchPlan.test.ts (19 tests) 99ms
+ ✓ tests/browser/desktopControlObservation.test.ts (3 tests) 6775ms
+   ✓ collects through actual admission while retaining human exclusion: {"coordinated":true,"human":false}  3545ms
+   ✓ collects through actual admission while retaining human exclusion: {"coordinated":false,"human":false}  3212ms
+ ✓ tests/browser/chatgptDeveloperAppLifecycle.test.ts (26 tests) 8647ms
+     ✓ refreshes a late terminal conversation before returning committed-Send failure: {"terminalFailure":true}  764ms
+     ✓ refreshes a late terminal conversation before returning committed-Send failure: {"manualApproval":true}  708ms
+     ✓ carries managed browser provenance through affinity without a legacy PID file: {"browserProcessId":1234,"wrongIdentity":false,"originalConfig":false,"completed":true}  716ms
+     ✓ carries managed browser provenance through affinity without a legacy PID file: {"browserProcessId":1234,"wrongIdentity":false,"originalConfig":true,"completed":true}  709ms
+     ✓ preserves attributable WSL Windows loopback provenance through the canonical host alias  707ms
+     ✓ returns answer and refreshed terminal identity after exactly one Send  708ms
+     ✓ preserves terminal failure evidence without retry: {"terminalFailure":true,"effectState":"effect_observed"}  704ms
+     ✓ preserves terminal failure evidence without retry: {"uncertainSend":true,"effectState":"unknown"}  710ms
+     ✓ preserves terminal failure evidence without retry: {"manualApproval":true,"effectState":"effect_observed"}  705ms
+     ✓ honors the selected response deadline through the shared lifecycle  708ms
+     ✓ uses the canonical browser default when no response deadline is configured  717ms
+     ✓ retains a shorter selected response deadline and never retries after Send  706ms
+
+ Test Files  5 passed (5)
+      Tests  60 passed (60)
+   Start at  21:56:27
+   Duration  12.36s (transform 4.55s, setup 802ms, import 6.23s, tests 15.54s, environment 1ms)
+

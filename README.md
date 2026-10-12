@@ -187,6 +187,8 @@ auracall --profile wsl-chrome-3 apps --target chatgpt test Corel33t \
 # Work/project/conversation targeting. JSON and text return answerText,
 # conversationId, terminal/current URL, effectState and retrySafe. Unknown or
 # observed Send effects are never retry-safe; there is no automatic resubmit.
+# Response collection uses the selected browser.timeoutMs (canonical browser
+# default: 2 hours); apps test has no separate fixed two-minute deadline.
 # Issue 6 provider-free fixtures prove this source seam, not installed/live use.
 # Create, refresh, submitted tests, and uninstall require --expected-account
 # plus --yes. OAuth, MFA, consent, CAPTCHA, and verification remain human gates.
