@@ -160,3 +160,5 @@ Final native terminal01:02:21.401Z/exit124; failedJSON and observer-completion t
 ## Revision | Qualified browser process handoff
 
 Resumed goal: provider-free real app/affinity/remote authority loop reproduced processunknown/provenance_missing. Preserve service-resolved PID and managed directory through provisioned endpoint and bind existing authorization to exact leased target. Original/reduced fixtures pass; absent process and wrong account block.44tests5files, scopedlint/typecheck/fullbuild pass; Standards/Spec0 accepted source blockers. Installed runtime unchanged; both native intents exhausted and full native acceptance OPEN. Evidence: [process handoff diagnosis](../evidence/issue253-provider-process-handoff/diagnosis.md).
+
+Source process-provenance repair integrated PR291 merge56c11d72d / source3303b51a6.44tests5files, lint/typecheck/fullbuild green. Installed package remains87a779dac; promotion and a separately authorized native completion remain. Both prior intents exhausted, no retry. Goal checkpoint before cumulative2h; use evidence/issue253-provider-process-handoff/result.json for exact source identity.

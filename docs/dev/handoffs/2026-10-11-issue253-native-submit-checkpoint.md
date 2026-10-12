@@ -40,3 +40,5 @@ Final followup: actual native terminal01:02:21.401Z/exit124, observer completion
 ## Resumed source diagnosis checkpoint
 
 Branch fix/issue253-provider-process-handoff repairs qualified service PID loss with a real affinity-to-remote regression. See docs/dev/evidence/issue253-provider-process-handoff/diagnosis.md and retained red/green logs.44tests5files, lint/typecheck/fullbuild pass. Installed runtime remains87a779dac; neither native intent is reusable. Next: integrate source checkpoint, promote installed package with parity and provider-free checks; only separately authorized new native acceptance may send the frozen prompt. Goal retains cumulative two-hour/1MM bound.
+
+Source process-provenance repair integrated PR291 merge56c11d72d / source3303b51a6.44tests5files, lint/typecheck/fullbuild green. Installed package remains87a779dac; promotion and a separately authorized native completion remain. Both prior intents exhausted, no retry. Goal checkpoint before cumulative2h; use evidence/issue253-provider-process-handoff/result.json for exact source identity.

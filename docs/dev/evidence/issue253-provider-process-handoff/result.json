@@ -1,0 +1,25 @@
+{
+  "sourceCommit": "3303b51a609e06588583c6dd812fa296a7de5c7a",
+  "integratedCommit": "56c11d72d7d68de104e16b0eb1cdbbb9d6bd20da",
+  "pr": "https://github.com/ecochran76/auracall/pull/291",
+  "issueState": "OPEN",
+  "tests": {
+    "tier": "focused",
+    "files": 5,
+    "passed": 44,
+    "providerEffects": 0
+  },
+  "typecheck": "passed",
+  "scopedLint": "passed",
+  "fullBuild": "passed",
+  "review": {
+    "standardsAcceptedBlockers": 0,
+    "specAcceptedBlockers": 0
+  },
+  "installedSourceCommit": "87a779dacacdf92eea71e517d7cc1e3a70e620af",
+  "installedPromotion": "pending",
+  "nativeCompletion": "unproven",
+  "previousNativeIntents": "both exhausted; no retry",
+  "historicalFallbackPidFileState": "unknown",
+  "next": "Promote integrated source with exact compiled parity and provider-free seam verification; require separately authorized native acceptance before Send."
+}
