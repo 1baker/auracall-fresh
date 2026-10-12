@@ -20,5 +20,9 @@
     "mode": "primary serial frozen patch"
   },
   "nativeAcceptance": "unproven; original attempts exhausted; no new prompt authorized",
-  "installed": "pending"
+  "installed": "passed",
+  "sourceCommit": "c2458d307649ace514ae5ee70da6ba409d5856ea",
+  "integratedCommit": "048ac2591c1f9feeb4517936d356af2996e173e6",
+  "pr": "https://github.com/ecochran76/auracall/pull/297",
+  "installedSharedLifecycleTests": 3
 }
