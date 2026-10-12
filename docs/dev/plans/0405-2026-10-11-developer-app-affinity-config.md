@@ -147,3 +147,12 @@ Source lease handoff verification:61tests4files pass, scoped lint/typecheck/full
 ### Installed handoff and bounded checkpoint
 
 PR288 integrated87a779dac/validatedf4b0b8282; CLI/MCP/API user-runtime-issue253-submit-handoff,591files exactparity; installed real CLI/utility/provisioner fixture0provider effects. API56928 active/processKillMode/argv binds prefix. Browser95651 absent before restart, actorunknown. Finallease released/settled with restart-unverified reason; no manualtransition. Scoped Session152–163 membership unchanged, not wholeDB equivalence. Original once-only submit exhaustedpre_effect; full native completion OPEN. See [restart-safe checkpoint](../handoffs/2026-10-11-issue253-native-submit-checkpoint.md).
+
+
+## Revision | Newly authorized installed native acceptance
+
+User explicitly authorized one new attempt after the Matt original-scenario recommendation. Prior once-only intent and pre_effect/nullCID receipt were reconciled and preserved; no old invocation is resent. Current installed PR288 source87a779dac,591files fresh exactparity and both wrappers verified. Existing LitScout thread runs one same frozen1463byte prompt attempt with separate append-only attempt2 intent/evidence, native guarded prerequisites and read-only visual/DOM observer. Native invocation began2026-10-12T00:56:06.555Z. No manual lease/control recovery, browser cleanup, directCDP Send, Answer now, automatic approvals, new wakes or retries. Observe same invocation until terminal or01:03Z checkpoint; native response acceptance remains pending.
+
+New native attempt failedpre_effect/provider_session_provenance_missing, nullCID/noSend. Fresh samebrowser/account/empty screenshot and leaseadoption1 independently inspected; PR288 acquisition advanced, provenance gate remains. CLIterminal pending outerguard. [Renewed native evidence](../evidence/issue253-renewed-native-acceptance/analysis.md). No retry or sourcechange.
+
+Final native terminal01:02:21.401Z/exit124; failedJSON and observer-completion timestamps recorded separately. Fresh final samebrowser/account/empty and lease lost/restart-unverified/effectnone/adoption1 verified. Scoped Session152–163 membership unchanged. Both intents preserved/exhausted; no retry. Issue253 native completion remains OPEN.
