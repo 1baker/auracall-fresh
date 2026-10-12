@@ -52,7 +52,24 @@
     "retainedReferences": 6,
     "preservedSessions152to163": true
   },
-  "nativeCliCompletion": "not proven; desktop control failed after effect; process terminal pending outer guard",
+  "nativeCliCompletion": "failed receipt; actual native terminal exit124; clean exit unproven",
   "issue253": "OPEN",
-  "memoryDisposition": "forbidden"
+  "memoryDisposition": "forbidden",
+  "actualLifecycle": {
+    "observedAt": "2026-10-12T02:04:43.324654+00:00",
+    "observerCompletionAt": "2026-10-12T02:00:24.976Z",
+    "terminal": true,
+    "exitCode": 124,
+    "signal": null,
+    "nativeTerminalEvents": [
+      {
+        "at": "2026-10-12T02:00:24.660Z",
+        "stage": "native-terminal",
+        "exitCode": 124,
+        "signal": null
+      }
+    ],
+    "researchTerminalSeparate": true,
+    "legacyFieldCorrection": "intentExists/resultExists refer to fallback paths and do not describe attempt3; providerPromptSubmissionAttempted is invocation flag, actual send independently proven"
+  }
 }
