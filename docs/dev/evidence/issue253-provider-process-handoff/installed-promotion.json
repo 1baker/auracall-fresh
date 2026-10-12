@@ -1,0 +1,14 @@
+{
+  "observedAt": "2026-10-12T01:45:52.021563+00:00",
+  "service": {
+    "MainPID": "8964",
+    "KillMode": "process",
+    "ActiveState": "active",
+    "SubState": "running"
+  },
+  "apiArgvBindsInstalledPrefix": true,
+  "cliWrapperBindsInstalledPrefix": true,
+  "mcpWrapperBindsInstalledPrefix": true,
+  "browserProcesses": [],
+  "providerEffects": 0
+}

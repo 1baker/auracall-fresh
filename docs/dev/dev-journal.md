@@ -1,3 +1,7 @@
+## 2026-10-11 — Installed Issue253 process handoff
+
+User requested resource reset and continuation. Promoted c4ec9c8bf/validated3303b51a6 with591fileparity; CLI/MCP/API verified. Installed provider-free handoff and inventory fixtures and /desktops contract pass. No browser processes before/after APIsoftware restart; exitactorunknown. Native once-only acceptance awaits fresh authorization, old intents exhausted. Evidence: docs/dev/evidence/issue253-provider-process-handoff/installed.md.
+
 ## 2026-10-11 — Issue253 process provenance handoff
 
 Resumed goal reproduced native processunknown symptom through actual app/affinity/remote lifecycle. Source repair carries qualified service PID instead of relying on legacy metadata.44 focused tests5files, scoped lint/typecheck/fullbuild pass. Installed/live acceptance remains separate, both prior intents exhausted. See evidence/issue253-provider-process-handoff/diagnosis.md.
