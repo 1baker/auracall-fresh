@@ -27,7 +27,10 @@ import { resolveConfiguredServiceAccountId } from "../config/serviceAccountIdent
 import type { ResolvedUserConfig } from "../config.js";
 import { resolveChatgptTenantLimits } from "../runtime/tenantExecutionLimits.js";
 import type { AccountMirrorMetadataCollectorInput } from "./chatgptMetadataCollector.js";
-import { acquireLiveFollowCrawlerTab } from "./liveFollowTabCoordinator.js";
+import {
+	acquireEphemeralBrowserTab,
+	acquireLiveFollowCrawlerTab,
+} from "./liveFollowTabCoordinator.js";
 import { withAccountMirrorProviderTrafficPlan } from "./providerTrafficPlan.js";
 
 export interface ConfiguredLiveFollowAffinityContext {
@@ -54,6 +57,7 @@ export async function createConfiguredLiveFollowAffinity(input: {
 	provider: "chatgpt" | "gemini" | "grok";
 	runtimeProfileId: string;
 	operationId: string;
+	workloadKind?: "live-follow" | "ephemeral";
 	maxBrowserInteractionsPerMinute: number;
 	conversationReadCooldownMs?: number;
 	pageRefreshCooldownMs?: number;
@@ -96,8 +100,14 @@ export async function createConfiguredLiveFollowAffinity(input: {
 		if (!target.host || !target.port || target.managedBrowserProfile !== managedBrowserProfile) {
 			return null;
 		}
-		return { host: target.host, port: target.port, browserProcessId: target.browserProcessId ?? null, managedBrowserProfile };
+		return {
+			host: target.host,
+			port: target.port,
+			browserProcessId: target.browserProcessId ?? null,
+			managedBrowserProfile,
+		};
 	};
+	const workloadKind = input.workloadKind ?? "live-follow";
 	const scope = {
 		runtimeProfileId: input.runtimeProfileId,
 		managedBrowserProfile,
@@ -143,7 +153,7 @@ export async function createConfiguredLiveFollowAffinity(input: {
 					provider: "chatgpt",
 					runtimeProfileId: input.runtimeProfileId,
 					managedBrowserProfile,
-					workloadId: `live-follow:${input.operationId}`,
+					workloadId: `${workloadKind}:${input.operationId}`,
 					operationId: input.operationId,
 					tabLeaseId: `pre-lease:${input.operationId}`,
 				},
@@ -166,7 +176,9 @@ export async function createConfiguredLiveFollowAffinity(input: {
 		{ trafficPhase: "bootstrap", workKey: "scope:crawler-target" },
 	);
 	let coldStartTargets: Array<{ targetId: string; url: string }> = [];
-	const crawler = await acquireLiveFollowCrawlerTab({
+	const acquireCrawler =
+		workloadKind === "live-follow" ? acquireLiveFollowCrawlerTab : acquireEphemeralBrowserTab;
+	const crawler = await acquireCrawler({
 		registry: runtime.registry,
 		scope,
 		operationId: input.operationId,
@@ -220,7 +232,7 @@ export async function createConfiguredLiveFollowAffinity(input: {
 			runtimeProfileId: input.runtimeProfileId,
 			managedBrowserProfile,
 		},
-		workloadId: `live-follow:${input.operationId}`,
+		workloadId: `${workloadKind}:${input.operationId}`,
 		operationId: input.operationId,
 		tabLeaseId: crawler.lease.leaseId,
 		policy: {
@@ -242,7 +254,7 @@ export async function createConfiguredLiveFollowAffinity(input: {
 			provider: "chatgpt",
 			runtimeProfileId: input.runtimeProfileId,
 			managedBrowserProfile,
-			workloadId: `live-follow:${input.operationId}`,
+			workloadId: `${workloadKind}:${input.operationId}`,
 			operationId: input.operationId,
 			tabLeaseId: crawler.lease.leaseId,
 		},
@@ -348,7 +360,7 @@ export async function createConfiguredLiveFollowAffinity(input: {
 		kind: "browser-execution" as const,
 		operationClass: "shared-read" as const,
 		ownerPid: process.pid,
-		ownerCommand: `account-mirror-live-follow:${input.operationId}`,
+		ownerCommand: `${workloadKind === "live-follow" ? "account-mirror-live-follow" : "account-mirror-refresh"}:${input.operationId}`,
 		startedAt: (input.now ?? (() => new Date()))().toISOString(),
 		updatedAt: (input.now ?? (() => new Date()))().toISOString(),
 	};

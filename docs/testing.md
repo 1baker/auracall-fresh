@@ -1,3 +1,11 @@
+- Refresh affinity lifetime (provider-free):
+  `pnpm vitest run tests/accountMirror/refreshAffinityLifetime.test.ts`.
+  Public refresh service, configured affinity, coordinator, file-backed registry/
+  ledger and retirement path operate in a temporary home. Browser transport,
+  activity observation and collector output are simulated. Cold standalone
+  refresh expires normally; completion and borrowed retained tabs stay retained.
+  This proves lifetime/effects in the fixture, not a live browser exit.
+
 - Passive ChatGPT project index (provider-free):
   `pnpm vitest run tests/browser/chatgptContextAffinityRoute.test.ts -t 'project-index'`.
   Public service, utility affinity and actual adapter expression read recorded
