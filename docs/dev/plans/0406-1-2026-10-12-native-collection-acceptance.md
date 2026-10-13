@@ -2,7 +2,7 @@
 
 State: OPEN — user authorized up to ten additional serial submission packets.
 Parent: Plan0405; Plan0406 source/install CLOSED. Issue253 OPEN.
-Installed source e953a877146d1f92d98a2c46c19c957abb52ba91, validated 6cc7ae97ef10ce9b2851d300dc7107c82a95f79f, prefix ~/.auracall/user-runtime-issue253-retirement-audit. Plan0407 installs expiry-close auditing; it grants no native acceptance effects.
+Installed source bcc48e31fb259147736ea7c9854b25b32871e34b, validated 29ed141e120047438fd182fe761763b75cb313f1, prefix ~/.auracall/user-runtime-issue253-terminal-exit. Plan0407 installs expiry-close auditing; it grants no native acceptance effects.
 
 ## Concrete proposed execution
 
@@ -14,7 +14,7 @@ User authorization received: up to ten additional serial submission packets. For
 
 Success requires native completed receipt with exact conversation identity, full answer marker/digest verified against that same conversation, native CLI exit0, effect_observed/nonretryable evidence, correct account/app/Instant screenshot, original prompt verbatim (native app prefix recorded separately), scoped lease/process readback and research outcome audit. Capture route/status timeline and actual terminal timestamps independently of planned deadline. Failure/pending/approval/loss: reconcile exact original request and return incomplete gates, no resend. Preserve unknown exit attribution. Short Instant completion is not active-chat idle-expiry proof.
 
-Private artifacts: existing Demo10 campaign attempt4 files; primary exact process/visual proofs under ~/.auracall/diagnostics/issue253-retirement-audit-installed. Public receipts use hashes and bounded claims, exclude raw research/account/app/screenshots. No general memory writes.
+Private artifacts: existing Demo10 campaign attempt4 files; primary exact process/visual proofs under ~/.auracall/diagnostics/issue253-terminal-exit-installed. Public receipts use hashes and bounded claims, exclude raw research/account/app/screenshots. No general memory writes.
 
 Goal checkpoint before05:43:58.455186Z or1.5MM token allowance. The user has expanded submission authority to ten additional packets; this plan records that authority and does not renew goal limits.
 

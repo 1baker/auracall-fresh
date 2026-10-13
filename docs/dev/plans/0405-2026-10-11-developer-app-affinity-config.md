@@ -11,7 +11,7 @@ Base: 9b324b3dc7d3f8f1ec50e3888f02e71c39047e02
 
 ## Current State
 
-PR295 collector admission, PR297 response deadline, and PR299 durable lease-expiry close auditing are integrated and installed. Current prefix user-runtime-issue253-retirement-audit, source e953a877146d1f92d98a2c46c19c957abb52ba91 / validated 6cc7ae97ef10ce9b2851d300dc7107c82a95f79f; 592 compiled files match, 41 source tests and five installed audit cases pass. API PID15114, /desktops200. Plan0407 is CLOSED. Historical lease retirement reports already-missing with zero recorded closes, so its closer remains unproven; no historical close attribution was fabricated. Original attempt3 completed provider research but its CLI receipt failed. All earlier attempts remain exhausted. Full native collection acceptance remains OPEN; Plan0406-1 awaits explicit once-only authorization. No new provider request, wake, or forced live closure.
+PR301 terminal-exit repair is integrated and installed bcc48e31f / validated29ed141e1 in user-runtime-issue253-terminal-exit.592compiledfiles match,34source tests/typecheck/build pass; API25715 exactargv/processKillMode,/desktops200. Installed native no-submit recheck exit0 in39seconds with exactaccount/app; bounded Plan0408 CLOSED. User authorized up to10additional serial submission packets,0consumed. Canonical Instantsetup precedes packet1. Prior exhausted attempts and failedreceipts preserved. Full Issue253 native completion remainsOPEN. Expiry audit captured API30839 idle-expired close request but preserved/still-live result; later process exit actor remainsunknown.
 
 ## Scope and seams
 

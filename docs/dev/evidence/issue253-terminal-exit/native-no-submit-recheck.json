@@ -1,0 +1,13 @@
+{
+  "observedAt": "2026-10-13T02:11:18.723193+00:00",
+  "receiptSha256": "7b5ab4f1585b60d0643b0a19c19e6f2225fc55b40b37c5c031412d78d32913f6",
+  "nativeAction": "test",
+  "nativeStatus": "completed",
+  "accountMatches": true,
+  "inventoryComplete": true,
+  "selectedAppMatches": true,
+  "exitCode": 0,
+  "elapsedMs": 39012,
+  "terminalAt": "2026-10-13T02:09:00.039Z",
+  "providerSubmissions": 0
+}
