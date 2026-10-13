@@ -1,3 +1,4 @@
+import { runInNewContext } from "node:vm";
 import { describe, expect, it, vi } from "vitest";
 import { createChatgptDeveloperAppBrowserAdapter } from "../../src/browser/providers/chatgptDeveloperApps.js";
 
@@ -110,6 +111,83 @@ describe("developer app inventory with current settings UI", () => {
 		} finally {
 			await adapter.close();
 			vi.useRealTimers();
+		}
+	});
+});
+
+describe("developer app operation blocking scope", () => {
+	it.each([
+		"healthy",
+		"main",
+		"sidebar-dialog",
+	])("history Retry retains operation gate for %s", async (location) => {
+		const operationFailure = location !== "healthy";
+		const element = (text: string, sidebar: boolean, dialog = false) => ({
+			textContent: text,
+			getAttribute: () => null,
+			getBoundingClientRect: () => ({ width: 100, height: 20 }),
+			closest: (selector: string) =>
+				selector.includes("dialog") ? (dialog ? {} : null) : sidebar ? {} : null,
+		});
+		const sidebar = element("Unable to load history Retry", true);
+		const main = element(
+			operationFailure ? "Something went wrong Retry" : "Ready when you are",
+			location === "sidebar-dialog",
+			location === "sidebar-dialog",
+		);
+		const buttons = [
+			element("Retry", true),
+			...(operationFailure
+				? [element("Retry", location === "sidebar-dialog", location === "sidebar-dialog")]
+				: []),
+		];
+		const nodes = [sidebar, main].map((parentElement) => ({
+			parentElement,
+			textContent: parentElement.textContent,
+		}));
+		const document = {
+			body: { innerText: nodes.map((n) => n.textContent).join("\n") },
+			querySelectorAll: () => buttons,
+			createTreeWalker: () => {
+				let i = 0;
+				return { nextNode: () => nodes[i++] ?? null };
+			},
+		};
+		let guardEvaluated = false;
+		const client = {
+			Runtime: {
+				enable: async () => {},
+				evaluate: async ({ expression }: { expression: string }) => {
+					if (!guardEvaluated) {
+						guardEvaluated = true;
+						return {
+							result: {
+								value: runInNewContext(expression, { document, NodeFilter: { SHOW_TEXT: 4 } }),
+							},
+						};
+					}
+					throw new Error("fixture selection reached");
+				},
+			},
+			Page: { enable: async () => {}, navigate: async () => {} },
+			close: async () => {},
+		};
+		const adapter = createChatgptDeveloperAppBrowserAdapter(
+			{
+				userConfig: {} as never,
+				getUserIdentity: async () => ({ email: "owner@example.test" }) as never,
+				connectDevTools: async () => ({ client: client as never, port: 45015 }),
+			},
+			async () => {
+				throw new Error("unexpected browser creation");
+			},
+		);
+		try {
+			await expect(adapter.selectForTest({ name: "Fixture App" } as never)).rejects.toThrow(
+				operationFailure ? "Cannot select Fixture App: retry" : "fixture selection reached",
+			);
+		} finally {
+			await adapter.close();
 		}
 	});
 });

@@ -1,3 +1,5 @@
+- Developer-app blocker scope (provider-free): `pnpm vitest run tests/browser/chatgptDeveloperAppInventory.test.ts`. The public adapter permits app preparation when only sidebar history reports Retry, but retains main and nested-dialog errors. Native app selection and provider completion remain separate acceptance gates.
+
 - Lease-expiry close records (provider-free): `pnpm vitest run tests/browser-service/tabLeaseRetirement.test.ts tests/browser/tabConcurrencyRuntime.test.ts tests/browser/configuredChatgptTabMaintenance.test.ts tests/browser/activeChatRetirement.test.ts`. Verifies durable intent before close, confirmed outcome afterward, no synthetic close for already-missing, pre-close audit failure preservation and activity protection. No live tab is closed.
 
 - Desktop response observation (provider-free): `pnpm vitest run tests/browser/desktopControlObservation.test.ts`. Real response wait, guarded CDP and desktop control gate exercise coordinated polling, ordinary observation and human exclusion. Mocked transport completion is separate from native provider/CLI acceptance.

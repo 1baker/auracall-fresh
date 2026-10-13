@@ -1,0 +1,35 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-issue253-triage
+
+ ❯ tests/browser/chatgptDeveloperAppInventory.test.ts (6 tests | 1 failed) 770ms
+     ✓ returns complete installed apps with Developer mode observation null 5ms
+     ✓ returns complete installed apps with Developer mode observation true 1ms
+     ✓ returns complete installed apps with Developer mode observation false 0ms
+     ✓ history Retry retains operation gate for healthy 254ms
+     ✓ history Retry retains operation gate for main 251ms
+     × history Retry retains operation gate for sidebar-dialog 256ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/browser/chatgptDeveloperAppInventory.test.ts > developer app operation blocking scope > history Retry retains operation gate for sidebar-dialog
+AssertionError: expected [Function] to throw error including 'Cannot select Fixture App: retry' but got 'fixture selection reached'
+
+Expected: "Cannot select Fixture App: retry"
+Received: "fixture selection reached"
+
+ ❯ tests/browser/chatgptDeveloperAppInventory.test.ts:152:4
+    150|   }, async () => { throw new Error("unexpected browser creation"); });
+    151|   try {
+    152|    await expect(adapter.selectForTest({ name: "Fixture App" } as never…
+       |    ^
+    153|     operationFailure ? "Cannot select Fixture App: retry" : "fixture s…
+    154|   } finally { await adapter.close(); }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 passed (6)
+   Start at  21:53:23
+   Duration  1.94s (transform 721ms, setup 42ms, import 985ms, tests 770ms, environment 0ms)
+
