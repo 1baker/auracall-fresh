@@ -1,8 +1,10 @@
 import { randomUUID } from "node:crypto";
 import type { ResolvedUserConfig } from "../../../config.js";
 import { runConfiguredChatgptUtilityOperation } from "../../configuredChatgptUtilityAffinity.js";
+import { resolveChatgptConversationUrl } from "../../providers/chatgptAdapter.js";
 import type { Conversation, Project } from "../../providers/domain.js";
 import { getProvider } from "../../providers/index.js";
+import { providerNavigationAllowed } from "../../providers/navigationPolicy.js";
 import type { BrowserProviderListOptions, ProviderUserIdentity } from "../../providers/types.js";
 import {
 	type BrowserProcessOwnerAttribution,
@@ -653,7 +655,14 @@ export class ChatgptService extends LlmService {
 		if (!this.usesUtilityAffinity() || options?.cacheOnly) {
 			return super.getConversationContext(conversationId, options);
 		}
-		return this.runWithUtilityAffinity(options?.listOptions, (listOptions) =>
+		const affinityOptions = options?.listOptions?.tabTargetId
+			? options.listOptions
+			: {
+					...options?.listOptions,
+					configuredUrl: resolveChatgptConversationUrl(conversationId, options?.projectId),
+					allowNavigation: providerNavigationAllowed(options?.listOptions),
+				};
+		return this.runWithUtilityAffinity(affinityOptions, (listOptions) =>
 			super.getConversationContext(conversationId, { ...options, listOptions }),
 		);
 	}

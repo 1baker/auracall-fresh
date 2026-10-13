@@ -1,3 +1,18 @@
+## 2026-10-13 | Plan0411 context-route feedback loop
+
+Goal renewed full Plan0386 resolution with paced provider journeys and a
+checkpoint before2million tokens/6hours. Isolated current-origin/main worktree
+fix/issue165-context-affinity-route. Public service plus production utility,
+coordinator/registry/governor and adapter transport fixture reproduces installed
+root-route refusal. First fix passes cold read; warm second-conversation case
+then fails, fixed by carrying existing caller navigation policy. Four route/
+custody cases and50focused checks pass; typecheck/build/touchedBiome pass.
+Three lifecycle CDP.Close proxy failures independently recur on unchanged PR305
+code line; baseline retained, not attributed to this change. Installed acceptance
+and historical missing-message diagnosis remain OPEN. Primary serial review
+and integration precede another bounded live diagnostic read. Plan0411 is the
+goal control record; prior acceptance counters/windows remain historical.
+
 ## 2026-10-11 — Attempt3 completed provider response, failed native collection
 
 One newly authorized Instant run completed actual backend response, independently screenshot/active-path/endturn verified. Frozen prompt preserved; no retry/wake. AuraCall CLI failed Desktop control busy/effect_observed; further source diagnosis required. Exact evidence: docs/dev/evidence/issue253-attempt3-native-acceptance/analysis.md. Native process terminal pending original outerguard02:01:19Z.

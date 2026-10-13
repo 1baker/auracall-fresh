@@ -1,3 +1,14 @@
+## 2026-10-13 — Context reads must acquire their requested route (#165)
+
+A standalone tab-affinity context read previously acquired the configured root
+then refused it as the wrong exact target. A public service/production-affinity/
+adapter transport replay reproduces the installed root-versus-conversation
+error. The wrapper now supplies the requested conversation route at acquisition
+and carries the caller's navigation policy. Cold reads avoid the extra root
+visit; warm reads reuse the same physical process tab. Explicit preservation and
+caller-owned exact targets remain authoritative. This repairs diagnostic access;
+it does not prove the historical missing-message cause or automatic acceptance.
+
 ## 2026-10-12 — Record the expiry close before requesting it (#253)
 
 Mutable lease snapshots and aggregate cleanup counts cannot attribute a physical close. Persist append-only close-request and confirmed outcome events with actor process, lease/target identity and expiry reason. Already-missing must remain an observation; keep actual close intent separate from successful target disappearance and registry finalization. Preserve the tab if pre-close recording fails and never fabricate historical close events.
