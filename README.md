@@ -800,6 +800,10 @@ Terminology note:
   conversation route directly and reuses its owned process tab for later reads.
   Explicit navigation restrictions and caller-owned exact targets remain
   authoritative.
+  Governed context reads also check the owned page for native conversation
+  HTTP429 and visible request-limit warnings before identity work and during
+  message waits. Such a signal stops the read through the existing provider
+  guard rather than reporting an empty or missing-message result.
   Direct `conversations context get` reads have a shared finite 120-second
   command-lifecycle deadline, overridable with `--timeout-ms`. For an exact
   conversation ID without project resolution, the deadline starts before

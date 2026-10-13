@@ -1,3 +1,13 @@
+## 2026-10-13 — Late native HTTP429 is a read stop (#165)
+
+An owned live page exposed native conversation-list429 while no messages loaded.
+The public reader replay reproduced a generic messages-not-found result after
+that signal. Passive checks through the existing provider governor before
+identity work and each message poll now persist and report the rate-limit stop;
+a following read makes no additional payload request. No navigation, reload,
+warning dismissal or new provider request is added by the check. Keep current
+signal proof separate from the historical October8 cause, which remains open.
+
 ## 2026-10-13 — Context reads must acquire their requested route (#165)
 
 A standalone tab-affinity context read previously acquired the configured root

@@ -2,7 +2,7 @@
 
 State: OPEN
 Parent: Plan 0386 / issue 165
-Branch: fix/issue165-context-affinity-route
+Branch: fix/issue165-context-read-rate-guard
 Target: main
 
 ## Current State
@@ -87,6 +87,38 @@ compared with unchanged baseline. Origin/main advanced to72280ead1 with only
 issue253 acceptance docs; preserve those records during integration. No new
 provider journey has run under this goal yet. Next: integrate, install with
 parity, then one paced diagnostic read with passive warning/response observation.
+
+## Checkpoint 3 — outcome_progress / warning containment
+
+PR307 merged88448ddbf and installed with581-file parity; API65142. Diagnostic1
+reached the historical messages-not-found surface, proving route access repaired.
+Its observer missed attachment because Chromium exposes a collapsed argv string;
+the native census claim is explicitly corrected in the installed-rate-stop note.
+Diagnostic2 attached only to the exact owned target and stopped immediately on
+native `/backend-api/conversations` HTTP429. Existing guard/ledger warning was
+recorded; scheduler/all17 completions stayed paused. Native helper subsequently
+proves absence; exit actor unknown and no explicit browser close ran. API
+maintenance released both diagnostic leases. Historical journey counters were
+not reset; this new goal has two diagnostic journeys, no automatic acceptance
+journey yet. No provider traffic after the429 stop.
+
+## Checkpoint 4 — blocker_reduction
+
+New local late-native429/empty-messages replay on the public seam goes red as
+messages-not-found (5.25s); the minimal successor checks the existing governor
+before identity and each message poll. It goes green as rate-limit (about0.7s),
+persists the warning, and blocks a following read without another payload fetch.
+Nine files67tests and typecheck pass. Detailed source/live separation and the
+native-census correction are in
+`../notes/2026-10-13-plan0411-installed-route-and-rate-stop.md`.
+Goal meter at this checkpoint:228844tokens/2620seconds; full objective OPEN.
+Next: serial review, integrate/install successor, then paced normal automatic
+acceptance with stronger exact response-path and Retry-After observation.
+
+Primary serial review: `../notes/2026-10-13-plan0411-rate-review.md`, zero
+accepted Standards/Spec blockers for this slice.67focused plus362broader tests
+pass; typecheck, scoped lint and build pass. No further provider journey while
+reviewing. Provider recovery remains unproved despite elapsed finite cooldown.
 
 ## Checkpoint 1 — blocker_reduction
 

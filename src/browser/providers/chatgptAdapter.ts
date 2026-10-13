@@ -9483,7 +9483,10 @@ async function readChatgptConversationContextWithClient(
 				);
 			}
 			recordBrowserScrapeProviderAction(options, "chatgpt.postPayloadReadiness.succeeded.v1");
-			const readMessages = () => readVisibleChatgptConversationMessagesWithClient(client, options);
+			const readMessages = async () => {
+				await resolveProviderTrafficGovernor(options)?.checkWarning?.(client.Runtime);
+				return readVisibleChatgptConversationMessagesWithClient(client, options);
+			};
 
 			let messages = await readMessages();
 			if (messages.length === 0) {
@@ -13748,6 +13751,7 @@ export function createChatgptAdapter(): Pick<
 			);
 			const { targetId, host, port } = connection;
 			return runWithChatgptAbortBoundConnection(connection, options, async (client) => {
+				await resolveProviderTrafficGovernor(options)?.checkWarning?.(client.Runtime);
 				await assertChatgptExpectedIdentity(client, options);
 				await dismissCreateProjectDialogIfOpen(client.Runtime, {
 					strict: true,
