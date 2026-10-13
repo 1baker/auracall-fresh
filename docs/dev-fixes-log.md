@@ -1,3 +1,15 @@
+## 2026-10-13 — Read project sidebar IDs without click fanout (#165)
+
+The native ChatGPT sidebar exposes project rows with
+data-app-action-sidebar-project-id and data-app-action-sidebar-project-label,
+while containing no project anchors. Account mirror intentionally disables
+project click fallback, so the anchor-only passive reader returned[] and reported
+zero projects. Passive extraction now reads those IDs/labels, normalizes canonical
+project URLs and deduplicates them alongside existing links/current project.
+It adds no project click or provider request. Public service/real-affinity/adapter
+expression replay catches the omission; installed discovery remains a separate
+gate from synthetic markup and source checks.
+
 ## 2026-10-13 — Standalone mirror refresh needs governed custody (#165)
 
 Installed explicit project discovery failed at identity before physical connect:
