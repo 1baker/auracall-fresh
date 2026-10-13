@@ -53939,3 +53939,7 @@ Plan0407 instrumentation installed PR299 e953a8771 /validated6cc7ae97e;592compil
 ## Issue253 expanded submission authorization
 
 User authorized up to ten additional serial submission packets. Plan0406-1 OPEN, ledger0/10; prior attempts preserved. Primary preflight and collaborator contract readback precede any Send. No new wakes or general memory writes.
+
+## Issue253 terminal-boundary regression
+
+Additional submissions0/10. No-submit native preflight produced completed receipt but exit124. Fast actual-command child fixture red at1500ms; explicit flushed exit after returned operation and successful custody release green34tests. Native remaining-handle actor is unproven. Plan0408 OPEN; installation/native validation remain.
