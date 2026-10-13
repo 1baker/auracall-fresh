@@ -796,6 +796,10 @@ Terminology note:
   `not_found_or_unavailable`. Persisting that online state does not delete
   cached artifact/file history; ordinary reconciliation excludes the terminal
   conversation before provider work or `maxItems` budget is spent.
+  In tab-affinity mode, a standalone context read acquires the requested
+  conversation route directly and reuses its owned process tab for later reads.
+  Explicit navigation restrictions and caller-owned exact targets remain
+  authoritative.
   Direct `conversations context get` reads have a shared finite 120-second
   command-lifecycle deadline, overridable with `--timeout-ms`. For an exact
   conversation ID without project resolution, the deadline starts before
