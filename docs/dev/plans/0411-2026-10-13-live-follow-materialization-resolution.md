@@ -2,7 +2,7 @@
 
 State: OPEN
 Parent: Plan 0386 / issue 165
-Branch: fix/issue165-context-read-rate-guard
+Branch: fix/issue165-governed-refresh
 Target: main
 
 ## Current State
@@ -162,3 +162,26 @@ new-goal journeys total: four diagnostic, two automatic. Full changed/quiet,
 composed guard/reload and bounded scheduler acceptance remain OPEN. Next: verify
 discovery/detail scheduling and nested-failure semantics through the normal
 production seam before choosing a source change or another governed live pass.
+
+## Checkpoint 6 — blocker reduction, standalone discovery custody
+
+One bounded explicit project-discovery refresh stopped at identity before physical
+connect: provider traffic governor required. No observed attachment or provider
+response; diagnostic trace identifies the guard refusal. Journey7 charged as an
+attempt; no automatic retry. Resolved runtime refresh setup gated the configured
+affinity factory on liveFollowOperationId, which the public refresh API does not
+accept. Ranked predictions after the red loop: (1) absent acquisition causes
+missing governor, (2) an acquired governor is lost at collector forwarding,
+(3) UI transport loses carried authority. Live-follow passes, standalone fails
+in the same public refresh/real governor/traffic-plan/UI guard fixture, and the
+factory is absent for standalone: this discriminates prediction1.
+
+Smallest repair acquires configured affinity for a resolved runtime and falls
+back to the generated refresh ID for operation custody. Existing factory returns
+null for non-ChatGPT/non-affinity mode; profile dispatcher remains its fallback.
+Loop: pnpm vitest run tests/accountMirror/refreshService.test.ts -t 'governs refresh'.
+Red: one passed/one failed, ProviderTrafficGovernorRequiredError before physical
+navigation. Green: two passed, one simulated navigation each. Acquisition and
+collector result are injected; browser-service UI guard, governor, traffic-plan
+wrapper and refresh service are real.120focused/82broader checks and typecheck
+pass. Installed replay awaits review/integration/build/promotion. Full goal OPEN.

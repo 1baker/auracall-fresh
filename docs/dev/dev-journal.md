@@ -1,3 +1,13 @@
+## 2026-10-13 | Plan0411 standalone discovery governor repair
+
+Bounded explicit discovery stopped before physical connect with missing-governor
+guard; no warning bypass/retry. Public refresh plus actual governor/traffic-plan/
+UI guard replay distinguishes missing standalone affinity acquisition from
+forwarding loss. Same fixture passes live-follow and fails standalone before
+fix, both pass after request-ID custody fallback.120focused/82broader checks and
+typecheck pass. Source review/build/promotion and installed replay are next; full
+changed/quiet, original chat failure and scheduler acceptance remain OPEN.
+
 ## 2026-10-13 | Plan0411 installed automatic artifact proof
 
 PR308 merged/installed d5765f234 with581compiled-file parity. Two normal

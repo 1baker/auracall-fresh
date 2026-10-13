@@ -3,6 +3,11 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { createBrowserOperationDispatcher } from "../../packages/browser-service/src/service/operationDispatcher.js";
+import {
+	createProviderTrafficGovernor,
+	withProviderTrafficContext,
+} from "../../packages/browser-service/src/service/providerTrafficGovernor.js";
+import { navigateAndSettle } from "../../packages/browser-service/src/service/ui.js";
 import type { AccountMirrorPersistence } from "../../src/accountMirror/cachePersistence.js";
 import {
 	AccountMirrorIdentityMismatchError,
@@ -604,20 +609,48 @@ describe("account mirror refresh service", () => {
 		});
 	});
 
-	test("routes a live-follow pass through its exact affinity tab without taking the profile dispatcher", async () => {
+	test.each([
+		"completion-1",
+		undefined,
+	])("governs refresh %s through its exact affinity tab", async (liveFollowOperationId) => {
+		const page = { navigate: vi.fn(async () => ({})) };
+		const runtime = {
+			evaluate: vi.fn(async () => ({ result: { value: "https://chatgpt.com/" } })),
+		};
+		const browserTransport = {
+			// biome-ignore lint/style/useNamingConvention: CDP wire name.
+			Page: page,
+			// biome-ignore lint/style/useNamingConvention: CDP wire name.
+			Runtime: runtime,
+			// biome-ignore lint/style/useNamingConvention: Existing browser authority marker.
+			__auracallProviderTrafficRequired: true,
+		};
 		const metadataCollector = {
-			collect: vi.fn(async () => ({
-				detectedIdentityKey: "ecochran76@gmail.com",
-				detectedAccountLevel: "Business",
-				metadataCounts: { projects: 0, conversations: 0, artifacts: 0, files: 0, media: 0 },
-				manifests: { projects: [], conversations: [], artifacts: [], files: [], media: [] },
-				evidence: {
-					identitySource: "profile-menu",
-					projectSampleIds: [],
-					conversationSampleIds: [],
-					truncated: { projects: false, conversations: false, artifacts: false },
-				},
-			})),
+			collect: vi.fn(async (input: AccountMirrorMetadataCollectorInput) => {
+				await navigateAndSettle(browserTransport as never, {
+					url: "https://chatgpt.com/g/fixture/project",
+					forceNavigation: true,
+					waitForDocumentReady: false,
+					providerTrafficGovernor: input.providerTrafficGovernor
+						? withProviderTrafficContext(input.providerTrafficGovernor, {
+								trafficPhase: "index",
+								workKey: "scope:provider-index",
+							})
+						: undefined,
+				});
+				return {
+					detectedIdentityKey: "ecochran76@gmail.com",
+					detectedAccountLevel: "Business",
+					metadataCounts: { projects: 0, conversations: 0, artifacts: 0, files: 0, media: 0 },
+					manifests: { projects: [], conversations: [], artifacts: [], files: [], media: [] },
+					evidence: {
+						identitySource: "profile-menu",
+						projectSampleIds: [],
+						conversationSampleIds: [],
+						truncated: { projects: false, conversations: false, artifacts: false },
+					},
+				};
+			}),
 		};
 		const dispatcher = createBrowserOperationDispatcher();
 		const acquireQueued = vi.spyOn(dispatcher, "acquireQueued");
@@ -627,7 +660,20 @@ describe("account mirror refresh service", () => {
 			beforeInteraction: vi.fn(async () => undefined),
 			finish: vi.fn(),
 		};
+		const providerTrafficGovernor = createProviderTrafficGovernor({
+			attribution: {
+				provider: "chatgpt",
+				runtimeProfileId: "default",
+				managedBrowserProfile: "/managed/chatgpt",
+				workloadId: "refresh",
+				operationId: "refresh",
+				tabLeaseId: "lease-crawler",
+			},
+			interactionGovernor,
+			mutationAudit: async () => undefined,
+		});
 		const affinityFactory = vi.fn(async () => ({
+			providerTrafficGovernor,
 			tabAffinity: { host: "127.0.0.1", port: 45011, targetId: "crawler-1" },
 			interactionGovernor,
 			operation: {
@@ -674,7 +720,7 @@ describe("account mirror refresh service", () => {
 			provider: "chatgpt",
 			runtimeProfileId: "default",
 			explicitRefresh: true,
-			liveFollowOperationId: "completion-1",
+			liveFollowOperationId,
 		});
 
 		expect(providerGuardCensus).toHaveBeenCalledWith(
@@ -683,6 +729,10 @@ describe("account mirror refresh service", () => {
 			}),
 		);
 		expect(result.status).toBe("completed");
+		expect(page.navigate).toHaveBeenCalledOnce();
+		expect(affinityFactory).toHaveBeenCalledWith(
+			expect.objectContaining({ operationId: liveFollowOperationId ?? result.requestId }),
+		);
 		expect(acquireQueued).not.toHaveBeenCalled();
 		expect(metadataCollector.collect).toHaveBeenCalledWith(
 			expect.objectContaining({
