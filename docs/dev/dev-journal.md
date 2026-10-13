@@ -53959,3 +53959,7 @@ Plan0409 OPEN: public actual-submission policy regression red for explicit selec
 ### 2026-10-13 Issue253 packet2 preparation blocker
 
 Native no-submit check failed before Send; canonical probe reproduced sidebar history Retry. Plan0410 scopes developer-app blocker observation with public-adapter red/green tests, retaining main/dialog errors.71focused checks pass; native submission count remains1/10. Live differential and installed acceptance pending.
+
+### 2026-10-13 Issue253 packet2 native launch
+
+PR305 installed592exactparity/API98570. Canonical no-submit app selection passes exit0/39.468s. Packet2 launched once02:59:46.547Z with genuine observer readiness before intent;2/10 consumed. Primary visually verified5.6Instant on actualsubmitted page. Observer local-to-serverCID binding defect observed and read-only repair authorized; preservegap, no native retry. Awaitoriginalreceipt/completion.

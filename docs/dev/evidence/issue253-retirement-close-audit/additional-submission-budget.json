@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "authorizedAdditionalPackets": 10,
-  "consumedAdditionalPackets": 1,
+  "consumedAdditionalPackets": 2,
   "userInstruction": "take it up to 10 additional submission packets",
   "recordedAt": "2026-10-13T01:56:40.154340+00:00",
   "packets": [
@@ -29,6 +29,20 @@
       "workflowCallLimit": 65,
       "baselineSessionsPreserved": true,
       "nativeAcceptance": false
+    },
+    {
+      "packet": "packet-2",
+      "status": "native-running",
+      "launchedAt": "2026-10-13T02:59:46.547Z",
+      "deadline": "2026-10-13T03:09:46.542Z",
+      "guardPid": 12699,
+      "runnerSha256": "24b1a32a01625ae039d49e5e9b7dfa2efed236a3fe16b4154711e01c865977ba",
+      "observerGate": "qualified before native launch; immutable snapshot SHA and fresh process/heartbeat validated",
+      "requestedModel": "chatgpt:fast",
+      "modelStrategy": "select",
+      "thinkingTime": "light",
+      "actualModel": "pending submitted-page observation",
+      "sourceCommit": "c89504d366becf2067f6c2e29d5225692f844763"
     }
   ],
   "serial": true,
