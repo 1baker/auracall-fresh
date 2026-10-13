@@ -1,3 +1,19 @@
+## 2026-10-13 | Plan0411 native HTTP429 containment and local repair
+
+PR307 installed with581compiled-file parity; API65142/all17completions and
+scheduler paused. Direct diagnostic1 now reaches messages-not-found; observer0
+attachments supplies no warning proof. Corrected native helper handles Chromium
+collapsed argv; earlier tokenized scans do not prove absence. Diagnostic2 owns
+one exact attachment and halts its command on native conversation-listHTTP429.
+Existing guard/ledger containment recorded, no further provider journey.
+Subsequent native absence is verified; exit actor unknown, explicit close never
+ran, API maintenance releases both diagnostic leases. Local actual-probe/public-
+reader replay reports missing-messages before fix, rate-limit after fix; followup
+read emits no further payload fetch.67focused checks/typecheck/lint/build pass.
+Full adapter formatting/import-order failures match baseline. Full automatic
+acceptance remains OPEN; review/integration precede next paced journey. Evidence:
+notes/2026-10-13-plan0411-installed-route-and-rate-stop.md.
+
 ## 2026-10-13 | Plan0411 context-route feedback loop
 
 Goal renewed full Plan0386 resolution with paced provider journeys and a

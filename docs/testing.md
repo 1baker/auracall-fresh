@@ -6,6 +6,9 @@
   with one navigation. Explicit preservation and exact-target restrictions
   refuse a different route. Synthetic messages prove route handoff only, not
   historical missing-message causality or installed automatic materialization.
+  A late native conversation-list HTTP429 fixture also executes the actual
+  ResourceTiming warning probe: the reader reports a rate-limit stop, persists
+  the warning and blocks a subsequent payload fetch without reload/navigation.
 
 - Developer-app blocker scope (provider-free): `pnpm vitest run tests/browser/chatgptDeveloperAppInventory.test.ts`. The public adapter permits app preparation when only sidebar history reports Retry, but retains main and nested-dialog errors. Native app selection and provider completion remain separate acceptance gates.
 

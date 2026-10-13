@@ -1,6 +1,7 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { runInNewContext } from "node:vm";
 import { afterEach, expect, test, vi } from "vitest";
 import { createInMemoryProviderInteractionLedger } from "../../packages/browser-service/src/service/interactionLedger.js";
 import { createInMemoryBrowserTabLeaseRegistry } from "../../packages/browser-service/src/service/tabLeaseRegistry.js";
@@ -27,12 +28,16 @@ test.each([
 	"next",
 	"preserved",
 	"exact-preserved",
+	"late-rate-limit",
 ])("standalone context read preserves route custody (%s)", async (scenario) => {
 	const home = await mkdtemp(path.join(os.tmpdir(), "auracall-context-route-"));
 	setAuracallHomeDirOverrideForTest(home);
 	const pages = new Map<string, string>();
 	const opened: string[] = [];
 	const navigated: string[] = [];
+	let nativeRateLimited = false;
+	let payloadReads = 0;
+	let payloadReadsAtWarning = 0;
 	const registry = createInMemoryBrowserTabLeaseRegistry();
 	const ledger = createInMemoryProviderInteractionLedger();
 	const config = {
@@ -63,19 +68,47 @@ test.each([
 			enable: async () => undefined,
 			evaluate: async ({ expression }: { expression: string }) => {
 				let value: unknown = [];
-				if (expression === "location.href") value = pages.get(target);
+				if (expression.includes("const latest = new Map()")) {
+					value = runInNewContext(expression, {
+						document: { querySelectorAll: () => [] },
+						location: { origin: "https://chatgpt.com", href: pages.get(target) },
+						// biome-ignore lint/style/useNamingConvention: Browser platform constructor.
+						URL,
+						performance: {
+							getEntriesByType: () =>
+								nativeRateLimited
+									? [
+											{
+												name: "https://chatgpt.com/backend-api/conversations?offset=0",
+												responseStatus: 429,
+												responseEnd: 100,
+											},
+										]
+									: [],
+						},
+					});
+				} else if (expression === "location.href") value = pages.get(target);
 				else if (expression.includes("/api/auth/session"))
 					value = { user: { id: "fixture-user", email: "operator@example.test" } };
 				else if (expression.includes("const rawConversationId")) value = true;
 				else if (expression.includes("document.readyState")) value = true;
-				else if (expression.includes("/backend-api/conversation/"))
+				else if (expression.includes("/backend-api/conversation/")) {
+					payloadReads += 1;
 					value = { ok: true, body: JSON.stringify({ mapping: {} }) };
-				else if (expression.includes("const pageStart ="))
+				} else if (expression.includes("const pageStart =")) {
+					if (scenario === "late-rate-limit") {
+						nativeRateLimited = true;
+						payloadReadsAtWarning = payloadReads;
+					}
 					value = {
-						messages: [{ role: "assistant", text: "Known fixture answer" }],
+						messages:
+							scenario === "late-rate-limit"
+								? []
+								: [{ role: "assistant", text: "Known fixture answer" }],
 						nextOffset: null,
 						totalMessages: 1,
 					};
+				}
 				return { result: { value } };
 			},
 		},
@@ -109,6 +142,28 @@ test.each([
 			}),
 	});
 	try {
+		if (scenario === "late-rate-limit") {
+			await expect(
+				service.getConversationContext("fixture-conversation", {
+					refresh: true,
+					retryAttempts: 0,
+					timeoutMs: 10000,
+				}),
+			).rejects.toThrow("Provider traffic stopped after rate-limit");
+			expect(opened).toEqual(["https://chatgpt.com/c/fixture-conversation"]);
+			expect(navigated).toEqual([]);
+			expect(payloadReads).toBe(payloadReadsAtWarning);
+			await expect(
+				service.getConversationContext("fixture-conversation", {
+					refresh: true,
+					retryAttempts: 0,
+					timeoutMs: 1000,
+				}),
+			).rejects.toThrow(/rate.limit/i);
+			expect(payloadReads).toBe(payloadReadsAtWarning);
+			expect(opened).toHaveLength(1);
+			return;
+		}
 		await expect(
 			service.getConversationContext("fixture-conversation", {
 				refresh: true,
@@ -160,4 +215,4 @@ test.each([
 	} finally {
 		await rm(home, { recursive: true, force: true });
 	}
-});
+}, 15000);
