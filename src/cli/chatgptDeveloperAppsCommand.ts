@@ -1,3 +1,4 @@
+import type { BrowserModelStrategy } from "../browser/types.js";
 import type { DeveloperAppSubmissionEvidence } from "../browser/chatgptDeveloperAppSubmission.js";
 import { BrowserAutomationClient } from "../browser/client.js";
 import {
@@ -65,7 +66,7 @@ export interface ChatgptDeveloperAppCliDependencies {
 	createAdapter?: (
 		browser: ChatgptDeveloperAppBrowserClient,
 		createBrowser: ChatgptDeveloperAppBrowserClientFactory,
-		options: { abortSignal?: AbortSignal; browserOperationOwned?: boolean },
+		options: { abortSignal?: AbortSignal; browserOperationOwned?: boolean; modelStrategy?: BrowserModelStrategy },
 	) => ChatgptDeveloperAppCliAdapter;
 }
 
@@ -112,6 +113,7 @@ export type ChatgptDeveloperAppOperationInput =
 			action: "test";
 			app: string;
 			submit: boolean;
+			modelStrategy?: BrowserModelStrategy;
 			prompt?: string | null;
 			confirmed: boolean;
 			expectedAccount: string;
@@ -359,6 +361,7 @@ export async function runChatgptDeveloperAppOperationForCli(
 			(config) => createBrowser(config, { target: "chatgpt" }),
 			{
 				browserOperationOwned: dependencies.browserOperationOwned,
+				modelStrategy: input.action === "test" ? input.modelStrategy : undefined,
 			},
 		);
 		try {

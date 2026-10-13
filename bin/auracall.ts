@@ -5791,6 +5791,8 @@ appsCommand
       action: 'test',
       app,
       submit: Boolean(options.submit),
+      modelStrategy: program.getOptionValueSource?.('browserModelStrategy') === 'cli'
+        ? options.browserModelStrategy as 'select' | 'current' | 'ignore' : undefined,
       prompt: typeof options.prompt === 'string' ? options.prompt : null,
       expectedAccount: String(options.expectedAccount ?? ''),
       confirmed: Boolean(options.yes),

@@ -1,0 +1,11 @@
+{
+  "sourceTestsBeforeRegistrationAddition": 62,
+  "actualCliRegistrationAdditionalCases": 3,
+  "typecheck": "passed",
+  "productionBuild": "passed",
+  "primaryStandardsReview": "no accepted blockers",
+  "primarySpecReview": "explicit select and current omission semantics covered; installed/native not yet proven",
+  "packet1NativeExitCode": 124,
+  "packet1ProviderTerminal": "pending reconciliation",
+  "installedModelPolicy": "not yet"
+}

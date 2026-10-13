@@ -471,6 +471,15 @@ describe("bounded submission contract", () => {
 		});
 		expect(runBrowser).toHaveBeenCalledTimes(1);
 	});
+	it("honors explicit model selection on the actual submitted page", async () => {
+		const runBrowser = vi.fn(async () => ({ answerText: "answer" }) as never);
+		await submitChatgptDeveloperApp(
+			{ ...config, model: "gpt-5.6-sol", profiles: { fixture: { ...config.profiles.fixture, services: { chatgpt: { ...config.profiles.fixture.services.chatgpt, thinkingTime: "light" } } } }, browser: { ...config.browser, thinkingTime: "light" } } as never,
+			app, "Use app", { runBrowser, modelStrategy: "select" } as never,
+		);
+		expect(runBrowser).toHaveBeenCalledWith(expect.objectContaining({config: expect.objectContaining({modelStrategy: "select", desiredModel: "gpt-5.6-sol", thinkingTime: "light", chatgptMode: "chat"})}));
+	});
+
 	it("forces per-run Chat/current and removes inherited Work/composer settings", async () => {
 		const runBrowser = vi.fn(async () => ({ answerText: "answer" }) as never);
 		await submitChatgptDeveloperApp(
