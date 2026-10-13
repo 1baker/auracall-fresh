@@ -1,0 +1,14 @@
+{
+  "observedAt": "2026-10-13T02:18:57.499927+00:00",
+  "canonicalSelector": "chatgpt:fast",
+  "selectedModel": "GPT-5.6 Sol",
+  "checkedCurrentModel": "GPT-5.6 Sol",
+  "thinkingTime": "light",
+  "visibleModel": "5.6 Instant",
+  "accountMatches": true,
+  "emptyComposer": true,
+  "exitCode": 0,
+  "screenshotSha256": "da5cd6dead4ae4db134f57ea2a10238363e9da4080c8440f498a3e42bb89025f",
+  "primaryViewedScreenshot": true,
+  "noSend": true
+}
