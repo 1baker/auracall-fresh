@@ -7565,6 +7565,17 @@ async function scrapeChatgptProjects(
           url: location.href,
         });
       }
+      for (const row of Array.from(document.querySelectorAll('[data-app-action-sidebar-project-id]'))) {
+        const rawId = row.getAttribute('data-app-action-sidebar-project-id') || '';
+        const projectId = parseProjectId('/g/' + rawId + '/project');
+        if (!projectId || projects.has(projectId)) continue;
+        const name = normalize(row.getAttribute('data-app-action-sidebar-project-label') || projectId);
+        projects.set(projectId, {
+          id: projectId,
+          name: name || projectId,
+          url: new URL('/g/' + projectId + '/project', location.origin).toString(),
+        });
+      }
       for (const link of Array.from(document.querySelectorAll('a[href*="/project"]'))) {
         const href = link.getAttribute('href') || '';
         const projectId = parseProjectId(href);

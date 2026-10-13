@@ -1,3 +1,11 @@
+- Passive ChatGPT project index (provider-free):
+  `pnpm vitest run tests/browser/chatgptContextAffinityRoute.test.ts -t 'project-index'`.
+  Public service, utility affinity and actual adapter expression read recorded
+  native project-row attribute shapes with synthetic IDs/names. No project click,
+  conversation payload fetch or extra route navigation occurs; legacy anchors
+  remain readable and invalid/duplicate rows are excluded. This does not prove
+  cold-page hydration or installed provider-index freshness.
+
 - Standalone and live-follow refresh custody (provider-free):
   `pnpm vitest run tests/accountMirror/refreshService.test.ts -t 'governs refresh'`.
   Public refresh service forwards governed affinity into the real traffic plan,

@@ -2,17 +2,20 @@
 
 State: OPEN
 Parent: Plan 0386 / issue 165
-Branch: fix/issue165-governed-refresh
+Branch: fix/issue165-passive-project-index
 Target: main
 
 ## Current State
 
-The user renewed the full resolution objective on 2026-10-13, authorizing paced
-provider journeys as needed. Historical exhausted and expired windows stay
-recorded. The October 13 direct installed context read fails before messages:
-its exact owned target is at ChatGPT root rather than the conversation route.
-Original missing-message causality and full automatic acceptance remain open.
-Base is current origin/main c89504d36 (PR305), the installed code line.
+The user renewed the full resolution objective on2026-10-13, authorizing paced
+provider journeys as needed. Historical windows/counters stay recorded. PR307
+route handoff, PR308late-rate read stop and PR309governed standalone refresh are
+merged and installed. A normal automatic child captured21186readable JSON bytes
+with exact cache/manifest/archive hash agreement. Original chat remains empty
+and uncached; no historical cause or terminal absence is proved. Current packet
+repairs passive project discovery: installed discovery reported0projects while
+the retained native DOM had8project-ID rows. Full acceptance remains OPEN.
+Initial source base was PR305/c89504d36; checkpoints preserve each successor.
 
 ## Authority and control
 
@@ -185,3 +188,36 @@ navigation. Green: two passed, one simulated navigation each. Acquisition and
 collector result are injected; browser-service UI guard, governor, traffic-plan
 wrapper and refresh service are real.120focused/82broader checks and typecheck
 pass. Installed replay awaits review/integration/build/promotion. Full goal OPEN.
+
+## Checkpoint 7 — passive project-index repair
+
+PR309 merged c7572ecab and installed with581compiled-file parity, API35646.
+Discovery2 stopped before observed provider traffic on a native desktop ownership
+lock; no lock was retained at later inspection. Periodic pool maintenance uses
+the same lock, but that receipt does not identify the holder. Normal failure
+backoff/minimum interval+jitter honored until15:39:16.723Z. Discovery3 completed
+request acctmirror_bad3ee3c-7146-465c-a39c-20af81499267 at15:39:34.836Z; one exact
+attachment,3samples,179observedresponses, no observed429/warning/error. It reported
+projects0 and an empty provider-index epoch while preserving349cached conversations
+and prior assets. Cache totals are not fresh discovery proof. Nine goal journeys
+total: four diagnostic, two automatic, three discovery attempts.
+
+A passive screenshot/DOM capture qualified the exact retained idle lease by
+lease ID, request workload, scope and unchanged revision before/after. Idle
+clears active owner-process fields; the initial owner-PID-only checker wrongly
+refused this retained lease. It was corrected without claiming/closing/navigating
+the tab. DOM contains8data-app-action-sidebar-project-id rows, zero project
+anchors. Account mirror disables click fallback; passive scraper only checked
+anchors. Original conversation cause remains separate from this source defect.
+
+Red public service/production-affinity/adapter+actual expression replay returns
+[] with the recorded attribute shape and synthetic ID/name. Ranked predictions:
+(1) ignored passive row markers cause omission, (2) sidebar collapsed/unhydrated
+causes omission, (3) collector truncation discards adapter rows. Fixture begins
+with loaded row markers and fails directly at public listProjects before collector
+merging; adding only passive row extraction makes it green. This proves1for the
+qualified markup, not initial-load timing. No clicks, extra route visits or new
+provider API are added. Existing normalization and deduplication retain legacy
+links; mixed replay excludes invalid IDs/duplicates.181relevant checks, typecheck,
+full build, test Biome and adapter lint pass. Next: serial review/integration,
+installed parity/paced discovery, then normal automatic acceptance. Full goal OPEN.

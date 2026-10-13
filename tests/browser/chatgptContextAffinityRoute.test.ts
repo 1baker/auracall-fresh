@@ -29,7 +29,9 @@ test.each([
 	"preserved",
 	"exact-preserved",
 	"late-rate-limit",
-])("standalone context read preserves route custody (%s)", async (scenario) => {
+	"project-index",
+	"project-index-mixed",
+])("standalone reads preserve route custody (%s)", async (scenario) => {
 	const home = await mkdtemp(path.join(os.tmpdir(), "auracall-context-route-"));
 	setAuracallHomeDirOverrideForTest(home);
 	const pages = new Map<string, string>();
@@ -87,6 +89,37 @@ test.each([
 									: [],
 						},
 					});
+				} else if (expression.includes("const projects = new Map()")) {
+					const projectRow = {
+						getAttribute: (name: string) =>
+							(
+								({
+									"data-app-action-sidebar-project-id": "g-p-11111111111111111111111111111111",
+									"data-app-action-sidebar-project-label": "Fixture project",
+								}) as Record<string, string>
+							)[name] ?? null,
+					};
+					const legacyLink = {
+						getAttribute: () => "/g/g-p-22222222222222222222222222222222/project",
+						textContent: "Legacy project",
+					};
+					const invalidRow = { getAttribute: () => "invalid-project" };
+					value = runInNewContext(expression, {
+						document: {
+							title: "ChatGPT",
+							querySelectorAll: (selector: string) =>
+								selector === "[data-app-action-sidebar-project-id]"
+									? scenario === "project-index-mixed"
+										? [projectRow, projectRow, invalidRow]
+										: [projectRow]
+									: selector === 'a[href*="/project"]' && scenario === "project-index-mixed"
+										? [legacyLink]
+										: [],
+						},
+						location: { origin: "https://chatgpt.com", href: pages.get(target) },
+						// biome-ignore lint/style/useNamingConvention: Browser platform constructor.
+						URL,
+					});
 				} else if (expression === "location.href") value = pages.get(target);
 				else if (expression.includes("/api/auth/session"))
 					value = { user: { id: "fixture-user", email: "operator@example.test" } };
@@ -142,6 +175,32 @@ test.each([
 			}),
 	});
 	try {
+		if (scenario === "project-index" || scenario === "project-index-mixed") {
+			await expect(
+				service.listProjects({ disableProjectClickFallback: true, accountMirrorInventory: true }),
+			).resolves.toEqual([
+				{
+					id: "g-p-11111111111111111111111111111111",
+					name: "Fixture project",
+					provider: "chatgpt",
+					url: "https://chatgpt.com/g/g-p-11111111111111111111111111111111/project",
+				},
+				...(scenario === "project-index-mixed"
+					? [
+							{
+								id: "g-p-22222222222222222222222222222222",
+								name: "Legacy project",
+								provider: "chatgpt",
+								url: "https://chatgpt.com/g/g-p-22222222222222222222222222222222/project",
+							},
+						]
+					: []),
+			]);
+			expect(navigated).toEqual([]);
+			expect(opened).toEqual(["https://chatgpt.com/"]);
+			expect(payloadReads).toBe(0);
+			return;
+		}
 		if (scenario === "late-rate-limit") {
 			await expect(
 				service.getConversationContext("fixture-conversation", {

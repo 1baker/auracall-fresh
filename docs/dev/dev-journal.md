@@ -1,3 +1,15 @@
+## 2026-10-13 | Plan0411 passive project discovery loop
+
+PR309 installed c7572ecab/581fileparity, API35646. One replay stopped on native
+ownership lock, honored backoff+jitter. Next governed discovery completed but
+reported0projects with349cached rows preserved. Qualified retained idle DOM has
+8project-ID markers and0project links; inactive owner fields are not lease loss.
+Public service+production affinity/adapter/expression replay goes red as[] then
+green after passive marker extraction; mixed legacy/invalid/duplicate case passes
+without navigation.181relevant tests/typecheck/build/scoped lint pass. Current
+fix/issue165-passive-project-index awaits review/promotion. Nine journeys total;
+full changed/quiet/guard/scheduler and original-chat diagnosis remain OPEN.
+
 ## 2026-10-13 | Plan0411 standalone discovery governor repair
 
 Bounded explicit discovery stopped before physical connect with missing-governor
