@@ -7,7 +7,7 @@
   "packets": [
     {
       "packet": "packet-1",
-      "status": "native-timeout-provider-reconciliation-pending",
+      "status": "provider-completed-native-timeout",
       "launchedAt": "2026-10-13T02:18:50.475Z",
       "deadline": "2026-10-13T02:28:50.470Z",
       "nativeOwnerPid": 99328,
@@ -19,7 +19,16 @@
       "fastAcceptance": "not proven",
       "nativeExitCode": 124,
       "nativeTerminalAt": "2026-10-13T02:28:50.063Z",
-      "nativeElapsedMs": 599593
+      "nativeElapsedMs": 599593,
+      "providerTerminal": true,
+      "providerStatus": "finished_successfully",
+      "providerAnswerSha256": "6e101327eb250f598808540974c64cd6cfdebcf831d4a20c88b2ad8a5f70f8cf",
+      "providerAnswerPlainTextChars": 23744,
+      "actualBackendModel": "gpt-6-pro",
+      "workflowAdmittedCalls": 51,
+      "workflowCallLimit": 65,
+      "baselineSessionsPreserved": true,
+      "nativeAcceptance": false
     }
   ],
   "serial": true,

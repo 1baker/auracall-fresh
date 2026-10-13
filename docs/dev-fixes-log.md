@@ -24748,3 +24748,7 @@ Completed app commands must flush the full receipt and release browser-operation
 ## Developer-app submitted-page model policy
 
 Model setup on a utility tab is not a submitted-page model guarantee. Honor explicit --browser-model-strategy in the native app submission lifecycle while keeping current-model behavior when omitted. Preserve configured thinking selection only for explicit select, and verify actual conversation model independently.
+
+## 2026-10-13 — Sidebar history Retry blocked app preparation (#253)
+
+Whole-body app blocking probes confused a sidebar history load failure with an active operation failure. Probe visible text/buttons outside nav/aside, preserving dialog/alert surfaces even nested there. Public adapter red/green regression catches healthy composer plus history Retry and retains active main/dialog failures. No Retry clicking or suppression of provider errors.

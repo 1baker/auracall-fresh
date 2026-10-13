@@ -1,4 +1,7 @@
-import { buildChatgptAppComposerLookup, CHATGPT_APP_MENTION_SELECTOR } from "../actions/chatgptComposer.js";
+import {
+	buildChatgptAppComposerLookup,
+	CHATGPT_APP_MENTION_SELECTOR,
+} from "../actions/chatgptComposer.js";
 import type { DevToolsConnectionOptions } from "../../../packages/browser-service/src/types.js";
 import type { ResolvedUserConfig } from "../../config.js";
 import {
@@ -1209,13 +1212,22 @@ async function assertNoChatgptBlockingSurface(client: ChromeClient, action: stri
         const rect = element.getBoundingClientRect();
         return rect.width > 0 && rect.height > 0;
       };
+      // Sidebar history failures do not block an independent app operation.
+      // Keep main, dialog and global notices in the probe.
+      const operationElement = (element) => Boolean(element.closest('[role="dialog"],[role="alert"]')) || !element.closest('nav,aside');
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+      const text = [];
+      for (let node; (node = walker.nextNode());) {
+        const parent = node.parentElement;
+        if (parent && operationElement(parent) && visible(parent)) text.push(node.textContent || '');
+      }
       const buttons = Array.from(document.querySelectorAll('button,[role="button"]'))
-        .filter(visible)
+        .filter((element) => visible(element) && operationElement(element))
         .map((element) => String(element.textContent || element.getAttribute('aria-label') || '').trim())
         .filter(Boolean)
         .slice(0, 80);
       return {
-        text: String(document.body?.innerText || '').slice(0, 12000),
+        text: text.join(' ').slice(0, 12000),
         ariaLabel: '',
         buttonLabels: buttons,
       };

@@ -53951,3 +53951,11 @@ Packet1 native submission launched02:18:50Z,1/10consumed,deadline02:28:50Z, exac
 ## Issue253 explicit model policy
 
 Plan0409 OPEN: public actual-submission policy regression red for explicit select/current override; repair forwards only explicit existing CLI strategy to submission adapter and preserves current default. Canonical configured model/thinking applied on submitted page, not preparation tab. CLI-forwarding/lifecycle proofs green; typecheck fixture annotation corrected, finalchecks pending. Packet1 stillsameoriginalCID, no promotion/restart/resubmission.
+
+### 2026-10-13 Issue253 additional packet checkpoint
+
+1/10 consumed. Original packet1 independently completed provider-side (one prompt,51/65 calls,7Session166 KEEP entries, baseline preserved), but nativeCLI124/emptyreceipt and wrongPro model remain failed acceptance. PR303 model-policy runtime now promoted592file parity/API77641/KillModeprocess/desktops200. Fresh browser28993 absent before software restart; exact idle-expiry close-request audit exists with preserved result, process-exit actor unknown. Preparing one guarded no-submit packet2 readiness check. No wakes or memory writes.
+
+### 2026-10-13 Issue253 packet2 preparation blocker
+
+Native no-submit check failed before Send; canonical probe reproduced sidebar history Retry. Plan0410 scopes developer-app blocker observation with public-adapter red/green tests, retaining main/dialog errors.71focused checks pass; native submission count remains1/10. Live differential and installed acceptance pending.
