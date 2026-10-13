@@ -2,7 +2,7 @@
 
 State: OPEN
 Parent: Plan 0386 / issue 165
-Branch: fix/issue165-refresh-affinity-lifetime
+Branch: fix/issue165-project-index-budget-yield
 Target: main
 
 ## Current State
@@ -255,3 +255,39 @@ shares the browser. Require API no-active-work and own-scope cleanup, preserve
 foreign leases/targets across software promotion, and recheck OS/registry after.
 Full changed/quiet, original-chat cause, composed guard/reload and scheduler
 acceptance remain OPEN; nine provider journeys/attempts remain the goal total.
+
+## Checkpoint 9 — operator budget stop, unintegrated budget-yield repair
+
+Goal meter2254565tokens/14503seconds at the final readback exceeds the user's
+2million-token stop boundary. Primary missed that boundary; stop execution now.
+No further provider journey or integration in this window. Goal is paused under
+the explicit budget-stop instruction; full objective remains OPEN.
+
+Installed source PR312/a761df02c,581compiled-file parity, API95510. CLI/MCP/API
+use the bounded-refresh runtime. PR310passive project reader is included.
+Discovery4 (tenth goal journey/attempt) reached the actual project surface, then
+failed index/page_navigate budget1. One observer attachment64samples403observed
+responses, no observed429/warning. Native project payloads and retained DOM
+qualify actual project rows; original ID absent from the captured two-project/
+sidebar subsets, not global absence proof. The one-off lease is ephemeral/TTL.
+Scheduler and all17active completions remained paused during execution.
+
+Unintegrated source fix on this branch: collector yields when its frozen index
+navigation budget is exhausted, preserving gathered rows and next-project cursor
+instead of attempting another unplanned route visit. Public collector plus actual
+governor/plan replay fails on the second of two simulated project reads before
+fix; after fix it yields after one and a fresh cycle resumes the second from
+serialized evidence. The one-navigation budget remains1.196relevant tests,
+typecheck and touched Biome pass. Build log is retained privately; read terminal
+status on restart. No Standards/Spec review, PR, installation or live replay for
+this repair yet. Native attribution to this exact loop awaits installed replay.
+
+Restart from this checkpoint, not earlier route branches. Verify current refs,
+installed identity, own/foreign custody, operation states, warning ledger and
+normal eligibility before effects. Review/validate the budget-yield source slice,
+then integrate/promote and run one paced discovery replay. Keep original chat
+access, independent changed-B/quiet, composed guard/reload and bounded scheduler
+gates open. Never click Answer now, reset old journey counters, seed live changes
+or weaken guards. Raw evidence remains private under the Plan0411 diagnostics
+directory. Memory disposition: forbidden at operator budget stop; no new durable
+memory is queued in this execution window.

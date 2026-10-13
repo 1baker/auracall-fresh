@@ -1,3 +1,14 @@
+## 2026-10-13 | Plan0411 budget-stop checkpoint
+
+Meter2254565tokens/14503seconds exceeded the2million-token user boundary; primary
+missed it and stops the window. Installed PR312/a761df02c/581fileparity, API95510.
+Tenth journey reaches project discovery then hits frozen index navigation budget1,
+with no observed429/warning. Unintegrated collector yield/cursor repair has a
+red/green actual-governor loop and196passing checks/typecheck/Biome. Review,
+integration, installation and native replay remain pending. Plan0411checkpoint9
+is the restart authority. Full original-chat/changed/quiet/guard/scheduler
+acceptance remains OPEN. Memory forbidden at the operator budget-stop boundary.
+
 ## 2026-10-13 | Plan0411 standalone lifetime correction
 
 PR310 merged/staged with581fileparity; promotion deferred. PR309 mistakenly gave
