@@ -24744,3 +24744,7 @@ Developer-app submitted test attempted shared process-tab acquisition while its 
 ## Developer-app one-shot terminal semantics
 
 Completed app commands must flush the full receipt and release browser-operation custody before explicit CLI exit; retained browser/CDP handles must not turn a returned result into an outer timeout. Failures preserve nonzero status; exceptions/release failures remain errors. Actual-command subprocess regression covers200KB output and retained-handle completion. Native causal handle attribution remains separate from this boundary proof.
+
+## Developer-app submitted-page model policy
+
+Model setup on a utility tab is not a submitted-page model guarantee. Honor explicit --browser-model-strategy in the native app submission lifecycle while keeping current-model behavior when omitted. Preserve configured thinking selection only for explicit select, and verify actual conversation model independently.

@@ -54,6 +54,22 @@ function createAdapter(
 }
 
 describe("executeChatgptDeveloperAppOperation", () => {
+	it("forwards explicit model strategy only to the submission adapter", async () => {
+		const strategies: unknown[] = [];
+		const result = await runChatgptDeveloperAppOperationForCli({ browser: {} } as never, {
+			action: "test", app: "asdk_app_corel33t", submit: true, prompt: "Use app",
+			expectedAccount: "eric.cochran@soylei.com", confirmed: true, modelStrategy: "select",
+		}, {
+			createBrowser: async () => ({ userConfig: { browser: {} }, runUtilityBrowserOperation: async ({ run }: { run: (options: Record<string, never>) => Promise<unknown> }) => run({}) }) as never,
+			createAdapter: (_browser, _factory, options) => {
+				strategies.push(options.modelStrategy);
+				return { ...createAdapter({ submitTest: async () => ({status: "completed", message: "fixture"}) }), close: async () => {} };
+			},
+		});
+		expect(result.status).toBe("completed");
+		expect(strategies).toEqual([undefined, "select"]);
+	});
+
 	it.each([
 		"success",
 		"settlement-failure",

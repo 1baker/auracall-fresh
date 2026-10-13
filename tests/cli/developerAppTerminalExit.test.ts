@@ -1,3 +1,4 @@
+import { Command } from "commander";
 import { readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import ts from 'typescript';
@@ -28,4 +29,22 @@ it.each([['completed', 0], ['failed', 1]] as const)('settles the actual apps CLI
   expect(result.status).toBe(expectedCode);
   expect(result.stdout.endsWith('RELEASED\n')).toBe(true);
   expect(JSON.parse(result.stdout.slice(0, -'RELEASED\n'.length)).payload).toHaveLength(200000);
+});
+
+it.each([[], ['--browser-model-strategy', 'select'], ['--browser-model-strategy', 'current']])('forwards only an explicit model flag from the actual app command registration: %j', async (...args) => {
+  const flags = args as string[];
+  const program = new Command().option('--browser-model-strategy <strategy>', '', 'select');
+  program.parse(['node','fixture',...flags]);
+  const source=readFileSync('bin/auracall.ts','utf8');
+  const start=source.indexOf("appsCommand\n  .command('test <app>')");
+  const end=source.indexOf("appsCommand\n  .command('uninstall",start);
+  const ast=ts.createSourceFile('action.ts',source.slice(start,end),ts.ScriptTarget.Latest,true);
+  let callback: ts.FunctionExpression | undefined;
+  const visit=(node: ts.Node)=>{if(ts.isFunctionExpression(node))callback=node;else ts.forEachChild(node,visit);};
+  visit(ast); expect(callback).toBeDefined();
+  let strategy: unknown;
+  const compiled=ts.transpile('const action='+callback!.getText(ast)+';',{target:ts.ScriptTarget.ES2022});
+  const action=new Function('program','runChatgptDeveloperAppsCliAction',compiled+';return action;')(program,async (_command: unknown, build: (options: Record<string,unknown>)=>{modelStrategy?:unknown})=>{strategy=build({...program.opts(),submit:true,yes:true,prompt:'fixture',expectedAccount:'fixture'}).modelStrategy;});
+  await action.call(new Command(),'fixture-app');
+  expect(strategy).toBe(flags.length ? flags[1] : undefined);
 });

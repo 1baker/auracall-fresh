@@ -1,0 +1,162 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-issue253-triage
+
+ ❯ tests/browser/chatgptDeveloperAppLifecycle.test.ts (27 tests | 1 failed) 8508ms
+     ✓ refreshes a late terminal conversation before returning committed-Send failure: {"terminalFailure":true}  729ms
+     ✓ refreshes a late terminal conversation before returning committed-Send failure: {"manualApproval":true}  704ms
+     ✓ carries managed browser provenance through affinity without a legacy PID file: {"browserProcessId":1234,"wrongIdentity":false,"originalConfig":false,"completed":true}  712ms
+     ✓ carries managed browser provenance through affinity without a legacy PID file: {"browserProcessId":1234,"wrongIdentity":false,"originalConfig":true,"completed":true}  706ms
+     ✓ carries managed browser provenance through affinity without a legacy PID file: {"browserProcessId":null,"wrongIdentity":false,"originalConfig":false,"completed":false} 3ms
+     ✓ carries managed browser provenance through affinity without a legacy PID file: {"browserProcessId":1234,"wrongIdentity":true,"originalConfig":false,"completed":false} 2ms
+     ✓ preserves attributable WSL Windows loopback provenance through the canonical host alias  703ms
+     ✓ fails closed without a matching managed process and never authorizes arbitrary remote hosts from a local PID 4ms
+     ✓ returns answer and refreshed terminal identity after exactly one Send  705ms
+     ✓ preserves terminal failure evidence without retry: {"terminalFailure":true,"effectState":"effect_observed"}  704ms
+     ✓ preserves terminal failure evidence without retry: {"uncertainSend":true,"effectState":"unknown"}  704ms
+     ✓ preserves terminal failure evidence without retry: {"manualApproval":true,"effectState":"effect_observed"}  704ms
+     ✓ does not send after selection changes or account preflight fails 3ms
+     ✓ honors the selected response deadline through the shared lifecycle  703ms
+     ✓ uses the canonical browser default when no response deadline is configured  704ms
+     ✓ retains a shorter selected response deadline and never retries after Send  703ms
+     ✓ preserves full selected runtime configuration at affinity admission without provider effects 1ms
+     ✓ preserves the selected AuraCall runtime profile across the shared submit lifecycle 1ms
+     ✓ upgrades unknown to structured observed effect without retry 1ms
+     × honors explicit model selection on the actual submitted page 5ms
+     ✓ forces per-run Chat/current and removes inherited Work/composer settings 1ms
+     ✓ rejects unsupported high-level input before transport: {"attachments":[{"path":"/unused","displayPath":"unused"}]} 1ms
+     ✓ rejects unsupported high-level input before transport: {"fallbackSubmission":{"prompt":"retry","attachments":[]}} 0ms
+     ✓ rejects unsupported high-level input before transport: {"config":{"composerTool":"other"}} 0ms
+     ✓ rejects unsupported high-level input before transport: {"config":{"projectId":"project"}} 0ms
+     ✓ rejects unsupported high-level input before transport: {"config":{"conversationId":"conversation"}} 0ms
+     ✓ rejects unsupported high-level input before transport: {"config":{"chatgptMode":"work"}} 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/browser/chatgptDeveloperAppLifecycle.test.ts > bounded submission contract > honors explicit model selection on the actual submitted page
+AssertionError: expected "vi.fn()" to be called with arguments: [ ObjectContaining{…} ]
+
+Received: 
+
+  1st vi.fn() call:
+
+  [
+-   ObjectContaining {
+-     "config": ObjectContaining {
++   {
++     "abortSignal": undefined,
++     "completionMode": "assistant_response",
++     "config": {
++       "agentBrowserRdp": null,
++       "allowCookieErrors": false,
++       "auracallProfileName": "fixture",
++       "blankTabLimit": 1,
++       "blockingProfileAction": "restart-managed",
++       "bootstrapCookiePath": null,
++       "browserBuild": null,
++       "browserFamily": null,
+        "chatgptMode": "chat",
+-       "desiredModel": "GPT-5.6 Sol",
+-       "modelStrategy": "select",
+-       "thinkingTime": "light",
++       "chatgptToolApproval": "manual",
++       "chatgptUrl": "https://chatgpt.com/",
++       "chromeCookiePath": "/home/ecochran76/.config/google-chrome/Default/Cookies",
++       "chromePath": "/usr/bin/google-chrome",
++       "chromeProfile": "Default",
++       "collapseDisposableWindows": true,
++       "composerTool": null,
++       "conversationId": null,
++       "cookieNames": null,
++       "cookieSync": false,
++       "cookieSyncWaitMs": 0,
++       "debug": false,
++       "debugPort": null,
++       "debugPortRange": null,
++       "debugPortStrategy": "fixed",
++       "deepResearchPlanAction": "start",
++       "desiredModel": "gpt-5.6-sol",
++       "display": ":0.0",
++       "geminiUrl": "https://gemini.google.com/app",
++       "grokUrl": null,
++       "headless": false,
++       "hideWindow": false,
++       "inlineCookies": null,
++       "inlineCookiesSource": null,
++       "inputTimeoutMs": 60000,
++       "keepBrowser": false,
++       "managedProfileRoot": "/tmp/auracall-vitest-RdAdhu/browser-profiles",
++       "manualLogin": true,
++       "manualLoginCookieSync": false,
++       "manualLoginProfileDir": "/tmp/auracall-vitest-RdAdhu/browser-profiles/fixture/chatgpt",
++       "manualLoginWaitForSession": true,
++       "modelStrategy": "current",
++       "projectId": null,
++       "providerSessionAuthorization": {
++         "authority": {
++           "assertProof": [Function assertProof],
++           "resolveExpectation": [Function resolveExpectation],
++           "validateProof": [Function validateProof],
++           "verify": [Function verify],
++         },
++         "context": {
++           "auracallRuntimeProfile": "fixture",
++           "browserProfile": "fixture",
++           "devtoolsHost": "127.0.0.1",
++           "devtoolsPort": 12345,
++           "managedBrowserProfile": "/tmp/auracall-vitest-RdAdhu/browser-profiles/fixture/chatgpt",
++           "providerId": "chatgpt",
++           "sourceBrowserProfile": "Default",
++         },
++         "expectation": {
++           "configuredIdentity": {
++             "email": "fixture@example.com",
++           },
++           "configuredServiceAccountId": "service-account:chatgpt:fixture@example.com",
++           "providerId": "chatgpt",
++           "source": "runtime-profile",
++         },
++         "onProof": undefined,
++       },
++       "remoteChrome": {
++         "host": "127.0.0.1",
++         "port": 12345,
++       },
++       "serviceTabLimit": 3,
++       "tabConcurrencyMode": "serialized",
++       "target": "chatgpt",
++       "targetUrl": null,
++       "thinkingTime": undefined,
++       "timeoutMs": 7200000,
++       "url": "https://chatgpt.com/",
++       "workModel": null,
++       "wslChromePreference": "auto",
++     },
++     "ecosystemMention": {
++       "acceptedPluginIds": [
++         "plugin_fixture",
++         "fixture",
++       ],
++       "label": "Fixture App",
+      },
++     "onProviderEffectState": [Function onProviderEffectState],
++     "prompt": "Use app",
++     "runtimeHintCb": [Function runtimeHintCb],
++     "skipBrowserExecutionOperation": false,
++     "tabAffinityUserConfig": undefined,
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ tests/browser/chatgptDeveloperAppLifecycle.test.ts:480:22
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 26 passed (27)
+   Start at  21:23:23
+   Duration  10.51s (transform 1.34s, setup 39ms, import 1.81s, tests 8.51s, environment 0ms)
+

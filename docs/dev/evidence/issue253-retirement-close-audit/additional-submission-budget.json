@@ -7,7 +7,7 @@
   "packets": [
     {
       "packet": "packet-1",
-      "status": "running",
+      "status": "native-timeout-provider-reconciliation-pending",
       "launchedAt": "2026-10-13T02:18:50.475Z",
       "deadline": "2026-10-13T02:28:50.470Z",
       "nativeOwnerPid": 99328,
@@ -16,7 +16,10 @@
       "observerGate": "violated; shell continued after readiness error",
       "recoveryObserver": "attached after launch to exact packet lease",
       "actualModel": "Pro",
-      "fastAcceptance": "not proven"
+      "fastAcceptance": "not proven",
+      "nativeExitCode": 124,
+      "nativeTerminalAt": "2026-10-13T02:28:50.063Z",
+      "nativeElapsedMs": 599593
     }
   ],
   "serial": true,

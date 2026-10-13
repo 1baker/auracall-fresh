@@ -1,7 +1,7 @@
 import type { ResolvedUserConfig } from "../config.js";
 import { resolveBrowserLaunchPlan } from "./service/browserLaunchPlan.js";
 import { createProviderSessionAuthorization } from "./providers/providerSessionAuthority.js";
-import type { BrowserAutomationConfig, BrowserRunOptions, BrowserRunResult } from "./types.js";
+import type { BrowserAutomationConfig, BrowserModelStrategy, BrowserRunOptions, BrowserRunResult } from "./types.js";
 
 export type DeveloperAppEffectState = "pre_effect" | "unknown" | "effect_observed";
 export interface DeveloperAppSubmissionEvidence {
@@ -12,6 +12,7 @@ export interface DeveloperAppSubmissionEvidence {
 	retrySafe?: boolean;
 }
 export interface DeveloperAppSubmissionOptions {
+	modelStrategy?: BrowserModelStrategy;
 	abortSignal?: AbortSignal;
 	browserOperationOwned?: boolean;
 	runBrowser?: (options: BrowserRunOptions) => Promise<BrowserRunResult>;
@@ -67,9 +68,9 @@ export async function submitChatgptDeveloperApp(
 				chatgptUrl: "https://chatgpt.com/",
 				conversationId: null,
 				projectId: null,
-				modelStrategy: "current",
+				modelStrategy: options.modelStrategy ?? "current",
 				chatgptMode: "chat",
-				thinkingTime: undefined,
+				thinkingTime: options.modelStrategy === "select" ? plan.launchPolicy.thinkingTime : undefined,
 				composerTool: null,
 			},
 			ecosystemMention: {
