@@ -1,6 +1,6 @@
 # Plan0405 | Developer-app affinity configuration (#253)
 
-State: OPEN
+State: CLOSED
 Lane: P90
 Integration: merge
 Work items: #253
@@ -11,7 +11,9 @@ Base: 9b324b3dc7d3f8f1ec50e3888f02e71c39047e02
 
 ## Current State
 
-PR301 terminal-exit repair is integrated and installed bcc48e31f / validated29ed141e1 in user-runtime-issue253-terminal-exit.592compiledfiles match,34source tests/typecheck/build pass; API25715 exactargv/processKillMode,/desktops200. Installed native no-submit recheck exit0 in39seconds with exactaccount/app; bounded Plan0408 CLOSED. User authorized up to10additional serial submission packets,0consumed. Canonical Instantsetup precedes packet1. Prior exhausted attempts and failedreceipts preserved. Full Issue253 native completion remainsOPEN. Expiry audit captured API30839 idle-expired close request but preserved/still-live result; later process exit actor remainsunknown.
+Issue253 installed native acceptance passes on additionalpacket2: completed receipt, CLIexit0 at2026-10-13T03:09:30.980Z/584438ms, exact account/app and single frozen prompt, actual5.6Instant/backendgpt-5-6-instant, providerfinalend_turntrue and whole-answer normalized equality. Singleworkflow49/65 calls;5KEEP records in one newSession167; baseline152–163/165 preserved. InstalledsourcePR305 c89504d3/validated68bba1d3,592fileparity.2/10 additional packets consumed; stop after achieved acceptance. Source and native proof: docs/dev/evidence/issue253-blocker-scope/native-acceptance.json.
+
+Observer was actually ready before launch. Local-to-serverCID binding caused a capture gap; recovery filename collisions mean original PNG immutability is not proven. These limitations remain recorded; do not claim continuous visual coverage, research numerical/source validation, or active-chat idle-expiry protection. Historical browser-process exit actor remains unknown. No new wakes or general memory writes; memory disposition forbidden.
 
 ## Scope and seams
 
@@ -178,3 +180,7 @@ Attempt3 actual native Instant response completed; primary active-path backend f
 Real waitForAssistantResponse/CDP/DesktopControlGate loop reproduces Desktop control busy in2.43s with one same-generation client/nohuman/provider. Short-observer timingprobe passes unchanged collector; longobserver holds admission and parallel watchdog fails. Bound packet: expose actual CDP admission qualification to observation code and choose existing bounded snapshotpoller for coordinated Runtime domains; preserve all ownership/control checks and unmanaged dualobserver behavior. Real-loop regression beforefix; native attempt3 response alreadycompleted and cannot be resent. Validate source/installed loop and read same original conversation withoutSend.
 
 PR295 collector repair integrated/installed a8ad10a236e607ef928bec4b09eab9218e761564 (validated158b3b667a070cbd8b11eeea2251fb3966001d96):103 focused tests/1skip, typecheck/lint/build,591compiledparity and3installedboundary tests pass. Original once-only attempt exhausted; no native collection success claimed. Fixed120s app-test deadline is a separate diagnosis item before another research acceptance. Original process absent with unknown exit actor.
+
+## Closure — 2026-10-13
+
+Native acceptance completed on packet2 after source, installed model-policy, terminal and blocker-scope repairs. Earlier failures and receipts remain historical evidence; any earlier pending/open statement below this closure describes its original checkpoint, not current state. Goal accounting and submission ledger were not reset.

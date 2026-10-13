@@ -1,6 +1,6 @@
 # Issue253 fresh native collection acceptance
 
-State: OPEN — user authorized up to ten additional serial submission packets.
+State: CLOSED — user authorized up to ten additional serial submission packets.
 Parent: Plan0405; Plan0406 source/install CLOSED. Issue253 OPEN.
 Installed source bcc48e31fb259147736ea7c9854b25b32871e34b, validated 29ed141e120047438fd182fe761763b75cb313f1, prefix ~/.auracall/user-runtime-issue253-terminal-exit. Plan0407 installs expiry-close auditing; it grants no native acceptance effects.
 
@@ -20,8 +20,12 @@ Goal checkpoint before05:43:58.455186Z or1.5MM token allowance. The user has exp
 
 The prior goal wall-clock checkpoint has elapsed. This pending plan does not renew that allowance; re-anchor any approved execution against current time and goal authority before effects.
 
-## Current State — authorized packet budget
+## Current State
 
-User instruction: "take it up to 10 additional submission packets". Additional packets consumed: 0/10. Earlier attempts remain immutable. LitScout is locating the frozen contract and runner before dispatch; no submission authorized to the collaborator until primary preflight completes. Each packet has one Send, the existing ten-minute outer guard, visual observation, exact receipt/conversation/result proof and research audit. Remaining goal allowance is measured by current goal accounting, retaining the 1.5MM-token/four-hour stop. General memory writes remain forbidden.
+Issue253 installed native acceptance passes on additionalpacket2: completed receipt, CLIexit0 at2026-10-13T03:09:30.980Z/584438ms, exact account/app and single frozen prompt, actual5.6Instant/backendgpt-5-6-instant, providerfinalend_turntrue and whole-answer normalized equality. Singleworkflow49/65 calls;5KEEP records in one newSession167; baseline152–163/165 preserved. InstalledsourcePR305 c89504d3/validated68bba1d3,592fileparity.2/10 additional packets consumed; stop after achieved acceptance. Source and native proof: docs/dev/evidence/issue253-blocker-scope/native-acceptance.json.
 
-Provider-label reconciliation: literal Instant setup returned option-not-found; installed canonical modelSelector maps instant alias to chatgpt:fast, currently GPT-5.6 Sol with light thinking. Use that canonical intent and verify actual checked model/thinking state. Earlier setup failures remain preserved; no prompt effects occurred.
+Observer was actually ready before launch. Local-to-serverCID binding caused a capture gap; recovery filename collisions mean original PNG immutability is not proven. These limitations remain recorded; do not claim continuous visual coverage, research numerical/source validation, or active-chat idle-expiry protection. Historical browser-process exit actor remains unknown. No new wakes or general memory writes; memory disposition forbidden.
+
+## Closure — 2026-10-13
+
+Native acceptance completed on packet2 after source, installed model-policy, terminal and blocker-scope repairs. Earlier failures and receipts remain historical evidence; any earlier pending/open statement below this closure describes its original checkpoint, not current state. Goal accounting and submission ledger were not reset.
