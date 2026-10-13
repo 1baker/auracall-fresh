@@ -1,3 +1,15 @@
+## 2026-10-13 — Standalone mirror refresh needs governed custody (#165)
+
+Installed explicit project discovery failed at identity before physical connect:
+provider traffic governor required. Refresh previously acquired configured
+affinity only when a live-follow completion ID was present. Standalone refresh
+now uses its own generated request ID through the same configured factory.
+Non-ChatGPT/non-affinity factory fallback remains the profile dispatcher. Keep
+traffic authority, retained tab custody, warning stops and budgets intact rather
+than relaxing the physical-action guard. Local public refresh/UI replay is red
+without completion ID and green with request-scoped affinity; installed replay
+and wider changed/quiet acceptance remain separate.
+
 ## 2026-10-13 — Late native HTTP429 is a read stop (#165)
 
 An owned live page exposed native conversation-list429 while no messages loaded.

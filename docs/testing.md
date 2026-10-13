@@ -1,3 +1,11 @@
+- Standalone and live-follow refresh custody (provider-free):
+  `pnpm vitest run tests/accountMirror/refreshService.test.ts -t 'governs refresh'`.
+  Public refresh service forwards governed affinity into the real traffic plan,
+  provider governor and UI physical-action guard against simulated CDP. Missing
+  standalone acquisition fails before navigation; both entry paths navigate
+  once after repair. Collector result and affinity acquisition are injected, so
+  this does not prove installed discovery or provider identity acceptance.
+
 - Context-read affinity route handoff (provider-free):
   `pnpm vitest run tests/browser/chatgptContextAffinityRoute.test.ts`.
   Public ChatgptService, production utility affinity, coordinator, registry,

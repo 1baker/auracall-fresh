@@ -2,7 +2,7 @@
 
 State: OPEN
 Parent: Plan 0386 / issue 165
-Branch: fix/issue165-context-read-rate-guard
+Branch: fix/issue165-governed-refresh
 Target: main
 
 ## Current State
@@ -126,3 +126,62 @@ Goal is active; source worktree isolated on current installed code line. Prior
 turn changed next action with a failed single installed read and cleanup proof,
 so it counts as progress. Existing four single-visit and one retry-classification
 test do not prove the original symptom. Current action: build the route loop.
+
+## Checkpoint 5 — outcome progress, unresolved original row
+
+PR308 merged d5765f234 and installed with581compiled-file parity; API87064.
+Two normal unscoped passes advanced the retained parent13→15. The first copied
+a two-message chat and skipped its asset-free child. The second automatically
+materialized one real JSON artifact21186bytes, with checksum
+42530045a480aed4c7a2391fc09779754434422980ad0f74cb24a7f30b3b76f6
+and matching readable cache/archive bytes. Child
+hmj_25f5b6e91b0643eaa655afb6ab4e5c92 succeeded1materialized/0failed/0skipped;
+provider identity verdict MATCH. This row's index fingerprint did not change,
+so positive retained-missing capture is proved, independent changed-B is not.
+The second pass observer followed metadata and child on the same target, with
+75samples,627observedresponses and no warning/errors. Response counts include
+UI/static/cache traffic and are not a count of explicit provider operations.
+
+Original row still has no local context. Its nested context read failed while
+the overall refresh reported completed; preserve that distinction. A subsequent
+paced diagnostic observed an empty/loading page and exact conversation404 with
+conversation_inaccessible/can_retry=false, without429. The same backend error
+was also observed on the first pass's readable chat: API denial alone cannot
+justify terminal deletion or unavailable classification. No selector cause is
+proved when the real page contains no messages.
+
+A passive observed project-Chats lookup returned16rows, eight IDs absent from
+the frozen349-row catalog. Original row was absent from this one project only;
+this is not global absence proof. SDK result completed, but its process retained
+a connection and was interrupted at the140second controller deadline. Its raw
+receipt labels the operation direct_diagnostic_read, although the operation was
+project listing; this correction leaves the raw receipt intact.
+
+All17completions and scheduler remain paused after terminal observations. Six
+new-goal journeys total: four diagnostic, two automatic. Full changed/quiet,
+composed guard/reload and bounded scheduler acceptance remain OPEN. Next: verify
+discovery/detail scheduling and nested-failure semantics through the normal
+production seam before choosing a source change or another governed live pass.
+
+## Checkpoint 6 — blocker reduction, standalone discovery custody
+
+One bounded explicit project-discovery refresh stopped at identity before physical
+connect: provider traffic governor required. No observed attachment or provider
+response; diagnostic trace identifies the guard refusal. Journey7 charged as an
+attempt; no automatic retry. Resolved runtime refresh setup gated the configured
+affinity factory on liveFollowOperationId, which the public refresh API does not
+accept. Ranked predictions after the red loop: (1) absent acquisition causes
+missing governor, (2) an acquired governor is lost at collector forwarding,
+(3) UI transport loses carried authority. Live-follow passes, standalone fails
+in the same public refresh/real governor/traffic-plan/UI guard fixture, and the
+factory is absent for standalone: this discriminates prediction1.
+
+Smallest repair acquires configured affinity for a resolved runtime and falls
+back to the generated refresh ID for operation custody. Existing factory returns
+null for non-ChatGPT/non-affinity mode; profile dispatcher remains its fallback.
+Loop: pnpm vitest run tests/accountMirror/refreshService.test.ts -t 'governs refresh'.
+Red: one passed/one failed, ProviderTrafficGovernorRequiredError before physical
+navigation. Green: two passed, one simulated navigation each. Acquisition and
+collector result are injected; browser-service UI guard, governor, traffic-plan
+wrapper and refresh service are real.120focused/82broader checks and typecheck
+pass. Installed replay awaits review/integration/build/promotion. Full goal OPEN.

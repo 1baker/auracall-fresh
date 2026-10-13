@@ -331,27 +331,25 @@ export function createAccountMirrorRefreshService(input: {
 			let affinity: Awaited<ReturnType<typeof liveFollowAffinityFactory>> | null = null;
 			let acquired: BrowserOperationAcquireResult;
 			try {
-				affinity =
-					request.liveFollowOperationId && isResolvedUserConfig(input.config)
-						? await liveFollowAffinityFactory({
-								userConfig: input.config,
-								provider,
-								runtimeProfileId,
-								operationId: request.liveFollowOperationId,
-								maxBrowserInteractionsPerMinute:
-									development?.maxBrowserInteractionsPerMinute ??
-									target.limits.maxBrowserInteractionsPerMinute,
-								conversationReadCooldownMs:
-									development?.conversationReadCooldownMs ??
-									target.limits.conversationReadCooldownMs,
-								pageRefreshCooldownMs:
-									development?.pageRefreshCooldownMs ?? target.limits.pageRefreshCooldownMs,
-								renavigationCooldownMs:
-									development?.renavigationCooldownMs ?? target.limits.renavigationCooldownMs,
-								abortSignal: request.abortSignal,
-								now,
-							})
-						: null;
+				affinity = isResolvedUserConfig(input.config)
+					? await liveFollowAffinityFactory({
+							userConfig: input.config,
+							provider,
+							runtimeProfileId,
+							operationId: request.liveFollowOperationId ?? requestId,
+							maxBrowserInteractionsPerMinute:
+								development?.maxBrowserInteractionsPerMinute ??
+								target.limits.maxBrowserInteractionsPerMinute,
+							conversationReadCooldownMs:
+								development?.conversationReadCooldownMs ?? target.limits.conversationReadCooldownMs,
+							pageRefreshCooldownMs:
+								development?.pageRefreshCooldownMs ?? target.limits.pageRefreshCooldownMs,
+							renavigationCooldownMs:
+								development?.renavigationCooldownMs ?? target.limits.renavigationCooldownMs,
+							abortSignal: request.abortSignal,
+							now,
+						})
+					: null;
 				acquired =
 					affinity?.operation ??
 					(await dispatcher.acquireQueued(operationInput, {

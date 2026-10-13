@@ -1,3 +1,27 @@
+## 2026-10-13 | Plan0411 standalone discovery governor repair
+
+Bounded explicit discovery stopped before physical connect with missing-governor
+guard; no warning bypass/retry. Public refresh plus actual governor/traffic-plan/
+UI guard replay distinguishes missing standalone affinity acquisition from
+forwarding loss. Same fixture passes live-follow and fails standalone before
+fix, both pass after request-ID custody fallback.120focused/82broader checks and
+typecheck pass. Source review/build/promotion and installed replay are next; full
+changed/quiet, original chat failure and scheduler acceptance remain OPEN.
+
+## 2026-10-13 | Plan0411 installed automatic artifact proof
+
+PR308 merged/installed d5765f234 with581compiled-file parity. Two normal
+unscoped passes advanced parent13→15; second automatic child captured21186byte
+JSON with exact local/manifest/archive hash agreement and MATCH identity. This
+is retained-missing positive capture, not changed-index acceptance. Original
+chat remains empty and uncached, its nested read fails despite completed outer
+refresh. Backend conversation_inaccessible also occurs on a readable chat, so
+no terminal deletion inference. One project listing found eight uncached IDs
+among16rows; project absence is not global absence. SDK returned rows but
+retained a connection until bounded interrupt. Six goal journeys consumed;
+all17completions/scheduler paused. Checkpoint5 in Plan0411 preserves limits and
+remaining changed/quiet, guard/reload and scheduler gates.
+
 ## 2026-10-13 | Plan0411 native HTTP429 containment and local repair
 
 PR307 installed with581compiled-file parity; API65142/all17completions and
