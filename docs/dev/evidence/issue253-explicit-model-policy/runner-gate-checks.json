@@ -1,0 +1,63 @@
+{
+  "passed": true,
+  "cases": [
+    {
+      "name": "missing_snapshot",
+      "error": "ENOENT",
+      "noIntent": true,
+      "noSpawn": true,
+      "spawns": 0,
+      "writes": 0
+    },
+    {
+      "name": "stale_snapshot",
+      "error": "Observer handshake stale or mismatched",
+      "noIntent": true,
+      "noSpawn": true,
+      "spawns": 0,
+      "writes": 0
+    },
+    {
+      "name": "invalid_auth_date",
+      "error": "Exact fresh dispatch authorization missing",
+      "noIntent": true,
+      "noSpawn": true,
+      "spawns": 0,
+      "writes": 0
+    },
+    {
+      "name": "invalid_ready_date",
+      "error": "Observer handshake stale or mismatched",
+      "noIntent": true,
+      "noSpawn": true,
+      "spawns": 0,
+      "writes": 0
+    },
+    {
+      "name": "snapshot_packet_mismatch",
+      "error": "Observer handshake stale or mismatched",
+      "noIntent": true,
+      "noSpawn": true,
+      "spawns": 0,
+      "writes": 0
+    },
+    {
+      "name": "heartbeat_identity_mismatch",
+      "error": "Heartbeat stale or identity mismatch",
+      "noIntent": true,
+      "noSpawn": true,
+      "spawns": 0,
+      "writes": 0
+    },
+    {
+      "name": "valid_handshake_mocked_spawn",
+      "error": "Forbidden spawn",
+      "noIntent": false,
+      "noSpawn": false,
+      "spawns": 1,
+      "writes": 3
+    }
+  ],
+  "realProviderEffects": 0,
+  "qualificationCorrection": "Initial five negative cases stopped at unrelated prefix mismatch; corrected full prefix and exact expected errors, then reran with a positive mocked-spawn control."
+}
