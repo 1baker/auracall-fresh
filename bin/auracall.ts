@@ -5527,17 +5527,32 @@ async function runChatgptDeveloperAppsCliAction(
   if (!acquired.acquired) {
     throw new Error(formatBrowserOperationBusyResult(acquired));
   }
+  let receiptEmitted = false;
   try {
     const result = await runChatgptDeveloperAppOperationForCli(userConfig, input, { browserOperationOwned: true });
     if (result.action !== 'list' && result.status === 'failed') process.exitCode = 1;
     if (commandOptions.json) {
       console.log(JSON.stringify(result, null, 2));
+      receiptEmitted = true;
       return;
     }
     console.log(formatChatgptDeveloperAppOperationResult(result));
+    receiptEmitted = true;
   } finally {
     await acquired.release();
+    if (receiptEmitted) await exitAfterCompletedDeveloperAppCommand();
   }
+}
+
+async function exitAfterCompletedDeveloperAppCommand(): Promise<void> {
+  // Completed one-shot app commands must not wait for retained browser/CDP
+  // handles. Custody is released before this boundary; flush the full receipt
+  // and diagnostics before exiting with the operation's actual status.
+  await Promise.all([
+    new Promise<void>((resolve, reject) => process.stdout.write('', (error) => error ? reject(error) : resolve())),
+    new Promise<void>((resolve, reject) => process.stderr.write('', (error) => error ? reject(error) : resolve())),
+  ]);
+  process.exit(process.exitCode ?? 0);
 }
 
 async function runChatgptSkillsCliAction(

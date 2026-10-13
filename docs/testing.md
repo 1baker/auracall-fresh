@@ -3438,3 +3438,5 @@ installed identity, live local routes and existing browser/configuration preserv
 The route probe does not replace active-lane/PR/ancestry reconciliation.
 
 Issue253 process provenance regression: `pnpm vitest run tests/browser/chatgptDeveloperAppLifecycle.test.ts -t "carries managed browser provenance"` exercises actual app/affinity/remote preflight with hermetic transport/storage, including missing legacy PID metadata, unknown process and wrong account. It produces no provider effects.
+
+Developer-app CLI terminal boundary: `pnpm vitest run tests/cli/developerAppTerminalExit.test.ts tests/cli/chatgptDeveloperAppsCommand.test.ts` executes the actual command in isolated child processes and verifies full output/custody before0/1 termination despite retained handles.

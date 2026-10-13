@@ -24740,3 +24740,7 @@ Closing the only incompatible startup page before creating its replacement can e
 ### 2026-10-11 | Issue253 nested inventory/submission custody
 
 Developer-app submitted test attempted shared process-tab acquisition while its outer exact inventory utility lease was active. A13ms real-seam fixture reproduces process-owned. Read inventory, close and settle utility custody before shared submission; preserve full config, confirmation/account/exact app/live before-Send checks and ownership gates. Failed settlement stops effects. Original native invocation was pre_effect and unrepeated; full acceptance remains open.
+
+## Developer-app one-shot terminal semantics
+
+Completed app commands must flush the full receipt and release browser-operation custody before explicit CLI exit; retained browser/CDP handles must not turn a returned result into an outer timeout. Failures preserve nonzero status; exceptions/release failures remain errors. Actual-command subprocess regression covers200KB output and retained-handle completion. Native causal handle attribution remains separate from this boundary proof.

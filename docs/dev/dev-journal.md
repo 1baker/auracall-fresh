@@ -53935,3 +53935,11 @@ User clarified AuraCall must itself record expiry closures. Plan0407: shared ret
 Plan0407 source ready:41tests7files/typecheck/scopedlint/fullbuild pass; primary serial Standards/Spec review no accepted blockers. Sink includes actorPID/startticks and endpointbrowserPID whenknown; all expiry cleanup callers wired, lostclose/inspection failuredeferred. Historicalclose remainsunproven; no operator attribution note or synthetic event. Installation pending, no liveclose/newprompt.
 
 Plan0407 instrumentation installed PR299 e953a8771 /validated6cc7ae97e;592compiledparity,5actual compiledmaintenance audit cases pass. API15114 active/running processKillMode, /desktops200. Regular cleanup now has durable request/outcome sink; no synthetic historical events or forced liveclose/newprompt. Full Issue253 nativecollection stillblocked on freshonce authorization. Memory disposition forbidden; productlogging authorized, generalmemory writes notauthorized.
+
+## Issue253 expanded submission authorization
+
+User authorized up to ten additional serial submission packets. Plan0406-1 OPEN, ledger0/10; prior attempts preserved. Primary preflight and collaborator contract readback precede any Send. No new wakes or general memory writes.
+
+## Issue253 terminal-boundary regression
+
+Additional submissions0/10. No-submit native preflight produced completed receipt but exit124. Fast actual-command child fixture red at1500ms; explicit flushed exit after returned operation and successful custody release green34tests. Native remaining-handle actor is unproven. Plan0408 OPEN; installation/native validation remain.
