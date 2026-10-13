@@ -686,7 +686,8 @@ Terminology note:
 - ChatGPT account mirror refreshes in tab-affinity mode use a governed crawler
   tab for both standalone refreshes and live-follow passes. Standalone requests
   use their refresh request ID for custody and traffic attribution; the same
-  pacing, warning stops and idle lease maintenance apply. Project discovery reads
+  pacing and warning stops apply. A cold standalone request gets a TTL lease;
+  borrowing a retained live-follow tab preserves its existing lifetime. Project discovery reads
   sidebar project IDs and links without visiting each project; account mirroring
   keeps project click fallback disabled.
 - Account mirror refreshes are metadata-first and identity-gated. Successful

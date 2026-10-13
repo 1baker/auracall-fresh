@@ -2,7 +2,7 @@
 
 State: OPEN
 Parent: Plan 0386 / issue 165
-Branch: fix/issue165-passive-project-index
+Branch: fix/issue165-refresh-affinity-lifetime
 Target: main
 
 ## Current State
@@ -12,9 +12,9 @@ provider journeys as needed. Historical windows/counters stay recorded. PR307
 route handoff, PR308late-rate read stop and PR309governed standalone refresh are
 merged and installed. A normal automatic child captured21186readable JSON bytes
 with exact cache/manifest/archive hash agreement. Original chat remains empty
-and uncached; no historical cause or terminal absence is proved. Current packet
-repairs passive project discovery: installed discovery reported0projects while
-the retained native DOM had8project-ID rows. Full acceptance remains OPEN.
+and uncached; no historical cause or terminal absence is proved. Pending installation combines passive project discovery (native0reported while
+DOM had8project-ID rows) with bounded standalone affinity lifetime. Original
+chat and full changed/quiet/guard/scheduler acceptance remain OPEN.
 Initial source base was PR305/c89504d36; checkpoints preserve each successor.
 
 ## Authority and control
@@ -221,3 +221,37 @@ provider API are added. Existing normalization and deduplication retain legacy
 links; mixed replay excludes invalid IDs/duplicates.181relevant checks, typecheck,
 full build, test Biome and adapter lint pass. Next: serial review/integration,
 installed parity/paced discovery, then normal automatic acceptance. Full goal OPEN.
+
+## Checkpoint 8 — correct standalone lifetime before promotion
+
+PR310 merged f38c8cbf0; staged project-reader runtime matches581compiled files,
+but is not promoted yet. Cleanup exposed a defect in our PR309: selecting the
+live-follow factory for a standalone refresh grants indefinite retention. The
+retained discovery3 root has live-follow retention, so its displayed idle deadline
+is TTL-exempt. This is not a missing maintenance loop.
+
+Public refresh+actual configured affinity/coordinator/file registry/ledger replay
+goes red: standalone retention live-follow instead of ttl; completion case passes.
+Ranked predictions: (1) acquisition chooses the persistent workload, (2) registry
+ignores ephemeral lifetime, (3) activity guard prevents retirement. Choosing the
+existing ephemeral acquisition only for standalone resolves1; the real registry
+then expires it and guarded simulated close runs once. Completion and a standalone
+borrow of its retained process remain TTL-exempt. Browser transport, activity
+observation and collector result are simulated; no provider/browser launched.
+72focused+90broader checks, typecheck/build/scoped Biome pass. First warm-borrow
+fixture used insufficient policy time, correctly refused minimum interval; its
+clock now advances30minutes without bypass. No live provider retry during repair.
+
+Corrective retirement of the one completed discovery lease passed native process,
+root/no-draft, inactivity and desktop-control guards, and recorded a close intent
+by77734at16:08:26.534Z. Private helper lost class prototype methods through object
+spread and failed at finishRetirement; no physical close retry ran. Fresh readback
+finds that target absent; API35646 reconciles lease released/revision6 with an
+already-missing audit at16:09:14.277Z. Failed helper did not retain close ack;
+do not invent completed-close attribution. A different process19366has a separate
+conversation lease in the same native browser78525; that target is preserved.
+Global native absence is not a correct promotion gate when unrelated custody
+shares the browser. Require API no-active-work and own-scope cleanup, preserve
+foreign leases/targets across software promotion, and recheck OS/registry after.
+Full changed/quiet, original-chat cause, composed guard/reload and scheduler
+acceptance remain OPEN; nine provider journeys/attempts remain the goal total.

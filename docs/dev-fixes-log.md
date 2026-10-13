@@ -1,3 +1,15 @@
+## 2026-10-13 — Governed standalone refresh must retain a bounded lifetime (#165)
+
+PR309 reused live-follow affinity for standalone requests, inadvertently granting
+new one-off tabs indefinite live-follow retention. A public refresh/production
+affinity/coordinator/real file-registry replay catches live-follow retention where
+TTL is required. Select the existing ephemeral acquisition path for standalone
+refreshes, with matching traffic attribution. Completion callers keep live-follow
+retention, and borrowing an existing retained process tab never downgrades it.
+The replay retires an inactive standalone tab after its idle TTL and preserves
+retained completion/borrowed tabs. Do not reinterpret an unrelated conversation
+in the shared browser as this request's resource leak.
+
 ## 2026-10-13 — Read project sidebar IDs without click fanout (#165)
 
 The native ChatGPT sidebar exposes project rows with

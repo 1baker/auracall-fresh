@@ -1,3 +1,15 @@
+## 2026-10-13 | Plan0411 standalone lifetime correction
+
+PR310 merged/staged with581fileparity; promotion deferred. PR309 mistakenly gave
+a one-off refresh indefinite live-follow retention. Public refresh through real
+configured affinity/coordinator/file registry detects it; existing ephemeral
+acquisition fixes cold standalone lifetime while retaining completion/borrowed
+process lifetimes.162relevant checks/typecheck/build/scoped Biome pass. Corrective
+own-tab retirement helper failed at lease finalization after audited close intent;
+no physical retry. API later reconciled target absent/lease released. Separate
+foreign conversation sharing native process is preserved. Checkpoint8 records
+exact receipts, attribution limit and scoped promotion gate. Goal OPEN.
+
 ## 2026-10-13 | Plan0411 passive project discovery loop
 
 PR309 installed c7572ecab/581fileparity, API35646. One replay stopped on native

@@ -337,6 +337,7 @@ export function createAccountMirrorRefreshService(input: {
 							provider,
 							runtimeProfileId,
 							operationId: request.liveFollowOperationId ?? requestId,
+							workloadKind: request.liveFollowOperationId ? "live-follow" : "ephemeral",
 							maxBrowserInteractionsPerMinute:
 								development?.maxBrowserInteractionsPerMinute ??
 								target.limits.maxBrowserInteractionsPerMinute,
