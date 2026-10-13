@@ -1,6 +1,6 @@
 # Issue253 developer-app CLI terminal exit
 
-State: OPEN
+State: CLOSED
 Parent: Plan0405 / Plan0406-1. Issue253 remains OPEN.
 
 ## Current State
@@ -18,3 +18,7 @@ Hypotheses: remaining browser/CDP handles, stalled dispatcher release, output/on
 ## Acceptance and remaining work
 
 Focused suite34tests passes. Typecheck/build pass; final review moved completion flag after successful receipt emission to preserve serialization/output errors. Primary Standards/Spec review, integration and exact installed parity precede one native no-submit recheck. Instant setup remains separate. Then dispatch packet1 against the authorized unchanged prompt, one Send and ten-minute guard. No new wakes, general memory writes or historical attribution fabrication. Stop on accepted native completion or unsafe/unknown state; no blind retries.
+
+Installed PR301 bcc48e31f / validated29ed141e1 into user-runtime-issue253-terminal-exit;592compiledparity,CLI/MCP/API25715 argvqualified/processKillMode,/desktops200. Installer metadata lacked sourceCommit and was explicitly annotated against source/parity after verification. First readiness read was connection-refused during startup, then sameprocess ready200; no retryrestart for readiness. Native no-submit recheck authorized with distinct artifacts, pending.
+
+Native installed no-submit recheck completed with exact account/app and full inventory, CLI exit0 in39012ms at02:09:00.039Z; receiptSHA7b5ab4f1585b60d0643b0a19c19e6f2225fc55b40b37c5c031412d78d32913f6 independentlyverified. Bounded terminal packet CLOSED; Issue253 full submission acceptance remains OPEN,0/10consumed. Modelsetup next under canonical guardedutilitylease. Memory disposition forbidden, no general memory authority.

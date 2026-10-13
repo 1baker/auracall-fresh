@@ -53943,3 +53943,5 @@ User authorized up to ten additional serial submission packets. Plan0406-1 OPEN,
 ## Issue253 terminal-boundary regression
 
 Additional submissions0/10. No-submit native preflight produced completed receipt but exit124. Fast actual-command child fixture red at1500ms; explicit flushed exit after returned operation and successful custody release green34tests. Native remaining-handle actor is unproven. Plan0408 OPEN; installation/native validation remain.
+
+PR301 terminal-exit runtime installed bcc48e31f/validated29ed141e1,592compiledparity/API25715 /desktops200. Oldbrowser57592 absent beforepromotion. Durable audit shows idle-expired close-request by30839 but preserved/still-live outcome, so actualprocess exit attribution remains unknown. Native no-submit recheck pending, submissions0/10.
