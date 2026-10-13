@@ -1,0 +1,12 @@
+{
+  "at": "2026-10-13T02:47:41.966710+00:00",
+  "apiPid": 77641,
+  "argv": "node /home/ecochran76/.auracall/user-runtime-issue253-app-model-policy/node_modules/auracall/dist/bin/auracall.js api serve ",
+  "KillMode": "process",
+  "desktopsStatus": 200,
+  "compiledParityFiles": 592,
+  "sourceCommit": "6a247d967d3a66306ca3dcd5a8fdb40f2965dee2",
+  "validatedSourceCommit": "f7ccec1fea14686476c0d8cf73c067ccdde909a9",
+  "browser28993PresentBeforeRestart": false,
+  "memoryDisposition": "forbidden"
+}
