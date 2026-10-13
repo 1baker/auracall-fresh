@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "authorizedAdditionalPackets": 10,
+  "consumedAdditionalPackets": 0,
+  "userInstruction": "take it up to 10 additional submission packets",
+  "recordedAt": "2026-10-13T01:56:40.154340+00:00",
+  "packets": [],
+  "serial": true,
+  "noNewWakes": true
+}
