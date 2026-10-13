@@ -1,11 +1,13 @@
 # Issue253 explicit submitted-page model policy
 
-State: OPEN
+State: CLOSED
 Parent: Plan0405 / Plan0406-1. Additional submissions1/10 consumed; packet1 native exit124; original provider completion verified; native acceptance failed.
 
 ## Current State
 
-Packet1 actual backend model_slug gpt-6-pro and primary screenshotPro contradict the prior utility-tab5.6Instant setup. Source submitChatgptDeveloperApp unconditionally forced current strategy and cleared thinking selection on its fresh page. Preparation-tab model does not establish submitted-page model.
+Issue253 installed native acceptance passes on additionalpacket2: completed receipt, CLIexit0 at2026-10-13T03:09:30.980Z/584438ms, exact account/app and single frozen prompt, actual5.6Instant/backendgpt-5-6-instant, providerfinalend_turntrue and whole-answer normalized equality. Singleworkflow49/65 calls;5KEEP records in one newSession167; baseline152–163/165 preserved. InstalledsourcePR305 c89504d3/validated68bba1d3,592fileparity.2/10 additional packets consumed; stop after achieved acceptance. Source and native proof: docs/dev/evidence/issue253-blocker-scope/native-acceptance.json.
+
+Observer was actually ready before launch. Local-to-serverCID binding caused a capture gap; recovery filename collisions mean original PNG immutability is not proven. These limitations remain recorded; do not claim continuous visual coverage, research numerical/source validation, or active-chat idle-expiry protection. Historical browser-process exit actor remains unknown. No new wakes or general memory writes; memory disposition forbidden.
 
 ## Scope and contract
 
@@ -26,3 +28,7 @@ Primary runner-gate review corrected false fixture coverage:5/6originalcases fai
 2026-10-13T02:47:41Z: promoted PR303 runtime after original provider completion and fresh OS census. All592 compiled files match validated source; API77641 exact model-policy prefix, KillModeprocess and /desktops200. Original browser28993 was absent before this software restart. Packet1 plain-text final23744chars SHA2566e101327eb250f598808540974c64cd6cfdebcf831d4a20c88b2ad8a5f70f8cf; one frozen user prompt,51/65 workflow admissions,7KEEP entries in newSession166, priorSessions152–163/165 unchanged. Native exit124/emptyreceipt, Pro model and launch-observer violation remain failures.
 
 Expiry audit attributes a guarded tab-close request to API25715/start214747 at02:44:05.206Z for the exact packet1 lease/target; result02:44:05.451Z preserved/target-still-live-after-close. It does not establish browser-process exit actor. Do not infer ordering from approximate operator timing. Packet2 preparation authorized, but no submission until fresh account/app/browser/observer gates pass. Memory disposition forbidden by current task boundary.
+
+## Closure — 2026-10-13
+
+Native acceptance completed on packet2 after source, installed model-policy, terminal and blocker-scope repairs. Earlier failures and receipts remain historical evidence; any earlier pending/open statement below this closure describes its original checkpoint, not current state. Goal accounting and submission ledger were not reset.

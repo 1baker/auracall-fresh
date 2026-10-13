@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "packet": "packet-2",
+  "accepted": true,
+  "acceptedScope": "Issue253 installed native app completion and selected fast model; no continuous-visual or active-idle-expiry acceptance claim",
+  "sourceCommit": "c89504d366becf2067f6c2e29d5225692f844763",
+  "validatedSourceCommit": "68bba1d3ccbe33c46b7cb2678458c77c06e39f4a",
+  "compiledParityFiles": 592,
+  "nativeStatus": "completed",
+  "nativeExit": {
+    "at": "2026-10-13T03:09:30.980Z",
+    "exitCode": 0,
+    "signal": null,
+    "elapsedMs": 584438,
+    "packet": "packet-2",
+    "researchTerminalQualified": false
+  },
+  "nativeReceiptBytes": 29550,
+  "nativeReceiptSha256": "b8f6aca2c3ea66d6bd162446e6b5ad41ff15c943cde142261e692c97f7cec54e",
+  "nativeAnswerSha256": "62c7c7903b3ff4ea739a5f5fa614d8345c1f723cef449d724ea58a0b3b20a7ee",
+  "providerFinalPlainTextSha256": "01c46af562d6a1f385a897879d187c733db53f14d840d0f8cc0561f3fe2b9f66",
+  "providerEndTurn": true,
+  "actualBackendModel": "gpt-5-6-instant",
+  "expectedAccountMatched": true,
+  "exactExistingAppMatched": true,
+  "inventoryComplete": true,
+  "userMessages": 1,
+  "frozenPromptVerbatim": true,
+  "appPrefixVerifiedSeparately": true,
+  "frozenPromptSha256": "5bf4cb111938e09d449836ad186dcc5544a0acc980888120207dcd4072b63b58",
+  "answerComparison": {
+    "normalization": "remove native ChatGPT said wrapper and Markdown heading/bold/italic/backtick/link markup, collapse whitespace; does not compare raw representations",
+    "normalizedEqual": true,
+    "nativeNormalizedSha256": "1e63bc07a090b4da30c55086a6bbf0167dcc569cbc7b795edbde7d7ae7963a95",
+    "backendNormalizedSha256": "1e63bc07a090b4da30c55086a6bbf0167dcc569cbc7b795edbde7d7ae7963a95"
+  },
+  "effectState": "effect_observed",
+  "retrySafe": false,
+  "workflowAdmittedCalls": 49,
+  "workflowCallLimit": 65,
+  "toolOutcomes": {
+    "success": 47,
+    "error": 2
+  },
+  "newSessionKeptCount": 5,
+  "priorBaselineSessionsPreserved": true,
+  "observerReadyBeforeLaunch": true,
+  "observerLimitations": [
+    "OriginalobserverlocalCID binding causedcapturegap",
+    "RecoveryPNGcollision means someoriginalframes mayhave been overwritten; currentimages andtimeline preserved",
+    "Numerical/source claims need researchaudit separatefromnative transport acceptance"
+  ],
+  "nativeOwnerPid": 12701,
+  "browserPid": 1100,
+  "browserStartTicks": "515531",
+  "targetId": "CF65806812A7BE3DBD186A682733D22A",
+  "leaseId": "3ca07c1b-6d28-416c-b829-1f9157248813",
+  "privateEvidenceLocator": "~/.local/share/litscout/research-notes/live-demo-campaign-20261011/demo10/additional-native-packets/packet-2",
+  "memoryDisposition": "forbidden",
+  "priorSession166Preserved": true,
+  "session166MembershipVerified": true
+}
