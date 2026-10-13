@@ -126,3 +126,39 @@ Goal is active; source worktree isolated on current installed code line. Prior
 turn changed next action with a failed single installed read and cleanup proof,
 so it counts as progress. Existing four single-visit and one retry-classification
 test do not prove the original symptom. Current action: build the route loop.
+
+## Checkpoint 5 — outcome progress, unresolved original row
+
+PR308 merged d5765f234 and installed with581compiled-file parity; API87064.
+Two normal unscoped passes advanced the retained parent13→15. The first copied
+a two-message chat and skipped its asset-free child. The second automatically
+materialized one real JSON artifact21186bytes, with checksum
+42530045a480aed4c7a2391fc09779754434422980ad0f74cb24a7f30b3b76f6
+and matching readable cache/archive bytes. Child
+hmj_25f5b6e91b0643eaa655afb6ab4e5c92 succeeded1materialized/0failed/0skipped;
+provider identity verdict MATCH. This row's index fingerprint did not change,
+so positive retained-missing capture is proved, independent changed-B is not.
+The second pass observer followed metadata and child on the same target, with
+75samples,627observedresponses and no warning/errors. Response counts include
+UI/static/cache traffic and are not a count of explicit provider operations.
+
+Original row still has no local context. Its nested context read failed while
+the overall refresh reported completed; preserve that distinction. A subsequent
+paced diagnostic observed an empty/loading page and exact conversation404 with
+conversation_inaccessible/can_retry=false, without429. The same backend error
+was also observed on the first pass's readable chat: API denial alone cannot
+justify terminal deletion or unavailable classification. No selector cause is
+proved when the real page contains no messages.
+
+A passive observed project-Chats lookup returned16rows, eight IDs absent from
+the frozen349-row catalog. Original row was absent from this one project only;
+this is not global absence proof. SDK result completed, but its process retained
+a connection and was interrupted at the140second controller deadline. Its raw
+receipt labels the operation direct_diagnostic_read, although the operation was
+project listing; this correction leaves the raw receipt intact.
+
+All17completions and scheduler remain paused after terminal observations. Six
+new-goal journeys total: four diagnostic, two automatic. Full changed/quiet,
+composed guard/reload and bounded scheduler acceptance remain OPEN. Next: verify
+discovery/detail scheduling and nested-failure semantics through the normal
+production seam before choosing a source change or another governed live pass.

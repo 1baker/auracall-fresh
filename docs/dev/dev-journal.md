@@ -1,3 +1,17 @@
+## 2026-10-13 | Plan0411 installed automatic artifact proof
+
+PR308 merged/installed d5765f234 with581compiled-file parity. Two normal
+unscoped passes advanced parent13→15; second automatic child captured21186byte
+JSON with exact local/manifest/archive hash agreement and MATCH identity. This
+is retained-missing positive capture, not changed-index acceptance. Original
+chat remains empty and uncached, its nested read fails despite completed outer
+refresh. Backend conversation_inaccessible also occurs on a readable chat, so
+no terminal deletion inference. One project listing found eight uncached IDs
+among16rows; project absence is not global absence. SDK returned rows but
+retained a connection until bounded interrupt. Six goal journeys consumed;
+all17completions/scheduler paused. Checkpoint5 in Plan0411 preserves limits and
+remaining changed/quiet, guard/reload and scheduler gates.
+
 ## 2026-10-13 | Plan0411 native HTTP429 containment and local repair
 
 PR307 installed with581compiled-file parity; API65142/all17completions and
