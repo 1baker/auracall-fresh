@@ -1,9 +1,19 @@
+# 2026-10-14 — Plan0419 interceptor custody prerequisite
+
+Nested real guarded-CDP Fetch.enable reproduced a desktop-control deadlock inside
+an outer automation scope. Exact-owner async context now lets nested commands
+revalidate and reuse the outer hold, while human takeover and stale inherited
+callbacks remain blocked. Provider-free source only; final checks/review and actual
+owned-request wiring remain open. No install or provider probes.
+
 ## 2026-10-14 | Backend-request ledger foundation
 
 Plan0418 vertical public/file-backed ledger regressions separate request permits
 from operation budget and active-chat counters, enforce a shared fixture request
 ceiling, deduplicate hashed identity across restart, and preserve warning/ownership
-fences.21focused tests/3files pass. No production request-path wiring, selected
+fences.26focused tests/5files passed; the ledger's supplemental concurrent case
+then passed with16ledger tests. Source checkpoint694435163 pushed. No production
+request-path wiring, selected
 ceiling, installation or native traffic. Next pre-send unit must qualify actual
 automation custody, bootstrap, retained targets and human takeover; a lease alone
 is insufficient authority for a browser-wide interceptor. Full issue165 still OPEN.

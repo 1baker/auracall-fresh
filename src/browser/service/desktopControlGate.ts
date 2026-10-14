@@ -1,3 +1,4 @@
+import { AsyncLocalStorage } from "node:async_hooks";
 import { createHash, randomUUID } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -11,6 +12,8 @@ interface GateOwner {
 	ownerPid: number;
 	acquiredAt: string;
 }
+
+const automationScopes = new AsyncLocalStorage<ReadonlyMap<string, GateOwner>>();
 
 /** A clock alone never releases a human lease; exact provider revocation must qualify handoff. */
 export class DesktopControlGate {
@@ -145,6 +148,16 @@ export class DesktopControlGate {
 	}
 
 	async withAutomation<T>(binding: string, effect: () => Promise<T>): Promise<T> {
+		const inherited = automationScopes.getStore()?.get(this.lockPath);
+		if (inherited) {
+			const current = await this.owner();
+			if (
+				!current || current.id !== inherited.id || current.role !== "automation" ||
+				current.binding !== binding || inherited.binding !== binding ||
+				current.ownerPid !== process.pid
+			) throw new Error("Desktop automation ownership changed; refusing stale scope.");
+			return effect();
+		}
 		let owner: GateOwner | undefined;
 		for (let attempt = 0; attempt < 100; attempt += 1) {
 			try {
@@ -160,7 +173,9 @@ export class DesktopControlGate {
 		}
 		if (!owner) throw new Error("Desktop automation admission unavailable.");
 		try {
-			return await effect();
+			const scopes = new Map(automationScopes.getStore());
+			scopes.set(this.lockPath, owner);
+			return await automationScopes.run(scopes, effect);
 		} finally {
 			await this.transition(async () => {
 				const current = await this.owner();

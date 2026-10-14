@@ -1,3 +1,13 @@
+## 2026-10-14 | Nested desktop automation custody
+
+A persistent owned-request interceptor needs custody across setup, events and
+cleanup. Enclosing real guarded CDP commands in the existing automation scope
+previously deadlocked on nested acquisition. Exact-owner async context now allows
+nested commands to revalidate the same owner and generation; human takeover stays
+excluded, and inherited callbacks after release cannot act. Plan0419 contains the
+red/green receipt. Event listeners still need explicit context binding before
+interception wiring; this source checkpoint does not enable production interception.
+
 ## 2026-10-14 — Canonical project URLs can cause needless navigation (#165)
 
 ChatGPT project URLs can carry a human-readable suffix after the stable project
