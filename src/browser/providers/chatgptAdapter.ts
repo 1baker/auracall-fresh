@@ -3473,6 +3473,7 @@ function buildChatgptPayloadDirectRetryOptions(
 ): BrowserProviderListOptions {
 	return {
 		...options,
+		allowNavigation: false,
 		preserveActiveTab: true,
 	};
 }

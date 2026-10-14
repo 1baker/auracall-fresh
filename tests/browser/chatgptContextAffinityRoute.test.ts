@@ -10,6 +10,7 @@ import { runConfiguredChatgptUtilityOperation } from "../../src/browser/configur
 import { ChatgptService } from "../../src/browser/llmService/providers/chatgptService.js";
 import type { ResolvedUserConfig } from "../../src/config.js";
 
+const realSetTimeout = setTimeout;
 const wire = vi.hoisted(() => ({ connect: vi.fn() }));
 vi.mock("../../packages/browser-service/src/chromeLifecycle.js", async (importOriginal) => ({
 	...(await importOriginal<
@@ -25,6 +26,7 @@ afterEach(() => {
 
 test.each([
 	"cold",
+	"denied-payload",
 	"next",
 	"preserved",
 	"exact-preserved",
@@ -44,7 +46,14 @@ test.each([
 	const ledger = createInMemoryProviderInteractionLedger();
 	const config = {
 		auracallProfile: "fixture",
-		services: { chatgpt: { identity: { email: "operator@example.test" } } },
+		services: {
+			chatgpt: {
+				identity: { email: "operator@example.test" },
+				...(scenario === "denied-payload"
+					? { liveFollow: { maxBrowserInteractionsPerMinute: 6, renavigationCooldownMs: 120000 } }
+					: {}),
+			},
+		},
 		browser: {
 			target: "chatgpt",
 			tabConcurrencyMode: "tab-affinity",
@@ -127,7 +136,10 @@ test.each([
 				else if (expression.includes("document.readyState")) value = true;
 				else if (expression.includes("/backend-api/conversation/")) {
 					payloadReads += 1;
-					value = { ok: true, body: JSON.stringify({ mapping: {} }) };
+					value =
+						scenario === "denied-payload"
+							? { ok: false, status: 404, body: "{}" }
+							: { ok: true, body: JSON.stringify({ mapping: {} }) };
 				} else if (expression.includes("const pageStart =")) {
 					if (scenario === "late-rate-limit") {
 						nativeRateLimited = true;
@@ -144,6 +156,12 @@ test.each([
 				}
 				return { result: { value } };
 			},
+		},
+		// biome-ignore lint/style/useNamingConvention: CDP protocol domain.
+		Network: {
+			enable: async () => undefined,
+			responseReceived: () => () => undefined,
+			loadingFinished: () => () => undefined,
 		},
 		// biome-ignore lint/style/useNamingConvention: CDP protocol domain.
 		Page: {
@@ -174,7 +192,40 @@ test.each([
 				},
 			}),
 	});
+	const controller = new AbortController();
 	try {
+		if (scenario === "denied-payload") {
+			vi.useFakeTimers();
+			let settled = false;
+			const pending = service
+				.getConversationContext("fixture-conversation", {
+					refresh: true,
+					retryAttempts: 0,
+					timeoutMs: 60000,
+					listOptions: { abortSignal: controller.signal },
+				})
+				.then(
+					(value) => ({ value, error: null }),
+					(error) => ({ value: null, error }),
+				)
+				.finally(() => {
+					settled = true;
+				});
+			for (let tick = 0; tick < 70 && !settled; tick++) {
+				await vi.advanceTimersByTimeAsync(1000);
+				await new Promise<void>((resolve) => realSetTimeout(resolve, 10));
+			}
+			expect(settled).toBe(true);
+			const outcome = await pending;
+			expect(outcome.error).toBeNull();
+			expect(outcome.value).toMatchObject({
+				conversationId: "fixture-conversation",
+				messages: [{ role: "assistant", text: "Known fixture answer" }],
+			});
+			expect(opened).toEqual(["https://chatgpt.com/c/fixture-conversation"]);
+			expect(navigated).toEqual(["https://chatgpt.com/c/fixture-conversation"]);
+			return;
+		}
 		if (scenario === "project-index" || scenario === "project-index-mixed") {
 			await expect(
 				service.listProjects({ disableProjectClickFallback: true, accountMirrorInventory: true }),
@@ -272,6 +323,11 @@ test.each([
 		}
 		expect(pages.size).toBe(1);
 	} finally {
-		await rm(home, { recursive: true, force: true });
+		if (scenario === "denied-payload") {
+			controller.abort(new Error("fixture finished"));
+			await vi.advanceTimersByTimeAsync(200000);
+			vi.useRealTimers();
+		}
+		await rm(home, { recursive: true, force: true, maxRetries: 2 });
 	}
 }, 15000);

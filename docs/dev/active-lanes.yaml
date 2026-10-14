@@ -1,6 +1,22 @@
 schema_version: 1
 work_item_tracking: optional
 lanes:
+  - id: P90
+    objective: Return populated ChatGPT context without a second payload route fallback
+    work_items: [ecochran76/auracall#165]
+    plan: docs/dev/plans/0412-2026-10-14-populated-context-direct-retry.md
+    plan_ref: refs/heads/fix/issue165-populated-context
+    branch: fix/issue165-populated-context
+    target: main
+    plan_state: OPEN
+    custody_state: ACTIVE_WORKTREE
+    integration: merge
+    dependencies: []
+    overlaps: []
+    validation_status: source-validated-native-acceptance-pending
+    validation_ref: docs/dev/plans/0412-2026-10-14-populated-context-direct-retry.md
+    disposition: Settled direct-only retry isolated from the independent project-budget-yield checkpoint
+    updated_at: 2026-10-14
   - id: P88
     objective: Make AuraCall memory routing discoverable with precise closeout evidence
     work_items: [ecochran76/auracall#251]
