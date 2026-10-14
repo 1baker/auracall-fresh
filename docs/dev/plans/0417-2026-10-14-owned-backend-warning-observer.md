@@ -29,7 +29,8 @@ approved origins classify without DOM probing, payload bodies, headers or stored
 query strings. Foreign/static429s do not freeze the account. Response observer
 cleanup drains pending persistence; setup failure closes its transport/authority.
 No provider probes, warning clearing, installation or account-state changes have
-occurred in this goal packet. Source is not reviewed/integrated yet.
+occurred in this goal packet. Serial source review/remediation is complete; source
+is checkpointed but not integrated or installed.
 
 Checkpoint:69focused tests/10files, typecheck and build passed. Serial Standards
 and Spec review found cleanup-error aggregation and partial metadata replacement
@@ -43,6 +44,11 @@ stores prove a response seen by one process denies another. Tests also cover
 foreign/static responses, repeated warnings and setup-failure retirement. The
 final-warning transport fixture now publishes its acquired lease before probing;
 this preserves rather than bypasses the new ownership requirement.
+
+Current goal checkpoint:89465tokens/1093seconds. Validated source f60b82617
+pushed on the owned-backend-request-admission branch. Progress classification:
+blocker_reduction. Issue165 completion remains unproved. Next: separate request
+identity/deduplication and admission fixture, without choosing a production quota.
 
 ## Scope, acceptance and next unit
 
