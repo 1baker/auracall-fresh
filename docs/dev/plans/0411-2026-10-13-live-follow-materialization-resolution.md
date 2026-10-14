@@ -7,6 +7,24 @@ Target: main
 
 ## Current State
 
+2026-10-14 restart: user renewed resources and explicitly set the goal to
+complete the live-follow repairs using Ask Matt, stopping and checkpointing
+before two million tokens or six hours. New window starts at epoch1791974597;
+advance checkpoint at1791995297 (5h45m), hard stop before1791996197.
+Read the goal meter at every material boundary; historical counters below do
+not reset. Prior checkpoint9 remains preserved. Extraction is the first packet:
+capture minimal representative markup from one governed installed read, reproduce
+the populated-page failure at the public context seam, then repair causally.
+The independent project-budget-yield source checkpoint remains separate.
+
+Fresh readback: repair branch clean at eadaf2448 before this control update;
+installed wrapper resolves bounded-refresh prefix and compiled ChatGPT adapter
+matches this checkpoint. API23537 active; scheduler paused, all17active completion
+jobs paused, queued/running0, warnings0. All454selected registry leases released;
+installed native managed-profile census finds no browser. Historical process
+exit actors remain unknown. Graphiti healthy but no relevant Plan0411 recall;
+repair worktree unindexed, native code-discovery fallback applies.
+
 The user renewed the full resolution objective on2026-10-13, authorizing paced
 provider journeys as needed. Historical windows/counters stay recorded. PR307
 route handoff, PR308late-rate read stop and PR309governed standalone refresh are
@@ -291,3 +309,64 @@ gates open. Never click Answer now, reset old journey counters, seed live change
 or weaken guards. Raw evidence remains private under the Plan0411 diagnostics
 directory. Memory disposition: forbidden at operator budget stop; no new durable
 memory is queued in this execution window.
+
+## Checkpoint 10 — renewed window / extraction outcome progress
+
+User resumed the full goal with renewed2million-token/6hour bounds. Two new
+paced installed diagnostics reproduce60second populated-page timeout. Qualified
+representative markup has10role-marked message roots. Actual-expression DOM
+replay reads them correctly; native telemetry reaches message extraction then
+admits a second payload route fallback after direct404 and a missed exact
+fallback response. A public-service/production-affinity loop at unchanged
+120second navigation cooldown discriminates carried allowNavigation=true from
+ineffective preserveActiveTab=true on the settled payload retry.
+
+PR313 integrated58d9615f7 / source42921787e sets only that retry's
+allowNavigation=false.237source checks across8files, typecheck, scoped lint and
+build pass; primary serial Standards/Spec review has no open blockers. Review
+retains one new public-service transport case in the existing route harness;
+temporary real-DOM dependency and duplicate harness are excluded from source.
+581compiled files match the staged runtime; only ChatGPT adapter differs from
+the prior installation. CLI/MCP wrappers promoted, API76449, /desktops200,
+KillModeprocess. Prior17completion/scheduler pauses remain, active work0.
+
+Third new-window journey returns complete context with5user/5assistant messages
+before the60second read deadline. CLI does not exit afterward; controller sends
+SIGINT at90seconds. This is extraction evidence, NOT successful CLI acceptance.
+Plan0413 begins a public-command terminal-boundary replay; no additional live
+read while diagnosing it. Fresh readback has one idle retained selected lease
+and native browser87105/CDP45015, no active work/warnings. Preserve it under
+normal bounded retirement; no browser close/exit attribution is invented.
+
+Historical10goal journeys remain; new window3journeys so far. The separate
+post-budget authorized check remains outside those counters. Independent
+project-budget-yield checkpointeadaf2448 remains unintegrated/uninstalled, with
+122relevant checks freshly passing on unchanged source. Full changed/quiet,
+composed guard/reload and bounded scheduler acceptance remain OPEN.
+
+## Checkpoint 11 — original context command outcome progress
+
+Plan0413 public registered-command subprocess reproducesETIMEDOUT at1500ms
+even for a one-byte settled result. Reusing the existing flushed terminal
+boundary after service settlement fixes it; minimal/200KB success, provider
+failure and existing app cases pass8tests, typecheck and build. Entry point is
+excluded by Biome; new test is clean and source hunks reviewed serially on
+Standards/Spec with no open blockers. PR314 integratedb02159225 /
+sourcef6e134401, promoted with581compiled-file parity; only bin differs from
+the previous runtime. API13018 /desktops200, KillModeprocess.
+
+Fourth new-window journey runs the same original command at60seconds/0retries:
+exit0 in30.98seconds,10messages (5user/5assistant), exact equality with prior
+extracted message array, one owned observer attachment, no hard stop, no prompts.
+The earlier90second/SIGINT receipt remains failed CLI evidence. Source extraction
+and terminal command gates are now met. Fresh registry/OS readback is idle with
+one finite-TTL selected lease/browser18608 retained; no active work or warnings.
+Unrelated17completion and scheduler pauses remain. Normal resource retirement
+is still to be observed; no browser kill/close is issued by this packet.
+
+Goal readback before this checkpoint:556822tokens/2647seconds; renewed window
+remains below advance bounds. Historical10journeys plus4new-window journeys,
+with the separate post-budget check preserved outside these counters. Full
+independent changed-B/quiet, composed guard/reload and bounded scheduler gates
+remain OPEN. Next: reconcile/review/integrate the independent discovery-yield
+checkpoint, then one paced discovery replay, preserving current idle custody.

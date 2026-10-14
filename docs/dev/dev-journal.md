@@ -1,3 +1,12 @@
+## 2026-10-14 | Plan0411 renewed extraction diagnosis
+
+User renewed two-million-token/six-hour window and the full live-follow repair
+goal, using Ask Matt. Start with populated-page public context reproduction;
+no selector cause is proved. Fresh API23537, scheduler/all17completions paused,
+zero queued/running or warnings; selected454leases released and native browser
+absent. Preserve root dirty work and independent eadaf2448 budget-yield checkpoint.
+Plan0411 restart control record owns deadline and acceptance continuity.
+
 ## 2026-10-13 | Plan0411 budget-stop checkpoint
 
 Meter2254565tokens/14503seconds exceeded the2million-token user boundary; primary
