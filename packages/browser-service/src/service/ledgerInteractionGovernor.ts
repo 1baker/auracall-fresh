@@ -59,6 +59,41 @@ export function createLedgerBackedBrowserInteractionGovernor(input: {
 	};
 	let activeReservationId: string | null = null;
 	let closed = false;
+	const checkSharedWarning = async () => {
+		const warnings = await input.ledger.listActiveProviderWarnings({ now: readLifecycleTimestamp() });
+		if (warnings.some((warning) =>
+			warning.provider === input.scope.provider.trim().toLowerCase() &&
+			warning.tenantKey === input.scope.tenantKey.trim().toLowerCase(),
+		)) throw new ProviderInteractionAdmissionError("provider-warning");
+	};
+	const pace = async (kind: BrowserInteractionClass, abortSignal?: AbortSignal | null) => {
+		await checkSharedWarning();
+		const controller = new AbortController();
+		const signal = abortSignal
+			? AbortSignal.any([abortSignal, controller.signal])
+			: controller.signal;
+		let stopped = false;
+		let timer: ReturnType<typeof setTimeout> | undefined;
+		let wake: (() => void) | undefined;
+		const monitor = async () => {
+			while (!stopped) {
+				await new Promise<void>((resolve) => {
+					wake = resolve;
+					timer = setTimeout(resolve, 1000);
+				});
+				if (stopped) return;
+				await checkSharedWarning();
+			}
+		};
+		try {
+			await Promise.race([input.baseGovernor.beforeInteraction(kind, signal), monitor()]);
+		} finally {
+			stopped = true;
+			clearTimeout(timer);
+			wake?.();
+			controller.abort(new Error("Interaction pacing ended."));
+		}
+	};
 
 	const finish = async (
 		settlement: {
@@ -86,7 +121,7 @@ export function createLedgerBackedBrowserInteractionGovernor(input: {
 		async beforeInteraction(kind = "generic", abortSignal) {
 			if (closed) throw new ProviderInteractionGovernorClosedError();
 			await finish();
-			await input.baseGovernor.beforeInteraction(kind, abortSignal);
+			await pace(kind, abortSignal);
 			if (closed) throw new ProviderInteractionGovernorClosedError();
 			const admission = await input.ledger.reserve({
 				scope: input.scope,

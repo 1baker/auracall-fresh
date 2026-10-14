@@ -7,6 +7,11 @@ Target: main
 
 ## Current State
 
+User resumed provider-free repair on 2026-10-14. Plan0414 now also covers shared
+provider-account admission across OS processes: interrupted warning pacing and
+strictest recent contributed cap. Native retry hold and remaining parent gates
+stand. The budget-stop window below is preserved historical evidence.
+
 Execution STOPPED at the renewed token boundary; primary missed the advance
 checkpoint. Latest meter2057689, paused2058553tokens/7207seconds. PR315 is installed
 with581parity. Discovery5 observed native429 and ended collector timeout/API500;

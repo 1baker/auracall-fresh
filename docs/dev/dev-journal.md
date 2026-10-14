@@ -1,3 +1,13 @@
+## 2026-10-14 | Resumed shared provider-account admission repair
+
+Ask Matt diagnosis/TDD, serial primary execution. Two OS processes using the
+real file-backed ledger show shared budget enforcement, then reproduce delayed
+cross-caller warning interruption and higher-cap bypass. Shared governor polls
+warnings during pacing; ledger retains each recent admission's contributed cap.
+Expiry case prevents accidentally renewing an old tighter cap. Native provider
+retry hold remains; no live request or warning-state change made. Plan0414 carries
+current packet and preserved prior budget-stop evidence. Parent0411 remains OPEN.
+
 ## 2026-10-14 | Budget stop; late-warning admission checkpoint
 
 Window stopped after meter2057689 crossed2million; primary missed the advance

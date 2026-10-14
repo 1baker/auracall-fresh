@@ -8,6 +8,41 @@ Base: 55bd402a996c1bb7fa49bb3f4e5bdc6a54e48ac0
 
 ## Current State
 
+User resumed on 2026-10-14 with the additional requirement that concurrent
+AuraCall activity share provider-account controls. Current packet is provider-free;
+the native retry hold remains. Comparison base is
+55bd402a996c1bb7fa49bb3f4e5bdc6a54e48ac0, retaining checkpoint cd5eaceaab.
+
+Two real OS processes against the file-backed ledger reproduced two defects:
+another caller's warning did not interrupt local pacing (2-second deadline),
+and a caller with cap3 could exceed another caller's cap1 on the same account.
+The ledger now retains each admitted caller's minute ceiling and applies the
+strictest still-recent contribution. Contributions expire with their own
+interaction; the effective ceiling is not propagated indefinitely. Old records
+without the optional ceiling remain readable. The shared governor checks warnings
+before pacing and once per second while pacing, aborting its local wait on failure;
+atomic reserve/start remain the final admission authority.
+
+Exact red/green command:
+`pnpm vitest run tests/browser-service/concurrentInteractionGovernor.test.ts`.
+First red: warning did not interrupt pacing. Second red: admitted instead of
+minute-interaction-limit. Green proves cross-process, cross-runtime-profile budget
+and warning sharing using synthetic account identity and no provider traffic.
+The expiry regression separately protects against permanent accidental tightening.
+
+Final focused validation:37 tests/six files pass; typecheck and full build pass.
+Scoped Biome checks pass for its two included test files; browser-service source
+files are excluded by repository Biome configuration. `git diff --check` passes.
+
+Serial review axes: Standards found no blocking boundary or scope violations;
+Spec confirms shared admission and warning interruption at the durable governor
+seam. Remaining evidence limits: uninstrumented browser-generated requests,
+account-identity disagreement between independently configured callers, and native
+live-follow acceptance are not proved by this replay. No warning clearing,
+account-key rewrite, budget increase, browser restart or provider probe is included.
+
+The stopped window below remains historical evidence, not current authority.
+
 Execution window STOPPED under the user's2million-token checkpoint boundary.
 Primary missed the advance boundary: last read2057689tokens, paused meter
 2058553tokens/7207seconds. Full goal remains incomplete. No further provider

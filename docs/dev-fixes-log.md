@@ -1,3 +1,14 @@
+## 2026-10-14 — Concurrent callers must share account admission controls (#165)
+
+A durable shared ledger is insufficient if a caller checks its warning only after
+local pacing, or supplies a higher ceiling than another recent caller. Reproduce
+with separate OS processes and different runtime profiles on one synthetic account.
+Check shared warnings before and during pacing, keeping atomic admission last.
+Retain each admitted interaction's own ceiling for its rolling minute, applying
+the strictest recent contribution without extending that contribution's lifetime.
+This is admission accounting; browser-generated request fan-out remains a separate
+measurement boundary. A passed provider-free replay is not native retry clearance.
+
 ## 2026-10-14 — Yield project discovery at its physical navigation budget (#165)
 
 Logical page-read allowance does not permit another physical project visit after
