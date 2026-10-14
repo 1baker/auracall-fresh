@@ -49,10 +49,14 @@ do not treat such a test as a native request-enforcement regression.
 
 ## Scope and acceptance
 
-First settle units and ceiling: preserve the existing6browser-operations/minute
-setting with a separate backend-request ceiling, or deliberately change its units.
-User clarification requested; do not silently reinterpret that setting. This is a
-material operator behavior decision, not permission for another provider probe.
+User approved retaining the operation cap with a separate request limit. Numeric
+request ceiling remains undecided. Plan0416 first removes a verified needless
+canonical navigation from an already-ready project route with a display-name
+suffix. Its provider-free replay is not attribution of discovery5 traffic.
+
+Settle the separate request ceiling without silently reinterpreting the existing
+6browser-operations/minute setting. This is a material operator behavior decision,
+not permission for another provider probe.
 
 Then establish a production boundary that accounts for owned backend requests
 across concurrent callers, attributes target/account/request IDs without bodies,

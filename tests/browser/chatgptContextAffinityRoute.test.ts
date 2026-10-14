@@ -5,6 +5,7 @@ import { runInNewContext } from "node:vm";
 import { afterEach, expect, test, vi } from "vitest";
 import { createInMemoryProviderInteractionLedger } from "../../packages/browser-service/src/service/interactionLedger.js";
 import { createInMemoryBrowserTabLeaseRegistry } from "../../packages/browser-service/src/service/tabLeaseRegistry.js";
+import { readBoundedConversations } from "../../src/accountMirror/chatgptMetadataCollector.js";
 import { setAuracallHomeDirOverrideForTest } from "../../src/auracallHome.js";
 import { runConfiguredChatgptUtilityOperation } from "../../src/browser/configuredChatgptUtilityAffinity.js";
 import { ChatgptService } from "../../src/browser/llmService/providers/chatgptService.js";
@@ -33,12 +34,15 @@ test.each([
 	"late-rate-limit",
 	"project-index",
 	"project-index-mixed",
+	"project-conversations-slug",
+	"project-conversations-different",
 ])("standalone reads preserve route custody (%s)", async (scenario) => {
 	const home = await mkdtemp(path.join(os.tmpdir(), "auracall-context-route-"));
 	setAuracallHomeDirOverrideForTest(home);
 	const pages = new Map<string, string>();
 	const opened: string[] = [];
 	const navigated: string[] = [];
+	let reloads = 0;
 	let nativeRateLimited = false;
 	let payloadReads = 0;
 	let payloadReadsAtWarning = 0;
@@ -129,7 +133,22 @@ test.each([
 						// biome-ignore lint/style/useNamingConvention: Browser platform constructor.
 						URL,
 					});
-				} else if (expression === "location.href") value = pages.get(target);
+				} else if (expression.includes("const expectedChatsLabel")) value = true;
+				else if (expression.includes("const conversationOptionsPrefix"))
+					value = [
+						{
+							id: "fixture-conversation",
+							title: "Fixture chat",
+							projectId: "g-p-11111111111111111111111111111111",
+							url: "https://chatgpt.com/g/g-p-11111111111111111111111111111111/c/fixture-conversation",
+						},
+					];
+				else if (expression.includes("const rawId = String(match[1]"))
+					value = runInNewContext(expression, {
+						location: new URL(pages.get(target) ?? "https://chatgpt.com/"),
+						document: { title: "Fixture project" },
+					});
+				else if (expression === "location.href") value = pages.get(target);
 				else if (expression.includes("/api/auth/session"))
 					value = { user: { id: "fixture-user", email: "operator@example.test" } };
 				else if (expression.includes("const rawConversationId")) value = true;
@@ -165,6 +184,9 @@ test.each([
 		},
 		// biome-ignore lint/style/useNamingConvention: CDP protocol domain.
 		Page: {
+			reload: async () => {
+				reloads++;
+			},
 			enable: async () => undefined,
 			navigate: async ({ url }: { url: string }) => {
 				navigated.push(url);
@@ -185,7 +207,14 @@ test.each([
 						[...pages].map(([id, url]) => ({ id, url, type: "page" })) as never,
 					openTarget: async (_port, url) => {
 						opened.push(url);
-						pages.set("fixture-target", url);
+						pages.set(
+							"fixture-target",
+							scenario === "project-conversations-slug"
+								? "https://chatgpt.com/g/g-p-11111111111111111111111111111111-fixture-project/project"
+								: scenario === "project-conversations-different"
+									? "https://chatgpt.com/g/g-p-22222222222222222222222222222222/project"
+									: url,
+						);
 						return { id: "fixture-target", url } as never;
 					},
 					closeTarget: async () => undefined,
@@ -194,6 +223,28 @@ test.each([
 	});
 	const controller = new AbortController();
 	try {
+		if (
+			scenario === "project-conversations-slug" ||
+			scenario === "project-conversations-different"
+		) {
+			const projectId = "g-p-11111111111111111111111111111111";
+			await expect(
+				readBoundedConversations(service as never, projectId, 1, {
+					listOptions: { allowNavigation: true },
+				}),
+			).resolves.toMatchObject({
+				items: [expect.objectContaining({ id: "fixture-conversation", projectId })],
+				truncated: false,
+			});
+			expect(navigated).toEqual(
+				scenario === "project-conversations-slug"
+					? []
+					: [`https://chatgpt.com/g/${projectId}/project`],
+			);
+			expect(reloads).toBe(0);
+			expect(opened).toHaveLength(1);
+			return;
+		}
 		if (scenario === "denied-payload") {
 			vi.useFakeTimers();
 			let settled = false;

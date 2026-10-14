@@ -730,6 +730,10 @@ Terminology note:
   interrupt pending admission pacing within a one-second polling interval plus
   store-read latency. This budget counts admitted operations, not every request
   generated internally by a provider page.
+  Project conversation reads retain an already-ready same-origin project route
+  whose URL carries a display-name suffix after the stable project ID, avoiding
+  an extra navigation solely to canonicalize its URL. A different project still
+  requires navigation, and route/document readiness checks remain in force.
   Changed-frontier planning is deterministic and provider-free: each row
   becomes exactly one of `skip`, `visit_once`, `materialize_retained`, or
   `defer`. Active guards, identity mismatches, and future retry horizons defer;
