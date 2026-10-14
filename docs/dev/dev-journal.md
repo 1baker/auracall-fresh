@@ -1,3 +1,11 @@
+## 2026-10-14 | Project-route reuse integrated and installed
+
+PR321/source ddea20ec7/merge a3d143e4a.267focused checks, typecheck/build pass;
+582compiled files exact installed parity. API62047 healthy, /desktops200,
+scheduler/all17jobs paused, existing foreign browser process preserved. Plan0416
+CLOSED for scoped source/runtime repair. Zero native probes; backend request saving
+is unquantified, separate request ceiling undecided, parent0411/0415 still OPEN.
+
 ## 2026-10-14 | Ready project-route reuse regression
 
 Plan0416 removes canonical navigation when an already-ready project URL includes
