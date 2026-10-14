@@ -32,6 +32,15 @@ _Avoid_: Browser config, launch profile
 One requested model interaction routed through a provider binding, including its target, attachments, completion posture, and progress evidence.
 _Avoid_: Browser prompt, request
 
+**Browser operation**:
+One authorized browser action or read. A single operation may cause several
+provider backend requests; its budget is distinct from their budget.
+
+**Provider backend request permit**:
+An account-wide admission reservation for one uniquely identified backend request
+from an owned provider client. Repeated observations of the same request do not
+create another permit. A permit is not proof of a completed provider response.
+
 **Materialization attempt**:
 One bounded effort to turn a selected provider asset into a verified local artifact and durable receipt.
 _Avoid_: Download attempt, materialization run

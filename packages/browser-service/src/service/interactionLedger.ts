@@ -13,6 +13,7 @@ export type ProviderInteractionClass =
   | 'artifact-read'
   | 'selection'
   | 'provider-mutation'
+  | 'backend-request'
   | 'passive-observation';
 
 export type ProviderInteractionMutability = 'read-only' | 'provider-mutating';
@@ -38,6 +39,7 @@ export interface ProviderInteractionPolicy {
   maxConversationStartsPerHour: number | null;
   maxConversationStartsPerDay: number | null;
   maxInteractionsPerMinute?: number | null;
+  maxBackendRequestsPerMinute?: number | null;
 }
 
 export interface ProviderInteractionUsageSummary {
@@ -45,6 +47,11 @@ export interface ProviderInteractionUsageSummary {
   chatsLastHour: number;
   chatsLastDay: number;
   interactionsLastMinute: number;
+}
+
+export interface ProviderBackendRequestUsageSummary {
+  admittedRequestsLastMinute: number;
+  activeRequests: number;
 }
 
 export interface ProviderWarningInteractionEvidence {
@@ -65,6 +72,7 @@ export interface ProviderWarningEvidence {
   precedingInteractions: ProviderWarningInteractionEvidence[];
   cumulativeCounts: {
     interactions: number;
+    backendRequests?: number;
     navigations: number;
     reloads: number;
     conversationReads: number;
@@ -121,6 +129,8 @@ export interface ProviderInteractionRecord {
   outcome: ProviderInteractionOutcome | null;
   /** Account-wide ceiling contributed by this admission for its rolling minute. */
   maxInteractionsPerMinute?: number | null;
+  maxBackendRequestsPerMinute?: number | null;
+  backendRequestKey?: string | null;
 }
 
 export type ProviderInteractionOutcome = 'succeeded' | 'failed' | 'cancelled';
@@ -128,6 +138,9 @@ export type ProviderInteractionAdmissionRejectionReason =
   | 'provider-warning'
   | 'concurrent-limit'
   | 'minute-interaction-limit'
+  | 'minute-backend-request-limit'
+  | 'backend-request-identity-conflict'
+  | 'backend-request-fenced'
   | 'hourly-limit'
   | 'daily-limit';
 
@@ -176,10 +189,11 @@ export interface ReserveProviderInteractionInput {
   now: string;
   reservationTtlMs: number;
   policy: ProviderInteractionPolicy;
+  backendRequestKey?: string | null;
 }
 
 export type ProviderInteractionAdmission =
-  | { allowed: true; reservation: ProviderInteractionRecord }
+  | { allowed: true; reservation: ProviderInteractionRecord; duplicate?: boolean }
   | {
       allowed: false;
       reason: ProviderInteractionAdmissionRejectionReason;
@@ -242,6 +256,7 @@ export interface ProviderInteractionLedger {
     now: string;
   }): Promise<ProviderInteractionUsageSummary>;
   summarizeAggregateUsage(input: { now: string }): Promise<ProviderInteractionUsageSummary>;
+  summarizeBackendRequestUsage(input: { now: string; provider?: string; tenantKey?: string }): Promise<ProviderBackendRequestUsageSummary>;
 }
 
 export interface InMemoryProviderInteractionLedgerOptions {
@@ -308,6 +323,30 @@ class InMemoryProviderInteractionLedger implements ProviderInteractionLedger {
       return this.rejectAdmission(scope, input, 'provider-warning', warning);
     }
 
+    const backendRequest = input.interactionClass === 'backend-request';
+    const backendRequestKey = backendRequest ? input.backendRequestKey?.trim() : null;
+    if (backendRequest) {
+      if (!backendRequestKey || !/^sha256:[a-f0-9]{64}$/.test(backendRequestKey)) {
+        throw new Error('Backend request admission requires a hashed request identity.');
+      }
+      if (!input.tabLeaseId?.trim() || input.startsNewConversation) {
+        throw new Error('Backend request admission requires an owned lease and cannot start a conversation.');
+      }
+      const existing = [...this.records.values()].find(record =>
+        record.interactionClass === 'backend-request' &&
+        aggregateScopeKey(record.scope) === aggregateScopeKey(scope) &&
+        record.backendRequestKey === backendRequestKey);
+      if (existing) {
+        if (existing.scope.managedBrowserProfile !== scope.managedBrowserProfile || existing.tabLeaseId !== input.tabLeaseId?.trim()) {
+          return this.rejectAdmission(scope, input, 'backend-request-identity-conflict');
+        }
+        if (existing.state === 'abandoned' || existing.state === 'frozen') {
+          return this.rejectAdmission(scope, input, 'backend-request-fenced');
+        }
+        return { allowed: true, reservation: cloneRecord(existing), duplicate: true };
+      }
+    }
+
     const activeConversationWorkloads = new Set(
       [...this.records.values()]
         .filter(
@@ -331,27 +370,24 @@ class InMemoryProviderInteractionLedger implements ProviderInteractionLedger {
       return this.rejectAdmission(scope, input, 'concurrent-limit');
     }
 
-    let minuteInteractionLimit = normalizeLimit(
-      input.policy.maxInteractionsPerMinute ?? null,
-      'maxInteractionsPerMinute',
-    );
+    const limitField = backendRequest ? 'maxBackendRequestsPerMinute' : 'maxInteractionsPerMinute';
+    let minuteLimit = normalizeLimit(input.policy[limitField] ?? null, limitField);
     for (const record of this.records.values()) {
       if (
         aggregateScopeKey(record.scope) !== aggregateScopeKey(scope) ||
         Date.parse(record.startedAt ?? record.reservedAt) < nowMs - 60_000 ||
-        record.maxInteractionsPerMinute == null
+        record[limitField] == null
       ) continue;
-      const contributedLimit = normalizeLimit(record.maxInteractionsPerMinute, 'maxInteractionsPerMinute');
+      const contributedLimit = normalizeLimit(record[limitField], limitField);
       if (contributedLimit !== null) {
-        minuteInteractionLimit = minuteInteractionLimit === null
-          ? contributedLimit : Math.min(minuteInteractionLimit, contributedLimit);
+        minuteLimit = minuteLimit === null ? contributedLimit : Math.min(minuteLimit, contributedLimit);
       }
     }
     if (
-      minuteInteractionLimit !== null &&
-      this.countInteractions(scope, nowMs - 60_000) >= minuteInteractionLimit
+      minuteLimit !== null &&
+      this.countInteractions(scope, nowMs - 60_000, backendRequest) >= minuteLimit
     ) {
-      return this.rejectAdmission(scope, input, 'minute-interaction-limit');
+      return this.rejectAdmission(scope, input, backendRequest ? 'minute-backend-request-limit' : 'minute-interaction-limit');
     }
 
     if (input.startsNewConversation) {
@@ -400,7 +436,9 @@ class InMemoryProviderInteractionLedger implements ProviderInteractionLedger {
       providerWarning: null,
       stopReason: null,
       outcome: null,
-      maxInteractionsPerMinute: normalizeLimit(input.policy.maxInteractionsPerMinute ?? null, 'maxInteractionsPerMinute'),
+      maxInteractionsPerMinute: backendRequest ? null : normalizeLimit(input.policy.maxInteractionsPerMinute ?? null, 'maxInteractionsPerMinute'),
+      maxBackendRequestsPerMinute: backendRequest ? normalizeLimit(input.policy.maxBackendRequestsPerMinute ?? null, 'maxBackendRequestsPerMinute') : null,
+      ...(backendRequest ? { backendRequestKey } : {}),
     };
     this.records.set(reservationId, reservation);
     this.appendEvent({
@@ -767,7 +805,7 @@ class InMemoryProviderInteractionLedger implements ProviderInteractionLedger {
     const activeWorkloads = new Set<string>();
     for (const record of this.records.values()) {
       if (aggregateScopeKey(record.scope) !== aggregateScopeKey(scope)) continue;
-      if (record.state === 'reserved' || record.state === 'started') {
+      if (record.interactionClass !== 'backend-request' && (record.state === 'reserved' || record.state === 'started')) {
         activeWorkloads.add(record.workloadId);
       }
     }
@@ -790,7 +828,7 @@ class InMemoryProviderInteractionLedger implements ProviderInteractionLedger {
         provider: record.scope.provider,
         tenantKey: record.scope.tenantKey,
       });
-      if (record.state === 'reserved' || record.state === 'started') {
+      if (record.interactionClass !== 'backend-request' && (record.state === 'reserved' || record.state === 'started')) {
         activeWorkloads.add(`${scopeKey}\0${record.workloadId}`);
       }
     }
@@ -807,6 +845,18 @@ class InMemoryProviderInteractionLedger implements ProviderInteractionLedger {
       chatsLastHour,
       chatsLastDay,
       interactionsLastMinute,
+    };
+  }
+
+  async summarizeBackendRequestUsage(input: { now: string; provider?: string; tenantKey?: string }): Promise<ProviderBackendRequestUsageSummary> {
+    const nowMs = parseTimestamp(input.now, 'now');
+    this.expireReservations(nowMs);
+    const records = await this.list({ provider: input.provider, tenantKey: input.tenantKey });
+    const requests = records.filter(record => record.interactionClass === 'backend-request');
+    const scopes = new Map(requests.map(record => [aggregateScopeKey(record.scope), record.scope]));
+    return {
+      admittedRequestsLastMinute: [...scopes.values()].reduce((count, scope) => count + this.countInteractions(scope, nowMs - 60_000, true), 0),
+      activeRequests: requests.filter(record => record.state === 'reserved' || record.state === 'started').length,
     };
   }
 
@@ -869,9 +919,11 @@ class InMemoryProviderInteractionLedger implements ProviderInteractionLedger {
   private countInteractions(
     scope: Pick<ProviderInteractionScope, 'provider' | 'tenantKey'>,
     cutoffMs: number,
+    backendRequest = false,
   ): number {
     let count = 0;
     for (const record of this.records.values()) {
+      if ((record.interactionClass === 'backend-request') !== backendRequest) continue;
       if (aggregateScopeKey(record.scope) !== aggregateScopeKey(scope)) continue;
       if (record.state === 'reserved') {
         if (Date.parse(record.reservedAt) >= cutoffMs) count += 1;
@@ -992,6 +1044,10 @@ class FileBackedProviderInteractionLedger implements ProviderInteractionLedger {
 
   summarizeAggregateUsage(input: Parameters<ProviderInteractionLedger['summarizeAggregateUsage']>[0]) {
     return this.write((ledger) => ledger.summarizeAggregateUsage(input));
+  }
+
+  summarizeBackendRequestUsage(input: Parameters<ProviderInteractionLedger['summarizeBackendRequestUsage']>[0]) {
+    return this.write(ledger => ledger.summarizeBackendRequestUsage(input));
   }
 
   private async read<T>(operation: (ledger: InMemoryProviderInteractionLedger) => Promise<T>): Promise<T> {
@@ -1224,7 +1280,10 @@ function buildProviderWarningEvidence(input: {
         : Math.max(0, Math.floor(input.input.openTargetCount)),
     precedingInteractions,
     cumulativeCounts: {
-      interactions: settled.length,
+      interactions: settled.filter((event) => event.interactionClass !== 'backend-request').length,
+      ...(countClass('backend-request') > 0
+        ? { backendRequests: countClass('backend-request') }
+        : {}),
       navigations: countClass('navigation'),
       reloads: countClass('reload'),
       conversationReads: countClass('conversation-read'),
