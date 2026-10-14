@@ -15,6 +15,8 @@ backend-request budget. Units approved (retain operation cap, add request cap);
 numeric request ceiling and per-request admission work remain OPEN. No native
 retry clearance follows from the source/runtime promotion.
 
+## Original diagnostic packet (historical)
+
 Provider-free investigation resumed after installed PR318. No native journey,
 warning clearance, browser attachment, API restart or scheduler mutation occurs
 in this packet. Primary serial execution; no delegation.

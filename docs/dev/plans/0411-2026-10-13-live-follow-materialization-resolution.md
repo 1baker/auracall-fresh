@@ -7,6 +7,13 @@ Target: main
 
 ## Current State
 
+Latest source/runtime packet: Plan0416 CLOSED, PR321/source ddea20ec7 integrated
+at a3d143e4a and installed with582compiled-file parity. API62047 healthy, scheduler
+and all17active completions paused; foreign browser process preserved. This removes
+one reproduced redundant project navigation, not a measured share of discovery5
+requests. Plan0415 remains OPEN for separate request admission/ceiling; no native
+probe or retry clearance. Prior checkpoint/window evidence below is retained.
+
 PR318 shared governor repair is integrated and installed: sourcefadb5ba4f,
 merge236f46b68,581compiled parity, installed two-process regression green; API62879
 healthy with scheduler/all17jobs paused. No native replay or retry clearance.
