@@ -820,7 +820,10 @@ Terminology note:
   browser target/session resolution and cache identity/feature preflight, then
   continues through provider work. The deadline composes caller cancellation
   into each preflight/provider signal; timeout and caller abort are terminal,
-  non-retryable outcomes. Each live attempt writes a
+  non-retryable outcomes.
+  Completed context commands flush their full result and diagnostics before
+  exiting; retained browser connections do not keep the CLI alive afterward.
+  Each live attempt writes a
   metadata-only terminal receipt under the provider cache with outcome,
   elapsed time, attempt count, and last bounded preflight/scrape stage. If
   target or identity preflight times out before detected identity is available,

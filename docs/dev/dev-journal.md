@@ -1,3 +1,13 @@
+## 2026-10-14 | Plan0413 context terminal-boundary repair
+
+PR313 installed581parity/API76449; native original read emits5user/5assistant
+messages within60seconds but controller sendsSIGINT at90seconds because CLI
+does not exit. Preserve that failure; no selector repair or new prompt. Actual
+registered command callback with one-byte settled payload reproducesETIMEDOUT
+at1500ms. Existing flushed app boundary reused after context service completion;
+app custody release and nonzero failure remain. Source validation underway.
+Selected native browser87105 remains idle under bounded retirement, not killed.
+
 ## 2026-10-14 | Plan0412 populated context retry
 
 Renewed full Plan0411 goal; isolated extraction branch from installed PR312.

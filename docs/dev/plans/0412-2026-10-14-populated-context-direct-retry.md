@@ -9,6 +9,12 @@ Integration: reviewed short-lived branch
 
 ## Current State
 
+PR313 is integrated58d9615f7 and installed with581compiled-file parity. The
+paced original read emits all10messages before its60second read deadline, but
+CLI exit remains pending until the90second controller sends SIGINT. Preserve
+that failed terminal result; Plan0413 owns the successor terminal-boundary repair.
+Plan0412 remains OPEN until full original-command acceptance and resource readback.
+
 User resumed the full live-follow repair goal with Ask Matt and renewed a
 two-million-token/six-hour window. Parent control starts epoch1791974597;
 checkpoint before1791996197, with advance checkpoint1791995297/1.9million tokens.
