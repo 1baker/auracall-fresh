@@ -1,12 +1,23 @@
 # Plan 0416 — preserve ready project routes with display-name suffixes
 
-State: OPEN
+State: CLOSED
 Parent: Plan0411 / Plan0415 / issue165
 Branch: fix/issue165-project-route-reuse
 Target: main
 Base: d9d0a8e88360147f9b4664c9e95b02791eef2272
 
 ## Current State
+
+Source repair accepted and installed. PR321 merged at
+a3d143e4a192c5b7f5878f6d7493a4f4faead2a3; reviewed source
+ddea20ec71c7a277d57996a6dafd6fa22bc2fa62 is installed in
+`~/.auracall/user-runtime-issue165-project-route-reuse`. All582compiled JavaScript
+files match the build. API62047 healthy, /desktops200; scheduler/all17active jobs
+remain paused and one existing foreign browser process is preserved in fresh OS
+readback. Native provider journeys:0. This closes the scoped source/runtime repair,
+not native request reduction, request-budget enforcement or parent0411 acceptance.
+Private receipts: project-route-reuse-stage-parity.json and
+project-route-reuse-promotion/receipt.json under ~/.auracall/diagnostics/plan0411.
 
 Provider-free repair of one verified avoidable-navigation pattern. ChatGPT's
 current project URL may include a display-name suffix after its stable project ID.

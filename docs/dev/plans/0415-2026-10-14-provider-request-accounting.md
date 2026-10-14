@@ -8,6 +8,15 @@ Base: 5ad7a5fd8706e8ff52d89e5701e93224e14b1f35
 
 ## Current State
 
+Plan0416 is CLOSED: PR321 ready-project route reuse is integrated and installed
+with582compiled-file parity. This removes one reproduced redundant navigation
+pattern; it does not assign a share of discovery5 traffic or implement a separate
+backend-request budget. Units approved (retain operation cap, add request cap);
+numeric request ceiling and per-request admission work remain OPEN. No native
+retry clearance follows from the source/runtime promotion.
+
+## Original diagnostic packet (historical)
+
 Provider-free investigation resumed after installed PR318. No native journey,
 warning clearance, browser attachment, API restart or scheduler mutation occurs
 in this packet. Primary serial execution; no delegation.
