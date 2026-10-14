@@ -2,7 +2,11 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, test, vi } from "vitest";
-import { createProviderTrafficGovernor } from "../../packages/browser-service/src/service/providerTrafficGovernor.js";
+import {
+	createProviderTrafficGovernor,
+	ProviderBackendRequestBudgetExceededError,
+	ProviderTrafficWarningError,
+} from "../../packages/browser-service/src/service/providerTrafficGovernor.js";
 import {
 	type AccountMirrorConversationWorkState,
 	fingerprintAccountMirrorConversationIndexRow,
@@ -2076,7 +2080,13 @@ describe("ChatGPT account mirror metadata collector", () => {
 		});
 	});
 
-	test("yields project discovery at its physical navigation budget and resumes the cursor", async () => {
+	test.each([
+		"physical-navigation",
+		"backend-request",
+		"uncertain",
+		"guarded",
+		"guarded-during-yield",
+	])("project discovery preserves its cursor or hard stop; mode=%s", async (budgetKind) => {
 		const calls: string[] = [];
 		const projects = ["project_1", "project_2"].map((id) => ({
 			id,
@@ -2101,6 +2111,26 @@ describe("ChatGPT account mirror metadata collector", () => {
 				});
 				calls.push(projectId);
 				await action.settle({ outcome: "succeeded" });
+				if (budgetKind !== "physical-navigation" && projectId === "project_1") {
+					if (!governor.admitBackendRequest) throw new Error("Expected backend admission");
+					await governor
+						.admitBackendRequest("fixture-request", async () => undefined)
+						.catch((error) => {
+							if (
+								!(error instanceof ProviderBackendRequestBudgetExceededError) &&
+								!(
+									budgetKind === "uncertain" &&
+									error instanceof Error &&
+									error.message === "fixture-uncertain-dispatch"
+								)
+							)
+								throw error;
+						});
+					if (budgetKind === "guarded")
+						await governor.checkWarning?.({ fixtureGuard: true }).catch((error) => {
+							if (!(error instanceof ProviderTrafficWarningError)) throw error;
+						});
+				}
 				return [
 					{
 						id: `conv_${projectId}`,
@@ -2131,22 +2161,40 @@ describe("ChatGPT account mirror metadata collector", () => {
 		const collector = createChatgptAccountMirrorMetadataCollector(config as never, {
 			createClient: async () => client as never,
 		});
-		const makeController = () =>
-			createAccountMirrorMetadataTrafficPlanController(
-				createProviderTrafficGovernor({
-					attribution: {
-						provider: "chatgpt",
-						runtimeProfileId: "default",
-						managedBrowserProfile: "/fixture/managed",
-						workloadId: "fixture",
-						operationId: "fixture",
-						tabLeaseId: "fixture",
-					},
-					interactionGovernor: { beforeInteraction: async () => undefined },
-					mutationAudit: async () => undefined,
-				}),
-				{ maxPageReadsPerCycle: 4 },
-			);
+		const makeController = () => {
+			const governor = createProviderTrafficGovernor({
+				attribution: {
+					provider: "chatgpt",
+					runtimeProfileId: "default",
+					managedBrowserProfile: "/fixture/managed",
+					workloadId: "fixture",
+					operationId: "fixture",
+					tabLeaseId: "fixture",
+				},
+				interactionGovernor: { beforeInteraction: async () => undefined },
+				mutationAudit: async () => undefined,
+				admitBackendRequest:
+					budgetKind !== "physical-navigation"
+						? async () => {
+								if (budgetKind === "uncertain") throw new Error("fixture-uncertain-dispatch");
+								throw new ProviderBackendRequestBudgetExceededError();
+							}
+						: undefined,
+				probeWarning: async (context) =>
+					budgetKind.startsWith("guarded") &&
+					typeof context === "object" &&
+					context !== null &&
+					"fixtureGuard" in context
+						? { classification: "rate-limit", reason: "fixture429" }
+						: null,
+				persistWarning: async () => undefined,
+			});
+			const controller =
+				budgetKind !== "backend-request"
+					? createAccountMirrorMetadataTrafficPlanController(governor, { maxPageReadsPerCycle: 4 })
+					: undefined;
+			return { governor: controller?.governor ?? governor, controller };
+		};
 		const collect = (
 			controller: ReturnType<typeof makeController>,
 			previousEvidence?: Parameters<typeof collector.collect>[0]["previousEvidence"],
@@ -2159,7 +2207,19 @@ describe("ChatGPT account mirror metadata collector", () => {
 				requestedPhase: "project-conversations",
 				previousEvidence,
 				providerTrafficGovernor: controller.governor,
-				providerTrafficPlanController: controller,
+				providerTrafficPlanController: controller.controller,
+				shouldYield: async () => {
+					if (
+						budgetKind === "guarded-during-yield" &&
+						controller.governor.snapshotAdmissionState?.().backendRequestOutcome ===
+							"budget-exhausted"
+					) {
+						await controller.governor.checkWarning?.({ fixtureGuard: true }).catch((error) => {
+							if (!(error instanceof ProviderTrafficWarningError)) throw error;
+						});
+					}
+					return false;
+				},
 				limits: {
 					maxPageReadsPerCycle: 4,
 					maxConversationRowsPerCycle: 30,
@@ -2167,6 +2227,14 @@ describe("ChatGPT account mirror metadata collector", () => {
 					maxBrowserInteractionsPerMinute: 0,
 				},
 			});
+		if (budgetKind === "uncertain" || budgetKind.startsWith("guarded")) {
+			const collecting = collect(makeController());
+			if (budgetKind.startsWith("guarded"))
+				await expect(collecting).rejects.toBeInstanceOf(ProviderTrafficWarningError);
+			else await expect(collecting).rejects.toThrow("uncertain");
+			expect(calls).toEqual(["project_1"]);
+			return;
+		}
 		const first = await collect(makeController());
 		expect(calls).toEqual(["project_1"]);
 		expect(first.manifests.conversations.map((c) => c.id)).toEqual(["conv_project_1"]);

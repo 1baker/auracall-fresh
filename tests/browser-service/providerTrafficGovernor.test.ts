@@ -2,6 +2,7 @@ import { describe, expect, test, vi } from "vitest";
 import type { BrowserMutationRecord } from "../../packages/browser-service/src/service/mutationDispatcher.js";
 import {
 	createProviderTrafficGovernor,
+	ProviderBackendRequestBudgetExceededError,
 	ProviderTrafficAttributionError,
 	type ProviderTrafficWarning,
 	ProviderTrafficWarningError,
@@ -19,6 +20,89 @@ const attribution = {
 };
 
 describe("provider traffic governor", () => {
+	test("backend budget exhaustion stops the next browser action while warning detection remains active", async () => {
+		const beforeInteraction = vi.fn(async () => undefined);
+		const audit = vi.fn(async () => undefined);
+		const exhausted = new ProviderBackendRequestBudgetExceededError();
+		let warning: ProviderTrafficWarning | null = null;
+		const persistWarning = vi.fn(async () => undefined);
+		const governor = createProviderTrafficGovernor({
+			attribution,
+			interactionGovernor: { beforeInteraction },
+			mutationAudit: audit,
+			admitBackendRequest: async () => {
+				throw exhausted;
+			},
+			probeWarning: async () => warning,
+			persistWarning,
+		});
+		if (!governor.admitBackendRequest) throw new Error("Expected backend admission");
+		await expect(
+			governor.admitBackendRequest("sha256:fixture", async () => undefined),
+		).rejects.toBe(exhausted);
+		await expect(
+			governor.begin({ kind: "navigate", interactionClass: "renavigation", source: "fixture" }),
+		).rejects.toBe(exhausted);
+		expect(beforeInteraction).not.toHaveBeenCalled();
+		expect(audit).not.toHaveBeenCalled();
+		expect(governor.snapshotAdmissionState?.()).toMatchObject({
+			backendRequestOutcome: "budget-exhausted",
+		});
+		warning = { classification: "rate-limit", reason: "fixture429" };
+		await expect(governor.checkWarning?.({})).rejects.toBeInstanceOf(ProviderTrafficWarningError);
+		expect(persistWarning).toHaveBeenCalledTimes(1);
+		expect(governor.snapshotAdmissionState?.()).toMatchObject({ backendRequestOutcome: "guarded" });
+		await expect(
+			governor.begin({ kind: "navigate", interactionClass: "renavigation", source: "fixture" }),
+		).rejects.toBeInstanceOf(ProviderTrafficWarningError);
+	});
+
+	test("an uncertain in-flight request takes precedence over concurrent budget exhaustion", async () => {
+		const uncertain = new Error("fixture-uncertain-dispatch");
+		const exhausted = new ProviderBackendRequestBudgetExceededError();
+		let rejectDispatch!: (error: Error) => void;
+		let entered!: () => void;
+		const started = new Promise<void>((resolve) => {
+			entered = resolve;
+		});
+		const dispatch = new Promise<void>((_resolve, reject) => {
+			rejectDispatch = reject;
+		});
+		const hook = vi.fn(async (key: string) => {
+			if (key === "first") {
+				entered();
+				await dispatch;
+			} else throw exhausted;
+		});
+		const beforeInteraction = vi.fn(async () => undefined);
+		const governor = createProviderTrafficGovernor({
+			attribution,
+			interactionGovernor: { beforeInteraction },
+			mutationAudit: vi.fn(),
+			admitBackendRequest: hook,
+		});
+		if (!governor.admitBackendRequest) throw new Error("Expected backend admission");
+		const first = governor
+			.admitBackendRequest("first", async () => undefined)
+			.catch((error) => error);
+		await started;
+		await expect(governor.admitBackendRequest("second", async () => undefined)).rejects.toBe(
+			exhausted,
+		);
+		rejectDispatch(uncertain);
+		expect(await first).toBe(uncertain);
+		expect(governor.snapshotAdmissionState?.()).toMatchObject({
+			backendRequestOutcome: "uncertain",
+		});
+		await expect(
+			governor.begin({ kind: "navigate", interactionClass: "renavigation", source: "fixture" }),
+		).rejects.toBe(uncertain);
+		await expect(governor.admitBackendRequest("third", async () => undefined)).rejects.toBe(
+			uncertain,
+		);
+		expect(hook).toHaveBeenCalledTimes(2);
+		expect(beforeInteraction).not.toHaveBeenCalled();
+	});
 	test("rejects missing exact provider-work attribution during construction", () => {
 		expect(() =>
 			createProviderTrafficGovernor({

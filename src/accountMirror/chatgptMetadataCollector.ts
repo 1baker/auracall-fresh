@@ -605,16 +605,28 @@ export function createChatgptAccountMirrorMetadataCollector(
 							input,
 							"conversation-read",
 						),
-						shouldYield: async () =>
-							(await input.shouldYield?.()) === true ||
-							input.providerTrafficGovernor
-								?.snapshotAdmissionState?.()
-								.budgets.some(
+						shouldYield: async () => {
+							const callerYield = await input.shouldYield?.();
+							const state = input.providerTrafficGovernor?.snapshotAdmissionState?.();
+							if (state?.backendRequestOutcome === "guarded") {
+								await input.providerTrafficGovernor?.checkWarning?.();
+								throw new Error("Provider backend requests are guarded; collection stopped.");
+							}
+							if (state?.backendRequestOutcome === "uncertain")
+								throw new Error(
+									"Provider backend request outcome is uncertain; collection stopped.",
+								);
+							return (
+								callerYield === true ||
+								state?.backendRequestOutcome === "budget-exhausted" ||
+								state?.budgets.some(
 									(budget) =>
 										budget.phase === "index" &&
 										budget.kind === "page_navigate" &&
 										budget.remaining === 0,
-								) === true,
+								) === true
+							);
+						},
 					}),
 				);
 				projectConversations.push(...result.items);

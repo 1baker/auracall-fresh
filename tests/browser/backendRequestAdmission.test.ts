@@ -173,9 +173,8 @@ test.each([
 						? [value.message]
 						: [];
 			expect(messages(error)).toContain("Fixture continuation outcome is unknown");
-			expect(messages(error)).toContain(
-				"Backend request admission denied: minute-backend-request-limit.",
-			);
+			// An uncertain dispatch now fences the next request before another quota check.
+			expect(fixture.clients[1].requests).toEqual(["second"]);
 		} else if (pendingAction)
 			await expect(clients[1].close()).rejects.toMatchObject({
 				message: "Provider cleanup and authority settlement failed.",

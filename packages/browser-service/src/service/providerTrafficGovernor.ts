@@ -68,6 +68,7 @@ export interface ProviderTrafficGovernor {
 
 export interface ProviderTrafficAdmissionState {
 	version: 1;
+	backendRequestOutcome?: "ready" | "budget-exhausted" | "uncertain" | "guarded";
 	phases: Array<{ phase: string; admitted: number; limit: number; remaining: number }>;
 	budgets: Array<{
 		phase: string;
@@ -183,6 +184,18 @@ export function createProviderTrafficGovernor(input: {
 	const createActionId = input.createActionId ?? crypto.randomUUID;
 	const admitBackendRequest = input.admitBackendRequest;
 	let observedWarning: ProviderTrafficWarning | null = null;
+	let backendBudgetError: ProviderBackendRequestBudgetExceededError | null = null;
+	let backendRequestFailure: unknown;
+	let backendRequestFailed = false;
+	const assertBackendRequestState = () => {
+		if (backendRequestFailed) throw backendRequestFailure;
+		if (backendBudgetError) throw backendBudgetError;
+	};
+	const backendRequestOutcome = (): NonNullable<ProviderTrafficAdmissionState["backendRequestOutcome"]> => {
+		if (observedWarning) return "guarded";
+		if (backendRequestFailed) return "uncertain";
+		return backendBudgetError ? "budget-exhausted" : "ready";
+	};
 	let lastProbeContext: unknown;
 	const recentEffects: NonNullable<ProviderTrafficAdmissionState["recentEffects"]> = [];
 	const checkWarning = async (context?: unknown) => {
@@ -208,16 +221,24 @@ export function createProviderTrafficGovernor(input: {
 		checkWarning,
 		...(admitBackendRequest ? { admitBackendRequest: async (requestKey: string, effect: () => Promise<void>) => {
 			await checkWarning();
-			await admitBackendRequest(requestKey, effect);
+			assertBackendRequestState();
+			try { await admitBackendRequest(requestKey, effect); }
+			catch (error) {
+				if (error instanceof ProviderBackendRequestBudgetExceededError) backendBudgetError ??= error;
+				else if (!backendRequestFailed) { backendRequestFailed = true; backendRequestFailure = error; }
+				throw error;
+			}
 		} } : {}),
 		snapshotAdmissionState: () => ({
 			version: 1,
 			phases: [],
 			budgets: [],
+			...(admitBackendRequest ? { backendRequestOutcome: backendRequestOutcome() } : {}),
 			recentEffects: recentEffects.map((effect) => ({ ...effect })),
 		}),
 		async begin(actionInput) {
 			if (observedWarning) throw new ProviderTrafficWarningError(observedWarning);
+			assertBackendRequestState();
 			actionInput.abortSignal?.throwIfAborted();
 			await input.assertLease?.(attribution);
 			await input.interactionGovernor.beforeInteraction(

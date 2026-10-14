@@ -1,3 +1,14 @@
+## 2026-10-14 | Plan0421 source checkpoint and resource stop
+
+Backend exhaustion and unqualified request failures now stop later browser actions.
+Project discovery yields a serialized cursor for known request-budget exhaustion;
+warnings and uncertainty remain hard stops, including a warning delivered during
+the awaited external yield predicate.100focused tests/6files, typecheck and full
+build pass. Scoped formatting has only3existing CDP naming warnings. Source review
+complete for the packet; production activation and full issue165 acceptance remain
+open. Goal meter reached1,648,195tokens/6,645seconds: stop new implementation and
+prepare a temporary handoff before the user's2million-token boundary.
+
 ## 2026-10-14 | Owned Fetch source review checkpoint
 
 Plan0420 source fixture now denies backend sends across two runtime clients under

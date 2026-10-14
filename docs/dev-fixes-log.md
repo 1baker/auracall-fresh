@@ -1,3 +1,12 @@
+## 2026-10-14 | Request budget cursor and guard priority
+
+Plan0421 distinguishes known backend budget exhaustion from request uncertainty
+and provider warnings. Stop subsequent browser admission once request flow fails;
+only known exhaustion can yield project discovery and retain its serialized cursor.
+Read the admission snapshot after an awaited external yield predicate so a warning
+delivered during that await cannot be hidden by an older budget state.100focused
+tests, typecheck and build pass; source-only qualification, not native acceptance.
+
 ## 2026-10-14 | Owned request admission and terminal error evidence
 
 Plan0420 proves a conditional Fetch admission seam through configured account
