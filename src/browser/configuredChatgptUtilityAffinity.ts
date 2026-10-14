@@ -270,6 +270,7 @@ export async function runConfiguredChatgptUtilityOperation<TResult>(input: {
 				workloadId: `utility:${input.utilityId}`,
 				operationId: input.utilityId,
 				tabLeaseId: tab.lease.leaseId,
+				targetId: tab.lease.targetId,
 			},
 			interactionGovernor: governor,
 			mutationAudit:

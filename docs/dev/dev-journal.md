@@ -1,3 +1,14 @@
+## 2026-10-14 | Fresh issue165 goal; owned backend warning observer
+
+User created fresh active goal with2million-token/6hour checkpoint limits. Plan0417
+owns a provider-free warning-delivery unit at the actual client annotation path.
+Configured factory/real file-backed ledger loop goes red when another runtime's
+admission succeeds after a native429. Owned-target listener and lease-checked
+warning probe make it green; separate OS processes also prove shared denial.
+Setup-failure cleanup and foreign/static response exclusions verified. No live
+probe, guard clearing, deployment or job resumption. Request counting/admission
+and numeric ceiling remain separate outstanding units; full issue165 remains OPEN.
+
 ## 2026-10-14 | Project-route reuse integrated and installed
 
 PR321/source ddea20ec7/merge a3d143e4a.267focused checks, typecheck/build pass;

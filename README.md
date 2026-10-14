@@ -730,6 +730,11 @@ Terminology note:
   interrupt pending admission pacing within a one-second polling interval plus
   store-read latency. This budget counts admitted operations, not every request
   generated internally by a provider page.
+  On an attached owned ChatGPT connection, native backend429responses are
+  propagated to the shared account warning guard before waiting for a visible
+  dialog or the next DOM warning probe. Foreign-origin and static-resource
+  responses do not establish that provider warning. This warning delivery does
+  not supply a separate backend-request admission budget.
   Project conversation reads retain an already-ready same-origin project route
   whose URL carries a display-name suffix after the stable project ID, avoiding
   an extra navigation solely to canonicalize its URL. A different project still

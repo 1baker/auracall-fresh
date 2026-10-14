@@ -245,6 +245,7 @@ async function executeAdmittedChatgptConversation(
 			workloadId: workloadId(request.lease),
 			operationId: request.operationId,
 			tabLeaseId: request.lease.leaseId,
+			targetId: request.lease.targetId,
 		},
 		// The enclosing prompt reservation already owns admission and settlement.
 		interactionGovernor: { beforeInteraction: async () => undefined },

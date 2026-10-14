@@ -3,6 +3,7 @@ import type {
 	ProviderTrafficAuthority,
 	ProviderTrafficGovernor,
 } from "../../../packages/browser-service/src/service/providerTrafficGovernor.js";
+import { ProviderTrafficWarningError } from "../../../packages/browser-service/src/service/providerTrafficGovernor.js";
 import type { ChromeClient } from "../types.js";
 import type { BrowserProviderListOptions } from "./types.js";
 
@@ -12,6 +13,7 @@ type MutationContextCarrier = {
 	__auracallProviderTrafficGovernor?: ProviderTrafficGovernor;
 	__auracallProviderTrafficRequired?: boolean;
 	__auracallProviderTrafficAuthority?: ProviderTrafficAuthority;
+	__auracallResponseObserver?: { dispose(): Promise<void> };
 };
 
 function asMutationContextCarrier(value: unknown): MutationContextCarrier | null {
@@ -50,6 +52,15 @@ export async function annotateClientMutationContext(
 			`Provider traffic authority is unavailable for target ${targetId || "unknown"}.`,
 		);
 	}
+	const nextGovernor = options?.providerTrafficGovernor ?? authority?.governor;
+	if (
+		nextGovernor?.attribution.provider === "chatgpt" &&
+		nextGovernor.attribution.targetId &&
+		nextGovernor.attribution.targetId !== targetId
+	) {
+		throw new Error("Provider response target does not match its owned authority.");
+	}
+
 	extendedClient.__auracallMutationAudit = options?.mutationAudit;
 	extendedClient.__auracallProviderTrafficGovernor =
 		options?.providerTrafficGovernor ?? authority?.governor;
@@ -60,7 +71,46 @@ export async function annotateClientMutationContext(
 	extendedClient.__auracallProviderTrafficAuthority = authority;
 	extendedClient.__auracallMutationSourcePrefix =
 		normalizeMutationSourcePrefix(options?.mutationSourcePrefix) ?? defaultSourcePrefix;
-	if (authority) {
+	await extendedClient.__auracallResponseObserver?.dispose();
+	extendedClient.__auracallResponseObserver = undefined;
+	const governor = extendedClient.__auracallProviderTrafficGovernor;
+	let observer: { dispose(): Promise<void> } | undefined;
+	if (governor?.attribution.provider === "chatgpt" && governor.attribution.targetId) {
+		if (client.Network?.responseReceived && governor.checkWarning) {
+			const pending = new Set<Promise<void>>();
+			let failure: unknown;
+			let disposed = false;
+			const handler = (event: { response: { url: string; status: number } }) => {
+				if (disposed || event.response.status !== 429) return Promise.resolve();
+				const task =
+					governor
+						.checkWarning?.({ nativeProviderResponse: event.response })
+						.catch((error: unknown) => {
+							if (!(error instanceof ProviderTrafficWarningError)) failure = error;
+						}) ?? Promise.resolve();
+				pending.add(task);
+				void task.finally(() => pending.delete(task));
+				return task;
+			};
+			const subscription: unknown = client.Network.responseReceived(handler);
+			observer = {
+				async dispose() {
+					disposed = true;
+					if (typeof subscription === "function") subscription();
+					else
+						(
+							client as ChromeClient & {
+								removeListener?: (event: string, callback: typeof handler) => void;
+							}
+						).removeListener?.("Network.responseReceived", handler);
+					await Promise.all(pending);
+					if (failure) throw failure;
+				},
+			};
+			extendedClient.__auracallResponseObserver = observer;
+		}
+	}
+	if (authority || observer) {
 		const close = client.close.bind(client);
 		let closed = false;
 		client.close = async () => {
@@ -68,17 +118,42 @@ export async function annotateClientMutationContext(
 			closed = true;
 			let closeError: unknown = null;
 			try {
-				await close();
+				await observer?.dispose();
 			} catch (error) {
 				closeError = error;
 			}
-			await authority.close({
+			try {
+				await close();
+			} catch (error) {
+				closeError = closeError
+					? new AggregateError(
+							[closeError, error],
+							"Provider warning persistence and transport cleanup failed.",
+						)
+					: error;
+			}
+			await authority?.close({
 				outcome: closeError ? "failed" : "succeeded",
 				effectState: closeError ? "outcome-unknown" : "settled",
 				reason: closeError instanceof Error ? closeError.message : null,
 			});
 			if (closeError) throw closeError;
 		};
+	}
+	if (observer) {
+		try {
+			await client.Network.enable();
+		} catch (error) {
+			try {
+				await client.close();
+			} catch (cleanupError) {
+				throw new AggregateError(
+					[error, cleanupError],
+					"Provider response observer setup and cleanup failed.",
+				);
+			}
+			throw error;
+		}
 	}
 }
 

@@ -119,10 +119,10 @@ describe("live-follow final warning transport", () => {
 				operationId: "op-1",
 				maxBrowserInteractionsPerMinute: 20,
 			});
+			registry.list.mockResolvedValue([lease] as never);
 			const staleEvaluate = vi.fn(async () => ({ result: { value: null } }));
 			await affinity?.providerTrafficGovernor.checkWarning?.({ evaluate: staleEvaluate });
 			staleEvaluate.mockRejectedValue(new Error("WebSocket is not open: readyState 3 (CLOSED)"));
-			registry.list.mockResolvedValue([lease] as never);
 			if (outcome === "probe-stall") {
 				vi.useFakeTimers();
 				const pending = affinity?.completeSuccess().then(

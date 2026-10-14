@@ -263,6 +263,7 @@ export async function createConfiguredLiveFollowAffinity(input: {
 			workloadId: `${workloadKind}:${input.operationId}`,
 			operationId: input.operationId,
 			tabLeaseId: crawler.lease.leaseId,
+			targetId: crawler.lease.targetId,
 		},
 		interactionGovernor,
 		mutationAudit: browserService.getMutationAuditSink(),

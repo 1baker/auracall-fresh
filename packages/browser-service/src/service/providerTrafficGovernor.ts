@@ -17,6 +17,7 @@ export interface ProviderTrafficAttribution {
 	workloadId: string;
 	operationId: string;
 	tabLeaseId: string;
+	targetId?: string;
 }
 
 export interface ProviderTrafficWarning {
@@ -169,6 +170,7 @@ export function createProviderTrafficGovernor(input: {
 	const recentEffects: NonNullable<ProviderTrafficAdmissionState["recentEffects"]> = [];
 	const checkWarning = async (context?: unknown) => {
 		if (observedWarning) throw new ProviderTrafficWarningError(observedWarning);
+		await input.assertLease?.(attribution);
 		if (context !== undefined) lastProbeContext = context;
 		const warning = input.probeWarning
 			? await input.probeWarning(lastProbeContext, attribution)

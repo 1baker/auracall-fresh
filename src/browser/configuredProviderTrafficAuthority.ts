@@ -103,6 +103,7 @@ export function createConfiguredProviderTrafficAuthorityFactory(input: {
 					workloadId,
 					operationId,
 					tabLeaseId: reserved.value.lease.leaseId,
+					targetId,
 				},
 				interactionGovernor,
 				mutationAudit: input.baseOptions.mutationAudit ?? input.mutationAudit,
