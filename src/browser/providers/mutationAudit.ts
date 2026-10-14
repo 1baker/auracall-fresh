@@ -3,8 +3,12 @@ import type {
 	ProviderTrafficAuthority,
 	ProviderTrafficGovernor,
 } from "../../../packages/browser-service/src/service/providerTrafficGovernor.js";
-import { ProviderTrafficWarningError } from "../../../packages/browser-service/src/service/providerTrafficGovernor.js";
+import {
+	isKnownBackendRequestBudgetDenial,
+	ProviderTrafficWarningError,
+} from "../../../packages/browser-service/src/service/providerTrafficGovernor.js";
 import type { ChromeClient } from "../types.js";
+import { attachOwnedChatgptBackendRequestAdmission } from "./chatgptBackendRequestAdmission.js";
 import type { BrowserProviderListOptions } from "./types.js";
 
 type MutationContextCarrier = {
@@ -75,6 +79,7 @@ export async function annotateClientMutationContext(
 	extendedClient.__auracallResponseObserver = undefined;
 	const governor = extendedClient.__auracallProviderTrafficGovernor;
 	let observer: { dispose(): Promise<void> } | undefined;
+	let backendObserver: { dispose(): Promise<void> } | undefined;
 	if (governor?.attribution.provider === "chatgpt" && governor.attribution.targetId) {
 		if (client.Network?.responseReceived && governor.checkWarning) {
 			const pending = new Set<Promise<void>>();
@@ -110,7 +115,7 @@ export async function annotateClientMutationContext(
 			extendedClient.__auracallResponseObserver = observer;
 		}
 	}
-	if (authority || observer) {
+	if (authority || observer || governor?.admitBackendRequest) {
 		const close = client.close.bind(client);
 		let closed = false;
 		client.close = async () => {
@@ -118,7 +123,17 @@ export async function annotateClientMutationContext(
 			closed = true;
 			let closeError: unknown = null;
 			try {
-				await observer?.dispose();
+				const failures: unknown[] = [];
+				// Backend callbacks can deliver a native warning while they drain.
+				for (const dispose of [() => backendObserver?.dispose(), () => observer?.dispose()]) {
+					try {
+						await dispose();
+					} catch (error) {
+						failures.push(error);
+					}
+				}
+				if (failures.length)
+					throw new AggregateError(failures, "Provider observer cleanup failed.");
 			} catch (error) {
 				closeError = error;
 			}
@@ -132,11 +147,24 @@ export async function annotateClientMutationContext(
 						)
 					: error;
 			}
-			await authority?.close({
-				outcome: closeError ? "failed" : "succeeded",
-				effectState: closeError ? "outcome-unknown" : "settled",
-				reason: closeError instanceof Error ? closeError.message : null,
-			});
+			try {
+				await authority?.close({
+					outcome: closeError ? "failed" : "succeeded",
+					effectState: closeError
+						? isKnownBackendRequestBudgetDenial(closeError)
+							? "none"
+							: "outcome-unknown"
+						: "settled",
+					reason: closeError instanceof Error ? closeError.message : null,
+				});
+			} catch (error) {
+				if (closeError)
+					throw new AggregateError(
+						[closeError, error],
+						"Provider cleanup and authority settlement failed.",
+					);
+				throw error;
+			}
 			if (closeError) throw closeError;
 		};
 	}
@@ -150,6 +178,21 @@ export async function annotateClientMutationContext(
 				throw new AggregateError(
 					[error, cleanupError],
 					"Provider response observer setup and cleanup failed.",
+				);
+			}
+			throw error;
+		}
+	}
+	if (governor?.admitBackendRequest) {
+		try {
+			backendObserver = await attachOwnedChatgptBackendRequestAdmission(client, governor);
+		} catch (error) {
+			try {
+				await client.close();
+			} catch (cleanupError) {
+				throw new AggregateError(
+					[error, cleanupError],
+					"Backend admission setup and cleanup failed.",
 				);
 			}
 			throw error;

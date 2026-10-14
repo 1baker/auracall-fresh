@@ -62,6 +62,7 @@ export interface ProviderTrafficGovernor {
 	readonly attribution: ProviderTrafficAttribution;
 	begin(input: ProviderTrafficActionInput): Promise<ProviderTrafficAction>;
 	checkWarning?(context?: unknown): Promise<void>;
+	admitBackendRequest?(requestKey: string, effect: () => Promise<void>): Promise<void>;
 	snapshotAdmissionState?(): ProviderTrafficAdmissionState;
 }
 
@@ -112,6 +113,7 @@ export function withProviderTrafficContext(
 	return {
 		attribution: governor.attribution,
 		checkWarning: governor.checkWarning?.bind(governor),
+		admitBackendRequest: governor.admitBackendRequest?.bind(governor),
 		snapshotAdmissionState: governor.snapshotAdmissionState?.bind(governor),
 		begin: (input) =>
 			governor.begin({
@@ -134,6 +136,19 @@ export class ProviderTrafficWarningError extends Error {
 		super(`Provider traffic stopped after ${warning.classification}: ${warning.reason}`);
 		this.name = "ProviderTrafficWarningError";
 	}
+}
+
+export class ProviderBackendRequestBudgetExceededError extends Error {
+	constructor() {
+		super("Backend request admission denied: minute-backend-request-limit.");
+		this.name = "ProviderBackendRequestBudgetExceededError";
+	}
+}
+
+/** Every failure must prove pre-send budget denial; mixed cleanup failures stay unknown. */
+export function isKnownBackendRequestBudgetDenial(error: unknown): boolean {
+	return error instanceof ProviderBackendRequestBudgetExceededError ||
+		(error instanceof AggregateError && error.errors.length > 0 && error.errors.every(isKnownBackendRequestBudgetDenial));
 }
 
 export class ProviderTrafficGovernorRequiredError extends Error {
@@ -162,9 +177,11 @@ export function createProviderTrafficGovernor(input: {
 		attribution: ProviderTrafficAttribution,
 	) => Promise<void>;
 	createActionId?: () => string;
+	admitBackendRequest?: (requestKey: string, effect: () => Promise<void>) => Promise<void>;
 }): ProviderTrafficGovernor {
 	const attribution = normalizeAttribution(input.attribution);
 	const createActionId = input.createActionId ?? crypto.randomUUID;
+	const admitBackendRequest = input.admitBackendRequest;
 	let observedWarning: ProviderTrafficWarning | null = null;
 	let lastProbeContext: unknown;
 	const recentEffects: NonNullable<ProviderTrafficAdmissionState["recentEffects"]> = [];
@@ -189,6 +206,10 @@ export function createProviderTrafficGovernor(input: {
 	return {
 		attribution,
 		checkWarning,
+		...(admitBackendRequest ? { admitBackendRequest: async (requestKey: string, effect: () => Promise<void>) => {
+			await checkWarning();
+			await admitBackendRequest(requestKey, effect);
+		} } : {}),
 		snapshotAdmissionState: () => ({
 			version: 1,
 			phases: [],

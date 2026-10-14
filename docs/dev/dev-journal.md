@@ -1,3 +1,25 @@
+## 2026-10-14 | Owned Fetch source review checkpoint
+
+Plan0420 source fixture now denies backend sends across two runtime clients under
+an explicit fixture ceiling and deduplicates request events. Known denial releases
+only ledger-qualified custody; pending actions, mixed dispatch failures and warning-
+frozen requests remain fenced. Account-mirror phase wrapper preserves the hook;
+warning observation stays active while admitted callbacks drain.31affected tests,
+typecheck and full build pass; scoped formatting/diff checks pass. No production
+caller enables the hook yet. Collector yield, bootstrap, retained targets, mixed
+runtime participation and production ceiling remain integration gates. No provider
+probe, install, scheduler change or guard clearance.
+
+## 2026-10-14 | Owned Fetch admission regression in progress
+
+Plan0420 actual annotation/guarded-CDP/configured-factory fixture went red on the
+missing request observer. An explicit fixture request ceiling now denies a second
+runtime before send and deduplicates events through the durable ledger. Production
+callers do not enable the hook yet. Cleanup exposed masked budget/lease-settlement
+errors; both are now preserved, with unknown tab custody fenced. Collector yield
+semantics, bootstrap/retained targets and the production ceiling remain integration
+gates. Changes uncommitted; no install or provider probe.
+
 ## 2026-10-14 | Continuous owned-client custody hold
 
 Plan0419 follow-up adds a guarded-client hold for request callbacks outside original

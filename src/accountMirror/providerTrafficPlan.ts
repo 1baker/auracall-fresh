@@ -234,6 +234,7 @@ export function createAccountMirrorProviderTrafficPlanController(
 	const budgetedGovernor: ProviderTrafficGovernor = {
 		attribution: governor.attribution,
 		checkWarning: governor.checkWarning?.bind(governor),
+		admitBackendRequest: governor.admitBackendRequest?.bind(governor),
 		snapshotAdmissionState: () => {
 			const byBudget = new Map<
 				string,

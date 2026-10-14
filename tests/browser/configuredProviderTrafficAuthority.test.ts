@@ -12,6 +12,49 @@ afterEach(() => {
 });
 
 describe("configured provider traffic authority", () => {
+	test("a warning during backend dispatch preserves the failed settlement and frozen custody", async () => {
+		const directory = await mkdtemp(path.join(os.tmpdir(), "auracall-request-warning-"));
+		setAuracallHomeDirOverrideForTest(directory);
+		const config = {
+			auracallProfile: "fixture",
+			services: { chatgpt: { identity: { email: "operator@example.test" } } },
+		} as never;
+		try {
+			const factory = createConfiguredProviderTrafficAuthorityFactory({
+				userConfig: config,
+				provider: "chatgpt",
+				managedBrowserProfile: "/fixture/managed",
+				mutationAudit: async () => undefined,
+				baseOptions: {},
+				backendRequestLimit: 1,
+			});
+			const authority = await factory.acquire({ targetId: "fixture-target" });
+			const ledger = createBrowserTabConcurrencyRuntime(config).ledger;
+			if (!ledger || !authority.governor.admitBackendRequest)
+				throw new Error("Missing backend admission");
+			await expect(
+				authority.governor.admitBackendRequest(`sha256:${"a".repeat(64)}`, async () => {
+					const request = (await ledger.list())[0];
+					if (!request) throw new Error("Expected dispatched request record");
+					await ledger.recordProviderWarning({
+						scope: request.scope,
+						classification: "rate-limit",
+						reason: "fixture429",
+						observedAt: new Date().toISOString(),
+					});
+				}),
+			).rejects.toThrow("Backend dispatch and settlement failed");
+			expect(await ledger.list()).toEqual([
+				expect.objectContaining({ state: "frozen", effectState: "outcome-unknown" }),
+			]);
+			await expect(authority.close()).rejects.toThrow("release failed");
+			expect(
+				await ledger.listActiveProviderWarnings({ now: new Date().toISOString() }),
+			).toHaveLength(1);
+		} finally {
+			await rm(directory, { recursive: true, force: true });
+		}
+	});
 	test("an owned backend response freezes another runtime's account admission before a DOM probe", async () => {
 		const directory = await mkdtemp(path.join(os.tmpdir(), "auracall-owned-response-"));
 		setAuracallHomeDirOverrideForTest(directory);

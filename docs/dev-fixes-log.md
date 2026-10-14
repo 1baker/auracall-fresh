@@ -1,3 +1,14 @@
+## 2026-10-14 | Owned request admission and terminal error evidence
+
+Plan0420 proves a conditional Fetch admission seam through configured account
+stores and guarded owned-client custody. Request and browser-operation budgets stay
+separate. Preserve every dispatch/cleanup failure: a later quota denial cannot erase
+an earlier unknown effect. Ledger settlement rejection must propagate, and close
+must inspect owned request outcomes before releasing tab custody. Keep the response
+warning observer active until request callbacks finish draining. Source fixture
+qualification does not establish initial bootstrap or retained-target coverage,
+production quota or native materialization acceptance.
+
 ## 2026-10-14 | Nested desktop automation custody
 
 A persistent owned-request interceptor needs custody across setup, events and
