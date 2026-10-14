@@ -1,3 +1,12 @@
+## 2026-10-14 — Yield project discovery at its physical navigation budget (#165)
+
+Logical page-read allowance does not permit another physical project visit after
+the index navigation budget is exhausted. Compose the existing caller yield hook
+with actual governor budget state; retain gathered rows and next-project cursor.
+The public collector/real traffic-plan replay uses budget1 across two projects,
+then reloads serialized evidence into a fresh bounded cycle. No budget increase
+or complete-inventory claim follows from partial progress.
+
 ## 2026-10-14 — Complete context output is not terminal CLI success (#165)
 
 A context read can return all messages while retained handles keep its CLI alive.

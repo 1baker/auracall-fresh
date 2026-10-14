@@ -2086,7 +2086,7 @@ describe("ChatGPT account mirror metadata collector", () => {
 		const client = {
 			getProviderSessionProof: async () =>
 				createCollectorProviderSessionProof("chatgpt", {
-					email: "ecochran76@gmail.com",
+					email: "operator@example.test",
 					accountLevel: "Business",
 					source: "auth-session",
 				}),
@@ -2123,7 +2123,7 @@ describe("ChatGPT account mirror metadata collector", () => {
 					browserProfile: "default",
 					defaultService: "chatgpt",
 					services: {
-						chatgpt: { identity: { email: "ecochran76@gmail.com", accountLevel: "Business" } },
+						chatgpt: { identity: { email: "operator@example.test", accountLevel: "Business" } },
 					},
 				},
 			},
@@ -2154,7 +2154,7 @@ describe("ChatGPT account mirror metadata collector", () => {
 			collector.collect({
 				provider: "chatgpt",
 				runtimeProfileId: "default",
-				expectedIdentityKey: "ecochran76@gmail.com",
+				expectedIdentityKey: "operator@example.test",
 				sweepMode: "steady_follow",
 				requestedPhase: "project-conversations",
 				previousEvidence,

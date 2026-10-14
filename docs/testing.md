@@ -1,3 +1,10 @@
+- Project discovery physical-budget continuation (provider-free):
+  `pnpm vitest run tests/accountMirror/chatgptMetadataCollector.test.ts -t 'physical navigation budget'`.
+  Public collector and actual governor/traffic plan hold navigation budget1:
+  first project is retained with a yielded cursor, then serialized evidence
+  resumes only the second project in a fresh bounded cycle. Provider transport
+  is simulated; native exception attribution remains a separate replay gate.
+
 - Context command terminal boundary (provider-free):
   `pnpm vitest run tests/cli/conversationContextTerminalExit.test.ts tests/cli/developerAppTerminalExit.test.ts`.
   Actual registered command callbacks run in subprocesses with external SDK/config

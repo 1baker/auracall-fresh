@@ -7,6 +7,18 @@ Target: main
 
 ## Current State
 
+Latest checkpoint11: original context command passes on installed PR314,
+exit0 in30.98seconds with all10messages. Extraction and terminal-boundary fixes
+are integrated; independent discovery-budget yield is being reconciled/reviewed.
+API13018 and /desktops200; scheduler/all17active completions remain paused with
+no active work or provider warnings. The temporary restart-unverified lease state
+was preserved; later scoped OS readback proves browser/PID absence and the lease
+released/already-missing. No exit actor or completed physical close is inferred.
+Full changed-B/quiet/guard/scheduler gates
+remain OPEN; four new-window journeys are preserved alongside prior history.
+
+### Restart authority and initial readback | 2026-10-14
+
 2026-10-14 restart: user renewed resources and explicitly set the goal to
 complete the live-follow repairs using Ask Matt, stopping and checkpointing
 before two million tokens or six hours. New window starts at epoch1791974597;
@@ -24,6 +36,8 @@ jobs paused, queued/running0, warnings0. All454selected registry leases released
 installed native managed-profile census finds no browser. Historical process
 exit actors remain unknown. Graphiti healthy but no relevant Plan0411 recall;
 repair worktree unindexed, native code-discovery fallback applies.
+
+### Historical starting state | 2026-10-13
 
 The user renewed the full resolution objective on2026-10-13, authorizing paced
 provider journeys as needed. Historical windows/counters stay recorded. PR307
@@ -46,9 +60,10 @@ verification, identity drift or ambiguous custody; honor cooldowns without
 automatic repeated retries. Never click Answer now. Preserve unrelated pauses
 and dirty work. No prompts/uploads are needed for current diagnosis.
 
-Goal started at epoch 1791896816. Checkpoint and stop this execution window
+Historical first window started at epoch 1791896816. Its checkpoint/stop was
 before six hours (epoch 1791918416) or two million tokens, whichever comes first;
-use five hours forty-five minutes / 1.9 million tokens as advance checkpoints.
+that window is closed. Renewed restart bounds above govern current execution.
+Use five hours forty-five minutes / 1.9 million tokens as advance checkpoints.
 Read the goal meter at material boundaries. Keep the goal active until full
 acceptance, an operator pause, or a qualified blocked audit. Local loops have
 two attempts per hypothesis before reassessment; reassessment can change tactics
@@ -370,3 +385,10 @@ with the separate post-budget check preserved outside these counters. Full
 independent changed-B/quiet, composed guard/reload and bounded scheduler gates
 remain OPEN. Next: reconcile/review/integrate the independent discovery-yield
 checkpoint, then one paced discovery replay, preserving current idle custody.
+
+Resource follow-up: the lease briefly became lost/restart-unverified while the
+browser was present. Later native helper finds no selected browser and /proc
+proves the original PID absent; registry is released/already-missing. Earlier
+retirement audit says preserved, not closed. Exit actor remains unproven. The
+context/terminal successor plans are CLOSED on this bounded evidence; parent
+acceptance remains OPEN.

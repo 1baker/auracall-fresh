@@ -1,3 +1,14 @@
+## 2026-10-14 | Original context accepted; discovery-yield review
+
+PR314 installed581parity/API13018. Original command exits0 in30.98seconds with
+all10unchanged messages, zero prompts/retries and no hard stop. Later lease
+released/already-missing and native/PID absence qualify scoped cleanup; transient
+restart-unverified and preserved retirement audit remain, actor unknown. Plans
+0412/0413 CLOSED; broad0411 OPEN. Discovery checkpoint reconciled with integrated
+context fixes, preserving both journal histories;91combined checks, typecheck,
+build and touched Biome pass. Serial Standards/Spec review has no open blockers;
+one paced installed discovery replay follows promotion. Unrelated pauses persist.
+
 ## 2026-10-14 | Plan0413 context terminal-boundary repair
 
 PR313 installed581parity/API76449; native original read emits5user/5assistant

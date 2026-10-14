@@ -1,6 +1,22 @@
 schema_version: 1
 work_item_tracking: optional
 lanes:
+  - id: P92
+    objective: Retain partial project discovery at the physical navigation budget
+    work_items: [ecochran76/auracall#165]
+    plan: docs/dev/plans/0411-2026-10-13-live-follow-materialization-resolution.md
+    plan_ref: refs/heads/fix/issue165-project-index-budget-yield
+    branch: fix/issue165-project-index-budget-yield
+    target: main
+    plan_state: OPEN
+    custody_state: ACTIVE_WORKTREE
+    integration: merge
+    dependencies: []
+    overlaps: []
+    validation_status: source-reviewed-native-replay-pending
+    validation_ref: docs/dev/notes/2026-10-14-plan0411-budget-yield-review.md
+    disposition: Broad Plan0411 remains open after context and terminal successors; budget/cursor repair is separate
+    updated_at: 2026-10-14
   - id: P91
     objective: End completed context CLI commands after flushing their result
     work_items: [ecochran76/auracall#165]
@@ -8,12 +24,15 @@ lanes:
     plan_ref: refs/heads/fix/issue165-context-terminal-exit
     branch: fix/issue165-context-terminal-exit
     target: main
-    plan_state: OPEN
-    custody_state: ACTIVE_WORKTREE
+    plan_state: CLOSED
+    custody_state: INTEGRATED
+    checkpoint: f6e134401a736de6dba87320e85ba06d141c092b
+    remote_ref: refs/remotes/origin/fix/issue165-context-terminal-exit
+    integration_receipt: b021592252951a335438a10bf8f5384df82f3658
     integration: merge
     dependencies: []
     overlaps: []
-    validation_status: terminal-loop-green-native-acceptance-pending
+    validation_status: installed-original-command-accepted
     validation_ref: docs/dev/plans/0413-2026-10-14-context-command-terminal-exit.md
     disposition: Source extraction is installed; complete command exit remains the exact native gate
     updated_at: 2026-10-14
@@ -24,7 +43,7 @@ lanes:
     plan_ref: refs/heads/fix/issue165-populated-context
     branch: fix/issue165-populated-context
     target: main
-    plan_state: OPEN
+    plan_state: CLOSED
     custody_state: INTEGRATED
     checkpoint: 42921787eb0f5a341a7421d89869aeab03508d66
     remote_ref: refs/remotes/origin/fix/issue165-populated-context
@@ -32,7 +51,7 @@ lanes:
     integration: merge
     dependencies: []
     overlaps: []
-    validation_status: installed-extraction-terminal-acceptance-pending
+    validation_status: installed-original-command-accepted
     validation_ref: docs/dev/plans/0412-2026-10-14-populated-context-direct-retry.md
     disposition: Settled direct-only retry isolated from the independent project-budget-yield checkpoint
     updated_at: 2026-10-14

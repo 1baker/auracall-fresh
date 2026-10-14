@@ -1,6 +1,6 @@
 # Plan 0412 — populated context direct-only retry
 
-State: OPEN
+State: CLOSED
 Parent: Plan0411 / issue165
 Branch: fix/issue165-populated-context
 Target: main
@@ -9,11 +9,18 @@ Integration: reviewed short-lived branch
 
 ## Current State
 
+Scoped closeout: installed PR314 composes the terminal successor with this
+extraction repair. Original command exits0 in30.98seconds with10messages,
+exactly matching the prior extracted array, at60seconds/0retries/0prompts.
+Later scoped OS readback proves the selected browser and original PID absent;
+lease is released/already-missing. Exit actor is unproven; no synthetic close.
+Parent Plan0411 wider acceptance remains OPEN.
+
 PR313 is integrated58d9615f7 and installed with581compiled-file parity. The
 paced original read emits all10messages before its60second read deadline, but
 CLI exit remains pending until the90second controller sends SIGINT. Preserve
 that failed terminal result; Plan0413 owns the successor terminal-boundary repair.
-Plan0412 remains OPEN until full original-command acceptance and resource readback.
+That checkpoint's remaining command/resource gates are met by the closeout above.
 
 User resumed the full live-follow repair goal with Ask Matt and renewed a
 two-million-token/six-hour window. Parent control starts epoch1791974597;
@@ -65,5 +72,5 @@ actual cache/custody filesystem operations settle. No new dependency is retained
 
 Focused and broader source checks, typecheck, scoped Biome and full build pass.
 Primary serial Standards/Spec review has no open blockers. Integration,
-installation and native proof remain pending. Parent changed/quiet/guard/scheduler
-acceptance remains OPEN.
+installation, original-command proof and scoped cleanup are recorded above.
+Parent changed/quiet/guard/scheduler acceptance remains OPEN.
