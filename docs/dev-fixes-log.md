@@ -1,3 +1,22 @@
+## 2026-10-14 — Complete context output is not terminal CLI success (#165)
+
+A context read can return all messages while retained handles keep its CLI alive.
+The actual registered callback reproduces this with a settled SDK result and a
+noncritical retained timer, even for a one-byte message. Reuse the flushed
+one-shot boundary after successful service settlement, preserving operation
+status and failure propagation. Full payload output and process exit are separate
+acceptance gates; the specific native handle remains unattributed.
+
+## 2026-10-14 — Settled context payload retry must forbid navigation (#165)
+
+Setting preserveActiveTab=true does not forbid navigation when allowNavigation
+remains explicitly true. A failed payload fallback followed by readable DOM
+messages admitted a second route fallback, waiting behind the existing navigation
+cooldown until context timeout. Force allowNavigation=false only on the settled
+payload retry. Preserve the first governed fallback and role-qualified DOM read.
+The previous helper test mirrored the ineffective option shape; a public-service
+replay with actual DOM expression and policy time catches the behavioral failure.
+
 ## 2026-10-13 — Governed standalone refresh must retain a bounded lifetime (#165)
 
 PR309 reused live-follow affinity for standalone requests, inadvertently granting

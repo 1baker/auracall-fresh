@@ -2828,7 +2828,7 @@ describe("readChatgptConversationPayloadWithClient", () => {
 				interactionGovernor,
 			}),
 		).toMatchObject({
-			allowNavigation: true,
+			allowNavigation: false,
 			preserveActiveTab: true,
 			interactionGovernor,
 		});

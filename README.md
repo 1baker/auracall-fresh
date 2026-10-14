@@ -807,6 +807,9 @@ Terminology note:
   conversation route directly and reuses its owned process tab for later reads.
   Explicit navigation restrictions and caller-owned exact targets remain
   authoritative.
+  When an initial ChatGPT payload fallback leaves readable conversation DOM,
+  the settled payload retry uses direct fetch only and cannot revisit the route.
+  This preserves message extraction without waiting for another navigation.
   Governed context reads also check the owned page for native conversation
   HTTP429 and visible request-limit warnings before identity work and during
   message waits. Such a signal stops the read through the existing provider
@@ -817,7 +820,10 @@ Terminology note:
   browser target/session resolution and cache identity/feature preflight, then
   continues through provider work. The deadline composes caller cancellation
   into each preflight/provider signal; timeout and caller abort are terminal,
-  non-retryable outcomes. Each live attempt writes a
+  non-retryable outcomes.
+  Completed context commands flush their full result and diagnostics before
+  exiting; retained browser connections do not keep the CLI alive afterward.
+  Each live attempt writes a
   metadata-only terminal receipt under the provider cache with outcome,
   elapsed time, attempt count, and last bounded preflight/scrape stage. If
   target or identity preflight times out before detected identity is available,

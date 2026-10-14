@@ -1,6 +1,41 @@
 schema_version: 1
 work_item_tracking: optional
 lanes:
+  - id: P91
+    objective: End completed context CLI commands after flushing their result
+    work_items: [ecochran76/auracall#165]
+    plan: docs/dev/plans/0413-2026-10-14-context-command-terminal-exit.md
+    plan_ref: refs/heads/fix/issue165-context-terminal-exit
+    branch: fix/issue165-context-terminal-exit
+    target: main
+    plan_state: OPEN
+    custody_state: ACTIVE_WORKTREE
+    integration: merge
+    dependencies: []
+    overlaps: []
+    validation_status: terminal-loop-green-native-acceptance-pending
+    validation_ref: docs/dev/plans/0413-2026-10-14-context-command-terminal-exit.md
+    disposition: Source extraction is installed; complete command exit remains the exact native gate
+    updated_at: 2026-10-14
+  - id: P90
+    objective: Return populated ChatGPT context without a second payload route fallback
+    work_items: [ecochran76/auracall#165]
+    plan: docs/dev/plans/0412-2026-10-14-populated-context-direct-retry.md
+    plan_ref: refs/heads/fix/issue165-populated-context
+    branch: fix/issue165-populated-context
+    target: main
+    plan_state: OPEN
+    custody_state: INTEGRATED
+    checkpoint: 42921787eb0f5a341a7421d89869aeab03508d66
+    remote_ref: refs/remotes/origin/fix/issue165-populated-context
+    integration_receipt: 58d9615f754ca0c46cc207f6a56e526f8130c060
+    integration: merge
+    dependencies: []
+    overlaps: []
+    validation_status: installed-extraction-terminal-acceptance-pending
+    validation_ref: docs/dev/plans/0412-2026-10-14-populated-context-direct-retry.md
+    disposition: Settled direct-only retry isolated from the independent project-budget-yield checkpoint
+    updated_at: 2026-10-14
   - id: P88
     objective: Make AuraCall memory routing discoverable with precise closeout evidence
     work_items: [ecochran76/auracall#251]
