@@ -1,3 +1,15 @@
+## 2026-10-14 | Ready project-route reuse regression
+
+Plan0416 removes canonical navigation when an already-ready project URL includes
+a display-name suffix for the same stable ID. Existing composed harness now runs
+the bounded collector read through real service/affinity/adapter with external CDP
+fixture. Corrected initial root-page fixture before qualifying baseline red.
+Same-project case needs zero navigation/reload/reopen; different-project case
+still needs one navigation. Route/document and account custody checks remain.
+This is one verified avoidable pattern, not a causal allocation of discovery5's
+142backend responses. Separate request-cap units approved; numeric ceiling pending.
+No provider probe or warning clearance. Source review/installed acceptance pending.
+
 ## 2026-10-14 | Provider-free request accounting replay
 
 Plan0415: saved discovery5 trace replays460responses/142backend responses with

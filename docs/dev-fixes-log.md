@@ -1,3 +1,13 @@
+## 2026-10-14 — Canonical project URLs can cause needless navigation (#165)
+
+ChatGPT project URLs can carry a human-readable suffix after the stable project
+ID. Preserve the current same-origin project URL when its ID and route shape
+match, then keep existing route/document readiness verification. A generic textual
+URL comparison alone can navigate again to an equivalent canonical project page.
+Composed bounded-read regression checks actual physical calls and ensures a
+different project still requires navigation. Do not infer saved backend requests
+from source action counts or an unattributed response capture.
+
 ## 2026-10-14 — Concurrent callers must share account admission controls (#165)
 
 A durable shared ledger is insufficient if a caller checks its warning only after

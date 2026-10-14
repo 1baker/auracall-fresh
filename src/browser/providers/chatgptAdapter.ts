@@ -5180,10 +5180,26 @@ async function navigateToChatgptUrl(
 	projectId?: string,
 	options?: BrowserProviderListOptions,
 ): Promise<void> {
+	// ChatGPT may add a display-name suffix to a project route. Preserve that
+	// current route when it names the requested project; navigateAndSettle still
+	// verifies route and document readiness before declining a physical action.
+	let navigationUrl = url;
+	if (projectId) {
+		const currentUrl = await readChatgptLocationHref(client.Runtime).catch(() => null);
+		if (
+			currentUrl &&
+			isChatgptUrl(currentUrl) &&
+			new URL(currentUrl).origin === new URL(url).origin &&
+			extractChatgptProjectIdFromUrl(currentUrl) === projectId &&
+			/^\/g\/[^/]+\/project\/?$/.test(new URL(currentUrl).pathname)
+		) {
+			navigationUrl = currentUrl;
+		}
+	}
 	recordBrowserScrapeCdpCall(options, "Page.navigate");
 	recordBrowserScrapeProviderAction(options, "chatgpt.navigateUrl");
 	const settled = await navigateAndSettle(client, {
-		url,
+		url: navigationUrl,
 		routeExpression: projectId
 			? buildProjectRouteExpression(projectId)
 			: buildChatgptUrlRouteExpression(url),
