@@ -8,6 +8,24 @@ Base: 55bd402a996c1bb7fa49bb3f4e5bdc6a54e48ac0
 
 ## Current State
 
+PR318 is MERGED at236f46b68c28a1004090b36934a91f351d2cfdc4; reviewed source
+fadb5ba4f3de605beab7c8e478b31ce46b653852 is installed in
+`~/.auracall/user-runtime-issue165-shared-governor`. All581compiled JavaScript
+files match. The same two-process regression also passes against those installed
+compiled modules using an isolated temporary ledger. API PID62879 is healthy;
+/desktops200, scheduler paused, all17active completions paused, selected runs0,
+active interactions0, background drain idle. Fresh OS readback preserves the
+foreign browser PID81881/port45015. Its retained lease initially remained idle,
+then startup reconciliation marked it lost/restart-unverified; preservation of
+the browser process is not preserved lease authority. No lease reset was made. Initial post-restart validation reported busy; subsequent fresh
+readback is recorded separately, rather than erasing that first failure.
+
+This source/runtime repair is implemented. Full native acceptance remains OPEN,
+and native retry clearance is still withheld. Provider journeys in this packet:0.
+Private receipts: shared-governor-stage-parity.json,
+shared-governor-installed-regression.log, shared-governor-promotion/receipt.json
+under ~/.auracall/diagnostics/plan0411.
+
 User resumed on 2026-10-14 with the additional requirement that concurrent
 AuraCall activity share provider-account controls. Current packet is provider-free;
 the native retry hold remains. Comparison base is
@@ -43,6 +61,8 @@ account-key rewrite, budget increase, browser restart or provider probe is inclu
 
 The stopped window below remains historical evidence, not current authority.
 
+## Prior stopped window (historical)
+
 Execution window STOPPED under the user's2million-token checkpoint boundary.
 Primary missed the advance boundary: last read2057689tokens, paused meter
 2058553tokens/7207seconds. Full goal remains incomplete. No further provider
@@ -63,7 +83,7 @@ One fresh API-owned ephemeral lease was observed; terminal request-id equality
 was unavailable because the request returned an API error rather than a result.
 Raw failed receipts remain private. Wider discovery acceptance remains unproved.
 
-## Local feedback loop and unreviewed checkpoint
+## Prior local feedback loop and unreviewed checkpoint (historical)
 
 `pnpm vitest run tests/accountMirror/lateWarningAdmission.test.ts`.
 Public configured affinity, actual file-backed registry/ledger/governor and real
