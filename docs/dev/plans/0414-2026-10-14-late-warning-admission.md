@@ -14,8 +14,10 @@ fadb5ba4f3de605beab7c8e478b31ce46b653852 is installed in
 files match. The same two-process regression also passes against those installed
 compiled modules using an isolated temporary ledger. API PID62879 is healthy;
 /desktops200, scheduler paused, all17active completions paused, selected runs0,
-active interactions0, background drain idle. One foreign lease/browser process
-was preserved. Initial post-restart validation reported busy; subsequent fresh
+active interactions0, background drain idle. Fresh OS readback preserves the
+foreign browser PID81881/port45015. Its retained lease initially remained idle,
+then startup reconciliation marked it lost/restart-unverified; preservation of
+the browser process is not preserved lease authority. No lease reset was made. Initial post-restart validation reported busy; subsequent fresh
 readback is recorded separately, rather than erasing that first failure.
 
 This source/runtime repair is implemented. Full native acceptance remains OPEN,

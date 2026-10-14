@@ -5,7 +5,9 @@ installed two-process replay also passes,581compiled files exact parity. New
 user-runtime-issue165-shared-governor launcher prefix/API62879; /desktops200,
 scheduler/all17jobs paused, selected0/interactions0, drain idle. Initial restart
 readback was busy; later fresh OS/API evidence qualifies idle and preserved foreign
-browser process. No provider probe, warning clearance or automatic resumption.
+browser process PID81881/port45015. Its lease later became lost/restart-unverified
+during startup reconciliation; lease authority is not claimed preserved. No
+provider probe, warning clearance or automatic resumption.
 Native readiness and full0411 acceptance remain OPEN. Plan0414 records evidence.
 
 ## 2026-10-14 | Resumed shared provider-account admission repair
