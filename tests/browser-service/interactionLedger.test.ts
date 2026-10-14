@@ -16,6 +16,46 @@ const foregroundScope: ProviderInteractionScope = {
 };
 
 describe("interactionLedger (package)", () => {
+	test("a stricter account cap expires with its contributing interaction rather than being renewed by other callers", async () => {
+		const ledger = createInMemoryProviderInteractionLedger();
+		const reserve = async (operationId: string, now: string, limit: number) => {
+			const result = await ledger.reserve({
+				scope: { ...foregroundScope, runtimeProfileId: operationId },
+				workloadId: operationId,
+				operationId,
+				tabLeaseId: operationId,
+				interactionClass: "conversation-read",
+				mutability: "read-only",
+				startsNewConversation: false,
+				now,
+				reservationTtlMs: 30000,
+				policy: {
+					maxConcurrentChats: null,
+					maxConversationStartsPerHour: null,
+					maxConversationStartsPerDay: null,
+					maxInteractionsPerMinute: limit,
+				},
+			});
+			if (result.allowed) {
+				await ledger.start({ reservationId: result.reservation.reservationId, startedAt: now });
+				await ledger.settle({
+					reservationId: result.reservation.reservationId,
+					settledAt: now,
+					outcome: "succeeded",
+					effectState: "settled",
+				});
+			}
+			return result;
+		};
+		expect((await reserve("strict", "2026-10-14T12:00:00Z", 2)).allowed).toBe(true);
+		expect((await reserve("loose", "2026-10-14T12:00:30Z", 3)).allowed).toBe(true);
+		expect(await reserve("blocked", "2026-10-14T12:00:31Z", 3)).toMatchObject({
+			allowed: false,
+			reason: "minute-interaction-limit",
+		});
+		expect((await reserve("later", "2026-10-14T12:01:01Z", 3)).allowed).toBe(true);
+		expect((await reserve("later-again", "2026-10-14T12:01:02Z", 3)).allowed).toBe(true);
+	});
 	test("binds a post-admission tab lease once and persists the association", async () => {
 		const directory = await mkdtemp(path.join(os.tmpdir(), "auracall-interaction-binding-"));
 		try {

@@ -7,6 +7,20 @@ Target: main
 
 ## Current State
 
+User resumed provider-free repair on 2026-10-14. Plan0414 now also covers shared
+provider-account admission across OS processes: interrupted warning pacing and
+strictest recent contributed cap. Native retry hold and remaining parent gates
+stand. The budget-stop window below is preserved historical evidence.
+
+Execution STOPPED at the renewed token boundary; primary missed the advance
+checkpoint. Latest meter2057689, paused2058553tokens/7207seconds. PR315 is installed
+with581parity. Discovery5 observed native429 and ended collector timeout/API500;
+warning was persisted through installed guard/ledger, not automatically. Source
+late-warning-before-pacing repair is unreviewed/unintegrated/uninstalled on
+fix/issue165-late-warning-admission; Plan0414 is the bounded restart authority.
+Original context/terminal acceptance stands; full parent acceptance remains OPEN.
+No further provider probe, review or promotion in this stopped window.
+
 Latest checkpoint11: original context command passes on installed PR314,
 exit0 in30.98seconds with all10messages. Extraction and terminal-boundary fixes
 are integrated; independent discovery-budget yield is being reconciled/reviewed.

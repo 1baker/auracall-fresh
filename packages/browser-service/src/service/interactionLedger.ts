@@ -119,6 +119,8 @@ export interface ProviderInteractionRecord {
   providerWarning: ProviderWarningClassification | null;
   stopReason: string | null;
   outcome: ProviderInteractionOutcome | null;
+  /** Account-wide ceiling contributed by this admission for its rolling minute. */
+  maxInteractionsPerMinute?: number | null;
 }
 
 export type ProviderInteractionOutcome = 'succeeded' | 'failed' | 'cancelled';
@@ -329,10 +331,22 @@ class InMemoryProviderInteractionLedger implements ProviderInteractionLedger {
       return this.rejectAdmission(scope, input, 'concurrent-limit');
     }
 
-    const minuteInteractionLimit = normalizeLimit(
+    let minuteInteractionLimit = normalizeLimit(
       input.policy.maxInteractionsPerMinute ?? null,
       'maxInteractionsPerMinute',
     );
+    for (const record of this.records.values()) {
+      if (
+        aggregateScopeKey(record.scope) !== aggregateScopeKey(scope) ||
+        Date.parse(record.startedAt ?? record.reservedAt) < nowMs - 60_000 ||
+        record.maxInteractionsPerMinute == null
+      ) continue;
+      const contributedLimit = normalizeLimit(record.maxInteractionsPerMinute, 'maxInteractionsPerMinute');
+      if (contributedLimit !== null) {
+        minuteInteractionLimit = minuteInteractionLimit === null
+          ? contributedLimit : Math.min(minuteInteractionLimit, contributedLimit);
+      }
+    }
     if (
       minuteInteractionLimit !== null &&
       this.countInteractions(scope, nowMs - 60_000) >= minuteInteractionLimit
@@ -386,6 +400,7 @@ class InMemoryProviderInteractionLedger implements ProviderInteractionLedger {
       providerWarning: null,
       stopReason: null,
       outcome: null,
+      maxInteractionsPerMinute: normalizeLimit(input.policy.maxInteractionsPerMinute ?? null, 'maxInteractionsPerMinute'),
     };
     this.records.set(reservationId, reservation);
     this.appendEvent({

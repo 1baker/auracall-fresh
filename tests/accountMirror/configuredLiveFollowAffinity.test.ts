@@ -1,8 +1,10 @@
 import { vi as activityMock } from "vitest";
+
 activityMock.mock("../../src/browser/chatgptTabActivity.js", async (importOriginal) => {
 	const original = await importOriginal<typeof import("../../src/browser/chatgptTabActivity.js")>();
 	return { ...original, requireInactiveChatgptTab: activityMock.fn(async () => {}) };
 });
+
 import { describe, expect, test, vi } from "vitest";
 
 import {
@@ -51,6 +53,7 @@ describe("live-follow final warning transport", () => {
 		"clean",
 		"late-warning",
 		"probe-failure",
+		"probe-stall",
 	])("checks fresh final transport and preserves %s outcome", async (outcome) => {
 		const lifecycle = await import("../../packages/browser-service/src/chromeLifecycle.js");
 		const runtimeModule = await import("../../src/browser/tabConcurrencyRuntime.js");
@@ -78,6 +81,7 @@ describe("live-follow final warning transport", () => {
 		const close = vi.fn(async () => undefined);
 		const evaluate = vi.fn(async () => {
 			if (outcome === "probe-failure") throw new Error("fresh probe failed");
+			if (outcome === "probe-stall") return new Promise<never>(() => {});
 			return { result: { value: outcome === "late-warning" ? "Too many requests" : null } };
 		});
 		const connect = vi
@@ -119,7 +123,17 @@ describe("live-follow final warning transport", () => {
 			await affinity?.providerTrafficGovernor.checkWarning?.({ evaluate: staleEvaluate });
 			staleEvaluate.mockRejectedValue(new Error("WebSocket is not open: readyState 3 (CLOSED)"));
 			registry.list.mockResolvedValue([lease] as never);
-			if (outcome === "clean") await expect(affinity?.completeSuccess()).resolves.toBeUndefined();
+			if (outcome === "probe-stall") {
+				vi.useFakeTimers();
+				const pending = affinity?.completeSuccess().then(
+					() => null,
+					(e) => e.message,
+				);
+				await vi.advanceTimersByTimeAsync(10000);
+				expect(await pending).toContain("Owned ChatGPT warning check timed out");
+				vi.useRealTimers();
+			} else if (outcome === "clean")
+				await expect(affinity?.completeSuccess()).resolves.toBeUndefined();
 			else
 				await expect(affinity?.completeSuccess()).rejects.toThrow(
 					outcome === "late-warning" ? /Too many requests/ : /fresh probe failed/,

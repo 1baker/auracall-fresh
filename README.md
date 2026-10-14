@@ -723,6 +723,13 @@ Terminology note:
   into lifetime totals and returns the row to pending planning. Existing or
   malformed cache rows migrate conservatively to pending work with unknown
   availability and zero physical counters.
+  Provider-account admission counts concurrent callers in the shared durable
+  ledger across AuraCall runtime profiles. Each recent admitted interaction's
+  configured minute ceiling constrains later callers; a higher caller ceiling
+  does not override a stricter recent contribution. Shared provider warnings
+  interrupt pending admission pacing within a one-second polling interval plus
+  store-read latency. This budget counts admitted operations, not every request
+  generated internally by a provider page.
   Changed-frontier planning is deterministic and provider-free: each row
   becomes exactly one of `skip`, `visit_once`, `materialize_retained`, or
   `defer`. Active guards, identity mismatches, and future retry horizons defer;
