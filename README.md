@@ -797,6 +797,9 @@ Terminology note:
   live-follow pass; a later pass resumes from the next conversation. Because
   live follow is read-only, such failures do not create an
   `outcome-unknown` provider-effect fence.
+  Project discovery yields when its existing physical navigation budget is
+  exhausted, retaining collected rows and the next-project cursor for a later
+  cycle. A yielded inventory remains partial rather than complete.
   For ChatGPT conversation payload reads, an in-page 404 remains recoverable
   because the governed reload may still receive the exact payload with 200.
   Only an exact fallback conversation response with 404/410 is classified as

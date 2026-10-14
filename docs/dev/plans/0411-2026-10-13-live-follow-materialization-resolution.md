@@ -2,10 +2,42 @@
 
 State: OPEN
 Parent: Plan 0386 / issue 165
-Branch: fix/issue165-refresh-affinity-lifetime
+Branch: fix/issue165-project-index-budget-yield
 Target: main
 
 ## Current State
+
+Latest checkpoint11: original context command passes on installed PR314,
+exit0 in30.98seconds with all10messages. Extraction and terminal-boundary fixes
+are integrated; independent discovery-budget yield is being reconciled/reviewed.
+API13018 and /desktops200; scheduler/all17active completions remain paused with
+no active work or provider warnings. The temporary restart-unverified lease state
+was preserved; later scoped OS readback proves browser/PID absence and the lease
+released/already-missing. No exit actor or completed physical close is inferred.
+Full changed-B/quiet/guard/scheduler gates
+remain OPEN; four new-window journeys are preserved alongside prior history.
+
+### Restart authority and initial readback | 2026-10-14
+
+2026-10-14 restart: user renewed resources and explicitly set the goal to
+complete the live-follow repairs using Ask Matt, stopping and checkpointing
+before two million tokens or six hours. New window starts at epoch1791974597;
+advance checkpoint at1791995297 (5h45m), hard stop before1791996197.
+Read the goal meter at every material boundary; historical counters below do
+not reset. Prior checkpoint9 remains preserved. Extraction is the first packet:
+capture minimal representative markup from one governed installed read, reproduce
+the populated-page failure at the public context seam, then repair causally.
+The independent project-budget-yield source checkpoint remains separate.
+
+Fresh readback: repair branch clean at eadaf2448 before this control update;
+installed wrapper resolves bounded-refresh prefix and compiled ChatGPT adapter
+matches this checkpoint. API23537 active; scheduler paused, all17active completion
+jobs paused, queued/running0, warnings0. All454selected registry leases released;
+installed native managed-profile census finds no browser. Historical process
+exit actors remain unknown. Graphiti healthy but no relevant Plan0411 recall;
+repair worktree unindexed, native code-discovery fallback applies.
+
+### Historical starting state | 2026-10-13
 
 The user renewed the full resolution objective on2026-10-13, authorizing paced
 provider journeys as needed. Historical windows/counters stay recorded. PR307
@@ -28,9 +60,10 @@ verification, identity drift or ambiguous custody; honor cooldowns without
 automatic repeated retries. Never click Answer now. Preserve unrelated pauses
 and dirty work. No prompts/uploads are needed for current diagnosis.
 
-Goal started at epoch 1791896816. Checkpoint and stop this execution window
+Historical first window started at epoch 1791896816. Its checkpoint/stop was
 before six hours (epoch 1791918416) or two million tokens, whichever comes first;
-use five hours forty-five minutes / 1.9 million tokens as advance checkpoints.
+that window is closed. Renewed restart bounds above govern current execution.
+Use five hours forty-five minutes / 1.9 million tokens as advance checkpoints.
 Read the goal meter at material boundaries. Keep the goal active until full
 acceptance, an operator pause, or a qualified blocked audit. Local loops have
 two attempts per hypothesis before reassessment; reassessment can change tactics
@@ -255,3 +288,107 @@ shares the browser. Require API no-active-work and own-scope cleanup, preserve
 foreign leases/targets across software promotion, and recheck OS/registry after.
 Full changed/quiet, original-chat cause, composed guard/reload and scheduler
 acceptance remain OPEN; nine provider journeys/attempts remain the goal total.
+
+## Checkpoint 9 — operator budget stop, unintegrated budget-yield repair
+
+Goal meter2254565tokens/14503seconds at the final readback exceeds the user's
+2million-token stop boundary. Primary missed that boundary; stop execution now.
+No further provider journey or integration in this window. Goal is paused under
+the explicit budget-stop instruction; full objective remains OPEN.
+
+Installed source PR312/a761df02c,581compiled-file parity, API95510. CLI/MCP/API
+use the bounded-refresh runtime. PR310passive project reader is included.
+Discovery4 (tenth goal journey/attempt) reached the actual project surface, then
+failed index/page_navigate budget1. One observer attachment64samples403observed
+responses, no observed429/warning. Native project payloads and retained DOM
+qualify actual project rows; original ID absent from the captured two-project/
+sidebar subsets, not global absence proof. The one-off lease is ephemeral/TTL.
+Scheduler and all17active completions remained paused during execution.
+
+Unintegrated source fix on this branch: collector yields when its frozen index
+navigation budget is exhausted, preserving gathered rows and next-project cursor
+instead of attempting another unplanned route visit. Public collector plus actual
+governor/plan replay fails on the second of two simulated project reads before
+fix; after fix it yields after one and a fresh cycle resumes the second from
+serialized evidence. The one-navigation budget remains1.196relevant tests,
+typecheck and touched Biome pass. Build log is retained privately; read terminal
+status on restart. No Standards/Spec review, PR, installation or live replay for
+this repair yet. Native attribution to this exact loop awaits installed replay.
+
+Restart from this checkpoint, not earlier route branches. Verify current refs,
+installed identity, own/foreign custody, operation states, warning ledger and
+normal eligibility before effects. Review/validate the budget-yield source slice,
+then integrate/promote and run one paced discovery replay. Keep original chat
+access, independent changed-B/quiet, composed guard/reload and bounded scheduler
+gates open. Never click Answer now, reset old journey counters, seed live changes
+or weaken guards. Raw evidence remains private under the Plan0411 diagnostics
+directory. Memory disposition: forbidden at operator budget stop; no new durable
+memory is queued in this execution window.
+
+## Checkpoint 10 — renewed window / extraction outcome progress
+
+User resumed the full goal with renewed2million-token/6hour bounds. Two new
+paced installed diagnostics reproduce60second populated-page timeout. Qualified
+representative markup has10role-marked message roots. Actual-expression DOM
+replay reads them correctly; native telemetry reaches message extraction then
+admits a second payload route fallback after direct404 and a missed exact
+fallback response. A public-service/production-affinity loop at unchanged
+120second navigation cooldown discriminates carried allowNavigation=true from
+ineffective preserveActiveTab=true on the settled payload retry.
+
+PR313 integrated58d9615f7 / source42921787e sets only that retry's
+allowNavigation=false.237source checks across8files, typecheck, scoped lint and
+build pass; primary serial Standards/Spec review has no open blockers. Review
+retains one new public-service transport case in the existing route harness;
+temporary real-DOM dependency and duplicate harness are excluded from source.
+581compiled files match the staged runtime; only ChatGPT adapter differs from
+the prior installation. CLI/MCP wrappers promoted, API76449, /desktops200,
+KillModeprocess. Prior17completion/scheduler pauses remain, active work0.
+
+Third new-window journey returns complete context with5user/5assistant messages
+before the60second read deadline. CLI does not exit afterward; controller sends
+SIGINT at90seconds. This is extraction evidence, NOT successful CLI acceptance.
+Plan0413 begins a public-command terminal-boundary replay; no additional live
+read while diagnosing it. Fresh readback has one idle retained selected lease
+and native browser87105/CDP45015, no active work/warnings. Preserve it under
+normal bounded retirement; no browser close/exit attribution is invented.
+
+Historical10goal journeys remain; new window3journeys so far. The separate
+post-budget authorized check remains outside those counters. Independent
+project-budget-yield checkpointeadaf2448 remains unintegrated/uninstalled, with
+122relevant checks freshly passing on unchanged source. Full changed/quiet,
+composed guard/reload and bounded scheduler acceptance remain OPEN.
+
+## Checkpoint 11 — original context command outcome progress
+
+Plan0413 public registered-command subprocess reproducesETIMEDOUT at1500ms
+even for a one-byte settled result. Reusing the existing flushed terminal
+boundary after service settlement fixes it; minimal/200KB success, provider
+failure and existing app cases pass8tests, typecheck and build. Entry point is
+excluded by Biome; new test is clean and source hunks reviewed serially on
+Standards/Spec with no open blockers. PR314 integratedb02159225 /
+sourcef6e134401, promoted with581compiled-file parity; only bin differs from
+the previous runtime. API13018 /desktops200, KillModeprocess.
+
+Fourth new-window journey runs the same original command at60seconds/0retries:
+exit0 in30.98seconds,10messages (5user/5assistant), exact equality with prior
+extracted message array, one owned observer attachment, no hard stop, no prompts.
+The earlier90second/SIGINT receipt remains failed CLI evidence. Source extraction
+and terminal command gates are now met. Fresh registry/OS readback is idle with
+one finite-TTL selected lease/browser18608 retained; no active work or warnings.
+Unrelated17completion and scheduler pauses remain. Normal resource retirement
+is still to be observed; no browser kill/close is issued by this packet.
+
+Goal readback before this checkpoint:556822tokens/2647seconds; renewed window
+remains below advance bounds. Historical10journeys plus4new-window journeys,
+with the separate post-budget check preserved outside these counters. Full
+independent changed-B/quiet, composed guard/reload and bounded scheduler gates
+remain OPEN. Next: reconcile/review/integrate the independent discovery-yield
+checkpoint, then one paced discovery replay, preserving current idle custody.
+
+Resource follow-up: the lease briefly became lost/restart-unverified while the
+browser was present. Later native helper finds no selected browser and /proc
+proves the original PID absent; registry is released/already-missing. Earlier
+retirement audit says preserved, not closed. Exit actor remains unproven. The
+context/terminal successor plans are CLOSED on this bounded evidence; parent
+acceptance remains OPEN.

@@ -1,6 +1,6 @@
 # Plan 0413 — context command terminal exit
 
-State: OPEN
+State: CLOSED
 Parent: Plan0411 / Plan0412 / issue165
 Branch: fix/issue165-context-terminal-exit
 Target: main
@@ -8,6 +8,14 @@ Base: 58d9615f754ca0c46cc207f6a56e526f8130c060
 Integration: reviewed short-lived branch
 
 ## Current State
+
+Scoped closeout: PR314 integratedb02159225 / sourcef6e134401 is installed with
+581compiled-file parity. Original command exits0 in30.98seconds with all10
+unchanged messages; one attempt, zero retries/prompts, no hard stop. API13018 and
+/desktops200; all17completion and scheduler pauses persist. Later scoped native
+and original-PID absence plus released/already-missing lease prove cleanup state.
+The transient restart-unverified state is preserved; exit actor remains unknown.
+Parent Plan0411 wider acceptance remains OPEN.
 
 PR313 is integrated and installed with581compiled-file parity. One installed
 original context read emits all10messages within its60second read deadline, but
@@ -54,6 +62,5 @@ refactors, discovery budget changes or a claim of full Plan0411 acceptance.
 
 ## Next action
 
-Finish source validation/review, integrate/promote, then the single installed
-verification. Independent project-budget-yield and changed/quiet/guard/scheduler
-acceptance remain separate parent work.
+Scoped terminal repair is complete. Independent project-budget-yield and
+changed/quiet/guard/scheduler acceptance remain separate parent work.

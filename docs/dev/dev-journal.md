@@ -1,3 +1,14 @@
+## 2026-10-14 | Original context accepted; discovery-yield review
+
+PR314 installed581parity/API13018. Original command exits0 in30.98seconds with
+all10unchanged messages, zero prompts/retries and no hard stop. Later lease
+released/already-missing and native/PID absence qualify scoped cleanup; transient
+restart-unverified and preserved retirement audit remain, actor unknown. Plans
+0412/0413 CLOSED; broad0411 OPEN. Discovery checkpoint reconciled with integrated
+context fixes, preserving both journal histories;91combined checks, typecheck,
+build and touched Biome pass. Serial Standards/Spec review has no open blockers;
+one paced installed discovery replay follows promotion. Unrelated pauses persist.
+
 ## 2026-10-14 | Plan0413 context terminal-boundary repair
 
 PR313 installed581parity/API76449; native original read emits5user/5assistant
@@ -18,6 +29,26 @@ Explicit allowNavigation=true defeats preserveActiveTab on settled retry.
 One-line allowNavigation=false gives red/green at unchanged120second cooldown.
 210affected checks pass before fixture minimization; final checks/review/promotion
 and paced original read pending. Preserve separate project-budget-yield checkpoint.
+
+## 2026-10-14 | Plan0411 renewed extraction diagnosis
+
+User renewed two-million-token/six-hour window and the full live-follow repair
+goal, using Ask Matt. Start with populated-page public context reproduction;
+no selector cause is proved. Fresh API23537, scheduler/all17completions paused,
+zero queued/running or warnings; selected454leases released and native browser
+absent. Preserve root dirty work and independent eadaf2448 budget-yield checkpoint.
+Plan0411 restart control record owns deadline and acceptance continuity.
+
+## 2026-10-13 | Plan0411 budget-stop checkpoint
+
+Meter2254565tokens/14503seconds exceeded the2million-token user boundary; primary
+missed it and stops the window. Installed PR312/a761df02c/581fileparity, API95510.
+Tenth journey reaches project discovery then hits frozen index navigation budget1,
+with no observed429/warning. Unintegrated collector yield/cursor repair has a
+red/green actual-governor loop and196passing checks/typecheck/Biome. Review,
+integration, installation and native replay remain pending. Plan0411checkpoint9
+is the restart authority. Full original-chat/changed/quiet/guard/scheduler
+acceptance remains OPEN. Memory forbidden at the operator budget-stop boundary.
 
 ## 2026-10-13 | Plan0411 standalone lifetime correction
 

@@ -605,7 +605,16 @@ export function createChatgptAccountMirrorMetadataCollector(
 							input,
 							"conversation-read",
 						),
-						shouldYield: input.shouldYield,
+						shouldYield: async () =>
+							(await input.shouldYield?.()) === true ||
+							input.providerTrafficGovernor
+								?.snapshotAdmissionState?.()
+								.budgets.some(
+									(budget) =>
+										budget.phase === "index" &&
+										budget.kind === "page_navigate" &&
+										budget.remaining === 0,
+								) === true,
 					}),
 				);
 				projectConversations.push(...result.items);
@@ -749,17 +758,11 @@ export function createChatgptAccountMirrorMetadataCollector(
 				const selectedDetailWorkKey = chatgptAccountLibraryRead
 					? "scope:account-library"
 					: prioritizeDetailConversations && selectedConversation
-						? createAccountMirrorProviderTrafficWorkKey(
-								"conversation",
-								selectedConversation.id,
-							)
+						? createAccountMirrorProviderTrafficWorkKey("conversation", selectedConversation.id)
 						: selectedProject
 							? createAccountMirrorProviderTrafficWorkKey("project", selectedProject.id)
 							: selectedConversation
-								? createAccountMirrorProviderTrafficWorkKey(
-										"conversation",
-										selectedConversation.id,
-									)
+								? createAccountMirrorProviderTrafficWorkKey("conversation", selectedConversation.id)
 								: null;
 				freezeAccountMirrorDetailTrafficPlan(input.providerTrafficPlanController, {
 					workKeys: selectedDetailWorkKey ? [selectedDetailWorkKey] : [],

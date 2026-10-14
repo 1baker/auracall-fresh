@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, test, vi } from "vitest";
+import { createProviderTrafficGovernor } from "../../packages/browser-service/src/service/providerTrafficGovernor.js";
 import {
 	type AccountMirrorConversationWorkState,
 	fingerprintAccountMirrorConversationIndexRow,
@@ -2072,6 +2073,116 @@ describe("ChatGPT account mirror metadata collector", () => {
 		]);
 		expect(result.evidence.projectConversations).toMatchObject({
 			scannedProjects: 1,
+		});
+	});
+
+	test("yields project discovery at its physical navigation budget and resumes the cursor", async () => {
+		const calls: string[] = [];
+		const projects = ["project_1", "project_2"].map((id) => ({
+			id,
+			name: id,
+			provider: "chatgpt" as const,
+		}));
+		const client = {
+			getProviderSessionProof: async () =>
+				createCollectorProviderSessionProof("chatgpt", {
+					email: "operator@example.test",
+					accountLevel: "Business",
+					source: "auth-session",
+				}),
+			listProjects: async () => projects,
+			listConversations: async (projectId: string, options: BrowserProviderListOptions) => {
+				const governor = options.providerTrafficGovernor;
+				if (!governor) throw new Error("Expected governed project read");
+				const action = await governor.begin({
+					kind: "navigate",
+					interactionClass: "renavigation",
+					source: "fixture:project-index",
+				});
+				calls.push(projectId);
+				await action.settle({ outcome: "succeeded" });
+				return [
+					{
+						id: `conv_${projectId}`,
+						title: "Fixture conversation",
+						projectId,
+						provider: "chatgpt" as const,
+					},
+				];
+			},
+			listAccountFiles: async () => [],
+			listProjectFiles: async () => [],
+			listConversationFiles: async () => [],
+			getConversationContext: async () => {
+				throw new Error("No detail read in project discovery");
+			},
+		};
+		const config = {
+			runtimeProfiles: {
+				default: {
+					browserProfile: "default",
+					defaultService: "chatgpt",
+					services: {
+						chatgpt: { identity: { email: "operator@example.test", accountLevel: "Business" } },
+					},
+				},
+			},
+		};
+		const collector = createChatgptAccountMirrorMetadataCollector(config as never, {
+			createClient: async () => client as never,
+		});
+		const makeController = () =>
+			createAccountMirrorMetadataTrafficPlanController(
+				createProviderTrafficGovernor({
+					attribution: {
+						provider: "chatgpt",
+						runtimeProfileId: "default",
+						managedBrowserProfile: "/fixture/managed",
+						workloadId: "fixture",
+						operationId: "fixture",
+						tabLeaseId: "fixture",
+					},
+					interactionGovernor: { beforeInteraction: async () => undefined },
+					mutationAudit: async () => undefined,
+				}),
+				{ maxPageReadsPerCycle: 4 },
+			);
+		const collect = (
+			controller: ReturnType<typeof makeController>,
+			previousEvidence?: Parameters<typeof collector.collect>[0]["previousEvidence"],
+		) =>
+			collector.collect({
+				provider: "chatgpt",
+				runtimeProfileId: "default",
+				expectedIdentityKey: "operator@example.test",
+				sweepMode: "steady_follow",
+				requestedPhase: "project-conversations",
+				previousEvidence,
+				providerTrafficGovernor: controller.governor,
+				providerTrafficPlanController: controller,
+				limits: {
+					maxPageReadsPerCycle: 4,
+					maxConversationRowsPerCycle: 30,
+					maxArtifactRowsPerCycle: 0,
+					maxBrowserInteractionsPerMinute: 0,
+				},
+			});
+		const first = await collect(makeController());
+		expect(calls).toEqual(["project_1"]);
+		expect(first.manifests.conversations.map((c) => c.id)).toEqual(["conv_project_1"]);
+		expect(first.evidence.projectConversations).toMatchObject({
+			nextProjectIndex: 1,
+			scannedProjects: 1,
+			yielded: true,
+		});
+		expect(first.evidence.truncated.conversations).toBe(true);
+		const second = await collect(makeController(), JSON.parse(JSON.stringify(first.evidence)));
+		expect(calls).toEqual(["project_1", "project_2"]);
+		expect(second.manifests.conversations.map((c) => c.id)).toEqual(["conv_project_2"]);
+		expect(second.evidence.projectConversations).toMatchObject({
+			nextProjectIndex: 0,
+			scannedProjects: 1,
+			yielded: false,
 		});
 	});
 
