@@ -1,3 +1,13 @@
+## 2026-10-14 | Provider-free request accounting replay
+
+Plan0415: saved discovery5 trace replays460responses/142backend responses with
+peak72in an inclusive minute and two429s. Corrects category-only140 estimate.
+No request IDs or operation linkage in capture; one-navigation attribution is
+unproved. Existing shared ledger budgets admitted browser operations, while CDP
+response listeners do not admit individual requests. No valid request-enforcement
+seam yet. Clarification pending on retaining operation cap with a separate request
+ceiling versus changing its units. No provider or runtime mutation in this packet.
+
 ## 2026-10-14 | Shared account governor integrated and installed
 
 PR318 merge236f46b68/sourcefadb5ba4f. Source37focused tests, typecheck/build pass;
