@@ -22,6 +22,35 @@ remains excluded throughout the outer scope, and inherited callbacks after relea
 cannot revive the old scope. Separate gate instances for one display share context.
 No production interceptor is enabled by this change.
 
+## Continuous client hold follow-up
+
+Patch against6d98f2195 extends the same custody packet to callbacks emitted outside
+subscription-time async context. DesktopControlGate.holdAutomation returns run/close;
+run restores and revalidates exact-owner context, and close fences new callbacks,
+drains admitted callbacks and releases custody. guardedCdp.holdCdpCommandAdmission
+selects only a configured continuous-owner adapter, prevents duplicate acquisition,
+routes subsequent client commands through the hold and releases after successful
+transport close. If acquisition completes after client close, it is released rather
+than published. Uncoordinated clients are rejected, not silently given custody.
+
+Both native and legacy desktop runtime adapters implement continuous ownership,
+retaining their existing per-command browser generation checks. No interception
+is installed yet. The public hold test first failed because holdAutomation was
+absent; real guarded transport tests now exercise callback admission, idempotent
+release, human exclusion and close/acquisition race. Nine desktop-control tests
+pass; two actual local WebSocket/native-store tests also pass, including browser
+generation replacement during the hold. Typecheck and full build pass after fixing
+an initially missing AsyncLocalStorage context narrowing. A final native fixture
+typecheck also required capturing the defined client before its asynchronous
+callback; after that correction typecheck passes. Earlier failed typechecks are
+retained as development evidence, not described as clean runs.
+Serial review of the follow-up against6d98f2195 has no accepted blocking Standards
+or bounded-packet Spec finding. The public lifecycle stays in existing custody and
+transport modules; production adapters retain generation verification. Remaining
+issue acceptance and request interception gates are unchanged.
+This introduces a small owned-client lifecycle interface for the concrete request
+interceptor need; it does not replace existing per-command admission for other work.
+
 ## Scope and acceptance
 
 Keep ownership semantics local to DesktopControlGate, using its existing public

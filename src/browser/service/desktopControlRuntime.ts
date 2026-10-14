@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { setCdpCommandAdmissionResolver } from '../../../packages/browser-service/src/guardedCdp.js';
+import { setCdpCommandAdmissionResolver, type CdpCommandAdmission } from '../../../packages/browser-service/src/guardedCdp.js';
 import { DesktopBindingStore, type DesktopBinding } from './desktopBindings.js';
 import { NativeDesktopStore, nativeBrowserGeneration, verifyNativeBrowser, verifyNativeBrowserForOpening } from './nativeDesktopStore.js';
 import { DesktopControlGate } from './desktopControlGate.js';
@@ -29,7 +29,7 @@ setCdpCommandAdmissionResolver(async ({ host, port }) => {
     const binding = native[0];
     const generation = nativeBrowserGeneration(binding);
     const gate = new DesktopControlGate(binding.assignment.desktopId);
-    return { run: async (command, effect) => {
+    const admission: CdpCommandAdmission = { run: async (command, effect) => {
       const opening = command === 'Target.New' || command === 'Target.createTarget';
       const ownedEffect = async () => {
         const current = (await nativeStore.browsers()).filter(item => item.managedProfileDir === binding.managedProfileDir);
@@ -42,13 +42,18 @@ setCdpCommandAdmissionResolver(async ({ host, port }) => {
       return opening
         ? ownedEffect() : gate.withAutomation(generation, ownedEffect);
     } };
+    admission.hold = async () => {
+      const held = await gate.holdAutomation(generation);
+      return { run: (command, effect) => held.run(() => admission.run(command, effect)), close: () => held.close() };
+    };
+    return admission;
   }
   if (!bindings.length) return undefined;
   if (bindings.length !== 1) throw new Error('Ambiguous AuraCall desktop endpoint ownership.');
   const binding = bindings[0];
   const generation = desktopBindingGeneration(binding);
   const gate = new DesktopControlGate(binding.displayAllocationId);
-  return { run: async (command, effect) => {
+  const admission: CdpCommandAdmission = { run: async (command, effect) => {
     const ownedEffect = async () => {
       const current = (await store.list()).filter((item) => item.managedProfileDir === binding.managedProfileDir);
       if (current.length !== 1 || desktopBindingGeneration(current[0]) !== generation) {
@@ -59,4 +64,9 @@ setCdpCommandAdmissionResolver(async ({ host, port }) => {
     return command === 'Target.New' || command === 'Target.createTarget'
       ? ownedEffect() : gate.withAutomation(generation, ownedEffect);
   } };
+  admission.hold = async () => {
+    const held = await gate.holdAutomation(generation);
+    return { run: (command, effect) => held.run(() => admission.run(command, effect)), close: () => held.close() };
+  };
+  return admission;
 });

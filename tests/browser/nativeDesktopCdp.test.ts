@@ -12,6 +12,7 @@ import { setAuracallHomeDirOverrideForTest } from '../../src/auracallHome.js';
 import { NativeDesktopStore, nativeBrowserGeneration, observeNativeBrowser } from '../../src/browser/service/nativeDesktopStore.js';
 import { DesktopControlGate } from '../../src/browser/service/desktopControlGate.js';
 import CDP from '../../src/browser/cdp.js';
+import { holdCdpCommandAdmission } from '../../packages/browser-service/src/guardedCdp.js';
 
 test('native desktop ownership excludes actual wire commands and rejects reused process receipts', async () => {
   const home = await fs.mkdtemp(path.join(os.tmpdir(), 'auracall-native-cdp-'));
@@ -42,8 +43,14 @@ test('native desktop ownership excludes actual wire commands and rejects reused 
     await expect(client.Page.reload()).rejects.toThrow();
     expect(await fs.readFile(gateOwnerPath, 'utf8')).toBe('');
     await fs.rm(path.dirname(gateOwnerPath), { recursive: true });
+    const hold = await holdCdpCommandAdmission(client);
+    const heldClient = client;
+    await expect(gate.takeControl(nativeBrowserGeneration(binding))).rejects.toThrow('busy');
+    expect(await client.Page.reload()).toMatchObject({ sequence: 5 });
     await new NativeDesktopStore().recordBrowser({ ...binding, processStart: 'replaced-process' });
     await expect(client.Page.reload()).rejects.toThrow('ownership changed');
+    await expect(hold.run('Page.reload', () => heldClient.Page.reload())).rejects.toThrow('ownership changed');
+    await hold.close();
   } finally {
     await client?.close();
     const exited = once(child, 'exit'); child.kill(); await exited;

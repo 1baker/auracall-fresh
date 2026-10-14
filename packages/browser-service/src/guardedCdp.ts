@@ -2,10 +2,43 @@ import CDP from 'chrome-remote-interface';
 
 export interface CdpCommandAdmission {
   run<T>(command: string, effect: () => Promise<T>): Promise<T>;
+  hold?(): Promise<CdpCommandAdmissionHold>;
+}
+export interface CdpCommandAdmissionHold {
+  run<T>(command: string, effect: () => Promise<T>): Promise<T>;
+  close(): Promise<void>;
 }
 export interface CdpEndpoint { host: string; port: number }
 let resolveAdmission: ((endpoint: CdpEndpoint) => Promise<CdpCommandAdmission | undefined>) | undefined;
 const coordinatedSubjects = new WeakSet<object>();
+interface ClientAdmissionState {
+  admission: CdpCommandAdmission;
+  hold?: CdpCommandAdmissionHold;
+  acquiring?: boolean;
+  closed: boolean;
+}
+const clientAdmissions = new WeakMap<object, ClientAdmissionState>();
+
+/** A request interceptor must retain this hold until interception cleanup completes. */
+export async function holdCdpCommandAdmission(client: object): Promise<CdpCommandAdmissionHold> {
+  const state = clientAdmissions.get(client);
+  if (!state?.admission.hold) throw new Error('Continuous CDP ownership is unavailable for this client.');
+  if (state.closed) throw new Error('CDP client is closed.');
+  if (state.hold || state.acquiring) throw new Error('Continuous CDP ownership is already held for this client.');
+  state.acquiring = true;
+  try {
+    const hold = await state.admission.hold();
+    if (state.closed) {
+      await hold.close();
+      throw new Error('CDP client closed during continuous ownership acquisition.');
+    }
+    state.hold = hold;
+    return { run: (command, effect) => hold.run(command, effect), close: async () => {
+      await hold.close();
+      if (state.hold === hold) state.hold = undefined;
+    } };
+  } finally { state.acquiring = false; }
+}
 
 /** Observation code can choose bounded commands without weakening admission. */
 export function hasCdpCommandAdmission(subject: unknown): boolean {
@@ -61,7 +94,18 @@ const guardedCdp: typeof CDP = new Proxy(CDP, {
       coordinatedSubjects.add(client);
       if (client.Runtime && typeof client.Runtime === 'object') coordinatedSubjects.add(client.Runtime);
       const send = client.send.bind(client);
-      client.send = (...commandArgs: unknown[]) => admittedCall(admission, String(commandArgs[0]), send, commandArgs);
+      const state: ClientAdmissionState = { admission, closed: false };
+      clientAdmissions.set(client, state);
+      client.send = (...commandArgs: unknown[]) => admittedCall(state.hold ?? state.admission, String(commandArgs[0]), send, commandArgs);
+      if (typeof client.close === 'function') {
+        const close = client.close.bind(client);
+        client.close = async () => {
+          state.closed = true;
+          await close();
+          await state.hold?.close();
+          state.hold = undefined;
+        };
+      }
       return client;
     });
   },

@@ -1,3 +1,12 @@
+## 2026-10-14 | Continuous owned-client custody hold
+
+Plan0419 follow-up adds a guarded-client hold for request callbacks outside original
+async context. Native/legacy adapters retain generation verification; disconnect
+releases custody, and close during acquisition releases an unpublished hold. Nine
+desktop control/observation plus two local wire/native-store fixtures pass. Typecheck
+and full build pass after a context narrowing correction. No production interceptor,
+quota, installation or provider probe. Actual pre-send wiring remains next.
+
 # 2026-10-14 — Plan0419 interceptor custody prerequisite
 
 Nested real guarded-CDP Fetch.enable reproduced a desktop-control deadlock inside

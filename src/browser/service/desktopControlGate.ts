@@ -15,6 +15,11 @@ interface GateOwner {
 
 const automationScopes = new AsyncLocalStorage<ReadonlyMap<string, GateOwner>>();
 
+export interface DesktopAutomationHold {
+	run<T>(effect: () => Promise<T>): Promise<T>;
+	close(): Promise<void>;
+}
+
 /** A clock alone never releases a human lease; exact provider revocation must qualify handoff. */
 export class DesktopControlGate {
 	private readonly lockPath: string;
@@ -145,6 +150,38 @@ export class DesktopControlGate {
 			}
 			await fs.rm(this.lockPath, { recursive: true });
 		});
+	}
+
+	async holdAutomation(binding: string): Promise<DesktopAutomationHold> {
+		let publish!: (hold: DesktopAutomationHold) => void;
+		let reject!: (error: unknown) => void;
+		const ready = new Promise<DesktopAutomationHold>((resolve, fail) => { publish = resolve; reject = fail; });
+		let release!: () => void;
+		const released = new Promise<void>(resolve => { release = resolve; });
+		let closed = false;
+		const pending = new Set<Promise<unknown>>();
+		const lifetime = this.withAutomation(binding, async () => {
+			const scopes = automationScopes.getStore();
+			if (!scopes) throw new Error("Desktop automation scope is unavailable.");
+			publish({
+				run: <T>(effect: () => Promise<T>): Promise<T> => {
+					if (closed) return Promise.reject(new Error("Desktop automation hold is closed."));
+					const task = automationScopes.run(scopes, () => this.withAutomation(binding, effect));
+					pending.add(task);
+					void task.then(() => pending.delete(task), () => pending.delete(task));
+					return task;
+				},
+				close: async () => {
+					closed = true;
+					await Promise.allSettled(pending);
+					release();
+					await lifetime;
+				},
+			});
+			await released;
+		});
+		void lifetime.catch(reject);
+		return ready;
 	}
 
 	async withAutomation<T>(binding: string, effect: () => Promise<T>): Promise<T> {
