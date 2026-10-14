@@ -1,3 +1,15 @@
+## 2026-10-14 | Budget stop; late-warning admission checkpoint
+
+Window stopped after meter2057689 crossed2million; primary missed the advance
+checkpoint. Goal paused2058553tokens/7207seconds. PR315 installed581parity,
+API70947, foreign browser/target preserved across promotion. Discovery5 native429
+was followed by240second collector timeout/API500; warning persisted manually via
+installed guard/ledger, no clear or further probe. Local actual-affinity warning
+admission loop red/green;12tests/typecheck/build pass. Unreviewed/unintegrated/
+uninstalled source retained on fix/issue165-late-warning-admission. Plan0414 owns
+restart packet; full0411 acceptance remains OPEN. No new review/promotion/native
+replay in this stopped window. Memory forbidden at explicit checkpoint boundary.
+
 ## 2026-10-14 | Original context accepted; discovery-yield review
 
 PR314 installed581parity/API13018. Original command exits0 in30.98seconds with

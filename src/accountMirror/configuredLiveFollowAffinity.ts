@@ -241,7 +241,13 @@ export async function createConfiguredLiveFollowAffinity(input: {
 			maxConversationStartsPerDay: limits.maxChatsPerDay,
 			maxInteractionsPerMinute: input.maxBrowserInteractionsPerMinute,
 		},
-		baseGovernor,
+		baseGovernor: {
+			beforeInteraction: async (kind, signal) => {
+				await checkOwnedProviderWarning(signal);
+				await baseGovernor.beforeInteraction(kind, signal);
+				await checkOwnedProviderWarning(signal);
+			},
+		},
 		now: input.now,
 	});
 	let crawlerClaim = crawler.claim;
@@ -352,6 +358,43 @@ export async function createConfiguredLiveFollowAffinity(input: {
 		}
 		finished = true;
 	};
+	const checkOwnedProviderWarning = async (signal?: AbortSignal | null) => {
+		const activeSignal = signal ?? input.abortSignal;
+		activeSignal?.throwIfAborted();
+		const leases = await runtime.registry?.list({ scope, states: ["active"] });
+		const lease = leases?.find((candidate) => candidate.leaseId === crawlerClaim.leaseId);
+		if (
+			!lease ||
+			lease.ownerOperationId !== input.operationId ||
+			lease.targetId !== crawler.lease.targetId ||
+			lease.revision !== crawlerClaim.revision
+		) {
+			throw new Error("Live-follow crawler ownership changed before warning check.");
+		}
+		const client = await connectToChromeTarget({
+			host: crawler.endpoint.host,
+			port: crawler.endpoint.port,
+			target: crawler.lease.targetId,
+			abortSignal: activeSignal,
+			timeoutMs: 10000,
+		});
+		let warningTimer: ReturnType<typeof setTimeout> | undefined;
+		try {
+			await Promise.race([
+				providerTrafficGovernor.checkWarning?.(client.Runtime),
+				new Promise<never>((_resolve, reject) => {
+					warningTimer = setTimeout(
+						() => reject(new Error("Owned ChatGPT warning check timed out after 10000ms.")),
+						10000,
+					);
+				}),
+			]);
+		} finally {
+			if (warningTimer) clearTimeout(warningTimer);
+			await client.close();
+		}
+	};
+
 	const operationRecord = {
 		id: input.operationId,
 		key: `tab-lease:${crawler.lease.leaseId}`,
@@ -383,29 +426,7 @@ export async function createConfiguredLiveFollowAffinity(input: {
 				finish("failed", classifyLiveFollowFailureEffectState(), "affinity-context-released"),
 		},
 		completeSuccess: async () => {
-			// The visible blocking surface can arrive after the final action settles.
-			// Collection releases its read session; do not reuse that closed transport.
-			const leases = await runtime.registry?.list({ scope, states: ["active"] });
-			const lease = leases?.find((candidate) => candidate.leaseId === crawlerClaim.leaseId);
-			if (
-				!lease ||
-				lease.ownerOperationId !== input.operationId ||
-				lease.targetId !== crawler.lease.targetId ||
-				lease.revision !== crawlerClaim.revision
-			)
-				throw new Error("Live-follow crawler ownership changed before final warning check.");
-			const client = await connectToChromeTarget({
-				host: crawler.endpoint.host,
-				port: crawler.endpoint.port,
-				target: crawler.lease.targetId,
-				abortSignal: input.abortSignal,
-				timeoutMs: 10_000,
-			});
-			try {
-				await providerTrafficGovernor.checkWarning?.(client.Runtime);
-			} finally {
-				await client.close();
-			}
+			await checkOwnedProviderWarning();
 			await finish("succeeded", "settled");
 		},
 		completeFailure: async (error) => {
