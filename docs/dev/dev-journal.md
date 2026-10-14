@@ -1,3 +1,14 @@
+## 2026-10-14 | Plan0412 populated context retry
+
+Renewed full Plan0411 goal; isolated extraction branch from installed PR312.
+Two paced installed reads reproduce60second timeout; owned representative markup
+has ten role-qualified roots. Real-DOM/public-service replay reads their structure;
+failure is a second payload fallback after denial, not legacy role-attribute absence.
+Explicit allowNavigation=true defeats preserveActiveTab on settled retry.
+One-line allowNavigation=false gives red/green at unchanged120second cooldown.
+210affected checks pass before fixture minimization; final checks/review/promotion
+and paced original read pending. Preserve separate project-budget-yield checkpoint.
+
 ## 2026-10-13 | Plan0411 standalone lifetime correction
 
 PR310 merged/staged with581fileparity; promotion deferred. PR309 mistakenly gave

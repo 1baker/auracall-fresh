@@ -1,3 +1,11 @@
+- Populated ChatGPT context after payload denial (provider-free):
+  `pnpm vitest run tests/browser/chatgptContextAffinityRoute.test.ts -t denied-payload`.
+  Public service, production utility affinity and guards use virtual policy time;
+  payload denial and a synthetic visible message exercise the real reader.
+  A settled payload retry cannot admit a second route fallback even
+  when the caller allows navigation. External browser/network are simulated;
+  installed acceptance is separate.
+
 - Refresh affinity lifetime (provider-free):
   `pnpm vitest run tests/accountMirror/refreshAffinityLifetime.test.ts`.
   Public refresh service, configured affinity, coordinator, file-backed registry/

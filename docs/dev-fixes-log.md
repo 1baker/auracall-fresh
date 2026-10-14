@@ -1,3 +1,13 @@
+## 2026-10-14 — Settled context payload retry must forbid navigation (#165)
+
+Setting preserveActiveTab=true does not forbid navigation when allowNavigation
+remains explicitly true. A failed payload fallback followed by readable DOM
+messages admitted a second route fallback, waiting behind the existing navigation
+cooldown until context timeout. Force allowNavigation=false only on the settled
+payload retry. Preserve the first governed fallback and role-qualified DOM read.
+The previous helper test mirrored the ineffective option shape; a public-service
+replay with actual DOM expression and policy time catches the behavioral failure.
+
 ## 2026-10-13 — Governed standalone refresh must retain a bounded lifetime (#165)
 
 PR309 reused live-follow affinity for standalone requests, inadvertently granting

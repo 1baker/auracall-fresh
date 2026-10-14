@@ -807,6 +807,9 @@ Terminology note:
   conversation route directly and reuses its owned process tab for later reads.
   Explicit navigation restrictions and caller-owned exact targets remain
   authoritative.
+  When an initial ChatGPT payload fallback leaves readable conversation DOM,
+  the settled payload retry uses direct fetch only and cannot revisit the route.
+  This preserves message extraction without waiting for another navigation.
   Governed context reads also check the owned page for native conversation
   HTTP429 and visible request-limit warnings before identity work and during
   message waits. Such a signal stops the read through the existing provider
