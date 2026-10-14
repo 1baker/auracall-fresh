@@ -7,6 +7,10 @@ Target: main
 
 ## Current State
 
+PR318 shared governor repair is integrated and installed: sourcefadb5ba4f,
+merge236f46b68,581compiled parity, installed two-process regression green; API62879
+healthy with scheduler/all17jobs paused. No native replay or retry clearance.
+
 User resumed provider-free repair on 2026-10-14. Plan0414 now also covers shared
 provider-account admission across OS processes: interrupted warning pacing and
 strictest recent contributed cap. Native retry hold and remaining parent gates
