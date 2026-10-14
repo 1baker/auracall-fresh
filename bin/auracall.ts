@@ -4077,6 +4077,7 @@ conversationContextCommand
       listOptions,
     });
     console.log(JSON.stringify(context, null, 2));
+    await exitAfterCompletedBrowserUtilityCommand();
   });
 
 program
@@ -5540,12 +5541,12 @@ async function runChatgptDeveloperAppsCliAction(
     receiptEmitted = true;
   } finally {
     await acquired.release();
-    if (receiptEmitted) await exitAfterCompletedDeveloperAppCommand();
+    if (receiptEmitted) await exitAfterCompletedBrowserUtilityCommand();
   }
 }
 
-async function exitAfterCompletedDeveloperAppCommand(): Promise<void> {
-  // Completed one-shot app commands must not wait for retained browser/CDP
+async function exitAfterCompletedBrowserUtilityCommand(): Promise<void> {
+  // Completed one-shot browser utilities must not wait for retained browser/CDP
   // handles. Custody is released before this boundary; flush the full receipt
   // and diagnostics before exiting with the operation's actual status.
   await Promise.all([

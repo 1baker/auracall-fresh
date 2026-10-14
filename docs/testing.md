@@ -1,3 +1,9 @@
+- Context command terminal boundary (provider-free):
+  `pnpm vitest run tests/cli/conversationContextTerminalExit.test.ts tests/cli/developerAppTerminalExit.test.ts`.
+  Actual registered command callbacks run in subprocesses with external SDK/config
+  doubles and retained timers. Context success flushes full output and exits;
+  failures remain nonzero. This does not identify the native retained handle.
+
 - Populated ChatGPT context after payload denial (provider-free):
   `pnpm vitest run tests/browser/chatgptContextAffinityRoute.test.ts -t denied-payload`.
   Public service, production utility affinity and guards use virtual policy time;

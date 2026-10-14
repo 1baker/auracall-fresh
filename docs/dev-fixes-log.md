@@ -1,3 +1,12 @@
+## 2026-10-14 — Complete context output is not terminal CLI success (#165)
+
+A context read can return all messages while retained handles keep its CLI alive.
+The actual registered callback reproduces this with a settled SDK result and a
+noncritical retained timer, even for a one-byte message. Reuse the flushed
+one-shot boundary after successful service settlement, preserving operation
+status and failure propagation. Full payload output and process exit are separate
+acceptance gates; the specific native handle remains unattributed.
+
 ## 2026-10-14 — Settled context payload retry must forbid navigation (#165)
 
 Setting preserveActiveTab=true does not forbid navigation when allowNavigation
