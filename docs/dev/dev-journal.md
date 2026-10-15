@@ -54401,3 +54401,16 @@ Standards/Spec review repaired the inner cached-success finding; no bounded bloc
 finding remains. Exact evidence and limits in source-window reconciliation. Source
 checkpoint only, blocker_reduction; no combined native proof, production activation,
 install or live effect. Issue165 remains open. Memory disposition forbidden.
+
+## 2026-10-15 | Issue165 acceptance reassessment and missing source validation
+
+At71421809f, new324surface/guard/endpoint/lifecycle tests plus99automatic
+materialization tests pass, local production build passes. Reuse prior185tests,
+typecheck and affected lint receipts. Full GateB remains failed: refreshed33plan
+audit findings exactly match prior receipt; canonical main catalog blob
+c2242cfc1440e43e6d90f44f9c5b94fbbab9b9f2 lacks this repair branch. Existing source-
+window note has exact commands, evidence and gate table. Next is governance/lane
+reconciliation before integration; ceiling and genuine changed-B remain operator
+inputs. No production edits, installed/provider effects or goal reset. Bounded
+reassessment CLOSED, partial source/build outcome_progress; issue165 OPEN.
+Memory disposition forbidden; no explicit memory-update request.

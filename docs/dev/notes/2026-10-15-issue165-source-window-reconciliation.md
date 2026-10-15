@@ -1,5 +1,41 @@
 # Issue165 source-window acceptance reconciliation
 
+## Acceptance reassessment after 71421809f — 2026-10-15
+
+Repair checkout/remote/draft PR323 head agree at71421809f; PR OPEN/DRAFT, GitHub
+statusCheckRollup empty (not CI acceptance). User authorized reassessment; primary
+completed provider-free missing source checks and local build only. No production
+implementation change, integration, installation, provider probe, warning dismissal
+or scheduler action. Goal tool still has no current goal; no allocation reset.
+
+| Gate | Current evidence | Remaining requirement |
+| --- | --- | --- |
+| Source behavior | New324tests/8files and99materialization tests pass at71421809f; prior185tests/6files, typecheck and affected lint remain applicable. | Separate fixtures do not establish one native combined caller journey or broader participant coverage. |
+| GateB build | `pnpm run build` exit0, local TypeScript/operator/console/vendor outputs. | Local build is not installed parity. |
+| GateB governance | `pnpm plans:audit` exit1,429candidates/33findings. Exact ordered findings equal prior final audit. | Repair32missing policy targets and older0406-1 State header in the separate governance lane; do not waive/remove references. |
+| Lane/integration readiness | Canonical main catalog blob c2242cfc1440e43e6d90f44f9c5b94fbbab9b9f2 has zero matches for fix/issue165-owned-backend-request-admission. | Reconcile and register exact repair-lane custody through protected-default workflow before claiming lane audit/integration readiness. |
+| GateC | Source remains draft/unmerged/uninstalled by this work. | Reviewed canonical integration, authorized installation and fresh parity/pause/process readbacks. |
+| GateD/parent automatic acceptance | No new native result. | Genuine changed-B locator, completeA/changedB/quiet repeats, automatic bytes/hash/manifest/archive/local-copy agreement, warning/reload and bounded scheduler/resource acceptance. |
+| Production request admission | Both production factory/utility callers still omit backendRequestLimit. | Operator numeric ceiling decision, qualified participant wiring, then separately authorized installed proof; fixture values are not defaults. |
+
+Commands (provider-free):
+`pnpm vitest run tests/browser/chatgptAdapter.test.ts tests/browser/llmServiceFiles.test.ts tests/browser/chatgptRateLimitGuard.test.ts tests/browser/llmServiceRateLimit.test.ts tests/browser/portResolution.test.ts tests/browser/chatgptContextAffinityRoute.test.ts tests/accountMirror/liveFollowTabCoordinator.test.ts tests/browser/chatgptTabLifecycle.test.ts`
+passed324/8files in7.44s. `pnpm vitest run tests/runtime.historyMaterializationService.test.ts`
+passed99/1file in8.91s. Logs `/tmp/issue165-gateb-tests.log`,
+`/tmp/issue165-gateb-materialization-tests.log`, `/tmp/issue165-gateb-build.log`,
+`/tmp/issue165-gateb-plans-audit.log`. Local build outputs remain ignored; source
+revision plus commands preserve reproducibility of intentionally temporary logs.
+Canonical lane read saved in `/tmp/issue165-canonical-lanes-response.json` using
+GitHub contents API at ref main; blob SHA above identifies the inspected artifact.
+
+Reassessment/source-validation slice CLOSED; full GateB and issue165 remain OPEN.
+Classification outcome_progress for newly qualified source/build portions only.
+Next: reconcile governance and lane readiness before integration. Numeric ceiling
+and genuine changed-B questions were presented to the user; no answers inferred.
+Do not start another speculative hardening chain or interpret this receipt as live
+retry/promotion/install authority. Memory disposition forbidden; no explicit user
+request authorizes a memory update.
+
 ## Focused caller-capability repair — 2026-10-15
 
 User authorized one focused fix after the diagnostic below. Review base 9a74cd5d9;

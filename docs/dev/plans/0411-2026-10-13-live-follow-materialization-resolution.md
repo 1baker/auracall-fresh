@@ -7,6 +7,22 @@ Target: main
 
 ## Current State
 
+### 2026-10-15 acceptance reassessment and source validation
+
+Base71421809f, owner primary serial. User authorized reassessment after focused
+capability repair. One missing GateB provider-free selection and one local build;
+15-minute checkpoint backstop, no implementation loop. Reuse unchanged prior
+185-test/typecheck/lint receipts. Refresh plan-audit failures and canonical lane
+registration evidence; do not repair inherited governance or claim full GateB
+from partial checks. Only local build outputs and existing execution/reconciliation
+docs may change. No install, merge, native/provider journey, warning clearance or
+scheduler effect. Terminal condition: concrete validation result and next gate.
+State: CLOSED source-validation slice. Source71421809f: missing surface selection
+324tests/8files and automatic-materialization99tests/1file pass; local production
+build passes. Full GateB remains failed: audit33 exactly matches the prior receipt,
+and canonical main lane catalog lacks this repair branch. No code repair or
+integration/install/native effect. Existing reconciliation note records next gates.
+
 ### 2026-10-15 bounded caller-capability fix
 
 User authorized the focused fix after the two-execution factory-only cancellation
