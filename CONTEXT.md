@@ -44,6 +44,12 @@ Admission snapshots distinguish ready request flow, known budget exhaustion,
 unqualified failures and provider warnings. Collection may yield for known budget
 exhaustion; uncertainty or a provider warning requires a hard stop.
 
+A configured authority factory reports `backendRequestAdmissionEnabled` when its
+new authorities admit backend requests. This is cleanup capability metadata, not
+lease authority. Cancellation callers resolve options before reading and respect
+an explicit governor ahead of factory metadata; they never borrow a governor or
+acquire a target lease merely to inspect this capability.
+
 **Materialization attempt**:
 One bounded effort to turn a selected provider asset into a verified local artifact and durable receipt.
 _Avoid_: Download attempt, materialization run

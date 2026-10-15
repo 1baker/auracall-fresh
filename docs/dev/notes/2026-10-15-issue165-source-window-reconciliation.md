@@ -1,5 +1,60 @@
 # Issue165 source-window acceptance reconciliation
 
+## Focused caller-capability repair — 2026-10-15
+
+User authorized one focused fix after the diagnostic below. Review base 9a74cd5d9;
+the commit containing this section also contains implementation and tests.
+Configured factories report `backendRequestAdmissionEnabled` without acquiring
+leases. Collector context reads resolve options through existing buildListOptions
+(ensurePort false), inside the existing timeout. A shared capability check respects
+explicit-governor precedence without attaching or borrowing governors. Collector
+and inner LlmService use it for bounded cancellation drain. Cancelled option
+resolution cannot start a late read. Production ceilings remain omitted/inactive.
+
+Vertical evidence: collector factory-only case failed pending vs returned (2.58s),
+then passed (2.80s). Two inner factory-only abort/deadline cases independently
+returned cached context under cleanup uncertainty before the same capability fix.
+Logs: `/tmp/issue165-capability-red.log`, `/tmp/issue165-capability-green.log`,
+`/tmp/issue165-capability-inner-red.log`. Actual collector/configured authority/
+guard/stores use synthetic provider/SDK; inner tests use actual LlmService/cache
+with a synthetic provider and declared factory capability. These are separate
+fixtures, not one combined native collector/public-service/materialization proof.
+
+Validation: initial five-file selection174 passed; after final preflight guard,
+affected collector/owned-client/shared-governor selection146 passed (3files,50.03s).
+Unchanged inner-context21, traffic-plan13 and configured-authority5 from the first
+run remain applicable. Final typecheck passes. Logs:
+`/tmp/issue165-capability-validation.log`, `/tmp/issue165-capability-final-tests.log`,
+`/tmp/issue165-capability-final-typecheck.log`. Reproduce with the original handoff's
+four-file command plus tests/browser/llmServiceContext.test.ts and
+tests/browser-service/providerTrafficGovernor.test.ts (six unique files).
+Pre-fix diagnostic patch below is historical; do not reapply to repaired source.
+
+Final preflight-only rerun passed1/70skipped (3.26s); final typecheck exit0 and
+six affected app/test files pass Biome. Repository Biome includes exclude packages;
+supplemental shared-governor lint through stdin passes with unchanged output when
+formatter/assist are disabled. Supplemental formatting identifies only unchanged
+pre-existing blocks outside this patch; retained rather than expanding scope.
+Diffcheck passes. Logs `/tmp/issue165-capability-preflight-final.log`,
+`/tmp/issue165-capability-final-biome.log`; shared lint output/errors are
+`/tmp/issue165-providerTrafficGovernor-linted.ts` and
+`/tmp/issue165-capability-shared-lint-errors.log` (empty). Total185unique tests across
+six scoped files; not one full-suite run or full GateB.
+
+Serial Standards review: existing resolution seam, read-only capability, exact
+authority precedence, no borrowed lease/governor, no activation or unrelated
+refactor; no accepted blocking finding. Serial Spec review: factory-only timeout
+failure, parent abort, five-second expiry/late close, disabled/no-factory and
+explicit-no-hook deadlines, plus cancelled option resolution are covered. Inner
+cached-success finding accepted blocking and repaired within this same slice;
+no bounded blocking finding remains. Combined/native composition stays unqualified.
+
+Checkpoint: source slice CLOSED; issue165 OPEN. Classification blocker_reduction,
+not materialization acceptance. Full GateB retains the inherited planning failures
+below. Production ceiling, genuine changed-B, wider participants, integration,
+install and native acceptance remain open. No successor work or live effect.
+Memory disposition forbidden: no explicit memory-update request.
+
 ## Bounded caller diagnostic — 2026-10-15
 
 User resumed only the capped diagnostic slice after the fresh-agent handoff.

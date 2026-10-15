@@ -7,6 +7,7 @@ import {
 	createBrowserInteractionGovernor,
 } from "../../packages/browser-service/src/service/interactionGovernor.js";
 import {
+	hasProviderBackendRequestAdmission,
 	isKnownBackendRequestBudgetDenial,
 	type ProviderTrafficGovernor,
 	withProviderTrafficContext,
@@ -2939,7 +2940,8 @@ async function safeReadConversationFiles(
 }
 
 async function safeReadConversationContext(
-	client: Pick<BrowserAutomationClient, "getConversationContext">,
+	client: Pick<BrowserAutomationClient, "getConversationContext"> &
+		Partial<Pick<BrowserAutomationClient, "buildListOptions">>,
 	conversation: Conversation,
 	observation?: AccountMirrorDomDriftObservationContext,
 	timeoutMs?: number | null,
@@ -2985,12 +2987,19 @@ async function safeReadConversationContext(
 			};
 		}
 		const context = await withProviderCallTimeout(
-			(abortSignal) => {
+			async (abortSignal) => {
 				providerListOptions = {
 					...(providerListOptions ?? {}),
 					abortSignal,
 					...(chunk ? { accountMirrorContextChunk: chunk } : {}),
 				};
+				if (isChatgpt && !providerListOptions.providerTrafficGovernor && client.buildListOptions) {
+					providerListOptions = await client.buildListOptions(providerListOptions, {
+						ensurePort: false,
+					});
+				}
+				// Resolution grants no lease. If it outlives cancellation, never start the read.
+				abortSignal.throwIfAborted();
 				return client
 					.getConversationContext(conversation.id, {
 						projectId: conversation.projectId,
@@ -3006,15 +3015,11 @@ async function safeReadConversationContext(
 					})
 					.then(
 						(context) =>
-							abortSignal.aborted &&
-							providerListOptions?.providerTrafficGovernor?.admitBackendRequest
+							abortSignal.aborted && hasProviderBackendRequestAdmission(providerListOptions)
 								? withCollectorSessionBoundary(providerListOptions, async () => context)
 								: context,
 						(error: unknown) => {
-							if (
-								abortSignal.aborted &&
-								providerListOptions?.providerTrafficGovernor?.admitBackendRequest
-							)
+							if (abortSignal.aborted && hasProviderBackendRequestAdmission(providerListOptions))
 								return withCollectorSessionBoundary(providerListOptions, async () => {
 									throw error;
 								});
@@ -3025,7 +3030,7 @@ async function safeReadConversationContext(
 			timeoutMs,
 			`Conversation context inventory timed out for ${conversation.id}.`,
 			listOptions?.abortSignal,
-			Boolean(listOptions?.providerTrafficGovernor?.admitBackendRequest),
+			() => hasProviderBackendRequestAdmission(providerListOptions),
 		);
 		if (isChatgpt) {
 			const contextChunk = readAccountMirrorContextChunkMetadata(context);
@@ -3050,7 +3055,7 @@ async function safeReadConversationContext(
 		}
 		if (listOptions) listOptions.providerSession = undefined;
 		if (
-			listOptions?.providerTrafficGovernor?.admitBackendRequest &&
+			hasProviderBackendRequestAdmission(providerListOptions) &&
 			providerListOptions?.abortSignal?.aborted
 		)
 			throw failure;
@@ -3113,7 +3118,7 @@ async function closeAccountMirrorProviderSession(
 	await session.close().catch((error: unknown) => {
 		if (isKnownBackendRequestBudgetDenial(error) || hasUnknownOwnedRequestCleanup(error))
 			throw error;
-		if (!listOptions.providerTrafficGovernor?.admitBackendRequest) return;
+		if (!hasProviderBackendRequestAdmission(listOptions)) return;
 		throw new OwnedBackendRequestCleanupError(error);
 	});
 }
@@ -3174,8 +3179,9 @@ function withProviderCallTimeout<T>(
 	timeoutMs: number | null | undefined,
 	message: string,
 	parentSignal?: AbortSignal,
-	drainOnAbort = false,
+	drainOnAbort: boolean | (() => boolean) = false,
 ): Promise<T> {
+	const shouldDrain = () => (typeof drainOnAbort === "function" ? drainOnAbort() : drainOnAbort);
 	const controller = new AbortController();
 	const abortSignal = parentSignal
 		? AbortSignal.any([parentSignal, controller.signal])
@@ -3203,7 +3209,7 @@ function withProviderCallTimeout<T>(
 			if (settled || cancelling) return;
 			cancelling = true;
 			controller.abort(reason);
-			if (!drainOnAbort) {
+			if (!shouldDrain()) {
 				fail(reason);
 				return;
 			}
@@ -3224,7 +3230,9 @@ function withProviderCallTimeout<T>(
 				(error: unknown) => fail(new Error(cancellation.message, { cause: error })),
 			);
 		};
-		const onParentAbort = () => cancel(parentSignal?.reason ?? new Error(message));
+		const onParentAbort = () => {
+			if (shouldDrain()) cancel(parentSignal?.reason ?? new Error(message));
+		};
 		promise.then(
 			(value) => {
 				if (settled || cancelling) return;

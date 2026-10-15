@@ -1,3 +1,12 @@
+## 2026-10-15 | Factory-owned admission must remain visible to cancellation callers
+
+Collector returned before cleanup when only the client factory owned admission;
+inner LlmService also returned cached context under cleanup uncertainty. Resolve
+collector options through buildListOptions and share explicit-governor precedence
+with factory capability metadata, without taking or borrowing its lease. Preserve
+bounded drains, late close, legacy deadlines and cancelled preflight behavior.
+Separate provider-free fixtures do not establish combined native materialization.
+
 ## 2026-10-15 | Drain expiry cannot orphan eventual session handback
 
 A provider returned its retained client after the collector had already timed out;

@@ -7,6 +7,26 @@ Target: main
 
 ## Current State
 
+### 2026-10-15 bounded caller-capability fix
+
+User authorized the focused fix after the two-execution factory-only cancellation
+diagnostic at 9a74cd5d9. Owner primary, serial; review base 9a74cd5d9. One coherent
+fix, at most two red/green attempts and one consolidated Standards/Spec review;
+30-minute checkpoint backstop, inherited goal ceiling unchanged. Write scope:
+existing authority factory contract, collector option resolution/cancellation,
+owned-client and legacy controls, and these supporting docs. Resolve configured
+options through buildListOptions; report capability without borrowing a governor
+or acquiring a lease. Cancellation must drain owned cleanup and preserve failure;
+late sessions close once; omitted/no-hook authority keeps legacy behavior.
+Terminal condition: targeted tests, typecheck and affected lint/diff pass, serial
+review adjudicated, recoverable source checkpoint. No production ceiling selection,
+activation, provider probe, installation, merge or scheduler effect. Full issue165
+materialization acceptance remains open. State: source slice CLOSED. The commit
+containing this closeout carries the implementation and tests; the source-window
+reconciliation records red/green and serial review evidence. Classification:
+blocker_reduction for reproduced cancellation and cached-success defects. No
+installed/native acceptance gate closed.
+
 Provider-free source checkpoint bf2a9bf2d (draft PR323) qualifies additional owned
 request/cursor/session/cancellation seams through Plans0420–0432. It is unmerged
 and uninstalled; the latest focused148tests are not full GateB or native proof.

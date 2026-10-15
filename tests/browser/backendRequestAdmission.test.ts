@@ -426,6 +426,9 @@ test.each([
 	"detail-partial-failure",
 	"detail-partial-read-and-close",
 	"detail-cancel-failure",
+	"detail-cancel-factory-only",
+	"detail-cancel-parent-factory-only",
+	"detail-cancel-late-factory-only",
 	"detail-cancel-clean",
 	"detail-cancel-parent",
 	"detail-cancel-stalled",
@@ -442,10 +445,17 @@ test.each([
 	"library-persisted-warning",
 	"library-uncertain",
 	"library-active-action",
-])("unfinished owned read yields only known budget denial; mode=%s", async (mode) => {
+])("unfinished owned read yields only known budget denial; mode=%s", async (testMode) => {
+	const factoryOnly = testMode.startsWith("detail-cancel-") && testMode.endsWith("-factory-only");
+	const mode = factoryOnly
+		? testMode === "detail-cancel-factory-only"
+			? "detail-cancel-failure"
+			: testMode.replace(/-factory-only$/, "")
+		: testMode;
 	const detail = mode.startsWith("detail-");
 	const partialSession = mode.startsWith("detail-partial-");
 	const cancelling = mode.startsWith("detail-cancel-");
+	const failedCancellationClose = mode === "detail-cancel-failure";
 	const lateSession = mode.startsWith("detail-cancel-late");
 	let lateCloseCalls = 0;
 	const deferredCleanup = mode === "detail-cancel-stalled" || lateSession;
@@ -602,6 +612,10 @@ test.each([
 			const collector = createChatgptAccountMirrorMetadataCollector(config as never, {
 				createClient: async () =>
 					({
+						buildListOptions: async (options: BrowserProviderListOptions) => ({
+							...options,
+							providerTrafficAuthorityFactory: factory,
+						}),
 						getProviderSessionProof: async () => proof,
 						listProjects: async () =>
 							(library ? [] : ["project_1", "project_2"]).map((id) => ({
@@ -688,7 +702,7 @@ test.each([
 											},
 										};
 									}
-									transport.failClose = mode === "detail-cancel-failure";
+									transport.failClose = failedCancellationClose;
 									await client.close();
 									throw new Error("fixture provider aborted");
 								} finally {
@@ -805,7 +819,9 @@ test.each([
 								} as never)
 							: undefined),
 					providerTrafficGovernor:
-						failureMode === "retained-factory-only" ? undefined : controller.governor,
+						failureMode === "retained-factory-only" || factoryOnly
+							? undefined
+							: controller.governor,
 					providerTrafficPlanController:
 						(detail && mode !== "detail-chunk" && mode !== "detail-partial-scoped") || projectFiles
 							? undefined
@@ -852,7 +868,7 @@ test.each([
 					? "fixture parent cancelled"
 					: "Conversation context inventory timed out for project_1.",
 			);
-			if (mode === "detail-cancel-failure")
+			if (failedCancellationClose)
 				expect(leaves(error)).toContain("fixture retained transport close unknown");
 			const runtime = createBrowserTabConcurrencyRuntime({
 				auracallProfile: "default",
@@ -863,7 +879,7 @@ test.each([
 			).toMatchObject(
 				deferredCleanup
 					? { state: "active" }
-					: mode === "detail-cancel-failure"
+					: failedCancellationClose
 						? { state: "idle", effectState: "outcome-unknown" }
 						: { state: "released", effectState: "settled" },
 			);

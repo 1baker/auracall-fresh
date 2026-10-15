@@ -2571,10 +2571,26 @@ describe("ChatGPT account mirror metadata collector", () => {
 		}
 	});
 
-	test("bounds hung ChatGPT conversation detail reads and advances the cursor", async () => {
+	test.each([
+		"no-factory",
+		"disabled-factory",
+		"explicit-no-hook",
+	])("bounds hung ChatGPT conversation detail reads and advances the cursor; mode=%s", async (mode) => {
 		vi.useFakeTimers();
 		const dateNowSpy = vi.spyOn(Date, "now").mockReturnValue(1_000);
 		try {
+			const factory = {
+				backendRequestAdmissionEnabled: mode === "explicit-no-hook",
+				acquire: vi.fn(async () => {
+					throw new Error("Capability inspection must not acquire a lease");
+				}),
+			};
+			const listOptions: BrowserProviderListOptions = {
+				...(mode !== "no-factory" ? { providerTrafficAuthorityFactory: factory } : {}),
+				...(mode === "explicit-no-hook"
+					? { providerTrafficGovernor: { attribution: {} as never, begin: vi.fn() } }
+					: {}),
+			};
 			const diagnostics: AccountMirrorCollectorDiagnosticEvent[] = [];
 			const client = {
 				listAccountFiles: vi.fn(async () => []),
@@ -2601,6 +2617,7 @@ describe("ChatGPT account mirror metadata collector", () => {
 						scannedConversations: 1,
 					},
 					providerCallTimeoutMs: 1,
+					listOptions,
 					onDiagnosticEvent: (event) => {
 						diagnostics.push(event);
 					},
@@ -2617,10 +2634,11 @@ describe("ChatGPT account mirror metadata collector", () => {
 			});
 			expect(inventory.truncated).toBe(false);
 			expect(client.listConversationFiles).not.toHaveBeenCalled();
-			expect(client.getConversationContext).toHaveBeenCalledWith(
-				"conv_2",
-				accountMirrorContextOptions(0, 1),
-			);
+			expect(client.getConversationContext).toHaveBeenCalledWith("conv_2", {
+				...accountMirrorContextOptions(0, 1),
+				listOptions: { ...accountMirrorContextOptions(0, 1).listOptions, ...listOptions },
+			});
+			expect(factory.acquire).not.toHaveBeenCalled();
 			const contextCall = client.getConversationContext.mock.calls[0] as unknown as [
 				string,
 				{ listOptions?: BrowserProviderListOptions },
@@ -2633,6 +2651,50 @@ describe("ChatGPT account mirror metadata collector", () => {
 			).toBeGreaterThan(0);
 		} finally {
 			dateNowSpy.mockRestore();
+			vi.useRealTimers();
+		}
+	});
+
+	test("does not start a context read when option resolution finishes after cancellation", async () => {
+		vi.useFakeTimers();
+		let releaseResolution!: () => void;
+		const resolutionAllowed = new Promise<void>((resolve) => {
+			releaseResolution = resolve;
+		});
+		const acquire = vi.fn(async () => {
+			throw new Error("Cancelled resolution must not acquire a lease");
+		});
+		const client = {
+			listAccountFiles: vi.fn(async () => []),
+			listProjectFiles: vi.fn(async () => []),
+			listConversationFiles: vi.fn(async () => []),
+			getConversationContext: vi.fn(async () => {
+				throw new Error("Cancelled resolution must not start a provider read");
+			}),
+			buildListOptions: async (options: BrowserProviderListOptions) => {
+				await resolutionAllowed;
+				return {
+					...options,
+					providerTrafficAuthorityFactory: { backendRequestAdmissionEnabled: true, acquire },
+				};
+			},
+		};
+		try {
+			const collecting = readBoundedChatgptDetailInventory(
+				client,
+				[],
+				[{ id: "conv_1", title: "Conversation 1", provider: "chatgpt" }],
+				4,
+				{ maxDetailReads: 1, providerCallTimeoutMs: 1 },
+			);
+			await vi.advanceTimersByTimeAsync(1);
+			await collecting;
+			releaseResolution();
+			await vi.advanceTimersByTimeAsync(0);
+			expect(client.getConversationContext).not.toHaveBeenCalled();
+			expect(acquire).not.toHaveBeenCalled();
+		} finally {
+			releaseResolution();
 			vi.useRealTimers();
 		}
 	});

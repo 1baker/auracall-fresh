@@ -7,6 +7,7 @@ import {
 	createBrowserInteractionGovernor,
 } from "../../../packages/browser-service/src/service/interactionGovernor.js";
 import { createInMemoryBrowserMutationLog } from "../../../packages/browser-service/src/service/mutationDispatcher.js";
+import { hasProviderBackendRequestAdmission } from "../../../packages/browser-service/src/service/providerTrafficGovernor.js";
 import { getPreferredRuntimeProfile, getPreferredRuntimeProfileName } from "../../config/model.js";
 import { resolveConfiguredServiceAccountId } from "../../config/serviceAccountIdentity.js";
 import type { ResolvedUserConfig } from "../../config.js";
@@ -3025,7 +3026,7 @@ export abstract class LlmService {
 			if (
 				contextAbort &&
 				pendingProviderRead &&
-				scopedListOptions?.providerTrafficGovernor?.admitBackendRequest
+				hasProviderBackendRequestAdmission(scopedListOptions)
 			) {
 				// Admission owns custody until adapter cleanup confirms or this bounded drain expires.
 				let drainTimer: ReturnType<typeof scheduleTimer> | undefined;

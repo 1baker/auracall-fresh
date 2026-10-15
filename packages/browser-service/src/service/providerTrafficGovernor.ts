@@ -95,7 +95,23 @@ export interface ProviderTrafficAuthority {
 }
 
 export interface ProviderTrafficAuthorityFactory {
+	/** Request-aware factories report true before acquisition; this grants no lease or governor. */
+	readonly backendRequestAdmissionEnabled?: boolean;
 	acquire(input: { targetId: string }): Promise<ProviderTrafficAuthority>;
+}
+
+/** Match client authority precedence without taking or borrowing its lease. */
+export function hasProviderBackendRequestAdmission(
+	options:
+		| {
+				providerTrafficGovernor?: ProviderTrafficGovernor;
+				providerTrafficAuthorityFactory?: ProviderTrafficAuthorityFactory;
+		  }
+		| undefined,
+): boolean {
+	return options?.providerTrafficGovernor
+		? Boolean(options.providerTrafficGovernor.admitBackendRequest)
+		: options?.providerTrafficAuthorityFactory?.backendRequestAdmissionEnabled === true;
 }
 
 export interface ProviderTrafficContext {

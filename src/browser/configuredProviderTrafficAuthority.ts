@@ -62,6 +62,8 @@ export function createConfiguredProviderTrafficAuthorityFactory(input: {
 	};
 
 	return {
+		backendRequestAdmissionEnabled:
+			input.provider === "chatgpt" && input.backendRequestLimit !== undefined,
 		async acquire({ targetId }) {
 			const operationId = `provider-traffic-${randomUUID()}`;
 			const workloadId = `provider-client:${operationId}`;

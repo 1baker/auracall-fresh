@@ -933,7 +933,11 @@ test.each([
 	"stalled",
 	"clean",
 	"deadline",
-])("request-aware abort drains cleanup before considering cached context: %s", async (mode) => {
+	"failed-factory-only",
+	"deadline-factory-only",
+])("request-aware abort drains cleanup before considering cached context: %s", async (testMode) => {
+	const factoryOnly = testMode.endsWith("-factory-only");
+	const mode = testMode.replace(/-factory-only$/, "");
 	const homeDir = await mkdtemp(path.join(os.tmpdir(), "auracall-context-abort-drain-"));
 	setAuracallHomeDirOverrideForTest(homeDir);
 	const cacheContext: ProviderCacheContext = {
@@ -981,9 +985,20 @@ test.each([
 			timeoutMs: mode === "deadline" ? 25 : 10000,
 			listOptions: {
 				abortSignal: controller.signal,
-				providerTrafficGovernor: {
-					admitBackendRequest: async (_key: string, effect: () => Promise<void>) => effect(),
-				} as never,
+				...(factoryOnly
+					? {
+							providerTrafficAuthorityFactory: {
+								backendRequestAdmissionEnabled: true,
+								acquire: async () => {
+									throw new Error("Cleanup capability must not acquire a lease");
+								},
+							},
+						}
+					: {
+							providerTrafficGovernor: {
+								admitBackendRequest: async (_key: string, effect: () => Promise<void>) => effect(),
+							} as never,
+						}),
 			},
 		});
 		if (mode === "clean")

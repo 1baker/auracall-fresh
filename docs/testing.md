@@ -1,3 +1,12 @@
+- Factory-only context cancellation (provider-free):
+  `pnpm vitest run tests/browser/backendRequestAdmission.test.ts tests/browser/llmServiceContext.test.ts -t factory-only`.
+  Resolved factory capability selects bounded cleanup without exposing a governor
+  or taking another lease. Covers failed close, parent abort, late handback and
+  inner abort/deadline cached-success exclusion. Metadata collector tests retain
+  disabled/no-factory/explicit-no-hook deadlines and prohibit provider reads after
+  cancelled option resolution. Separate source fixtures; combined native
+  composition and materialization remain unqualified.
+
 - Late collector session settlement (provider-free):
   `pnpm vitest run tests/browser/backendRequestAdmission.test.ts -t detail-cancel-late`.
   Three controlled settlements after actual five-second drain expiry cover late

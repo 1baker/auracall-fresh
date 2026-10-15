@@ -54388,3 +54388,16 @@ note and adjacent patch. Diagnostic slice ends here; issue165 acceptance remains
 open. Next recommended work is one capability-propagation fix with exact ownership
 and no-hook controls, not another speculative hardening chain. No goal/allocation
 reset. Memory disposition forbidden: no explicit memory-update request.
+
+## 2026-10-15 | Issue165 focused caller-capability repair
+
+Factory-only cancellation now selects bounded cleanup in collector and inner
+LlmService. Shared capability metadata preserves explicit governor precedence
+without another lease. Original collector red and two inner cached-success reds
+reproduced before fixes. Final affected146tests/3files pass; unchanged inner21,
+traffic13 and authority5 receipts remain applicable. Final typecheck passes.
+Late close, parent abort, legacy deadlines and cancelled preflight covered. Serial
+Standards/Spec review repaired the inner cached-success finding; no bounded blocking
+finding remains. Exact evidence and limits in source-window reconciliation. Source
+checkpoint only, blocker_reduction; no combined native proof, production activation,
+install or live effect. Issue165 remains open. Memory disposition forbidden.
