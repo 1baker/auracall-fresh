@@ -1,6 +1,7 @@
 # Plan 0432 — late collector session cleanup
 
-State: CLOSED (bounded source packet; issue165 remains OPEN)
+State: CLOSED
+Scope: bounded source packet; issue165 remains OPEN
 Parent: Plan0431 / Plan0411 / issue165
 Base: 129619b62745fdddabc02261349032f9d222f86d
 Branch: fix/issue165-owned-backend-request-admission

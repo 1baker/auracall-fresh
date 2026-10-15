@@ -32,3 +32,21 @@ fixing. Keep integration/fullGateB and installed/native acceptance distinct. Pre
 historical failures and all raw acceptance receipts. Goal remains ACTIVE and
 incomplete; resource checkpoint does not renew allowance or close the objective.
 Memory disposition forbidden by session developer instruction; no memory write.
+
+
+## Planning audit follow-up
+
+Ran `pnpm plans:audit` across429candidates: initial exit1/39errors. Six introduced
+findings were State headers0427–0432 with explanatory suffixes; normalize to
+canonical `State: CLOSED` and separate Scope lines. Rerun exit1/33errors, no
+remaining findings for those six plans. FullGateB planning validation now has
+concrete failing evidence, not a pass or waived baseline.
+
+Residual33:32missing AGENTS policy targets0035–0066 and the older0406-1 plan's
+missing canonical State header. AGENTS.md, docs/dev/policies and that older plan
+have empty diff from inherited basecb9330a6666161ee98ad485fe0a450642c033ec9, so
+these are pre-existing branch findings. Keep them visible; do not remove policy
+references or invent baseline exemptions in issue165 closeout reserve. Governance
+adoption is a separate lane per restart handoff. Logs /tmp/issue165-source-window-
+plans-audit.log and /tmp/issue165-source-window-plans-audit-final.log. Diffcheck
+passes; no implementation or runtime change, no source tests rerun.

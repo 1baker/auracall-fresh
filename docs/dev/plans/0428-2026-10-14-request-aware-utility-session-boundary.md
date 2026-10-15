@@ -1,6 +1,7 @@
 # Plan 0428 — request-aware utility session boundary
 
-State: CLOSED (bounded source packet; issue165 remains OPEN)
+State: CLOSED
+Scope: bounded source packet; issue165 remains OPEN
 Parent: Plan0427 / Plan0425 / Plan0411 / issue165
 Base: 13b657921a57c6884be16c9546f0943dd89d1e29
 Branch: fix/issue165-owned-backend-request-admission

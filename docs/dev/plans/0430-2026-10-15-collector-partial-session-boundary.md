@@ -1,6 +1,7 @@
 # Plan 0430 — collector partial-session boundary
 
-State: CLOSED (bounded source packet; issue165 remains OPEN)
+State: CLOSED
+Scope: bounded source packet; issue165 remains OPEN
 Parent: Plan0429 / Plan0411 / issue165
 Base: b657b10677c71ef0dd812b3d803fd5f107b94277
 Branch: fix/issue165-owned-backend-request-admission

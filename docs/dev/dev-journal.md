@@ -54368,3 +54368,11 @@ PR323 remains draft/unmerged, and latest focused source checks do not establish
 fullGateB, canonical install or native/wider automatic acceptance. Plan0411 now
 links the exact remaining-gate note and distinguishes historical runtime receipts.
 No implementation/runtime effects; checkpoint before conservative1MM source stop.
+
+
+### 2026-10-15 Issue165 planning validation checkpoint
+
+plans:audit exit1/39: fixed six introduced noncanonical CLOSED headers0427–0432;
+rerun exit1/33. Residual32missing policy targets and0406-1 state header are unchanged
+from inheritedbasecb9330a66. Preserve failures and separate governance lane; full
+GateB remains failed/unmet. Source/runtime unchanged; diffcheck passes.

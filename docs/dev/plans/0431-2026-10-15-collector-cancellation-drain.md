@@ -1,6 +1,7 @@
 # Plan 0431 — collector cancellation drain
 
-State: CLOSED (bounded source packet; issue165 remains OPEN)
+State: CLOSED
+Scope: bounded source packet; issue165 remains OPEN
 Parent: Plan0430 / Plan0411 / issue165
 Base: 7e1055a0c931b405eb217fdf2fff088053b5be03
 Branch: fix/issue165-owned-backend-request-admission

@@ -1,6 +1,7 @@
 # Plan 0427 — request-aware abort cleanup
 
-State: CLOSED (bounded source packet; issue165 remains OPEN)
+State: CLOSED
+Scope: bounded source packet; issue165 remains OPEN
 Parent: Plan0426 / Plan0425 / Plan0411 / issue165
 Branch: fix/issue165-owned-backend-request-admission
 Target: main
