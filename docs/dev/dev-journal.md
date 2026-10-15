@@ -54326,3 +54326,14 @@ already-tagged close uncertainty, combining primary/cleanup failure and stopping
 before another detail row. Three source cases cover normal read, mixed failure
 and factory-owned hook without caller governor. Partial-chunk pass lifetime and
 other background/native gates remain open. No provider/runtime effects.
+
+
+### 2026-10-15 Issue165 partial-chunk session boundary
+
+Plan0430: partial collector return left owned Fetch/client alive. Add a top-level
+session boundary around detail inventory; retain cursor/evidence for fresh-pass
+continuation. Per-surface option copy independently reproduced the leak and now
+hands session back in finally. Confirmed close releases known lease; failure and
+mixed diagnostic/cleanup preserve errors and unknown custody. Direct helper
+session reuse stays intact. Outer cancellation/teardown race is needs_evidence;
+no live/native/activation effect or wider completion claim.

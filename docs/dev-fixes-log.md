@@ -1,3 +1,13 @@
+## 2026-10-15 | Only cursor and evidence cross collection passes
+
+Partial chunks retained an owned client beyond top-level collect; per-surface
+attribution also stranded it in an options copy. Close the detail session before
+return/throw and hand scoped session custody back in finally. Preserve cursor,
+completed evidence and both primary/cleanup failures; reconnect with fresh
+request authority on explicit resumption. Direct inventory helper reuse remains
+within one operation. Plan0430 qualifies provider-free composition; cancellation
+races and wider native acceptance remain separate.
+
 ## 2026-10-15 | A completed detail read still owns its session cleanup
 
 The collector swallowed retained-session close rejection and reported success.

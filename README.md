@@ -869,6 +869,9 @@ Terminology note:
   Account Mirror detail collection propagates owned retained-session cleanup
   failures before accepting completion or starting the next detail row; combined
   read/cleanup failures retain both causes.
+  Each top-level collection pass closes its retained detail client, including
+  partial chunks. Completed evidence and the continuation cursor cross passes;
+  the next explicit pass reconnects. Per-surface attribution shares that lifetime.
   History-backed materialization is an explicit separate job surface:
   `POST /v1/account-mirrors/materializations` queues a durable
   `history_materialization_job` by provider conversation id, account-mirror

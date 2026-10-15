@@ -785,7 +785,7 @@ export function createChatgptAccountMirrorMetadataCollector(
 					workKeys: selectedDetailWorkKey ? [selectedDetailWorkKey] : [],
 				});
 			}
-			const inventory =
+			const inventory = await withCollectorSessionBoundary(detailListOptions, async () =>
 				input.provider === "chatgpt"
 					? await readBoundedChatgptDetailInventory(
 							client,
@@ -860,7 +860,8 @@ export function createChatgptAccountMirrorMetadataCollector(
 									media: [],
 									truncated: false,
 									cursor: null,
-								};
+								},
+			);
 			await reportCollectorProgress(input, {
 				phase: "detail-inventory",
 				event: "completed",
@@ -2134,6 +2135,10 @@ export async function readBoundedAttachmentInventory(
 				truncated = true;
 				yielded = true;
 				break;
+			} finally {
+				// Per-surface attribution borrows the collector's session lifetime.
+				if (listOptions && conversationListOptions !== listOptions)
+					listOptions.providerSession = conversationListOptions?.providerSession;
 			}
 			const telemetryAfter = snapshotAccountMirrorVisitTelemetry(
 				conversationListOptions?.scrapeTelemetry,
@@ -3048,6 +3053,31 @@ async function safeReadConversationContext(
 			detail,
 		};
 	}
+}
+
+/** A collection pass owns its retained client; only its cursor crosses pass boundaries. */
+async function withCollectorSessionBoundary<TResult>(
+	listOptions: BrowserProviderListOptions | undefined,
+	run: () => Promise<TResult>,
+): Promise<TResult> {
+	const result = await Promise.resolve()
+		.then(run)
+		.then(
+			(value) => ({ ok: true as const, value }),
+			(error: unknown) => ({ ok: false as const, error }),
+		);
+	try {
+		await closeAccountMirrorProviderSession(listOptions);
+	} catch (cleanupError) {
+		if (!result.ok)
+			throw new AggregateError(
+				[result.error, cleanupError],
+				"Collector detail read and retained-session cleanup failed.",
+			);
+		throw cleanupError;
+	}
+	if (!result.ok) throw result.error;
+	return result.value;
 }
 
 async function closeAccountMirrorProviderSession(

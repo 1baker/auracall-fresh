@@ -1,3 +1,12 @@
+- Partial-chunk collection boundary (provider-free):
+  `pnpm vitest run tests/browser/backendRequestAdmission.test.ts -t detail-partial`.
+  Actual collector/configured authority/guard/store composition proves incomplete
+  cursor24 survives JSON serialization and fresh explicit pass, with two distinct
+  request permits. Normal and per-surface attribution close each client before
+  return; failed close and mixed diagnostic/close failure retain unknown custody.
+  Direct inventory-helper intra-operation session reuse remains covered separately.
+  Collector cancellation races and native acceptance remain separate gates.
+
 - Collector retained-session cleanup (provider-free):
   `pnpm vitest run tests/browser/backendRequestAdmission.test.ts -t detail-retained`.
   Actual collector/configured authority/guarded client/stores with synthetic rows

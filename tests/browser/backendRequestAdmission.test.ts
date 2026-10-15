@@ -421,6 +421,10 @@ test.each([
 	"detail-retained-failure",
 	"detail-retained-read-failure",
 	"detail-retained-factory-only",
+	"detail-partial-session",
+	"detail-partial-scoped",
+	"detail-partial-failure",
+	"detail-partial-read-and-close",
 	"files-budget",
 	"files-warning",
 	"files-persisted-warning",
@@ -433,6 +437,7 @@ test.each([
 	"library-active-action",
 ])("unfinished owned read yields only known budget denial; mode=%s", async (mode) => {
 	const detail = mode.startsWith("detail-");
+	const partialSession = mode.startsWith("detail-partial-");
 	const projectFiles = mode.startsWith("files-");
 	const library = mode.startsWith("library-");
 	const failureMode =
@@ -499,7 +504,9 @@ test.each([
 				baseOptions: {},
 				now: () => new Date(1792036000000 + pass * 61000),
 				backendRequestLimit:
-					failureMode === "uncertain" || failureMode.startsWith("retained-") ? 2 : 1,
+					failureMode === "uncertain" || failureMode.startsWith("retained-") || partialSession
+						? 2
+						: 1,
 			});
 			await annotateClientMutationContext(
 				client,
@@ -602,10 +609,37 @@ test.each([
 								if (failureMode === "retained-read-failure")
 									throw new Error("fixture retained read failure");
 							}
+							if (partialSession) {
+								transport.failClose =
+									mode === "detail-partial-failure" || mode === "detail-partial-read-and-close";
+								expect(options.listOptions.accountMirrorContextChunk.startMessageIndex).toBe(
+									pass === 0 ? 0 : 24,
+								);
+								options.listOptions.providerSession = {
+									providerId: "chatgpt",
+									key: id,
+									value: {},
+									close: () => client.close(),
+								};
+							}
 							return {
 								provider: "chatgpt",
 								conversationId: id,
 								messages: [],
+								...(partialSession
+									? {
+											metadata: {
+												accountMirrorContextChunk: {
+													startMessageIndex: pass === 0 ? 0 : 24,
+													endMessageIndex: pass === 0 ? 24 : 48,
+													nextMessageIndex: pass === 0 ? 24 : null,
+													maxMessages: 24,
+													totalMessages: 48,
+													complete: pass > 0,
+												},
+											},
+										}
+									: {}),
 								files: [],
 								artifacts: [{ id: `artifact_${id}`, title: id, kind: "spreadsheet" }],
 							};
@@ -619,9 +653,20 @@ test.each([
 					expectedIdentityKey: identity.email,
 					sweepMode: library ? "full_sweep" : "steady_follow",
 					requestedPhase: detail ? "detail-inventory" : "project-conversations",
+					...(partialSession ? { detailReadCap: 1 } : {}),
+					onDiagnosticEvent:
+						mode === "detail-partial-read-and-close"
+							? async (event) => {
+									if (event.stage === "conversation-context" && event.event === "completed")
+										throw new Error("fixture partial diagnostic failed");
+								}
+							: undefined,
 					...(detail
 						? {
-								previousConversations: ["project_1", "project_2"].map((id) => ({
+								previousConversations: (partialSession
+									? ["project_1"]
+									: ["project_1", "project_2"]
+								).map((id) => ({
 									id,
 									title: id,
 									provider: "chatgpt" as const,
@@ -659,7 +704,9 @@ test.each([
 					providerTrafficGovernor:
 						failureMode === "retained-factory-only" ? undefined : controller.governor,
 					providerTrafficPlanController:
-						(detail && mode !== "detail-chunk") || projectFiles ? undefined : controller,
+						(detail && mode !== "detail-chunk" && mode !== "detail-partial-scoped") || projectFiles
+							? undefined
+							: controller,
 					limits: {
 						maxPageReadsPerCycle: 4,
 						maxConversationRowsPerCycle: projectFiles || library ? 0 : 30,
@@ -668,9 +715,55 @@ test.each([
 					},
 				});
 			} finally {
-				await client.close();
+				if (!partialSession) await client.close();
 			}
 		};
+		if (partialSession) {
+			const runtime = createBrowserTabConcurrencyRuntime({
+				auracallProfile: "default",
+				services: { chatgpt: { identity } },
+			} as never);
+			if (mode === "detail-partial-failure" || mode === "detail-partial-read-and-close") {
+				const error = await collect(0).catch((failure: unknown) => failure);
+				expect(error).toBeInstanceOf(AggregateError);
+				const leaves = (value: unknown): string[] =>
+					value instanceof AggregateError
+						? value.errors.flatMap(leaves)
+						: value instanceof Error
+							? [value.message]
+							: [];
+				expect(leaves(error)).toContain("fixture retained transport close unknown");
+				if (mode === "detail-partial-read-and-close")
+					expect(leaves(error)).toContain("fixture partial diagnostic failed");
+				expect(calls).toEqual(["project_1"]);
+				expect(
+					(await runtime.registry?.list())?.find((lease) => lease.targetId === "project-pass-0"),
+				).toMatchObject({ state: "idle", effectState: "outcome-unknown" });
+				return;
+			}
+			const first = await collect(0);
+			expect(first.evidence.attachmentInventory?.conversationDetail).toMatchObject({
+				conversationId: "project_1",
+				nextMessageIndex: 24,
+			});
+			expect(first.evidence.truncated.artifacts).toBe(true);
+			expect(first.manifests.artifacts.map((artifact) => artifact.id)).toContain(
+				"artifact_project_1",
+			);
+			expect(
+				(await runtime.registry?.list())?.find((lease) => lease.targetId === "project-pass-0"),
+			).toMatchObject({ state: "released", effectState: "settled" });
+			expect(fixture.clients[0].handler).toBeUndefined();
+			const second = await collect(1, JSON.parse(JSON.stringify(first.evidence)));
+			expect(fixture.clients).toHaveLength(2);
+			expect(fixture.clients[1].handler).toBeUndefined();
+			expect(second.evidence.attachmentInventory?.conversationDetail).toBeNull();
+			expect(calls).toEqual(["project_1", "project_1"]);
+			expect(
+				(await runtime.ledger?.list())?.filter((row) => row.interactionClass === "backend-request"),
+			).toHaveLength(2);
+			return;
+		}
 		if (failureMode !== "budget") {
 			const error = await collect(0).catch((error: unknown) => error);
 			if (failureMode.startsWith("retained-")) {
