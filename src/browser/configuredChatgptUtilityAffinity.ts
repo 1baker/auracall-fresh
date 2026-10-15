@@ -35,6 +35,7 @@ import {
 	recordLibraryInventoryCleanupPhase,
 	recordLibraryInventoryStage,
 } from "./libraryInventoryDiagnostics.js";
+import { providerNavigationAllowed } from "./providers/navigationPolicy.js";
 import type { BrowserProviderListOptions } from "./providers/types.js";
 import type { BrowserService } from "./service/browserService.js";
 import { createBrowserTabConcurrencyRuntime } from "./tabConcurrencyRuntime.js";
@@ -103,7 +104,12 @@ export async function runConfiguredChatgptUtilityOperation<TResult>(input: {
 		if (!target.host || !target.port || target.managedBrowserProfile !== managedBrowserProfile) {
 			return null;
 		}
-		return { host: target.host, port: target.port, browserProcessId: target.browserProcessId ?? null, managedBrowserProfile };
+		return {
+			host: target.host,
+			port: target.port,
+			browserProcessId: target.browserProcessId ?? null,
+			managedBrowserProfile,
+		};
 	};
 	const inspectTarget = async (endpoint: { host: string; port: number }, targetId: string) => {
 		const targets = await (input.deps?.listTargets ?? listChromeTargets)(
@@ -185,7 +191,7 @@ export async function runConfiguredChatgptUtilityOperation<TResult>(input: {
 		startBrowser: async () => {
 			const target = await input.browserService.resolveServiceTarget({
 				serviceId: "chatgpt",
-				configuredUrl,
+				configuredUrl: "about:blank",
 				ensurePort: true,
 				abortSignal: input.options?.abortSignal,
 			});
@@ -205,7 +211,8 @@ export async function runConfiguredChatgptUtilityOperation<TResult>(input: {
 				})),
 		requireExistingTarget: input.options?.requireExistingTarget,
 		inspectTarget,
-		openTarget: async ({ host, port, url }) => {
+		openTarget: async ({ host, port }) => {
+			const url = "about:blank";
 			const target = input.deps?.openTarget
 				? await input.deps.openTarget(port, url, host)
 				: await openChromeTarget(port, url, host, undefined, {
@@ -219,6 +226,7 @@ export async function runConfiguredChatgptUtilityOperation<TResult>(input: {
 		},
 		closeTarget: ({ host, port, targetId }) => closeTarget({ host, port }, targetId),
 	});
+
 	let effectState: "settled" | "outcome-unknown" = "settled";
 	let outcome: "succeeded" | "failed" = "succeeded";
 	let warningRecordError: unknown = null;
@@ -226,6 +234,9 @@ export async function runConfiguredChatgptUtilityOperation<TResult>(input: {
 	let providerRunStarted = false;
 	let execution: { ok: true; value: TResult } | { ok: false; error: unknown };
 	try {
+		const ownsUnloadedTarget =
+			tab.lease.targetFingerprint === "about:blank" &&
+			(await inspectTarget(tab.endpoint, tab.lease.targetId))?.url === "about:blank";
 		recordLibraryInventoryStage(input.options, "affinity-build-options");
 		const options = await input.buildListOptions({
 			...(input.options ?? {}),
@@ -235,7 +246,9 @@ export async function runConfiguredChatgptUtilityOperation<TResult>(input: {
 			tabUrl: tab.lease.targetFingerprint ?? configuredUrl,
 			tabLifecycle: "retain",
 			preserveActiveTab:
-				input.options?.preserveActiveTab ?? input.options?.allowNavigation !== true,
+				ownsUnloadedTarget && providerNavigationAllowed(input.options)
+					? false
+					: (input.options?.preserveActiveTab ?? input.options?.allowNavigation !== true),
 		});
 		const baseGovernor =
 			options.interactionGovernor ??

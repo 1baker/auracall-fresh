@@ -1,5 +1,5 @@
-import type { ProviderTrafficGovernor } from "../../packages/browser-service/src/service/providerTrafficGovernor.js";
 import { withProcessTabAcquisition } from "../../packages/browser-service/src/service/processTabAcquisition.js";
+import type { ProviderTrafficGovernor } from "../../packages/browser-service/src/service/providerTrafficGovernor.js";
 import {
 	registerUnownedBrowserTabDeadlines,
 	releaseAbsentBrowserTabLeases,
@@ -114,11 +114,19 @@ async function acquireDedicatedBrowserTab(
 		}
 		assertEndpoint(endpoint, input.scope.managedBrowserProfile);
 		const inspected = await input.inspectTarget(endpoint, existing.targetId);
+		const ownedUnloadedTarget =
+			!input.requireExistingTarget &&
+			Boolean(existing.processBinding) &&
+			existing.workload.kind === "ephemeral" &&
+			existing.targetFingerprint === "about:blank" &&
+			inspected?.url === "about:blank" &&
+			(existing.effectState === "none" || existing.effectState === "settled");
 		if (
 			inspected &&
-			(input.requireExistingTarget
-				? isExactProviderRoute(inspected.url, input.targetUrl)
-				: isProviderRoute(inspected.url, input.targetUrl))
+			(ownedUnloadedTarget ||
+				(input.requireExistingTarget
+					? isExactProviderRoute(inspected.url, input.targetUrl)
+					: isProviderRoute(inspected.url, input.targetUrl)))
 		) {
 			const acquired = existing.processBinding
 				? await input.registry.acquireProcess({

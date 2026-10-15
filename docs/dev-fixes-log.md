@@ -1,3 +1,12 @@
+## 2026-10-14 | Claim a blank utility target before loading the provider
+
+Pre-lease utility creation loaded ChatGPT before owned-client admission could be
+installed. Start blank, preserve the actual initial fingerprint, then navigate
+through the exact lease/governor. An owned still-blank ephemeral lease with known
+effects can be reused in a fresh explicit pass; unknown or changed targets stay
+fenced. Keep post-acquisition inspection inside settlement handling. Plan0424
+qualifies this utility path with source fixtures, not every bootstrap/runtime path.
+
 ## 2026-10-14 | Empty file inventory is not proof after request denial
 
 Tolerant project/account file readers previously erased owned cleanup denial,

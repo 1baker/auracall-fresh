@@ -531,6 +531,60 @@ describe("live-follow crawler tab coordinator", () => {
 		});
 	});
 
+	test.each([
+		"none",
+		"settled",
+		"outcome-unknown",
+		"changed-route",
+	] as const)("reuses only a known owned unloaded target (%s)", async (mode) => {
+		const registry = createInMemoryBrowserTabLeaseRegistry();
+		const common = {
+			registry,
+			scope,
+			operationId: "utility-blank",
+			targetUrl: "https://chatgpt.com/",
+			idleTtlMs: 60000,
+			absoluteTtlMs: 3600000,
+			resolveExistingEndpoint: async () => ({
+				host: "127.0.0.1",
+				port: 45011,
+				managedBrowserProfile: scope.managedBrowserProfile,
+			}),
+			startBrowser: vi.fn(),
+			closeTarget: vi.fn(),
+			inspectTarget: vi.fn(),
+		};
+		const original = await acquireEphemeralBrowserTab({
+			...common,
+			openTarget: async () => ({ targetId: "owned-blank", url: "about:blank" }),
+		});
+		const idle = await registry.idle({
+			claim: original.claim,
+			now: new Date().toISOString(),
+			effectState: mode === "changed-route" ? "settled" : mode,
+		});
+		expect(idle.ok).toBe(true);
+		const openTarget = vi.fn();
+		const next = acquireEphemeralBrowserTab({
+			...common,
+			operationId: "next-utility",
+			inspectTarget: async () => ({
+				url: mode === "changed-route" ? "https://foreign.invalid/" : "about:blank",
+			}),
+			openTarget,
+		});
+		if (mode === "outcome-unknown" || mode === "changed-route")
+			await expect(next).rejects.toThrow();
+		else
+			expect((await next).lease).toMatchObject({
+				targetId: "owned-blank",
+				targetFingerprint: "about:blank",
+				state: "active",
+			});
+		expect(openTarget).not.toHaveBeenCalled();
+		expect(common.closeTarget).not.toHaveBeenCalled();
+	});
+
 	test("replaces a retained blank lease by adopting an existing exact target", async () => {
 		const registry = createInMemoryBrowserTabLeaseRegistry({
 			createLeaseId: (() => {

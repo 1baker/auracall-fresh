@@ -1,3 +1,11 @@
+- ChatGPT utility blank bootstrap (provider-free):
+  `pnpm vitest run tests/browser/chatgptContextAffinityRoute.test.ts tests/accountMirror/liveFollowTabCoordinator.test.ts`.
+  Actual service/utility/coordinator/adapter with simulated endpoint/CDP prove
+  blank startup/target requests, active lease and mutation audit before first
+  provider navigation, denial without load and explicit known-blank resumption.
+  Unknown effects and changed routes reject. This does not prove request-hook
+  composition, retained/background coverage or installed native startup behavior.
+
 - Interrupted owned file inventory (provider-free):
   `pnpm vitest run tests/browser/backendRequestAdmission.test.ts -t 'mode=(files|library)'`.
   Public collector/owned cleanup prove completed-file retention, incomplete library

@@ -27,6 +27,8 @@ afterEach(() => {
 
 test.each([
 	"cold",
+	"cold-startup",
+	"cold-denied",
 	"denied-payload",
 	"next",
 	"preserved",
@@ -40,8 +42,10 @@ test.each([
 	const home = await mkdtemp(path.join(os.tmpdir(), "auracall-context-route-"));
 	setAuracallHomeDirOverrideForTest(home);
 	const pages = new Map<string, string>();
+	let browserReady = scenario !== "cold-startup";
 	const opened: string[] = [];
 	const navigated: string[] = [];
+	const mutations: Array<{ phase: string; kind: string }> = [];
 	let reloads = 0;
 	let nativeRateLimited = false;
 	let payloadReads = 0;
@@ -69,13 +73,21 @@ test.each([
 	// service, affinity wrapper, coordinator, registry and adapter remain real.
 	const browserService = {
 		getConfig: () => ({}),
-		resolveServiceTarget: async () => ({
-			host: "127.0.0.1",
-			port: 45011,
-			managedBrowserProfile: path.join(home, "managed"),
-			browserProfile: "fixture",
-			browserProcessId: process.pid,
-		}),
+		resolveServiceTarget: async (options: { ensurePort?: boolean; configuredUrl?: string }) => {
+			if (!browserReady && !options.ensurePort)
+				return { managedBrowserProfile: path.join(home, "managed"), browserProfile: "fixture" };
+			if (!browserReady) {
+				expect(options.configuredUrl).toBe("about:blank");
+				browserReady = true;
+			}
+			return {
+				host: "127.0.0.1",
+				port: 45011,
+				managedBrowserProfile: path.join(home, "managed"),
+				browserProfile: "fixture",
+				browserProcessId: process.pid,
+			};
+		},
 	} as never;
 	wire.connect.mockImplementation(async ({ target }: { target: string }) => ({
 		// biome-ignore lint/style/useNamingConvention: CDP protocol domain.
@@ -189,6 +201,14 @@ test.each([
 			},
 			enable: async () => undefined,
 			navigate: async ({ url }: { url: string }) => {
+				expect(
+					(await registry.list()).some(
+						(lease) => lease.state === "active" && lease.targetId === target,
+					),
+				).toBe(true);
+				expect(
+					mutations.some((record) => record.phase === "start" && record.kind === "navigate"),
+				).toBe(true);
 				navigated.push(url);
 				pages.set(target, url);
 				return {};
@@ -201,11 +221,18 @@ test.each([
 		runUtilityOperation: (input) =>
 			runConfiguredChatgptUtilityOperation({
 				...input,
+				buildListOptions: async (overrides) => ({
+					...(await input.buildListOptions(overrides)),
+					mutationAudit: async (record) => {
+						mutations.push(record);
+					},
+				}),
 				deps: {
 					createRuntime: () => ({ registry, ledger }) as never,
 					listTargets: async () =>
 						[...pages].map(([id, url]) => ({ id, url, type: "page" })) as never,
 					openTarget: async (_port, url) => {
+						if (scenario.startsWith("cold")) expect(url).toBe("about:blank");
 						opened.push(url);
 						pages.set(
 							"fixture-target",
@@ -262,7 +289,7 @@ test.each([
 				.finally(() => {
 					settled = true;
 				});
-			for (let tick = 0; tick < 70 && !settled; tick++) {
+			for (let tick = 0; tick < 180 && !settled; tick++) {
 				await vi.advanceTimersByTimeAsync(1000);
 				await new Promise<void>((resolve) => realSetTimeout(resolve, 10));
 			}
@@ -273,8 +300,11 @@ test.each([
 				conversationId: "fixture-conversation",
 				messages: [{ role: "assistant", text: "Known fixture answer" }],
 			});
-			expect(opened).toEqual(["https://chatgpt.com/c/fixture-conversation"]);
-			expect(navigated).toEqual(["https://chatgpt.com/c/fixture-conversation"]);
+			expect(opened).toEqual(["about:blank"]);
+			expect(navigated).toEqual([
+				"https://chatgpt.com/c/fixture-conversation",
+				"https://chatgpt.com/c/fixture-conversation",
+			]);
 			return;
 		}
 		if (scenario === "project-index" || scenario === "project-index-mixed") {
@@ -298,8 +328,8 @@ test.each([
 						]
 					: []),
 			]);
-			expect(navigated).toEqual([]);
-			expect(opened).toEqual(["https://chatgpt.com/"]);
+			expect(navigated).toEqual(["https://chatgpt.com/"]);
+			expect(opened).toEqual(["about:blank"]);
 			expect(payloadReads).toBe(0);
 			return;
 		}
@@ -311,8 +341,8 @@ test.each([
 					timeoutMs: 10000,
 				}),
 			).rejects.toThrow("Provider traffic stopped after rate-limit");
-			expect(opened).toEqual(["https://chatgpt.com/c/fixture-conversation"]);
-			expect(navigated).toEqual([]);
+			expect(opened).toEqual(["about:blank"]);
+			expect(navigated).toEqual(["https://chatgpt.com/c/fixture-conversation"]);
 			expect(payloadReads).toBe(payloadReadsAtWarning);
 			await expect(
 				service.getConversationContext("fixture-conversation", {
@@ -325,6 +355,35 @@ test.each([
 			expect(opened).toHaveLength(1);
 			return;
 		}
+		if (scenario === "cold-denied") {
+			await expect(
+				service.getConversationContext("fixture-conversation", {
+					refresh: true,
+					retryAttempts: 0,
+					timeoutMs: 1000,
+					listOptions: {
+						interactionGovernor: {
+							beforeInteraction: async () => {
+								throw new Error("fixture denied initial navigation");
+							},
+						},
+					},
+				}),
+			).rejects.toThrow("fixture denied initial navigation");
+			expect(opened).toEqual(["about:blank"]);
+			expect(navigated).toEqual([]);
+			expect(pages.get("fixture-target")).toBe("about:blank");
+			await expect(
+				service.getConversationContext("fixture-conversation", {
+					refresh: true,
+					retryAttempts: 0,
+					timeoutMs: 1000,
+				}),
+			).resolves.toMatchObject({ messages: [{ role: "assistant", text: "Known fixture answer" }] });
+			expect(opened).toEqual(["about:blank"]);
+			expect(navigated).toEqual(["https://chatgpt.com/c/fixture-conversation"]);
+			return;
+		}
 		await expect(
 			service.getConversationContext("fixture-conversation", {
 				refresh: true,
@@ -335,11 +394,18 @@ test.each([
 			conversationId: "fixture-conversation",
 			messages: [{ role: "assistant", text: "Known fixture answer" }],
 		});
-		expect(opened).toEqual(["https://chatgpt.com/c/fixture-conversation"]);
-		expect(navigated).toEqual([]);
+		if (scenario === "cold" || scenario === "cold-startup") {
+			expect(opened).toEqual(["about:blank"]);
+			expect(navigated).toEqual(["https://chatgpt.com/c/fixture-conversation"]);
+			return;
+		}
+		expect(opened).toEqual(["about:blank"]);
+		expect(navigated).toEqual(["https://chatgpt.com/c/fixture-conversation"]);
+
 		if (scenario === "next") {
 			await expect(
 				service.getConversationContext("next-conversation", {
+					listOptions: { interactionGovernor: { beforeInteraction: async () => undefined } },
 					refresh: true,
 					retryAttempts: 0,
 					timeoutMs: 1000,
@@ -348,8 +414,11 @@ test.each([
 				conversationId: "next-conversation",
 				messages: [{ role: "assistant", text: "Known fixture answer" }],
 			});
-			expect(opened).toEqual(["https://chatgpt.com/c/fixture-conversation"]);
-			expect(navigated).toEqual(["https://chatgpt.com/c/next-conversation"]);
+			expect(opened).toEqual(["about:blank"]);
+			expect(navigated).toEqual([
+				"https://chatgpt.com/c/fixture-conversation",
+				"https://chatgpt.com/c/next-conversation",
+			]);
 		}
 		if (scenario === "preserved" || scenario === "exact-preserved") {
 			await expect(
@@ -358,6 +427,7 @@ test.each([
 					retryAttempts: 0,
 					timeoutMs: 1000,
 					listOptions: {
+						interactionGovernor: { beforeInteraction: async () => undefined },
 						preserveActiveTab: true,
 						...(scenario === "exact-preserved"
 							? {
@@ -369,8 +439,8 @@ test.each([
 					},
 				}),
 			).rejects.toThrow("not the expected https://chatgpt.com/c/next-conversation");
-			expect(opened).toEqual(["https://chatgpt.com/c/fixture-conversation"]);
-			expect(navigated).toEqual([]);
+			expect(opened).toEqual(["about:blank"]);
+			expect(navigated).toEqual(["https://chatgpt.com/c/fixture-conversation"]);
 		}
 		expect(pages.size).toBe(1);
 	} finally {
