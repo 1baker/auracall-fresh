@@ -1,3 +1,12 @@
+- Utility owned request composition (provider-free):
+  `pnpm vitest run tests/browser/backendRequestAdmission.test.ts -t 'utility request admission'`.
+  Real utility/configured stores and owned-CDP annotation share a fixture permit
+  in both caller orders without acquiring another utility lease. Unknown sends,
+  warnings and reconciliation failures retain fencing; lease loss blocks before
+  reserve/send. Omitted ceiling leaves the hook disabled, invalid ceiling fails
+  before browser resolution. Provider/CDP are simulated; activation/native coverage
+  remains a separate gate.
+
 - ChatGPT utility blank bootstrap (provider-free):
   `pnpm vitest run tests/browser/chatgptContextAffinityRoute.test.ts tests/accountMirror/liveFollowTabCoordinator.test.ts`.
   Actual service/utility/coordinator/adapter with simulated endpoint/CDP prove

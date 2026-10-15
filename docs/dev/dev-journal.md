@@ -1,3 +1,13 @@
+## 2026-10-14 | Plan0425 utility request authority composition
+
+Configured clients and utility now share request permits/effect reconciliation
+under their own exact leases. Optional explicit fixture ceiling enables utility
+interception without another lease; production callers remain disabled. Cross-
+caller order, warning/unknown fencing, lease loss, disabled/invalid limit and
+operation+reconciliation error preservation pass.144focused tests, typecheck,
+Biome and diff checks pass; serial Standards/Spec review complete. Plan0425 source
+packet CLOSED; broader caller/native/production ceiling gates remain open.
+
 ## 2026-10-14 | Plan0424 utility blank bootstrap
 
 ChatGPT utility acquisition now requests blank startup/targets, then performs the

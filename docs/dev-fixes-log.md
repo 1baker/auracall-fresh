@@ -1,3 +1,12 @@
+## 2026-10-14 | Share request admission without borrowing another lease
+
+A utility governor built its own operation authority but omitted backend admission.
+Share ledger request logic behind an exact-lease assertion; keep lease lifecycle
+with the caller. Reconcile all owned unfinished/unknown effects before settlement,
+even for read-only utility work. Preserve both operation and settlement failures
+instead of discarding reconciliation evidence. Plan0425 qualifies both caller
+orders and warning/uncertainty paths with explicit fixture ceilings only.
+
 ## 2026-10-14 | Claim a blank utility target before loading the provider
 
 Pre-lease utility creation loaded ChatGPT before owned-client admission could be

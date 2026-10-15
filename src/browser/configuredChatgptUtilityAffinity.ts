@@ -35,6 +35,10 @@ import {
 	recordLibraryInventoryCleanupPhase,
 	recordLibraryInventoryStage,
 } from "./libraryInventoryDiagnostics.js";
+import {
+	createOwnedBackendRequestAuthority,
+	validateBackendRequestLimit,
+} from "./ownedBackendRequestAuthority.js";
 import { providerNavigationAllowed } from "./providers/navigationPolicy.js";
 import type { BrowserProviderListOptions } from "./providers/types.js";
 import type { BrowserService } from "./service/browserService.js";
@@ -59,10 +63,12 @@ export async function runConfiguredChatgptUtilityOperation<TResult>(input: {
 	buildListOptions: (overrides: BrowserProviderListOptions) => Promise<BrowserProviderListOptions>;
 	options?: BrowserProviderListOptions;
 	mutability: "read-only" | "provider-mutating";
+	backendRequestLimit?: number;
 	run: (options: BrowserProviderListOptions) => Promise<TResult>;
 	now?: () => Date;
 	deps?: ConfiguredChatgptUtilityAffinityDeps;
 }): Promise<TResult | null> {
+	validateBackendRequestLimit(input.backendRequestLimit);
 	if (input.userConfig.browser?.tabConcurrencyMode !== "tab-affinity") return null;
 	const now = input.now ?? (() => new Date());
 	const runtimeProfileId = input.userConfig.auracallProfile?.trim() || "default";
@@ -231,6 +237,7 @@ export async function runConfiguredChatgptUtilityOperation<TResult>(input: {
 	let outcome: "succeeded" | "failed" = "succeeded";
 	let warningRecordError: unknown = null;
 	let governor: ReturnType<typeof createLedgerBackedBrowserInteractionGovernor> | null = null;
+	let backendRequests: ReturnType<typeof createOwnedBackendRequestAuthority> | undefined;
 	let providerRunStarted = false;
 	let execution: { ok: true; value: TResult } | { ok: false; error: unknown };
 	try {
@@ -275,6 +282,32 @@ export async function runConfiguredChatgptUtilityOperation<TResult>(input: {
 			baseGovernor,
 			now,
 		});
+		const assertOwnedLease = async () => {
+			const lease = (await runtime.registry?.list({ scope, states: ["active"] }))?.find(
+				(candidate) => candidate.leaseId === tab.lease.leaseId,
+			);
+			if (
+				!lease ||
+				lease.ownerOperationId !== input.utilityId ||
+				lease.targetId !== tab.lease.targetId ||
+				lease.revision !== tab.claim.revision
+			) {
+				throw new Error("Provider traffic tab lease ownership changed before utility action.");
+			}
+		};
+		backendRequests =
+			input.backendRequestLimit !== undefined
+				? createOwnedBackendRequestAuthority({
+						ledger: runtime.ledger,
+						scope: { provider: "chatgpt", tenantKey, runtimeProfileId, managedBrowserProfile },
+						workloadId: `utility:${input.utilityId}`,
+						operationId: input.utilityId,
+						tabLeaseId: tab.lease.leaseId,
+						backendRequestLimit: input.backendRequestLimit,
+						assertOwnedLease,
+						now,
+					})
+				: undefined;
 		const baseProviderTrafficGovernor = createProviderTrafficGovernor({
 			attribution: {
 				provider: "chatgpt",
@@ -292,19 +325,8 @@ export async function runConfiguredChatgptUtilityOperation<TResult>(input: {
 				input.browserService.getMutationAuditSink?.() ??
 				createInMemoryBrowserMutationLog().record,
 			settleInteraction: (settlement) => governor?.finish(settlement) ?? Promise.resolve(),
-			assertLease: async (attribution) => {
-				const lease = (await runtime.registry?.list({ scope, states: ["active"] }))?.find(
-					(candidate) => candidate.leaseId === attribution.tabLeaseId,
-				);
-				if (
-					!lease ||
-					lease.ownerOperationId !== attribution.operationId ||
-					lease.targetId !== tab.lease.targetId ||
-					lease.revision !== tab.claim.revision
-				) {
-					throw new Error("Provider traffic tab lease ownership changed before utility action.");
-				}
-			},
+			assertLease: assertOwnedLease,
+			admitBackendRequest: backendRequests?.admit,
 			probeWarning: probeChatgptRateLimitWarning,
 			persistWarning: async (warning) => {
 				const observedAt = now();
@@ -376,6 +398,7 @@ export async function runConfiguredChatgptUtilityOperation<TResult>(input: {
 		effectState,
 		now,
 		initialError: warningRecordError,
+		backendRequests,
 	});
 	const settlementResult = await waitForConfiguredChatgptUtilitySettlement(
 		settlement,
@@ -387,7 +410,15 @@ export async function runConfiguredChatgptUtilityOperation<TResult>(input: {
 			? "affinity-settlement-timed-out"
 			: "affinity-settlement-settled",
 	);
-	if (!execution.ok) throw execution.error;
+	if (!execution.ok) {
+		if (settlementResult.status === "settled" && settlementResult.error) {
+			throw new AggregateError(
+				[execution.error, settlementResult.error],
+				"Utility operation and settlement failed.",
+			);
+		}
+		throw execution.error;
+	}
 	if (settlementResult.status === "timed-out") {
 		throw new Error(
 			`ChatGPT utility settlement timed out after ${CHATGPT_UTILITY_SETTLEMENT_TIMEOUT_MS}ms.`,
@@ -406,13 +437,22 @@ async function settleConfiguredChatgptUtilityOperation(input: {
 	effectState: "settled" | "outcome-unknown";
 	now: () => Date;
 	initialError: unknown;
+	backendRequests?: ReturnType<typeof createOwnedBackendRequestAuthority>;
 }): Promise<unknown> {
-	let settlementError: unknown = input.initialError;
+	const failures: unknown[] = input.initialError ? [input.initialError] : [];
+	let effectState = input.effectState;
+	try {
+		effectState = (await input.backendRequests?.reconcileEffectState(effectState)) ?? effectState;
+	} catch (error) {
+		effectState = "outcome-unknown";
+		failures.push(error);
+	}
+
 	if (input.governor) {
 		try {
-			await input.governor.close({ outcome: input.outcome, effectState: input.effectState });
+			await input.governor.close({ outcome: input.outcome, effectState });
 		} catch (error) {
-			settlementError = error;
+			failures.push(error);
 		}
 	}
 	let claim: TabLeaseClaim = input.tab.claim;
@@ -421,12 +461,12 @@ async function settleConfiguredChatgptUtilityOperation(input: {
 			claim,
 			now: input.now().toISOString(),
 			idleTtlMs: 5 * 60_000,
-			effectState: input.effectState,
+			effectState,
 		});
 		if (!used.ok) throw new Error(`ChatGPT utility heartbeat failed: ${used.conflict.kind}.`);
 		claim = used.value.claim;
 	} catch (error) {
-		settlementError ??= error;
+		failures.push(error);
 		try {
 			const current = (await input.registry.list()).find(
 				(lease) =>
@@ -442,21 +482,23 @@ async function settleConfiguredChatgptUtilityOperation(input: {
 				};
 			}
 		} catch (recoveryError) {
-			settlementError ??= recoveryError;
+			failures.push(recoveryError);
 		}
 	}
 	try {
 		const idled = await input.registry.idle({
 			claim,
 			now: input.now().toISOString(),
-			effectState: input.effectState,
+			effectState,
 		});
 		if (!idled.ok)
 			throw new Error(`ChatGPT utility idle transition failed: ${idled.conflict.kind}.`);
 	} catch (error) {
-		settlementError ??= error;
+		failures.push(error);
 	}
-	return settlementError;
+	return failures.length > 1
+		? new AggregateError(failures, "Utility settlement failed.")
+		: failures[0];
 }
 
 async function waitForConfiguredChatgptUtilitySettlement(

@@ -9,6 +9,7 @@ import { createChatgptAccountMirrorMetadataCollector } from "../../src/accountMi
 import { createAccountMirrorMetadataTrafficPlanController } from "../../src/accountMirror/providerTrafficPlan.js";
 import { setAuracallHomeDirOverrideForTest } from "../../src/auracallHome.js";
 import { recordChatgptRateLimitDetection } from "../../src/browser/chatgptRateLimitGuard.js";
+import { runConfiguredChatgptUtilityOperation } from "../../src/browser/configuredChatgptUtilityAffinity.js";
 import { createConfiguredProviderTrafficAuthorityFactory } from "../../src/browser/configuredProviderTrafficAuthority.js";
 import {
 	annotateClientMutationContext,
@@ -657,4 +658,231 @@ test.each([
 		setAuracallHomeDirOverrideForTest(null);
 		await rm(home, { recursive: true, force: true });
 	}
+});
+
+test.each([
+	"factory-first",
+	"utility-first",
+	"uncertain",
+	"warning",
+	"disabled",
+	"lease-lost",
+	"reconcile-failure",
+])("utility request admission shares account permits and preserves effects; mode=%s", async (mode) => {
+	const home = await mkdtemp(path.join(os.tmpdir(), "auracall-utility-request-"));
+	setAuracallHomeDirOverrideForTest(home);
+	fixture.clients.length = 0;
+	const clients: Array<Awaited<ReturnType<typeof CDP>>> = [];
+	const gate = new DesktopControlGate("fixture-utility-request");
+	setCdpCommandAdmissionResolver(async () => ({
+		run: (_command, effect) => gate.withAutomation("generation", effect),
+		hold: async () => {
+			const held = await gate.holdAutomation("generation");
+			return { run: (_command, effect) => held.run(effect), close: () => held.close() };
+		},
+	}));
+	const identity = { email: "operator@example.test" };
+	const config = {
+		auracallProfile: "utility",
+		services: { chatgpt: { identity } },
+		browser: { tabConcurrencyMode: "tab-affinity" },
+	} as never;
+	const pages = new Map<string, string>();
+	const runtime = createBrowserTabConcurrencyRuntime(config);
+	let failReconciliation = false;
+	const ledger = runtime.ledger;
+	if (!ledger) throw new Error("Expected utility ledger");
+	const utilityLedger = new Proxy(ledger, {
+		get(target, key, receiver) {
+			if (key === "list")
+				return async (...args: Parameters<typeof ledger.list>) => {
+					if (failReconciliation) throw new Error("fixture reconciliation failed");
+					return target.list(...args);
+				};
+			const value = Reflect.get(target, key, receiver) as unknown;
+			return typeof value === "function" ? value.bind(target) : value;
+		},
+	});
+	const request = (requestId: string) => ({
+		requestId,
+		request: { url: "https://chatgpt.com/backend-api/conversations" },
+	});
+	const configuredRequest = async (denied: boolean) => {
+		const client = await CDP({ host: "127.0.0.1", port: 45160 });
+		clients.push(client);
+		const factory = createConfiguredProviderTrafficAuthorityFactory({
+			userConfig: { auracallProfile: "other", services: { chatgpt: { identity } } } as never,
+			provider: "chatgpt",
+			managedBrowserProfile: "/fixture/other",
+			mutationAudit: async () => undefined,
+			baseOptions: {},
+			backendRequestLimit: 1,
+		});
+		await annotateClientMutationContext(
+			client,
+			{ providerTrafficAuthorityFactory: factory, providerTrafficRequired: true },
+			"provider:chatgpt",
+			"other-target",
+		);
+		const state = fixture.clients[fixture.clients.length - 1];
+		if (!state.handler) throw new Error("Expected configured request interceptor");
+		await state.handler(request("other"));
+		if (denied) await expect(client.close()).rejects.toBeInstanceOf(AggregateError);
+		else await client.close();
+		expect(state.requests).toEqual(denied ? [] : ["other"]);
+		expect(state.failures).toEqual(denied ? ["other"] : []);
+	};
+	try {
+		if (mode === "factory-first") await configuredRequest(false);
+		const utilityIndex = fixture.clients.length;
+		const running = runConfiguredChatgptUtilityOperation({
+			userConfig: config,
+			browserService: {
+				resolveServiceTarget: async () => ({
+					host: "127.0.0.1",
+					port: 45161,
+					managedBrowserProfile: "/fixture/utility",
+					browserProcessId: process.pid,
+				}),
+			} as never,
+			utilityId: "fixture-utility",
+			mutability: "read-only",
+			backendRequestLimit: mode === "disabled" ? undefined : 1,
+			buildListOptions: async (options) => options,
+			deps: {
+				createRuntime: () => ({ ...runtime, ledger: utilityLedger }),
+				listTargets: async () =>
+					[...pages].map(([id, url]) => ({ id, url, type: "page" })) as never,
+				openTarget: async (_port, url) => {
+					pages.set("utility-target", url);
+					return { id: "utility-target", url } as never;
+				},
+				closeTarget: async () => undefined,
+			},
+			run: async (options) => {
+				const client = await CDP({ host: "127.0.0.1", port: 45161 });
+				clients.push(client);
+				await annotateClientMutationContext(
+					client,
+					options,
+					"provider:chatgpt",
+					options.tabTargetId,
+				);
+				const state = fixture.clients[utilityIndex];
+				if (mode === "disabled") {
+					expect(state.handler).toBeUndefined();
+					await client.close();
+					return "request admission disabled";
+				}
+				expect(state.handler).toBeTypeOf("function");
+				if (!state.handler) throw new Error("Expected utility request interceptor");
+				state.failContinuation = mode === "uncertain";
+				if (mode === "warning")
+					state.beforeContinue = async () => {
+						if (!state.responseHandler) throw new Error("Expected utility warning observer");
+						await state.responseHandler({
+							response: { url: "https://chatgpt.com/backend-api/conversations", status: 429 },
+						});
+					};
+				if (mode === "lease-lost") {
+					const lease = (await runtime.registry?.list())?.find(
+						(lease) => lease.targetId === "utility-target",
+					);
+					if (!lease || !runtime.registry) throw new Error("Expected exact utility lease");
+					const idle = await runtime.registry.idle({
+						claim: {
+							leaseId: lease.leaseId,
+							revision: lease.revision,
+							operationId: "fixture-utility",
+						},
+						now: new Date().toISOString(),
+						effectState: "settled",
+					});
+					expect(idle.ok).toBe(true);
+				}
+				await state.handler(request("utility"));
+				await client.close();
+				if (mode === "utility-first") {
+					await configuredRequest(true);
+					return "utility sent once";
+				}
+				if (mode === "reconcile-failure") {
+					failReconciliation = true;
+					throw new Error("fixture operation failed");
+				}
+				throw new Error("Unreachable after denied or uncertain close");
+			},
+		});
+		if (mode === "utility-first") await expect(running).resolves.toBe("utility sent once");
+		else if (mode === "disabled") await expect(running).resolves.toBe("request admission disabled");
+		else if (mode === "reconcile-failure") {
+			const error = await running.catch((error: unknown) => error);
+			expect(error).toBeInstanceOf(AggregateError);
+			const messages = (value: unknown): string[] =>
+				value instanceof AggregateError
+					? value.errors.flatMap(messages)
+					: value instanceof Error
+						? [value.message]
+						: [];
+			expect(messages(error)).toEqual(
+				expect.arrayContaining(["fixture operation failed", "fixture reconciliation failed"]),
+			);
+		} else await expect(running).rejects.toBeInstanceOf(AggregateError);
+		expect(fixture.clients[utilityIndex].requests).toEqual(
+			mode === "factory-first" || mode === "disabled" || mode === "lease-lost" ? [] : ["utility"],
+		);
+		expect(fixture.clients[utilityIndex].failures).toEqual(
+			mode === "utility-first" || mode === "disabled" || mode === "reconcile-failure"
+				? []
+				: ["utility"],
+		);
+
+		failReconciliation = false;
+		const requestRecords = (await ledger.list()).filter(
+			(record) =>
+				record.operationId === "fixture-utility" && record.interactionClass === "backend-request",
+		);
+		expect(requestRecords).toHaveLength(
+			mode === "factory-first" || mode === "disabled" || mode === "lease-lost" ? 0 : 1,
+		);
+		const leases = (await runtime.registry?.list())?.filter(
+			(lease) => lease.targetId === "utility-target",
+		);
+		expect(leases).toHaveLength(1);
+		expect(leases?.[0]).toMatchObject({
+			state: "idle",
+			effectState:
+				mode === "uncertain" || mode === "warning" || mode === "reconcile-failure"
+					? "outcome-unknown"
+					: "settled",
+		});
+		if (mode === "warning") {
+			const ledger = runtime.ledger;
+			if (!ledger) throw new Error("Expected utility ledger");
+			expect(
+				await ledger.listActiveProviderWarnings({ now: new Date().toISOString() }),
+			).toHaveLength(1);
+		}
+	} finally {
+		for (const client of clients) await client.close().catch(() => undefined);
+		setCdpCommandAdmissionResolver(undefined);
+		setAuracallHomeDirOverrideForTest(null);
+		await rm(home, { recursive: true, force: true });
+	}
+});
+
+test("utility rejects an invalid backend limit before resolving a browser", async () => {
+	const resolveServiceTarget = vi.fn();
+	await expect(
+		runConfiguredChatgptUtilityOperation({
+			userConfig: { browser: { tabConcurrencyMode: "tab-affinity" } } as never,
+			browserService: { resolveServiceTarget } as never,
+			utilityId: "invalid-limit",
+			mutability: "read-only",
+			backendRequestLimit: 0,
+			buildListOptions: async (options) => options,
+			run: vi.fn(),
+		}),
+	).rejects.toThrow("positive safe integer");
+	expect(resolveServiceTarget).not.toHaveBeenCalled();
 });
