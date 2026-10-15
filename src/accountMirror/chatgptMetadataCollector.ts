@@ -16,6 +16,10 @@ import { readChatgptRateLimitGuardState } from "../browser/chatgptRateLimitGuard
 import { BrowserAutomationClient } from "../browser/client.js";
 import { recordDomDriftObservation } from "../browser/domDriftObservations.js";
 import type { AccountMirrorMediaManifestEntry } from "../browser/llmService/cache/store.js";
+import {
+	hasUnknownOwnedRequestCleanup,
+	OwnedBackendRequestCleanupError,
+} from "../browser/ownedBackendRequestAuthority.js";
 import type {
 	Conversation,
 	ConversationArtifact,
@@ -2786,7 +2790,11 @@ function rethrowProviderRequestFailure(
 ): void {
 	const requestState =
 		listOptions?.providerTrafficGovernor?.snapshotAdmissionState?.().backendRequestOutcome;
-	if (isKnownBackendRequestBudgetDenial(error) || (requestState && requestState !== "ready"))
+	if (
+		isKnownBackendRequestBudgetDenial(error) ||
+		hasUnknownOwnedRequestCleanup(error) ||
+		(requestState && requestState !== "ready")
+	)
 		throw error;
 }
 
@@ -3007,9 +3015,17 @@ async function safeReadConversationContext(
 		}
 		return { context, observed: context !== null, outcome: "completed", detail: null };
 	} catch (error) {
-		await closeAccountMirrorProviderSession(providerListOptions);
+		let failure = error;
+		try {
+			await closeAccountMirrorProviderSession(providerListOptions);
+		} catch (cleanupError) {
+			failure = new AggregateError(
+				[error, cleanupError],
+				"Conversation read and retained-session cleanup failed.",
+			);
+		}
 		if (listOptions) listOptions.providerSession = undefined;
-		rethrowProviderRequestFailure(error, listOptions);
+		rethrowProviderRequestFailure(failure, listOptions);
 		const detail = error instanceof Error ? error.message : String(error);
 		await recordAccountMirrorDomDriftObservation(observation, {
 			surface: "account-mirror-conversation-context",
@@ -3040,7 +3056,12 @@ async function closeAccountMirrorProviderSession(
 	const session = listOptions?.providerSession;
 	if (!session) return;
 	listOptions.providerSession = undefined;
-	await session.close().catch(() => undefined);
+	await session.close().catch((error: unknown) => {
+		if (isKnownBackendRequestBudgetDenial(error) || hasUnknownOwnedRequestCleanup(error))
+			throw error;
+		if (!listOptions.providerTrafficGovernor?.admitBackendRequest) return;
+		throw new OwnedBackendRequestCleanupError(error);
+	});
 }
 
 function isProviderGuardFailureDetail(detail: string | null): boolean {

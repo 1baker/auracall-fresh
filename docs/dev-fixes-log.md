@@ -1,3 +1,12 @@
+## 2026-10-15 | A completed detail read still owns its session cleanup
+
+The collector swallowed retained-session close rejection and reported success.
+Propagate typed owned cleanup uncertainty even when only the client factory owns
+request admission; preserve both read and cleanup causes and stop before the next
+row. Untagged legacy cleanup retains its existing behavior, and pure confirmed
+budget denial remains resumable. Plan0429 qualifies actual collector/configured
+client composition with synthetic rows; partial-chunk lifetime remains separate.
+
 ## 2026-10-14 | A retained client cannot outlive its utility request authority
 
 A successful retained public read left Fetch observation active after utility

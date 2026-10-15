@@ -43,6 +43,7 @@ const fixture = vi.hoisted(() => ({
 		handler?: (event: unknown) => Promise<void>;
 		failContinuation?: boolean;
 		beforeContinue?: () => Promise<void>;
+		failClose?: boolean;
 		responseHandler?: (event: unknown) => Promise<void>;
 	}>,
 }));
@@ -53,6 +54,7 @@ vi.mock("chrome-remote-interface", () => ({
 			failures: [] as string[],
 			failContinuation: fixture.page?.failContinuation ?? false,
 			beforeContinue: undefined as (() => Promise<void>) | undefined,
+			failClose: false,
 			responseHandler: undefined as ((event: unknown) => Promise<void>) | undefined,
 			handler: undefined as ((event: unknown) => Promise<void>) | undefined,
 		};
@@ -137,6 +139,7 @@ vi.mock("chrome-remote-interface", () => ({
 				return {};
 			},
 			close: async () => {
+				if (state.failClose) throw new Error("fixture retained transport close unknown");
 				if (fixture.page) {
 					fixture.page.closeAttempts++;
 					if (fixture.page.failClose) throw new Error("fixture transport close outcome unknown");
@@ -415,6 +418,9 @@ test.each([
 	"detail-uncertain",
 	"detail-active-action",
 	"detail-chunk",
+	"detail-retained-failure",
+	"detail-retained-read-failure",
+	"detail-retained-factory-only",
 	"files-budget",
 	"files-warning",
 	"files-persisted-warning",
@@ -436,10 +442,12 @@ test.each([
 	fixture.clients.length = 0;
 	const clients: Array<Awaited<ReturnType<typeof CDP>>> = [];
 	const gate = new DesktopControlGate("fixture-project-yield");
+	const holds: Array<Awaited<ReturnType<typeof gate.holdAutomation>>> = [];
 	setCdpCommandAdmissionResolver(async () => ({
 		run: (_command, effect) => gate.withAutomation("generation", effect),
 		hold: async () => {
 			const held = await gate.holdAutomation("generation");
+			holds.push(held);
 			return { run: (_command, effect) => held.run(effect), close: () => held.close() };
 		},
 	}));
@@ -490,7 +498,8 @@ test.each([
 				mutationAudit: async () => undefined,
 				baseOptions: {},
 				now: () => new Date(1792036000000 + pass * 61000),
-				backendRequestLimit: failureMode === "uncertain" ? 2 : 1,
+				backendRequestLimit:
+					failureMode === "uncertain" || failureMode.startsWith("retained-") ? 2 : 1,
 			});
 			await annotateClientMutationContext(
 				client,
@@ -573,13 +582,26 @@ test.each([
 						getConversationContext: async (
 							id: string,
 							options: {
-								listOptions: { accountMirrorContextChunk: { startMessageIndex: number } };
+								listOptions: BrowserProviderListOptions & {
+									accountMirrorContextChunk: { startMessageIndex: number };
+								};
 							},
 						) => {
 							if (mode === "detail-chunk")
 								expect(options.listOptions.accountMirrorContextChunk.startMessageIndex).toBe(24);
 							if (!detail) throw new Error("No detail reads authorized");
 							await readRow(id);
+							if (failureMode.startsWith("retained-")) {
+								transport.failClose = true;
+								options.listOptions.providerSession = {
+									providerId: "chatgpt",
+									key: id,
+									value: {},
+									close: () => client.close(),
+								};
+								if (failureMode === "retained-read-failure")
+									throw new Error("fixture retained read failure");
+							}
 							return {
 								provider: "chatgpt",
 								conversationId: id,
@@ -634,7 +656,8 @@ test.each([
 									},
 								} as never)
 							: undefined),
-					providerTrafficGovernor: controller.governor,
+					providerTrafficGovernor:
+						failureMode === "retained-factory-only" ? undefined : controller.governor,
 					providerTrafficPlanController:
 						(detail && mode !== "detail-chunk") || projectFiles ? undefined : controller,
 					limits: {
@@ -650,6 +673,28 @@ test.each([
 		};
 		if (failureMode !== "budget") {
 			const error = await collect(0).catch((error: unknown) => error);
+			if (failureMode.startsWith("retained-")) {
+				expect(error).toBeInstanceOf(AggregateError);
+				const leaves = (value: unknown): string[] =>
+					value instanceof AggregateError
+						? value.errors.flatMap(leaves)
+						: value instanceof Error
+							? [value.message]
+							: [];
+				expect(leaves(error)).toContain("fixture retained transport close unknown");
+				if (failureMode === "retained-read-failure")
+					expect(leaves(error)).toContain("fixture retained read failure");
+				expect(calls).toEqual(["project_1"]);
+				const leases = await createBrowserTabConcurrencyRuntime({
+					auracallProfile: "default",
+					services: { chatgpt: { identity } },
+				} as never).registry?.list();
+				expect(leases?.find((lease) => lease.targetId === "project-pass-0")).toMatchObject({
+					state: "idle",
+					effectState: "outcome-unknown",
+				});
+				return;
+			}
 			if (failureMode === "persisted-warning") {
 				expect(error).toBeInstanceOf(Error);
 				expect((error as Error).message).toContain("fixture external warning");
@@ -754,6 +799,7 @@ test.each([
 		});
 	} finally {
 		for (const client of clients) await client.close().catch(() => undefined);
+		for (const held of holds) await held.close();
 		setCdpCommandAdmissionResolver(undefined);
 		setAuracallHomeDirOverrideForTest(null);
 		await rm(home, { recursive: true, force: true });

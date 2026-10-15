@@ -54316,3 +54316,13 @@ fixture qualifies repeat without another navigation and three distinct permits.
 Review found/reproduced false unknown fencing of pure budget denial; preserve
 its known typed outcome. Production activation and other background/exact-tab
 lifetimes remain open; no native provider effects.
+
+
+### 2026-10-15 Issue165 collector retained close failures
+
+Plan0429: actual collector/configured authority fixture reproduced successful
+collection after final-chunk transport close failed. Preserve request-aware and
+already-tagged close uncertainty, combining primary/cleanup failure and stopping
+before another detail row. Three source cases cover normal read, mixed failure
+and factory-owned hook without caller governor. Partial-chunk pass lifetime and
+other background/native gates remain open. No provider/runtime effects.

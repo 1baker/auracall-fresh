@@ -1,3 +1,11 @@
+- Collector retained-session cleanup (provider-free):
+  `pnpm vitest run tests/browser/backendRequestAdmission.test.ts -t detail-retained`.
+  Actual collector/configured authority/guarded client/stores with synthetic rows
+  prove final-chunk close uncertainty stops before later detail work and fences
+  custody. Mixed read/close preserves both causes; factory-only request ownership
+  propagates tagged cleanup failure even without a caller governor field. Partial
+  chunk/pass lifetime and native acceptance remain separate gates.
+
 - Public utility first-navigation request admission (provider-free):
   `pnpm vitest run tests/browser/backendRequestAdmission.test.ts -t 'public utility bootstrap'`.
   Actual ChatgptService, utility, adapter, annotation and guarded CDP process
