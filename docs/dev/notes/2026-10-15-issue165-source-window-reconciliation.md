@@ -1,5 +1,48 @@
 # Issue165 source-window acceptance reconciliation
 
+## Bounded caller diagnostic — 2026-10-15
+
+User resumed only the capped diagnostic slice after the fresh-agent handoff.
+Two executions completed; no production implementation, activation, installation,
+provider action or scheduler change. The goal tool returned no current goal in
+this session; no new goal or allocation reset was created. This checkpoint ends
+the diagnostic slice, not issue165. Progress: evidence gap reduced; no acceptance
+gate closed and no defect repaired.
+
+At unchanged implementation bf2a9bf2d / checkout 1ad31aa97, the existing actual
+collector/configured-authority/guard/store fixture demonstrates a factory-only
+cancellation gap. The new `detail-cancel-factory-only` case removes the outer
+collector governor while the owned client retains its factory-issued governor.
+Collection returns before the fixture allows provider cleanup to finish:
+expected `pending`, received `returned`. A differential control restoring only
+the collector governor passes, including preservation of failed transport-close
+cause and idle/outcome-unknown lease state. SDK/provider behavior is synthetic;
+this is prerequisite cancellation-contract evidence, not native materialization
+proof or proof of the original user-visible failure's cause.
+
+Reproducer is preserved beside this note as
+`2026-10-15-issue165-factory-only-cancellation-reproducer.patch`; it applies to
+1ad31aa97. In a disposable checkout, apply it with `git apply`, then run:
+`pnpm vitest run tests/browser/backendRequestAdmission.test.ts -t detail-cancel-factory-only`.
+Red: one failed / 62 skipped, 2.97s total, 90ms test; log
+`/tmp/issue165-factory-only-diagnostic-red.log`. For the control remove only
+` || factoryOnly` from the collector's `providerTrafficGovernor` condition.
+Same command: one passed / 62 skipped, 2.42s total, 97ms test; log
+`/tmp/issue165-factory-only-diagnostic-control.log`. Logs are intentionally
+temporary; the source-bound patch and procedure preserve reproducibility.
+All diagnostic edits to the executable test were restored afterward.
+
+Next recommendation: one bounded fix using existing option-resolution seams to
+make this cancellation contract reflect exact factory-owned admission capability;
+do not attach foreign/stale governors or activate a production ceiling. Qualify
+factory-only cancellation and late settlement plus no-hook controls, then one
+serial Standards/Spec review. This diagnostic did not inspect or select that
+implementation. Full GateB, production activation, genuine changed-B, integration,
+installed/native materialization and effect-authority gates remain open.
+Memory disposition: forbidden; no explicit user request for a memory update.
+
+## Prior source-window record
+
 Source audited: bf2a9bf2d02049c079d355c6c4d7816cc1593170.
 Issue165 OPEN; PR323 OPEN/DRAFT at that source. This read-only audit changes no
 implementation, installed runtime, provider, scheduler or warning state.

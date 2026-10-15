@@ -54376,3 +54376,15 @@ plans:audit exit1/39: fixed six introduced noncanonical CLOSED headers0427–043
 rerun exit1/33. Residual32missing policy targets and0406-1 state header are unchanged
 from inheritedbasecb9330a66. Preserve failures and separate governance lane; full
 GateB remains failed/unmet. Source/runtime unchanged; diffcheck passes.
+
+## 2026-10-15 | Issue165 bounded factory-only cancellation diagnostic
+
+At checkout 1ad31aa97, one caller-level repro returns before provider cleanup is
+permitted when only the client factory owns request admission. Restoring only the
+collector governor makes the same scenario pass. Two executions, 2.97s red / 2.42s
+control; diagnostic test edits restored, no production change or live effect.
+Reproducer and exact procedure are in the existing source-window reconciliation
+note and adjacent patch. Diagnostic slice ends here; issue165 acceptance remains
+open. Next recommended work is one capability-propagation fix with exact ownership
+and no-hook controls, not another speculative hardening chain. No goal/allocation
+reset. Memory disposition forbidden: no explicit memory-update request.

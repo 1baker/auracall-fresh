@@ -1,0 +1,57 @@
+diff --git a/tests/browser/backendRequestAdmission.test.ts b/tests/browser/backendRequestAdmission.test.ts
+index a86d0eab0..2592c3eff 100644
+--- a/tests/browser/backendRequestAdmission.test.ts
++++ b/tests/browser/backendRequestAdmission.test.ts
+@@ -426,6 +426,7 @@ test.each([
+ 	"detail-partial-failure",
+ 	"detail-partial-read-and-close",
+ 	"detail-cancel-failure",
++	"detail-cancel-factory-only",
+ 	"detail-cancel-clean",
+ 	"detail-cancel-parent",
+ 	"detail-cancel-stalled",
+@@ -446,6 +447,8 @@ test.each([
+ 	const detail = mode.startsWith("detail-");
+ 	const partialSession = mode.startsWith("detail-partial-");
+ 	const cancelling = mode.startsWith("detail-cancel-");
++	const factoryOnly = mode === "detail-cancel-factory-only";
++	const failedCancellationClose = mode === "detail-cancel-failure" || factoryOnly;
+ 	const lateSession = mode.startsWith("detail-cancel-late");
+ 	let lateCloseCalls = 0;
+ 	const deferredCleanup = mode === "detail-cancel-stalled" || lateSession;
+@@ -688,7 +691,7 @@ test.each([
+ 											},
+ 										};
+ 									}
+-									transport.failClose = mode === "detail-cancel-failure";
++									transport.failClose = failedCancellationClose;
+ 									await client.close();
+ 									throw new Error("fixture provider aborted");
+ 								} finally {
+@@ -805,7 +808,7 @@ test.each([
+ 								} as never)
+ 							: undefined),
+ 					providerTrafficGovernor:
+-						failureMode === "retained-factory-only" ? undefined : controller.governor,
++						failureMode === "retained-factory-only" || factoryOnly ? undefined : controller.governor,
+ 					providerTrafficPlanController:
+ 						(detail && mode !== "detail-chunk" && mode !== "detail-partial-scoped") || projectFiles
+ 							? undefined
+@@ -852,7 +855,7 @@ test.each([
+ 					? "fixture parent cancelled"
+ 					: "Conversation context inventory timed out for project_1.",
+ 			);
+-			if (mode === "detail-cancel-failure")
++			if (failedCancellationClose)
+ 				expect(leaves(error)).toContain("fixture retained transport close unknown");
+ 			const runtime = createBrowserTabConcurrencyRuntime({
+ 				auracallProfile: "default",
+@@ -863,7 +866,7 @@ test.each([
+ 			).toMatchObject(
+ 				deferredCleanup
+ 					? { state: "active" }
+-					: mode === "detail-cancel-failure"
++					: failedCancellationClose
+ 						? { state: "idle", effectState: "outcome-unknown" }
+ 						: { state: "released", effectState: "settled" },
+ 			);
