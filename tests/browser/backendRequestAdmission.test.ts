@@ -971,20 +971,31 @@ test.each([
 	}
 });
 
-test("utility rejects an invalid backend limit before resolving a browser", async () => {
+test.each([
+	"invalid-limit",
+	"inherited-session",
+])("utility rejects %s before resolving a browser", async (mode) => {
 	const resolveServiceTarget = vi.fn();
+	const close = vi.fn();
 	await expect(
 		runConfiguredChatgptUtilityOperation({
 			userConfig: { browser: { tabConcurrencyMode: "tab-affinity" } } as never,
 			browserService: { resolveServiceTarget } as never,
-			utilityId: "invalid-limit",
+			utilityId: mode,
 			mutability: "read-only",
-			backendRequestLimit: 0,
+			backendRequestLimit: mode === "invalid-limit" ? 0 : 1,
+			options:
+				mode === "inherited-session"
+					? { providerSession: { providerId: "chatgpt", key: "foreign", value: {}, close } }
+					: {},
 			buildListOptions: async (options) => options,
 			run: vi.fn(),
 		}),
-	).rejects.toThrow("positive safe integer");
+	).rejects.toThrow(
+		mode === "invalid-limit" ? "positive safe integer" : "cannot inherit a provider session",
+	);
 	expect(resolveServiceTarget).not.toHaveBeenCalled();
+	expect(close).not.toHaveBeenCalled();
 });
 
 test.each([
@@ -998,12 +1009,19 @@ test.each([
 	"abort-retained-failure",
 	"abort-retained-timeout",
 	"abort-retained-clean",
+	"retained-clean",
+	"retained-budget",
+	"retained-failure",
+	"retained-timeout",
+	"retained-read-and-close",
 ])("public utility bootstrap owns request admission before first navigation; mode=%s", async (mode) => {
 	const home = await mkdtemp(path.join(os.tmpdir(), "auracall-public-request-"));
 	setAuracallHomeDirOverrideForTest(home);
 	fixture.clients.length = 0;
 	const aborting = mode.startsWith("abort-");
 	const unknownAbort = aborting && mode !== "abort-retained-clean";
+	const retaining = mode.startsWith("retained-");
+	const unknownRetained = retaining && mode !== "retained-clean" && mode !== "retained-budget";
 	const controller = new AbortController();
 	let utilityError: unknown;
 	let finishUtility!: () => void;
@@ -1012,6 +1030,7 @@ test.each([
 	});
 	const completeRequests =
 		aborting ||
+		(retaining && mode !== "retained-budget") ||
 		mode === "allowed" ||
 		mode === "transport-failure" ||
 		mode === "transport-timeout" ||
@@ -1022,11 +1041,18 @@ test.each([
 		bootstrapRequests: completeRequests ? 1 : 2,
 		payloadReads: 0,
 		closeAttempts: 0,
-		failClose: mode === "transport-failure" || mode === "abort-retained-failure",
+		failClose:
+			mode === "transport-failure" ||
+			mode === "abort-retained-failure" ||
+			mode === "retained-failure" ||
+			mode === "retained-read-and-close",
 		abortRead: aborting ? () => controller.abort(new Error("fixture public abort")) : undefined,
-		stallClose: mode === "transport-timeout" || mode === "abort-retained-timeout",
+		stallClose:
+			mode === "transport-timeout" ||
+			mode === "abort-retained-timeout" ||
+			mode === "retained-timeout",
 		warnPayload: mode === "warning",
-		failRead: mode === "read-and-budget",
+		failRead: mode === "read-and-budget" || mode === "retained-read-and-close",
 		failContinuation: mode === "uncertain",
 	};
 	const gate = new DesktopControlGate("fixture-public-request");
@@ -1070,7 +1096,7 @@ test.each([
 		runUtilityOperation: (input) =>
 			runConfiguredChatgptUtilityOperation({
 				...input,
-				backendRequestLimit: completeRequests ? 2 : 1,
+				backendRequestLimit: mode === "retained-clean" ? 3 : completeRequests ? 2 : 1,
 				deps: {
 					listTargets: async () =>
 						opened
@@ -1093,7 +1119,7 @@ test.each([
 	const listOptions: BrowserProviderListOptions = {
 		interactionGovernor: { beforeInteraction: async () => undefined },
 		abortSignal: controller.signal,
-		useProviderSession: aborting,
+		useProviderSession: aborting || retaining,
 	};
 	try {
 		const reading = service.getConversationContext("fixture-conversation", {
@@ -1102,7 +1128,7 @@ test.each([
 			timeoutMs: 5000,
 			listOptions,
 		});
-		if (mode === "allowed")
+		if (mode === "allowed" || mode === "retained-clean")
 			await expect(reading).resolves.toMatchObject({
 				messages: [{ role: "assistant", text: "Known fixture answer" }],
 			});
@@ -1123,13 +1149,13 @@ test.each([
 				expect(messages(error)).toContain(
 					mode === "uncertain"
 						? "Fixture continuation outcome is unknown"
-						: mode === "transport-failure" || mode === "transport-timeout"
-							? mode === "transport-timeout"
+						: mode === "transport-failure" || mode === "transport-timeout" || unknownRetained
+							? mode === "transport-timeout" || mode === "retained-timeout"
 								? "Owned backend request client cleanup timed out."
 								: "fixture transport close outcome unknown"
 							: "Backend request admission denied: minute-backend-request-limit.",
 				);
-			if (mode === "read-and-budget")
+			if (mode === "read-and-budget" || mode === "retained-read-and-close")
 				expect(messages(error)).toContain("fixture public read failed");
 		}
 		await utilitySettled;
@@ -1147,6 +1173,7 @@ test.each([
 			state: "idle",
 			effectState:
 				unknownAbort ||
+				unknownRetained ||
 				mode === "uncertain" ||
 				mode === "transport-failure" ||
 				mode === "transport-timeout" ||
@@ -1175,7 +1202,30 @@ test.each([
 				await ledger.listActiveProviderWarnings({ now: new Date().toISOString() }),
 			).toHaveLength(1);
 		}
-		if (unknownAbort || mode === "transport-failure" || mode === "transport-timeout")
+		if (mode === "retained-clean") {
+			await expect(
+				service.getConversationContext("fixture-conversation", {
+					refresh: true,
+					retryAttempts: 0,
+					listOptions,
+				}),
+			).resolves.toMatchObject({ messages: [{ text: "Known fixture answer" }] });
+			expect(fixture.clients).toHaveLength(2);
+			expect(fixture.clients[1].requests).toEqual(["payload-2"]);
+			expect(fixture.clients[1].handler).toBeUndefined();
+			expect(fixture.page.closeAttempts).toBe(2);
+			expect(fixture.page.navigations).toHaveLength(1);
+			const records = await createBrowserTabConcurrencyRuntime(config).ledger?.list();
+			expect(
+				records?.filter((record) => record.interactionClass === "backend-request"),
+			).toHaveLength(3);
+		}
+		if (
+			unknownAbort ||
+			unknownRetained ||
+			mode === "transport-failure" ||
+			mode === "transport-timeout"
+		)
 			expect(released).toBe(false);
 		else {
 			const human = await gate.takeControl("generation");
@@ -1183,7 +1233,12 @@ test.each([
 		}
 	} finally {
 		// Isolated fixture cleanup after assertions, not proof of a transport disconnect.
-		if (unknownAbort || mode === "transport-failure" || mode === "transport-timeout")
+		if (
+			unknownAbort ||
+			unknownRetained ||
+			mode === "transport-failure" ||
+			mode === "transport-timeout"
+		)
 			await held?.close();
 		fixture.page = undefined;
 		setCdpCommandAdmissionResolver(undefined);

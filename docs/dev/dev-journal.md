@@ -54304,3 +54304,15 @@ abort/deadline codes with cleanup causes, and fence uncertain cleanup instead of
 returning cached success. Retained close is separately bounded to three seconds;
 confirmed close retains known custody. Fixture ceilings only; wider lifetime,
 production and native Plan0386 gates remain open. No probes or activation.
+
+
+### 2026-10-14 Issue165 request-aware utility session boundary
+
+Plan0428: a successful retained read left its request interceptor/client alive
+while utility lease settled. Scope request-aware session lifetime to the utility:
+close/drain before settlement, preserve mixed failures, reject inherited sessions,
+and reconnect with fresh authority on an explicit later call. Actual public
+fixture qualifies repeat without another navigation and three distinct permits.
+Review found/reproduced false unknown fencing of pure budget denial; preserve
+its known typed outcome. Production activation and other background/exact-tab
+lifetimes remain open; no native provider effects.

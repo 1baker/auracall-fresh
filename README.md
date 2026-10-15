@@ -862,7 +862,10 @@ Terminology note:
   additional seconds after abort/deadline for adapter cleanup. They retain the
   original abort/timeout code; failed or unconfirmed cleanup fences custody and
   prevents cached fallback. Reads without request admission keep their existing
-  deadline behavior.
+  deadline behavior. Request-aware utilities close sessions retained during their
+  operation before settling the lease; later calls connect with fresh authority.
+  They reject inherited provider sessions rather than borrow a prior authority.
+  Confirmed pre-send budget denial retains its typed, resumable outcome.
   History-backed materialization is an explicit separate job surface:
   `POST /v1/account-mirrors/materializations` queues a durable
   `history_materialization_job` by provider conversation id, account-mirror

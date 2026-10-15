@@ -1,3 +1,13 @@
+## 2026-10-14 | A retained client cannot outlive its utility request authority
+
+A successful retained public read left Fetch observation active after utility
+lease settlement. Close sessions created within request-aware utilities before
+settling; reject inherited sessions and reconnect with fresh authority on later
+explicit calls. Preserve both read and cleanup errors, but retain pure confirmed
+pre-send budget denial instead of tagging it unknown. Plan0428 uses the actual
+public service/utility/adapter/guard/stores with simulated SDK output. Legacy
+no-hook session behavior and other background lifetimes remain separate.
+
 ## 2026-10-14 | Abort rejection is not cleanup completion
 
 A retained-session abort suppressed close rejection; preserving it alone still

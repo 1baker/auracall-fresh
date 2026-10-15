@@ -4,7 +4,9 @@
   synthetic SDK request events from initial Page.navigate and payload evaluation.
   Covers allowed read, budget, uncertain send, mixed read/close failure, transport
   close rejection/timeout, warning and retained-session abort (confirmed, failed,
-  timed out). Explicit utility completion precedes custody assertions. Unknown
+  timed out), successful retained-session boundary/fresh explicit reuse, retained
+  budget denial and combined read/close failure. Inherited sessions reject before
+  browser resolution. Explicit utility completion precedes custody assertions. Unknown
   close keeps lease/desktop custody; fixture-only release is not disconnect proof.
   `tests/browser/llmServiceContext.test.ts` also covers the five-second request-aware
   abort drain, preserved abort/deadline codes and cached-success exclusion on

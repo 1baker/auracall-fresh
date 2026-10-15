@@ -11,6 +11,7 @@ import {
 } from "../../packages/browser-service/src/service/mutationDispatcher.js";
 import {
 	createProviderTrafficGovernor,
+	isKnownBackendRequestBudgetDenial,
 	withProviderTrafficContext,
 } from "../../packages/browser-service/src/service/providerTrafficGovernor.js";
 import {
@@ -37,6 +38,7 @@ import {
 } from "./libraryInventoryDiagnostics.js";
 import {
 	createOwnedBackendRequestAuthority,
+	OwnedBackendRequestCleanupError,
 	validateBackendRequestLimit,
 } from "./ownedBackendRequestAuthority.js";
 import { providerNavigationAllowed } from "./providers/navigationPolicy.js";
@@ -70,6 +72,8 @@ export async function runConfiguredChatgptUtilityOperation<TResult>(input: {
 }): Promise<TResult | null> {
 	validateBackendRequestLimit(input.backendRequestLimit);
 	if (input.userConfig.browser?.tabConcurrencyMode !== "tab-affinity") return null;
+	if (input.backendRequestLimit !== undefined && input.options?.providerSession)
+		throw new Error("Request-aware ChatGPT utility cannot inherit a provider session.");
 	const now = input.now ?? (() => new Date());
 	const runtimeProfileId = input.userConfig.auracallProfile?.trim() || "default";
 	const runtime = (input.deps?.createRuntime ?? createBrowserTabConcurrencyRuntime)(
@@ -257,6 +261,8 @@ export async function runConfiguredChatgptUtilityOperation<TResult>(input: {
 					? false
 					: (input.options?.preserveActiveTab ?? input.options?.allowNavigation !== true),
 		});
+		if (input.backendRequestLimit !== undefined && options.providerSession)
+			throw new Error("Request-aware ChatGPT utility cannot inherit a provider session.");
 		const baseGovernor =
 			options.interactionGovernor ??
 			createBrowserInteractionGovernor({ abortSignal: input.options?.abortSignal });
@@ -356,16 +362,51 @@ export async function runConfiguredChatgptUtilityOperation<TResult>(input: {
 			: plannedProviderTrafficGovernor;
 		providerRunStarted = true;
 		recordLibraryInventoryStage(input.options, "affinity-provider-read");
-		execution = {
-			ok: true,
-			value: await input.run({
-				...options,
-				interactionGovernor: governor,
-				providerTrafficGovernor,
-				preserveInteractionGovernorForProviderSession: true,
-				disableProviderMutationRetry: input.mutability === "provider-mutating",
-			}),
+		const runOptions: BrowserProviderListOptions = {
+			...options,
+			interactionGovernor: governor,
+			providerTrafficGovernor,
+			preserveInteractionGovernorForProviderSession: true,
+			disableProviderMutationRetry: input.mutability === "provider-mutating",
 		};
+		const result = await Promise.resolve()
+			.then(() => input.run(runOptions))
+			.then(
+				(value) => ({ ok: true as const, value }),
+				(error: unknown) => ({ ok: false as const, error }),
+			);
+		// Request authority belongs to this utility lease, even if its adapter retains a session.
+		if (backendRequests && runOptions.providerSession) {
+			const session = runOptions.providerSession;
+			runOptions.providerSession = undefined;
+			const cleanup = await waitForConfiguredChatgptUtilitySettlement(
+				Promise.resolve()
+					.then(() => session.close())
+					.then(
+						() => undefined,
+						(error: unknown) =>
+							isKnownBackendRequestBudgetDenial(error)
+								? error
+								: new OwnedBackendRequestCleanupError(error),
+					),
+				CHATGPT_UTILITY_SETTLEMENT_TIMEOUT_MS,
+			);
+			const cleanupError =
+				cleanup.status === "timed-out"
+					? new OwnedBackendRequestCleanupError(
+							new Error("Owned backend request utility-session cleanup timed out."),
+						)
+					: cleanup.error;
+			if (cleanupError)
+				throw result.ok
+					? cleanupError
+					: new AggregateError(
+							[result.error, cleanupError],
+							"Utility operation and retained-session cleanup failed.",
+						);
+		}
+		if (!result.ok) throw result.error;
+		execution = result;
 	} catch (error) {
 		recordLibraryInventoryCleanupPhase(input.options, "read-rejected");
 		outcome = "failed";
