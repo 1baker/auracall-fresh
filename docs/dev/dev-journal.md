@@ -54427,3 +54427,17 @@ remote readback disproves interpreting its missing catalog remote_ref as deletio
 Report separates narrow candidate edits from broader owner-led lane reconciliation
 and preserves handoff no-removal boundary. Research complete; no policy/catalog,
 implementation or live effect. Memory disposition forbidden; no memory request.
+
+## 2026-10-15 | Return to actual live-follow failure and acceptance
+
+Governance parked by user. Read-only live reanchor confirms API62047, scheduler and
+all17active completions paused,0queued/running/warnings; original parent still
+pass15 with its historical successful21186byte automatic child. Latest failed
+native attempt was separate discovery5:429 then collector timeout/API500. Wrapper
+still selects old route-reuse runtime; four sampled modules differ and the new
+request-authority module is absent. Current source still omits production request
+ceilings. Concrete bounded automatic acceptance proposal is prepared at
+/tmp/issue165-live-follow-next-acceptance.md; no effects run. Next production source
+requirement is explicit numeric backend requests/minute wiring, followed by
+separately authorized install and one normal parent pass. Changed-B is later,
+not a prerequisite to preparing this pass. Memory disposition forbidden.
