@@ -39,6 +39,40 @@ source checkpoint; integration and the explicitly excluded native gates remain.
 Goal meter at the stop checkpoint:1,648,195tokens /6,645seconds. Stop new work and
 finish the restart-safe checkpoint before2million tokens; no goal renewal here.
 
+### Unfinished project continuation | 2026-10-14
+
+Restart packet extends the completed-project boundary above. The public collector,
+actual configured request authority, phase wrapper, owned client annotation and
+guarded CDP run against the existing simulated transport. Project1 completes;
+project2 is denied before send and client close throws the actual nested cleanup
+error. The first regression failed with `Provider observer cleanup failed.`
+The project loop now yields only when every error leaf is a typed pre-send budget
+denial and the final admission snapshot is budget-exhausted. It retains project1
+and nextProjectIndex1 without counting project2 complete. Serialized evidence
+resumes only project2 under a fresh authority after virtual account time advances
+61seconds, with the fixture ceiling unchanged. No automatic retry is introduced.
+
+Warning-after-denial, uncertain dispatch and denial combined with an unfinished
+physical action all reject at the same collector seam. A post-close warning probe
+is invalid because close already released the lease; the final snapshot preserves
+the warning observer's drained state. Mixed cleanup failures never qualify.
+
+Progress classification: progress. Fixed comparison: cb9330a66 working-tree patch.
+Serial Standards review: AGENTS, architecture/testing/validation policies and the
+code-review baseline; no accepted violation. Serial Spec review: this restart
+packet under Plan0411/0386; accepted blocking coverage gap for unsettled physical
+work repaired with the active-action regression. Closed-world verification passes;
+no remaining blocker for this source packet. This is not a full issue Spec pass.
+
+Focused tier: 93tests/4files pass; `pnpm typecheck`, scoped Biome and diff checks
+pass. Red command: `pnpm vitest run tests/browser/backendRequestAdmission.test.ts
+-t 'unfinished owned project'`. Green selection: that file plus
+`tests/accountMirror/chatgptMetadataCollector.test.ts`,
+`tests/accountMirror/providerTrafficPlan.test.ts`, and
+`tests/browser/configuredProviderTrafficAuthority.test.ts`. No retries, live tests,
+installation or provider effects. Stop at this tested source checkpoint as directed
+by the restart handoff. Detail/artifact continuation and all later gates remain.
+
 ## Acceptance and bounds
 
 The existing full metadata collector seam must stop before another project read,
@@ -54,8 +88,9 @@ Commands:
 `pnpm vitest run tests/accountMirror/chatgptMetadataCollector.test.ts -t 'project discovery preserves'`
 
 No production request ceiling, runtime install, provider probe, scheduler change,
-warning clearance or new resource window. This packet does not qualify interrupted
-mid-project results, detail/artifact cursor handling, bootstrap, retained targets,
-mixed-version callers or full Plan0386 materialization acceptance. Preserve the
+warning clearance or new resource window. The original checkpoint did not qualify interrupted mid-project results; the
+restart packet above qualifies that project boundary only. Detail/artifact cursor
+handling, bootstrap, retained targets,
+mixed-version callers and full Plan0386 materialization acceptance remain open. Preserve the
 original goal and early checkpoint limits. Serial primary TDD and bounded separate
 Standards/Spec review; no delegation.

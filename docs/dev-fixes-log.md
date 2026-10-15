@@ -1,3 +1,12 @@
+## 2026-10-14 | Do not lose completed projects on an unfinished owned read
+
+A backend denial can surface from owned-client close as nested aggregate errors.
+Yield project discovery only if every error leaf proves a pre-send budget denial
+and the final governor snapshot confirms exhaustion. Keep the interrupted index;
+never count unread rows complete. Warnings, mixed cleanup failures and uncertain
+effects hard-stop. Plan0421's composed collector regression retains completed
+rows and resumes only the unfinished project after serialization, without retry.
+
 ## 2026-10-14 | Request budget cursor and guard priority
 
 Plan0421 distinguishes known backend budget exhaustion from request uncertainty

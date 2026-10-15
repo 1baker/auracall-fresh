@@ -1,3 +1,13 @@
+## 2026-10-14 | Unfinished owned project budget yield
+
+Plan0421 restart packet now retains completed project evidence and the interrupted
+project cursor when real owned-client cleanup contains only pre-send budget denials.
+Public collector/actual authority/phase wrapper/CDP fixture observes red, then green;
+serialized evidence resumes only the unfinished project in a fresh authorized pass.
+Warnings, uncertain sends and unsettled physical actions reject.93focused tests,
+typecheck, scoped Biome and diff checks pass. Serial Standards/Spec review complete;
+source checkpoint only. Issue165 and native/detail/materialization gates stay open.
+
 ## 2026-10-14 | Plan0421 source checkpoint and resource stop
 
 Backend exhaustion and unqualified request failures now stop later browser actions.

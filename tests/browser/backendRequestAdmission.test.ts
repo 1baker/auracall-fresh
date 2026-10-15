@@ -5,12 +5,15 @@ import { expect, test, vi } from "vitest";
 import CDP, {
 	setCdpCommandAdmissionResolver,
 } from "../../packages/browser-service/src/guardedCdp.js";
+import { createChatgptAccountMirrorMetadataCollector } from "../../src/accountMirror/chatgptMetadataCollector.js";
+import { createAccountMirrorMetadataTrafficPlanController } from "../../src/accountMirror/providerTrafficPlan.js";
 import { setAuracallHomeDirOverrideForTest } from "../../src/auracallHome.js";
 import { createConfiguredProviderTrafficAuthorityFactory } from "../../src/browser/configuredProviderTrafficAuthority.js";
 import {
 	annotateClientMutationContext,
 	resolveProviderTrafficGovernor,
 } from "../../src/browser/providers/mutationAudit.js";
+import { createProviderSessionAuthority } from "../../src/browser/providers/providerSessionAuthority.js";
 import { DesktopControlGate } from "../../src/browser/service/desktopControlGate.js";
 import { createBrowserTabConcurrencyRuntime } from "../../src/browser/tabConcurrencyRuntime.js";
 
@@ -293,6 +296,192 @@ test("closing an owned client retains its warning observer while backend dispatc
 		await sending;
 		await closing;
 		await client?.close().catch(() => undefined);
+		setCdpCommandAdmissionResolver(undefined);
+		setAuracallHomeDirOverrideForTest(null);
+		await rm(home, { recursive: true, force: true });
+	}
+});
+
+test.each([
+	"budget",
+	"warning",
+	"uncertain",
+	"active-action",
+])("unfinished owned project read yields only known budget denial; mode=%s", async (mode) => {
+	const home = await mkdtemp(path.join(os.tmpdir(), "auracall-project-request-yield-"));
+	setAuracallHomeDirOverrideForTest(home);
+	fixture.clients.length = 0;
+	const clients: Array<Awaited<ReturnType<typeof CDP>>> = [];
+	const gate = new DesktopControlGate("fixture-project-yield");
+	setCdpCommandAdmissionResolver(async () => ({
+		run: (_command, effect) => gate.withAutomation("generation", effect),
+		hold: async () => {
+			const held = await gate.holdAutomation("generation");
+			return { run: (_command, effect) => held.run(effect), close: () => held.close() };
+		},
+	}));
+	const identity = {
+		email: "operator@example.test",
+		accountLevel: "Business",
+		source: "auth-session",
+	};
+	const config = {
+		runtimeProfiles: {
+			default: {
+				browserProfile: "default",
+				defaultService: "chatgpt",
+				services: { chatgpt: { identity } },
+			},
+		},
+	};
+	const sessionAuthority = createProviderSessionAuthority({
+		profiles: { default: { services: { chatgpt: { identity } } } },
+	});
+	const context = {
+		providerId: "chatgpt" as const,
+		auracallRuntimeProfile: "default",
+		browserProfile: "default",
+		managedBrowserProfile: "/fixture/managed",
+		browserProcessId: 1234,
+		browserTargetId: "fixture",
+	};
+	const proof = sessionAuthority.verify({
+		context,
+		expectation: sessionAuthority.resolveExpectation(context),
+		observation: identity,
+	});
+	const calls: string[] = [];
+	try {
+		const collect = async (
+			pass: number,
+			previousEvidence?: Parameters<
+				ReturnType<typeof createChatgptAccountMirrorMetadataCollector>["collect"]
+			>[0]["previousEvidence"],
+		) => {
+			const client = await CDP({ host: "127.0.0.1", port: 45150 });
+			clients.push(client);
+			const factory = createConfiguredProviderTrafficAuthorityFactory({
+				userConfig: { auracallProfile: "default", services: { chatgpt: { identity } } } as never,
+				provider: "chatgpt",
+				managedBrowserProfile: "/fixture/managed",
+				mutationAudit: async () => undefined,
+				baseOptions: {},
+				now: () => new Date(1792036000000 + pass * 61000),
+				backendRequestLimit: mode === "uncertain" ? 2 : 1,
+			});
+			await annotateClientMutationContext(
+				client,
+				{ providerTrafficAuthorityFactory: factory, providerTrafficRequired: true },
+				"provider:chatgpt",
+				`project-pass-${pass}`,
+			);
+			const governor = resolveProviderTrafficGovernor(client);
+			if (!governor) throw new Error("Expected owned governor");
+			const controller = createAccountMirrorMetadataTrafficPlanController(governor, {
+				maxPageReadsPerCycle: 4,
+			});
+			const transport = fixture.clients[fixture.clients.length - 1];
+			const collector = createChatgptAccountMirrorMetadataCollector(config as never, {
+				createClient: async () =>
+					({
+						getProviderSessionProof: async () => proof,
+						listProjects: async () =>
+							["project_1", "project_2"].map((id) => ({ id, name: id, provider: "chatgpt" })),
+						listConversations: async (projectId: string) => {
+							calls.push(projectId);
+							if (projectId === "project_2" && mode === "active-action") {
+								await governor.begin({
+									kind: "navigate",
+									interactionClass: "renavigation",
+									source: "fixture:unfinished-project",
+								});
+								await client.send("Page.navigate", { url: "https://fixture.invalid" });
+							}
+							if (!transport.handler) throw new Error("Expected owned request handler");
+							if (projectId === "project_2" && mode === "uncertain")
+								transport.failContinuation = true;
+							await transport.handler({
+								requestId: projectId,
+								request: { url: "https://chatgpt.com/backend-api/conversations" },
+							});
+							if (transport.failures.length && mode === "warning") {
+								if (!transport.responseHandler) throw new Error("Expected owned warning observer");
+								await transport.responseHandler({
+									response: { url: "https://chatgpt.com/backend-api/conversations", status: 429 },
+								});
+							}
+							if (transport.failures.length) await client.close();
+							return [
+								{ id: `conv_${projectId}`, title: projectId, projectId, provider: "chatgpt" },
+							];
+						},
+						listAccountFiles: async () => [],
+						listProjectFiles: async () => [],
+						listConversationFiles: async () => [],
+						getConversationContext: async () => {
+							throw new Error("No detail reads authorized");
+						},
+					}) as never,
+			});
+			try {
+				return await collector.collect({
+					provider: "chatgpt",
+					runtimeProfileId: "default",
+					expectedIdentityKey: identity.email,
+					sweepMode: "steady_follow",
+					requestedPhase: "project-conversations",
+					previousEvidence,
+					providerTrafficGovernor: controller.governor,
+					providerTrafficPlanController: controller,
+					limits: {
+						maxPageReadsPerCycle: 4,
+						maxConversationRowsPerCycle: 30,
+						maxArtifactRowsPerCycle: 0,
+						maxBrowserInteractionsPerMinute: 0,
+					},
+				});
+			} finally {
+				await client.close();
+			}
+		};
+		if (mode !== "budget") {
+			const error = await collect(0).catch((error: unknown) => error);
+			expect(error).toBeInstanceOf(AggregateError);
+			const messages = (value: unknown): string[] =>
+				value instanceof AggregateError
+					? value.errors.flatMap(messages)
+					: value instanceof Error
+						? [value.message]
+						: [];
+			expect(messages(error)).toContain(
+				mode === "uncertain"
+					? "Fixture continuation outcome is unknown"
+					: mode === "active-action"
+						? "Provider traffic lease release failed: invalid-transition."
+						: "Backend request admission denied: minute-backend-request-limit.",
+			);
+			expect(calls).toEqual(["project_1", "project_2"]);
+			return;
+		}
+		const first = await collect(0);
+		expect(calls).toEqual(["project_1", "project_2"]);
+		expect(first.manifests.conversations.map((c) => c.id)).toEqual(["conv_project_1"]);
+		expect(first.evidence.projectConversations).toMatchObject({
+			nextProjectIndex: 1,
+			scannedProjects: 1,
+			yielded: true,
+		});
+		expect(first.evidence.truncated.conversations).toBe(true);
+		const second = await collect(1, JSON.parse(JSON.stringify(first.evidence)));
+		expect(calls).toEqual(["project_1", "project_2", "project_2"]);
+		expect(second.manifests.conversations.map((c) => c.id)).toEqual(["conv_project_2"]);
+		expect(second.evidence.projectConversations).toMatchObject({
+			nextProjectIndex: 0,
+			scannedProjects: 1,
+			yielded: false,
+		});
+	} finally {
+		for (const client of clients) await client.close().catch(() => undefined);
 		setCdpCommandAdmissionResolver(undefined);
 		setAuracallHomeDirOverrideForTest(null);
 		await rm(home, { recursive: true, force: true });

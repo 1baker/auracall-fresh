@@ -7,6 +7,7 @@ import {
 	createBrowserInteractionGovernor,
 } from "../../packages/browser-service/src/service/interactionGovernor.js";
 import {
+	isKnownBackendRequestBudgetDenial,
 	type ProviderTrafficGovernor,
 	withProviderTrafficContext,
 } from "../../packages/browser-service/src/service/providerTrafficGovernor.js";
@@ -1779,18 +1780,27 @@ export async function readBoundedProjectConversations(
 		}
 		const remainingProjects = projects.length - projectIndex;
 		const perProjectRows = Math.max(1, Math.ceil(remainingRows / remainingProjects));
-		const result = await readBoundedConversations(
-			client,
-			projects[projectIndex].id,
-			perProjectRows,
-			{
+		let result: Awaited<ReturnType<typeof readBoundedConversations>>;
+		try {
+			result = await readBoundedConversations(client, projects[projectIndex].id, perProjectRows, {
 				listOptions: options.listOptions,
 				pacer: options.pacer,
 				observation: options.observation,
 				tolerateReadFailure: options.tolerateReadFailure,
 				providerCallTimeoutMs: options.providerCallTimeoutMs,
-			},
-		);
+			});
+		} catch (error) {
+			if (!isKnownBackendRequestBudgetDenial(error)) throw error;
+			throwIfCollectionAborted(options.abortSignal);
+			const governor = options.listOptions?.providerTrafficGovernor;
+			const state = governor?.snapshotAdmissionState?.();
+			if (state?.backendRequestOutcome !== "budget-exhausted") throw error;
+			// The interrupted project produced no qualified row. Resume this index
+			// in a fresh authorized pass and retain only earlier completed reads.
+			truncated = true;
+			yielded = true;
+			break;
+		}
 		scannedProjects += 1;
 		conversations.push(...result.items);
 		remainingRows -= result.items.length;

@@ -1,3 +1,12 @@
+- Unfinished owned project continuation (provider-free):
+  `pnpm vitest run tests/browser/backendRequestAdmission.test.ts -t 'unfinished owned project'`.
+  Public collector, configured shared request authority, phase wrapper and owned
+  CDP cleanup retain earlier completed evidence and the interrupted cursor after
+  known pre-send denial. A fresh pass resumes only that project after virtual
+  account time advances; warning, uncertain-send and unsettled-action variants
+  reject. Provider list results and transport are simulated; this does not prove
+  detail/artifact continuation, bootstrap coverage or native materialization.
+
 - Project discovery physical-budget continuation (provider-free):
   `pnpm vitest run tests/accountMirror/chatgptMetadataCollector.test.ts -t 'physical navigation budget'`.
   Public collector and actual governor/traffic plan hold navigation budget1:
