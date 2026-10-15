@@ -3007,6 +3007,7 @@ async function safeReadConversationContext(
 			timeoutMs,
 			`Conversation context inventory timed out for ${conversation.id}.`,
 			listOptions?.abortSignal,
+			Boolean(listOptions?.providerTrafficGovernor?.admitBackendRequest),
 		);
 		if (isChatgpt) {
 			const contextChunk = readAccountMirrorContextChunkMetadata(context);
@@ -3030,6 +3031,11 @@ async function safeReadConversationContext(
 			);
 		}
 		if (listOptions) listOptions.providerSession = undefined;
+		if (
+			listOptions?.providerTrafficGovernor?.admitBackendRequest &&
+			providerListOptions?.abortSignal?.aborted
+		)
+			throw failure;
 		rethrowProviderRequestFailure(failure, listOptions);
 		const detail = error instanceof Error ? error.message : String(error);
 		await recordAccountMirrorDomDriftObservation(observation, {
@@ -3150,34 +3156,74 @@ function withProviderCallTimeout<T>(
 	timeoutMs: number | null | undefined,
 	message: string,
 	parentSignal?: AbortSignal,
+	drainOnAbort = false,
 ): Promise<T> {
 	const controller = new AbortController();
 	const abortSignal = parentSignal
 		? AbortSignal.any([parentSignal, controller.signal])
 		: controller.signal;
 	const promise = operation(abortSignal);
-	if (typeof timeoutMs !== "number" || !Number.isFinite(timeoutMs) || timeoutMs <= 0) {
-		return promise;
-	}
-	let timeout: NodeJS.Timeout | null = null;
+	const hasTimeout = typeof timeoutMs === "number" && Number.isFinite(timeoutMs) && timeoutMs > 0;
+	if (!hasTimeout && !drainOnAbort) return promise;
 	return new Promise<T>((resolve, reject) => {
-		timeout = setTimeout(
-			() => {
-				controller.abort(new Error(message));
-				reject(new Error(message));
-			},
-			Math.max(1, Math.floor(timeoutMs)),
-		);
+		let timeout: NodeJS.Timeout | undefined;
+		let drainTimeout: NodeJS.Timeout | undefined;
+		let cancelling = false;
+		let settled = false;
+		const clear = () => {
+			if (timeout) clearTimeout(timeout);
+			if (drainTimeout) clearTimeout(drainTimeout);
+			parentSignal?.removeEventListener("abort", onParentAbort);
+		};
+		const fail = (error: unknown) => {
+			if (settled) return;
+			settled = true;
+			clear();
+			reject(error);
+		};
+		const cancel = (reason: unknown) => {
+			if (settled || cancelling) return;
+			cancelling = true;
+			controller.abort(reason);
+			if (!drainOnAbort) {
+				fail(reason);
+				return;
+			}
+			const cancellation = reason instanceof Error ? reason : new Error(message, { cause: reason });
+			drainTimeout = setTimeout(
+				() =>
+					fail(
+						new Error(cancellation.message, {
+							cause: new OwnedBackendRequestCleanupError(
+								new Error("Owned collector provider cleanup did not finish within 5000ms."),
+							),
+						}),
+					),
+				5000,
+			);
+			promise.then(
+				() => fail(cancellation),
+				(error: unknown) => fail(new Error(cancellation.message, { cause: error })),
+			);
+		};
+		const onParentAbort = () => cancel(parentSignal?.reason ?? new Error(message));
 		promise.then(
 			(value) => {
-				if (timeout) clearTimeout(timeout);
+				if (settled || cancelling) return;
+				settled = true;
+				clear();
 				resolve(value);
 			},
-			(error) => {
-				if (timeout) clearTimeout(timeout);
-				reject(error);
+			(error: unknown) => {
+				if (!cancelling) fail(error);
 			},
 		);
+		if (hasTimeout)
+			timeout = setTimeout(() => cancel(new Error(message)), Math.max(1, Math.floor(timeoutMs)));
+		if (drainOnAbort && parentSignal) {
+			parentSignal.addEventListener("abort", onParentAbort, { once: true });
+			if (parentSignal.aborted) onParentAbort();
+		}
 	});
 }
 

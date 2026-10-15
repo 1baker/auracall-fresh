@@ -54337,3 +54337,14 @@ hands session back in finally. Confirmed close releases known lease; failure and
 mixed diagnostic/cleanup preserve errors and unknown custody. Direct helper
 session reuse stays intact. Outer cancellation/teardown race is needs_evidence;
 no live/native/activation effect or wider completion claim.
+
+
+### 2026-10-15 Issue165 request-aware collector cancellation
+
+Plan0431: collector timeout returned normal result after delayed failed provider
+close. Request-aware context calls now drain cancellation at most five seconds,
+retain timeout/parent reason and provider cause, and stop instead of accepting
+normal completion. Four controlled provider cases cover failed/confirmed close,
+parent abort and unresolved completion. Explicit observer handles already-aborted
+signal; test budget10s observes real5s bound. Native whole-service composition,
+late-session cleanup after expiry and wider acceptance remain open; no activation.

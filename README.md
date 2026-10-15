@@ -872,6 +872,9 @@ Terminology note:
   Each top-level collection pass closes its retained detail client, including
   partial chunks. Completed evidence and the continuation cursor cross passes;
   the next explicit pass reconnects. Per-surface attribution shares that lifetime.
+  With request admission active, detail timeout or cancellation drains provider
+  completion for at most five seconds and stops the pass. Confirmed cleanup does
+  not turn a cancelled read into success; unconfirmed cleanup retains custody.
   History-backed materialization is an explicit separate job surface:
   `POST /v1/account-mirrors/materializations` queues a durable
   `history_materialization_job` by provider conversation id, account-mirror

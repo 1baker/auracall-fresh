@@ -1,3 +1,12 @@
+- Collector cancellation drain (provider-free):
+  `pnpm vitest run tests/browser/backendRequestAdmission.test.ts -t detail-cancel`.
+  Actual collector/configured authority/guard/stores use controlled provider
+  promises and SDK output. Explicit abort/completion signals prove delayed failed
+  close, confirmed close, parent abort and five-second drain expiry. Unknown close
+  retains idle unknown custody; unresolved provider keeps active lease until
+  fixture teardown. Ten-second test limit permits observing the five-second bound.
+  This is collector/callee-contract proof, not full native service acceptance.
+
 - Partial-chunk collection boundary (provider-free):
   `pnpm vitest run tests/browser/backendRequestAdmission.test.ts -t detail-partial`.
   Actual collector/configured authority/guard/store composition proves incomplete

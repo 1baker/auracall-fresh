@@ -1,3 +1,13 @@
+## 2026-10-15 | Collector timeout is not provider cleanup completion
+
+The collector aborted a context call, discarded its later close failure and
+returned success. Request-aware context cancellation now drains for at most five
+seconds, preserves original reason plus provider failure cause, and stops the pass.
+Unresolved completion remains explicitly unknown; confirmed close remains a
+cancelled read. No-hook deadlines keep their existing behavior. Plan0431 uses
+actual collector/configured-client authority with controlled provider promises;
+native service composition and late-session cleanup remain separate gates.
+
 ## 2026-10-15 | Only cursor and evidence cross collection passes
 
 Partial chunks retained an owned client beyond top-level collect; per-surface

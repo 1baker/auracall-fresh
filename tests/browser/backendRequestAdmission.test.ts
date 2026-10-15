@@ -425,6 +425,10 @@ test.each([
 	"detail-partial-scoped",
 	"detail-partial-failure",
 	"detail-partial-read-and-close",
+	"detail-cancel-failure",
+	"detail-cancel-clean",
+	"detail-cancel-parent",
+	"detail-cancel-stalled",
 	"files-budget",
 	"files-warning",
 	"files-persisted-warning",
@@ -438,6 +442,24 @@ test.each([
 ])("unfinished owned read yields only known budget denial; mode=%s", async (mode) => {
 	const detail = mode.startsWith("detail-");
 	const partialSession = mode.startsWith("detail-partial-");
+	const cancelling = mode.startsWith("detail-cancel-");
+	const callerAbort = new AbortController();
+	let releaseStall!: () => void;
+	const stallAllowed = new Promise<void>((resolve) => {
+		releaseStall = resolve;
+	});
+	let observeAbort!: () => void;
+	let releaseCleanup!: () => void;
+	let finishProvider!: () => void;
+	const providerFinished = new Promise<void>((resolve) => {
+		finishProvider = resolve;
+	});
+	const aborted = new Promise<void>((resolve) => {
+		observeAbort = resolve;
+	});
+	const cleanupAllowed = new Promise<void>((resolve) => {
+		releaseCleanup = resolve;
+	});
 	const projectFiles = mode.startsWith("files-");
 	const library = mode.startsWith("library-");
 	const failureMode =
@@ -504,7 +526,10 @@ test.each([
 				baseOptions: {},
 				now: () => new Date(1792036000000 + pass * 61000),
 				backendRequestLimit:
-					failureMode === "uncertain" || failureMode.startsWith("retained-") || partialSession
+					failureMode === "uncertain" ||
+					failureMode.startsWith("retained-") ||
+					partialSession ||
+					cancelling
 						? 2
 						: 1,
 			});
@@ -598,6 +623,30 @@ test.each([
 								expect(options.listOptions.accountMirrorContextChunk.startMessageIndex).toBe(24);
 							if (!detail) throw new Error("No detail reads authorized");
 							await readRow(id);
+							if (cancelling) {
+								try {
+									if (mode === "detail-cancel-parent")
+										setImmediate(() => callerAbort.abort(new Error("fixture parent cancelled")));
+									await new Promise<void>((resolve) => {
+										const onAbort = () => {
+											observeAbort();
+											resolve();
+										};
+										if (options.listOptions.abortSignal?.aborted) onAbort();
+										else
+											options.listOptions.abortSignal?.addEventListener("abort", onAbort, {
+												once: true,
+											});
+									});
+									await cleanupAllowed;
+									if (mode === "detail-cancel-stalled") await stallAllowed;
+									transport.failClose = mode === "detail-cancel-failure";
+									await client.close();
+									throw new Error("fixture provider aborted");
+								} finally {
+									finishProvider();
+								}
+							}
 							if (failureMode.startsWith("retained-")) {
 								transport.failClose = true;
 								options.listOptions.providerSession = {
@@ -653,7 +702,13 @@ test.each([
 					expectedIdentityKey: identity.email,
 					sweepMode: library ? "full_sweep" : "steady_follow",
 					requestedPhase: detail ? "detail-inventory" : "project-conversations",
-					...(partialSession ? { detailReadCap: 1 } : {}),
+					...(cancelling
+						? {
+								providerCallTimeoutMs: mode === "detail-cancel-parent" ? 1000 : 25,
+								abortSignal: callerAbort.signal,
+							}
+						: {}),
+					...(partialSession || cancelling ? { detailReadCap: 1 } : {}),
 					onDiagnosticEvent:
 						mode === "detail-partial-read-and-close"
 							? async (event) => {
@@ -715,9 +770,68 @@ test.each([
 					},
 				});
 			} finally {
-				if (!partialSession) await client.close();
+				if (!partialSession && !cancelling) await client.close();
 			}
 		};
+		if (cancelling) {
+			const collecting = collect(0);
+			const outcome = collecting.then(
+				(value) => ({ value }),
+				(error: unknown) => ({ error }),
+			);
+			await aborted;
+			const observed = await Promise.race([
+				outcome.then(() => "returned"),
+				new Promise<string>((resolve) => setImmediate(() => resolve("pending"))),
+			]);
+			try {
+				expect(observed).toBe("pending");
+			} finally {
+				releaseCleanup();
+				if (mode !== "detail-cancel-stalled") await providerFinished;
+			}
+			const result = await outcome;
+			expect(result).toHaveProperty("error");
+			const error = "error" in result ? result.error : undefined;
+			const leaves = (value: unknown): string[] =>
+				value instanceof AggregateError
+					? value.errors.flatMap(leaves)
+					: value instanceof Error
+						? [value.message, ...leaves(value.cause)]
+						: [];
+			expect(leaves(error)).toContain(
+				mode === "detail-cancel-parent"
+					? "fixture parent cancelled"
+					: "Conversation context inventory timed out for project_1.",
+			);
+			if (mode === "detail-cancel-failure")
+				expect(leaves(error)).toContain("fixture retained transport close unknown");
+			const runtime = createBrowserTabConcurrencyRuntime({
+				auracallProfile: "default",
+				services: { chatgpt: { identity } },
+			} as never);
+			expect(
+				(await runtime.registry?.list())?.find((lease) => lease.targetId === "project-pass-0"),
+			).toMatchObject(
+				mode === "detail-cancel-stalled"
+					? { state: "active" }
+					: mode === "detail-cancel-failure"
+						? { state: "idle", effectState: "outcome-unknown" }
+						: { state: "released", effectState: "settled" },
+			);
+			if (mode === "detail-cancel-stalled") {
+				try {
+					expect(leaves(error)).toContain(
+						"Owned collector provider cleanup did not finish within 5000ms.",
+					);
+				} finally {
+					releaseStall();
+					await providerFinished;
+				}
+			}
+			expect(calls).toEqual(["project_1"]);
+			return;
+		}
 		if (partialSession) {
 			const runtime = createBrowserTabConcurrencyRuntime({
 				auracallProfile: "default",
@@ -891,13 +1005,16 @@ test.each([
 			yielded: false,
 		});
 	} finally {
+		releaseCleanup();
+		releaseStall();
+		if (cancelling) await providerFinished;
 		for (const client of clients) await client.close().catch(() => undefined);
 		for (const held of holds) await held.close();
 		setCdpCommandAdmissionResolver(undefined);
 		setAuracallHomeDirOverrideForTest(null);
 		await rm(home, { recursive: true, force: true });
 	}
-});
+}, 10000);
 
 test.each([
 	"factory-first",
