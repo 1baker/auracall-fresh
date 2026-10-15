@@ -11,6 +11,7 @@ import { setAuracallHomeDirOverrideForTest } from "../../src/auracallHome.js";
 import { recordChatgptRateLimitDetection } from "../../src/browser/chatgptRateLimitGuard.js";
 import { runConfiguredChatgptUtilityOperation } from "../../src/browser/configuredChatgptUtilityAffinity.js";
 import { createConfiguredProviderTrafficAuthorityFactory } from "../../src/browser/configuredProviderTrafficAuthority.js";
+import { ChatgptService } from "../../src/browser/llmService/providers/chatgptService.js";
 import {
 	annotateClientMutationContext,
 	resolveProviderTrafficGovernor,
@@ -20,6 +21,20 @@ import { DesktopControlGate } from "../../src/browser/service/desktopControlGate
 import { createBrowserTabConcurrencyRuntime } from "../../src/browser/tabConcurrencyRuntime.js";
 
 const fixture = vi.hoisted(() => ({
+	page: undefined as
+		| undefined
+		| {
+				url: string;
+				navigations: string[];
+				bootstrapRequests: number;
+				payloadReads: number;
+				closeAttempts: number;
+				failClose?: boolean;
+				stallClose?: boolean;
+				warnPayload?: boolean;
+				failRead?: boolean;
+				failContinuation?: boolean;
+		  },
 	clients: [] as Array<{
 		requests: string[];
 		failures: string[];
@@ -34,14 +49,17 @@ vi.mock("chrome-remote-interface", () => ({
 		const state = {
 			requests: [] as string[],
 			failures: [] as string[],
-			failContinuation: false,
+			failContinuation: fixture.page?.failContinuation ?? false,
 			beforeContinue: undefined as (() => Promise<void>) | undefined,
 			responseHandler: undefined as ((event: unknown) => Promise<void>) | undefined,
 			handler: undefined as ((event: unknown) => Promise<void>) | undefined,
 		};
 		fixture.clients.push(state);
 		const client = {
-			send: async (command: string, parameters: { requestId?: string }) => {
+			send: async (
+				command: string,
+				parameters: { requestId?: string; expression?: string; url?: string },
+			) => {
 				if (command === "Fetch.continueRequest" || command === "Fetch.failRequest") {
 					if (!parameters.requestId) throw new Error("Missing fixture request ID");
 					(command === "Fetch.continueRequest" ? state.requests : state.failures).push(
@@ -51,12 +69,86 @@ vi.mock("chrome-remote-interface", () => ({
 				if (command === "Fetch.continueRequest" && state.failContinuation)
 					throw new Error("Fixture continuation outcome is unknown");
 				if (command === "Fetch.continueRequest") await state.beforeContinue?.();
+				if (
+					command === "Fetch.continueRequest" &&
+					fixture.page?.warnPayload &&
+					parameters.requestId?.startsWith("payload-")
+				)
+					await state.responseHandler?.({
+						response: {
+							url: "https://chatgpt.com/backend-api/conversation/fixture-conversation",
+							status: 429,
+						},
+					});
+				if (command === "Page.navigate" && fixture.page) {
+					if (!state.handler)
+						throw new Error("Provider navigation started before request interception");
+					if (!parameters.url) throw new Error("Missing navigation URL");
+					fixture.page.navigations.push(parameters.url);
+					fixture.page.url = parameters.url;
+					for (let index = 0; index < fixture.page.bootstrapRequests; index++)
+						await state.handler({
+							requestId: `bootstrap-${index}`,
+							request: { url: "https://chatgpt.com/backend-api/conversations" },
+						});
+					return { frameId: "fixture-frame" };
+				}
+				if (command === "Runtime.evaluate" && fixture.page) {
+					const expression = parameters.expression ?? "";
+					let value: unknown = [];
+					if (expression === "location.href") value = fixture.page.url;
+					else if (expression.includes("/api/auth/session"))
+						value = { user: { id: "fixture-user", email: "operator@example.test" } };
+					else if (
+						expression.includes("const rawConversationId") ||
+						expression.includes("document.readyState")
+					)
+						value = true;
+					else if (expression.includes("/backend-api/conversation/")) {
+						const requestId = `payload-${++fixture.page.payloadReads}`;
+						if (!state.handler)
+							throw new Error("Payload fetch started without request interception");
+						await state.handler({
+							requestId,
+							request: { url: "https://chatgpt.com/backend-api/conversation/fixture-conversation" },
+						});
+						value =
+							state.requests.includes(requestId) && !state.failures.includes(requestId)
+								? { ok: true, body: JSON.stringify({ mapping: {} }) }
+								: { ok: false, status: 0, body: null };
+					} else if (expression.includes("const pageStart =")) {
+						if (fixture.page.failRead) throw new Error("fixture public read failed");
+						value = {
+							messages: [{ role: "assistant", text: "Known fixture answer" }],
+							nextOffset: null,
+							totalMessages: 1,
+						};
+					}
+					return { result: { value } };
+				}
 				return {};
 			},
-			close: async () => undefined,
+			close: async () => {
+				if (fixture.page) {
+					fixture.page.closeAttempts++;
+					if (fixture.page.failClose) throw new Error("fixture transport close outcome unknown");
+					if (fixture.page.stallClose) await new Promise<never>(() => undefined);
+				}
+			},
+			// biome-ignore lint/style/useNamingConvention: CDP protocol domain.
+			Runtime: {
+				enable: () => client.send("Runtime.enable", {}),
+				evaluate: (input: { expression: string }) => client.send("Runtime.evaluate", input),
+			},
+			// biome-ignore lint/style/useNamingConvention: CDP protocol domain.
+			Page: {
+				enable: () => client.send("Page.enable", {}),
+				navigate: (input: { url: string }) => client.send("Page.navigate", input),
+			},
 			// biome-ignore lint/style/useNamingConvention: CDP protocol domain.
 			Network: {
 				enable: async () => undefined,
+				loadingFinished: () => () => undefined,
 				responseReceived: (handler: (event: unknown) => Promise<void>) => {
 					state.responseHandler = handler;
 					return () => {
@@ -885,4 +977,166 @@ test("utility rejects an invalid backend limit before resolving a browser", asyn
 		}),
 	).rejects.toThrow("positive safe integer");
 	expect(resolveServiceTarget).not.toHaveBeenCalled();
+});
+
+test.each([
+	"allowed",
+	"budget",
+	"uncertain",
+	"read-and-budget",
+	"transport-failure",
+	"transport-timeout",
+	"warning",
+])("public utility bootstrap owns request admission before first navigation; mode=%s", async (mode) => {
+	const home = await mkdtemp(path.join(os.tmpdir(), "auracall-public-request-"));
+	setAuracallHomeDirOverrideForTest(home);
+	fixture.clients.length = 0;
+	const completeRequests =
+		mode === "allowed" ||
+		mode === "transport-failure" ||
+		mode === "transport-timeout" ||
+		mode === "warning";
+	fixture.page = {
+		url: "about:blank",
+		navigations: [],
+		bootstrapRequests: completeRequests ? 1 : 2,
+		payloadReads: 0,
+		closeAttempts: 0,
+		failClose: mode === "transport-failure",
+		stallClose: mode === "transport-timeout",
+		warnPayload: mode === "warning",
+		failRead: mode === "read-and-budget",
+		failContinuation: mode === "uncertain",
+	};
+	const gate = new DesktopControlGate("fixture-public-request");
+	let held: Awaited<ReturnType<typeof gate.holdAutomation>> | undefined;
+	let released = false;
+	setCdpCommandAdmissionResolver(async () => ({
+		run: (_command, effect) => gate.withAutomation("generation", effect),
+		hold: async () => {
+			const hold = await gate.holdAutomation("generation");
+			held = hold;
+			return {
+				run: (_command, effect) => hold.run(effect),
+				close: async () => {
+					released = true;
+					await hold.close();
+				},
+			};
+		},
+	}));
+	const config = {
+		auracallProfile: "public",
+		services: { chatgpt: { identity: { email: "operator@example.test" } } },
+		browser: {
+			tabConcurrencyMode: "tab-affinity",
+			chatgptUrl: "https://chatgpt.com/",
+			cache: { rootDir: home, identityKey: "fixture", useDetectedIdentity: false },
+		},
+	} as never;
+	let opened = false;
+	const service = ChatgptService.create(config, {
+		browserService: {
+			getConfig: () => ({}),
+			resolveServiceTarget: async () => ({
+				host: "127.0.0.1",
+				port: 45170,
+				managedBrowserProfile: "/fixture/public",
+				browserProfile: "fixture",
+				browserProcessId: process.pid,
+			}),
+		} as never,
+		runUtilityOperation: (input) =>
+			runConfiguredChatgptUtilityOperation({
+				...input,
+				backendRequestLimit: completeRequests ? 2 : 1,
+				deps: {
+					listTargets: async () =>
+						opened
+							? ([{ id: "public-target", type: "page", url: fixture.page?.url }] as never)
+							: [],
+					openTarget: async (_port, url) => {
+						expect(url).toBe("about:blank");
+						opened = true;
+						return { id: "public-target", url } as never;
+					},
+					closeTarget: async () => undefined,
+				},
+			}),
+	});
+	try {
+		const reading = service.getConversationContext("fixture-conversation", {
+			refresh: true,
+			retryAttempts: 0,
+			timeoutMs: 5000,
+			listOptions: { interactionGovernor: { beforeInteraction: async () => undefined } },
+		});
+		if (mode === "allowed")
+			await expect(reading).resolves.toMatchObject({
+				messages: [{ role: "assistant", text: "Known fixture answer" }],
+			});
+		else {
+			const error = await reading.catch((error: unknown) => error);
+			expect(error).toBeInstanceOf(Error);
+			const messages = (value: unknown): string[] =>
+				value instanceof AggregateError
+					? value.errors.flatMap(messages)
+					: value instanceof Error
+						? [value.message]
+						: [];
+			if (mode === "warning")
+				expect(messages(error).some((message) => /rate.limit/i.test(message))).toBe(true);
+			else
+				expect(messages(error)).toContain(
+					mode === "uncertain"
+						? "Fixture continuation outcome is unknown"
+						: mode === "transport-failure" || mode === "transport-timeout"
+							? mode === "transport-timeout"
+								? "Owned backend request client cleanup timed out."
+								: "fixture transport close outcome unknown"
+							: "Backend request admission denied: minute-backend-request-limit.",
+				);
+			if (mode === "read-and-budget")
+				expect(messages(error)).toContain("fixture public read failed");
+		}
+		expect(fixture.page.navigations).toEqual(["https://chatgpt.com/c/fixture-conversation"]);
+		expect(fixture.clients).toHaveLength(1);
+		expect(fixture.clients[0].requests).toEqual(
+			completeRequests ? ["bootstrap-0", "payload-1"] : ["bootstrap-0"],
+		);
+		expect(fixture.clients[0].handler).toBeUndefined();
+		expect(fixture.page.closeAttempts).toBe(1);
+
+		const leases = await createBrowserTabConcurrencyRuntime(config).registry?.list();
+		expect(leases?.find((lease) => lease.targetId === "public-target")).toMatchObject({
+			state: "idle",
+			effectState:
+				mode === "uncertain" ||
+				mode === "transport-failure" ||
+				mode === "transport-timeout" ||
+				mode === "warning"
+					? "outcome-unknown"
+					: "settled",
+		});
+
+		if (mode === "warning") {
+			const ledger = createBrowserTabConcurrencyRuntime(config).ledger;
+			if (!ledger) throw new Error("Expected public request ledger");
+			expect(
+				await ledger.listActiveProviderWarnings({ now: new Date().toISOString() }),
+			).toHaveLength(1);
+		}
+		if (mode === "transport-failure" || mode === "transport-timeout") expect(released).toBe(false);
+		else {
+			const human = await gate.takeControl("generation");
+			await gate.releaseControl(human.token, "generation");
+		}
+	} finally {
+		// Isolated fixture cleanup after assertions, not proof of a transport disconnect.
+		if (mode === "transport-failure" || mode === "transport-timeout") await held?.close();
+		fixture.page = undefined;
+		setCdpCommandAdmissionResolver(undefined);
+		setAuracallHomeDirOverrideForTest(null);
+		await rm(home, { recursive: true, force: true });
+	}
 });

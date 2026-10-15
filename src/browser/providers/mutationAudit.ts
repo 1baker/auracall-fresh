@@ -7,6 +7,7 @@ import {
 	isKnownBackendRequestBudgetDenial,
 	ProviderTrafficWarningError,
 } from "../../../packages/browser-service/src/service/providerTrafficGovernor.js";
+import { OwnedBackendRequestCleanupError } from "../ownedBackendRequestAuthority.js";
 import type { ChromeClient } from "../types.js";
 import { attachOwnedChatgptBackendRequestAdmission } from "./chatgptBackendRequestAdmission.js";
 import type { BrowserProviderListOptions } from "./types.js";
@@ -116,6 +117,11 @@ export async function annotateClientMutationContext(
 		}
 	}
 	if (authority || observer || governor?.admitBackendRequest) {
+		const failClose = (error: unknown): never => {
+			if (governor?.admitBackendRequest && !isKnownBackendRequestBudgetDenial(error))
+				throw new OwnedBackendRequestCleanupError(error);
+			throw error;
+		};
 		const close = client.close.bind(client);
 		let closed = false;
 		client.close = async () => {
@@ -158,14 +164,16 @@ export async function annotateClientMutationContext(
 					reason: closeError instanceof Error ? closeError.message : null,
 				});
 			} catch (error) {
-				if (closeError)
-					throw new AggregateError(
-						[closeError, error],
-						"Provider cleanup and authority settlement failed.",
-					);
-				throw error;
+				failClose(
+					closeError
+						? new AggregateError(
+								[closeError, error],
+								"Provider cleanup and authority settlement failed.",
+							)
+						: error,
+				);
 			}
-			if (closeError) throw closeError;
+			if (closeError) failClose(closeError);
 		};
 	}
 	if (observer) {

@@ -1094,6 +1094,9 @@ operation governor, and counts toward that operation budget. If admission is
 denied, the target stays blank. A later explicit command can reuse the known owned
 blank target under normal guards; this does not trigger an automatic retry or
 clear an uncertain effect. Existing-target preservation still applies.
+When backend request admission is enabled, a failed request or an unconfirmed
+client disconnect prevents the utility read from reporting success. Unknown cleanup
+keeps the utility fenced even when readable content was already observed.
 
 Browser and new-target opening are independent of desktop input ownership. Automatic placement uses the native pool’s configured maximum, grows with demand and wraps when full; shrink remains guarded by empty-capacity custody. Desktop human-control ownership continues to protect interaction with existing pages. A retained input claim must not be used to prevent browser opening. Issue253/Plan0405 record the source and acceptance boundaries.
 

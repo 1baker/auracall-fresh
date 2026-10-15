@@ -399,6 +399,7 @@ export async function runConfiguredChatgptUtilityOperation<TResult>(input: {
 		now,
 		initialError: warningRecordError,
 		backendRequests,
+		operationError: execution.ok ? undefined : execution.error,
 	});
 	const settlementResult = await waitForConfiguredChatgptUtilitySettlement(
 		settlement,
@@ -438,11 +439,14 @@ async function settleConfiguredChatgptUtilityOperation(input: {
 	now: () => Date;
 	initialError: unknown;
 	backendRequests?: ReturnType<typeof createOwnedBackendRequestAuthority>;
+	operationError?: unknown;
 }): Promise<unknown> {
 	const failures: unknown[] = input.initialError ? [input.initialError] : [];
 	let effectState = input.effectState;
 	try {
-		effectState = (await input.backendRequests?.reconcileEffectState(effectState)) ?? effectState;
+		effectState =
+			(await input.backendRequests?.reconcileEffectState(effectState, input.operationError)) ??
+			effectState;
 	} catch (error) {
 		effectState = "outcome-unknown";
 		failures.push(error);

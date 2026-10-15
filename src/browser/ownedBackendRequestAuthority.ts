@@ -5,6 +5,22 @@ import type {
 import { ProviderBackendRequestBudgetExceededError } from "../../packages/browser-service/src/service/providerTrafficGovernor.js";
 import type { TabLeaseEffectState } from "../../packages/browser-service/src/service/tabLeaseRegistry.js";
 
+export class OwnedBackendRequestCleanupError extends AggregateError {
+	constructor(error: unknown) {
+		super(
+			error instanceof AggregateError ? error.errors : [error],
+			error instanceof Error ? error.message : "Owned backend request cleanup failed.",
+		);
+	}
+}
+
+function hasUnknownOwnedRequestCleanup(error: unknown): boolean {
+	return (
+		error instanceof OwnedBackendRequestCleanupError ||
+		(error instanceof AggregateError && error.errors.some(hasUnknownOwnedRequestCleanup))
+	);
+}
+
 export function validateBackendRequestLimit(limit: number | undefined): void {
 	if (limit !== undefined && (!Number.isSafeInteger(limit) || limit < 1))
 		throw new Error("Backend request limit must be a positive safe integer.");
@@ -103,7 +119,9 @@ export function createOwnedBackendRequestAuthority(input: {
 		},
 		async reconcileEffectState<TEffect extends TabLeaseEffectState>(
 			effectState: TEffect,
+			failure?: unknown,
 		): Promise<TEffect | "settled" | "outcome-unknown"> {
+			if (hasUnknownOwnedRequestCleanup(failure)) return "outcome-unknown";
 			const records = (await ledger.list({ provider, tenantKey })).filter(
 				(record) => record.tabLeaseId === tabLeaseId && record.operationId === operationId,
 			);

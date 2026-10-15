@@ -1,3 +1,13 @@
+## 2026-10-14 | Public request failures must survive bounded client cleanup
+
+A public context read returned success after its owned interceptor denied overflow:
+the bounded close helper classified every rejected promise as settled. Preserve
+request-aware cleanup failures and both read/close causes. Tag uncertain close or
+close timeout so read-only utility settlement cannot downgrade it to settled;
+retain desktop custody until disconnect is verified. Plan0426 qualifies actual
+public adapter/transport composition with simulated SDK/provider output. Abort-
+triggered and retained-session cleanup remain separate gates.
+
 ## 2026-10-14 | Share request admission without borrowing another lease
 
 A utility governor built its own operation authority but omitted backend admission.

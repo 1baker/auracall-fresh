@@ -1,3 +1,13 @@
+## 2026-10-14 | Plan0426 public bootstrap request proof and cleanup failures
+
+Public ChatgptService/utility/adapter/owned-CDP fixture now intercepts first-navigation
+and payload requests. Known denial no longer disappears in normal cleanup; mixed
+read/close causes survive. Transport-close failure/timeout retains unknown lease
+and desktop custody. Warning and uncertain-send cases hard-stop.88focused tests,
+typecheck, Biome/diff checks pass (2existing lifecycle infos); serial Standards/Spec
+review complete. Source packet CLOSED; abort/retained/other caller/native gates stay
+open. No production activation or provider effect.
+
 ## 2026-10-14 | Plan0425 utility request authority composition
 
 Configured clients and utility now share request permits/effect reconciliation

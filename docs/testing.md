@@ -1,3 +1,12 @@
+- Public utility first-navigation request admission (provider-free):
+  `pnpm vitest run tests/browser/backendRequestAdmission.test.ts -t 'public utility bootstrap'`.
+  Actual ChatgptService, utility, adapter, annotation and guarded CDP process
+  synthetic SDK request events from initial Page.navigate and payload evaluation.
+  Covers allowed read, budget, uncertain send, mixed read/close failure, transport
+  close rejection/timeout and warning. Unknown close keeps lease/desktop custody;
+  fixture-only hold release is not native disconnect proof. Abort/retained/other
+  bootstrap callers and production activation remain unqualified.
+
 - Utility owned request composition (provider-free):
   `pnpm vitest run tests/browser/backendRequestAdmission.test.ts -t 'utility request admission'`.
   Real utility/configured stores and owned-CDP annotation share a fixture permit
