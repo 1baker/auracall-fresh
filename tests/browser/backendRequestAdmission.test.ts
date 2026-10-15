@@ -17,6 +17,7 @@ import {
 	resolveProviderTrafficGovernor,
 } from "../../src/browser/providers/mutationAudit.js";
 import { createProviderSessionAuthority } from "../../src/browser/providers/providerSessionAuthority.js";
+import type { BrowserProviderListOptions } from "../../src/browser/providers/types.js";
 import { DesktopControlGate } from "../../src/browser/service/desktopControlGate.js";
 import { createBrowserTabConcurrencyRuntime } from "../../src/browser/tabConcurrencyRuntime.js";
 
@@ -33,6 +34,7 @@ const fixture = vi.hoisted(() => ({
 				stallClose?: boolean;
 				warnPayload?: boolean;
 				failRead?: boolean;
+				abortRead?: () => void;
 				failContinuation?: boolean;
 		  },
 	clients: [] as Array<{
@@ -117,6 +119,12 @@ vi.mock("chrome-remote-interface", () => ({
 								? { ok: true, body: JSON.stringify({ mapping: {} }) }
 								: { ok: false, status: 0, body: null };
 					} else if (expression.includes("const pageStart =")) {
+						if (fixture.page.abortRead) {
+							const abort = fixture.page.abortRead;
+							fixture.page.abortRead = undefined;
+							abort();
+							throw new Error("fixture context interrupted");
+						}
 						if (fixture.page.failRead) throw new Error("fixture public read failed");
 						value = {
 							messages: [{ role: "assistant", text: "Known fixture answer" }],
@@ -987,11 +995,23 @@ test.each([
 	"transport-failure",
 	"transport-timeout",
 	"warning",
+	"abort-retained-failure",
+	"abort-retained-timeout",
+	"abort-retained-clean",
 ])("public utility bootstrap owns request admission before first navigation; mode=%s", async (mode) => {
 	const home = await mkdtemp(path.join(os.tmpdir(), "auracall-public-request-"));
 	setAuracallHomeDirOverrideForTest(home);
 	fixture.clients.length = 0;
+	const aborting = mode.startsWith("abort-");
+	const unknownAbort = aborting && mode !== "abort-retained-clean";
+	const controller = new AbortController();
+	let utilityError: unknown;
+	let finishUtility!: () => void;
+	const utilitySettled = new Promise<void>((resolve) => {
+		finishUtility = resolve;
+	});
 	const completeRequests =
+		aborting ||
 		mode === "allowed" ||
 		mode === "transport-failure" ||
 		mode === "transport-timeout" ||
@@ -1002,8 +1022,9 @@ test.each([
 		bootstrapRequests: completeRequests ? 1 : 2,
 		payloadReads: 0,
 		closeAttempts: 0,
-		failClose: mode === "transport-failure",
-		stallClose: mode === "transport-timeout",
+		failClose: mode === "transport-failure" || mode === "abort-retained-failure",
+		abortRead: aborting ? () => controller.abort(new Error("fixture public abort")) : undefined,
+		stallClose: mode === "transport-timeout" || mode === "abort-retained-timeout",
 		warnPayload: mode === "warning",
 		failRead: mode === "read-and-budget",
 		failContinuation: mode === "uncertain",
@@ -1062,14 +1083,24 @@ test.each([
 					},
 					closeTarget: async () => undefined,
 				},
-			}),
+			})
+				.catch((error: unknown) => {
+					utilityError = error;
+					throw error;
+				})
+				.finally(() => finishUtility()),
 	});
+	const listOptions: BrowserProviderListOptions = {
+		interactionGovernor: { beforeInteraction: async () => undefined },
+		abortSignal: controller.signal,
+		useProviderSession: aborting,
+	};
 	try {
 		const reading = service.getConversationContext("fixture-conversation", {
 			refresh: true,
 			retryAttempts: 0,
 			timeoutMs: 5000,
-			listOptions: { interactionGovernor: { beforeInteraction: async () => undefined } },
+			listOptions,
 		});
 		if (mode === "allowed")
 			await expect(reading).resolves.toMatchObject({
@@ -1084,7 +1115,9 @@ test.each([
 					: value instanceof Error
 						? [value.message]
 						: [];
-			if (mode === "warning")
+			if (aborting)
+				expect(error).toMatchObject({ code: "conversation_context_aborted", outcome: "aborted" });
+			else if (mode === "warning")
 				expect(messages(error).some((message) => /rate.limit/i.test(message))).toBe(true);
 			else
 				expect(messages(error)).toContain(
@@ -1099,6 +1132,8 @@ test.each([
 			if (mode === "read-and-budget")
 				expect(messages(error)).toContain("fixture public read failed");
 		}
+		await utilitySettled;
+		if (aborting) expect(listOptions.providerSession).toBeUndefined();
 		expect(fixture.page.navigations).toEqual(["https://chatgpt.com/c/fixture-conversation"]);
 		expect(fixture.clients).toHaveLength(1);
 		expect(fixture.clients[0].requests).toEqual(
@@ -1111,6 +1146,7 @@ test.each([
 		expect(leases?.find((lease) => lease.targetId === "public-target")).toMatchObject({
 			state: "idle",
 			effectState:
+				unknownAbort ||
 				mode === "uncertain" ||
 				mode === "transport-failure" ||
 				mode === "transport-timeout" ||
@@ -1119,6 +1155,19 @@ test.each([
 					: "settled",
 		});
 
+		if (unknownAbort) {
+			const messages = (value: unknown): string[] =>
+				value instanceof AggregateError
+					? value.errors.flatMap(messages)
+					: value instanceof Error
+						? [value.message, ...messages(value.cause)]
+						: [];
+			expect(messages(utilityError)).toContain(
+				mode === "abort-retained-timeout"
+					? "Owned backend request retained-session cleanup timed out."
+					: "fixture transport close outcome unknown",
+			);
+		}
 		if (mode === "warning") {
 			const ledger = createBrowserTabConcurrencyRuntime(config).ledger;
 			if (!ledger) throw new Error("Expected public request ledger");
@@ -1126,14 +1175,16 @@ test.each([
 				await ledger.listActiveProviderWarnings({ now: new Date().toISOString() }),
 			).toHaveLength(1);
 		}
-		if (mode === "transport-failure" || mode === "transport-timeout") expect(released).toBe(false);
+		if (unknownAbort || mode === "transport-failure" || mode === "transport-timeout")
+			expect(released).toBe(false);
 		else {
 			const human = await gate.takeControl("generation");
 			await gate.releaseControl(human.token, "generation");
 		}
 	} finally {
 		// Isolated fixture cleanup after assertions, not proof of a transport disconnect.
-		if (mode === "transport-failure" || mode === "transport-timeout") await held?.close();
+		if (unknownAbort || mode === "transport-failure" || mode === "transport-timeout")
+			await held?.close();
 		fixture.page = undefined;
 		setCdpCommandAdmissionResolver(undefined);
 		setAuracallHomeDirOverrideForTest(null);

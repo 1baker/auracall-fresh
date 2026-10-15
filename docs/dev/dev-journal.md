@@ -54293,3 +54293,14 @@ PR305 installed592exactparity/API98570. Canonical no-submit app selection passes
 ### 2026-10-13 Issue253 installed native acceptance PASS
 
 Packet2 completed native exit0 in584.438s beforeguarddeadline. Exact existing app/account/inventory, frozenoneprompt/backend5.6Instant/providerfinal and wholeanswer normalized equality verified.49/65workflowcalls;5newSession167KEEP, priorbaselinepreserved.2/10 used, no furtherpackets. Plans0405/0406-1/0409/0410 CLOSED with boundedclaims; observergap/PNGcollision and unknownhistoricalexitactor preserved. Numericalresearchvalidation andactiveidleexpiry are separate. Memory forbidden; no wakes.
+
+
+### 2026-10-14 Issue165 request-aware abort cleanup
+
+Plan0427: retained-session abort fixture reproduced settled lease after failed
+close. Preserving adapter close failure alone stayed red: service abort raced
+cleanup. Request-aware context reads now drain at most five seconds, preserve
+abort/deadline codes with cleanup causes, and fence uncertain cleanup instead of
+returning cached success. Retained close is separately bounded to three seconds;
+confirmed close retains known custody. Fixture ceilings only; wider lifetime,
+production and native Plan0386 gates remain open. No probes or activation.

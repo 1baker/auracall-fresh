@@ -858,6 +858,11 @@ Terminology note:
   `cache context get` returns the receipt as `terminalReceipt` without
   contacting a browser.
   An explicit `--refresh` never substitutes stale cached context for a timeout.
+  Programmatic context reads with owned backend request admission allow up to five
+  additional seconds after abort/deadline for adapter cleanup. They retain the
+  original abort/timeout code; failed or unconfirmed cleanup fences custody and
+  prevents cached fallback. Reads without request admission keep their existing
+  deadline behavior.
   History-backed materialization is an explicit separate job surface:
   `POST /v1/account-mirrors/materializations` queues a durable
   `history_materialization_job` by provider conversation id, account-mirror

@@ -1,3 +1,14 @@
+## 2026-10-14 | Abort rejection is not cleanup completion
+
+A retained-session abort suppressed close rejection; preserving it alone still
+released the utility with settled effects because the public service raced the
+provider against abort. Drain request-aware context cleanup within five seconds,
+preserve its cause under the original abort/deadline code, and classify nested
+cleanup uncertainty before cache fallback and lease settlement. Observe abort-
+listener rejection without consuming the read path's original promise. Plan0427
+covers this source seam with actual public composition and synthetic SDK output;
+other retained/background lifetimes and native activation remain separate gates.
+
 ## 2026-10-14 | Public request failures must survive bounded client cleanup
 
 A public context read returned success after its owned interceptor denied overflow:

@@ -4817,6 +4817,8 @@ function bindChatgptAbortCleanup(
 				status === "timed-out" ? "abort-cleanup-timed-out" : "abort-cleanup-settled",
 			);
 		});
+		// The abort listener cannot await; the read path still observes the original promise.
+		void cleanupPromise.catch(() => undefined);
 	};
 	const unbind = (() => {
 		if (signal) signal.removeEventListener("abort", closeAbortedConnection);
@@ -4843,10 +4845,25 @@ async function closeAbortedChatgptTabConnection(
 		(connection.borrowedFromSession || retainedConnection === connection)
 	) {
 		options.providerSession = undefined;
-		return waitForChatgptCleanup(
-			Promise.resolve().then(() => providerSession.close()),
+		let closeFailure: unknown;
+		let closeFailed = false;
+		const status = await waitForChatgptCleanup(
+			Promise.resolve()
+				.then(() => providerSession.close())
+				.catch((error: unknown) => {
+					closeFailed = true;
+					closeFailure = error;
+				}),
 			CHATGPT_CDP_CLOSE_TIMEOUT_MS,
 		);
+		if (options.providerTrafficGovernor?.admitBackendRequest) {
+			if (status === "timed-out")
+				throw new OwnedBackendRequestCleanupError(
+					new Error("Owned backend request retained-session cleanup timed out."),
+				);
+			if (closeFailed) throw new OwnedBackendRequestCleanupError(closeFailure);
+		}
+		return status;
 	}
 	return closeChatgptTabConnection(connection, options);
 }

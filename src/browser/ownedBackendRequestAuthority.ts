@@ -14,10 +14,14 @@ export class OwnedBackendRequestCleanupError extends AggregateError {
 	}
 }
 
-function hasUnknownOwnedRequestCleanup(error: unknown): boolean {
+export function hasUnknownOwnedRequestCleanup(error: unknown, seen = new Set<unknown>()): boolean {
+	if (seen.has(error)) return false;
+	seen.add(error);
 	return (
 		error instanceof OwnedBackendRequestCleanupError ||
-		(error instanceof AggregateError && error.errors.some(hasUnknownOwnedRequestCleanup))
+		(error instanceof AggregateError &&
+			error.errors.some((item) => hasUnknownOwnedRequestCleanup(item, seen))) ||
+		(error instanceof Error && hasUnknownOwnedRequestCleanup(error.cause, seen))
 	);
 }
 

@@ -3,9 +3,13 @@
   Actual ChatgptService, utility, adapter, annotation and guarded CDP process
   synthetic SDK request events from initial Page.navigate and payload evaluation.
   Covers allowed read, budget, uncertain send, mixed read/close failure, transport
-  close rejection/timeout and warning. Unknown close keeps lease/desktop custody;
-  fixture-only hold release is not native disconnect proof. Abort/retained/other
-  bootstrap callers and production activation remain unqualified.
+  close rejection/timeout, warning and retained-session abort (confirmed, failed,
+  timed out). Explicit utility completion precedes custody assertions. Unknown
+  close keeps lease/desktop custody; fixture-only release is not disconnect proof.
+  `tests/browser/llmServiceContext.test.ts` also covers the five-second request-aware
+  abort drain, preserved abort/deadline codes and cached-success exclusion on
+  uncertain cleanup. Other retained/background lifetimes, bootstrap callers and
+  production activation remain unqualified.
 
 - Utility owned request composition (provider-free):
   `pnpm vitest run tests/browser/backendRequestAdmission.test.ts -t 'utility request admission'`.
