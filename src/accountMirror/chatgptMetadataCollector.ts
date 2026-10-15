@@ -1978,14 +1978,29 @@ export async function readBoundedAttachmentInventory(
 			progress.scannedProjectIds.push(project.id);
 			const stageStartedAt = performance.now();
 			await reportDiagnostic({ stage: "project-files", event: "started", projectId: project.id });
-			const projectFiles = await safeReadProjectFiles(
-				client,
-				project,
-				projectListOptions,
-				observation,
-				providerCallTimeoutMs,
-				pacer,
-			);
+			let projectFiles: FileRef[];
+			try {
+				projectFiles = await safeReadProjectFiles(
+					client,
+					project,
+					projectListOptions,
+					observation,
+					providerCallTimeoutMs,
+					pacer,
+				);
+			} catch (error) {
+				if (!isKnownBackendRequestBudgetDenial(error)) throw error;
+				await throwIfDetailProviderGuardObserved(readProviderGuard, project.id);
+				throwIfCollectionAborted(projectListOptions?.abortSignal);
+				if (
+					projectListOptions?.providerTrafficGovernor?.snapshotAdmissionState?.()
+						.backendRequestOutcome !== "budget-exhausted"
+				)
+					throw error;
+				truncated = true;
+				yielded = true;
+				break;
+			}
 			await reportDiagnostic({
 				stage: "project-files",
 				event: "completed",
@@ -2401,14 +2416,50 @@ export async function readBoundedChatgptDetailInventory(
 		typeof options !== "number" && options.usePerSurfaceTrafficContext
 			? withDetailProviderTrafficContext(listOptions, "scope:account-library")
 			: listOptions;
-	const library = skipAccountLibraryInventory
-		? { artifacts: [], files: [], truncated: false }
-		: await readBoundedChatgptLibraryInventory(client, limit, {
-				listOptions: libraryListOptions,
-				pacer,
-				observation,
-				providerCallTimeoutMs,
-			});
+	let library: Awaited<ReturnType<typeof readBoundedChatgptLibraryInventory>>;
+	try {
+		library = skipAccountLibraryInventory
+			? { artifacts: [], files: [], truncated: false }
+			: await readBoundedChatgptLibraryInventory(client, limit, {
+					listOptions: libraryListOptions,
+					pacer,
+					observation,
+					providerCallTimeoutMs,
+				});
+	} catch (error) {
+		if (!isKnownBackendRequestBudgetDenial(error)) throw error;
+		if (typeof options !== "number")
+			await throwIfDetailProviderGuardObserved(options.readProviderGuard, "account-library");
+		throwIfCollectionAborted(libraryListOptions?.abortSignal);
+		if (
+			libraryListOptions?.providerTrafficGovernor?.snapshotAdmissionState?.()
+				.backendRequestOutcome !== "budget-exhausted"
+		)
+			throw error;
+		return {
+			artifacts: [],
+			files: [],
+			media: [],
+			visitBundles: [],
+			truncated: true,
+			cursor: createAttachmentInventoryCursor(typeof options === "number" ? null : options.cursor, {
+				projectsLength: projects.length,
+				conversationsLength: conversations.length,
+				detailReadLimit: 0,
+				conversationDetail: typeof options === "number" ? null : options.cursor?.conversationDetail,
+				scannedProjects: 0,
+				scannedConversations: 0,
+				yielded: true,
+				yieldCause: {
+					observedAt: null,
+					ownerCommand: null,
+					kind: "backend-request-budget",
+					operationClass: "backend-request",
+				},
+			}),
+			progress: createAttachmentInventoryProgress(),
+		};
+	}
 	if (typeof options !== "number") {
 		await throwIfDetailProviderGuardObserved(options.readProviderGuard, "account-library");
 	}
@@ -2729,6 +2780,16 @@ function createProjectConversationCursor(
 	};
 }
 
+function rethrowProviderRequestFailure(
+	error: unknown,
+	listOptions?: BrowserProviderListOptions,
+): void {
+	const requestState =
+		listOptions?.providerTrafficGovernor?.snapshotAdmissionState?.().backendRequestOutcome;
+	if (isKnownBackendRequestBudgetDenial(error) || (requestState && requestState !== "ready"))
+		throw error;
+}
+
 async function safeReadProjectFiles(
 	client: Pick<BrowserAutomationClient, "listProjectFiles">,
 	project: Project,
@@ -2754,6 +2815,7 @@ async function safeReadProjectFiles(
 			listOptions?.abortSignal,
 		);
 	} catch (error) {
+		rethrowProviderRequestFailure(error, listOptions);
 		await recordAccountMirrorDomDriftObservation(observation, {
 			surface: "account-mirror-project-files",
 			action: "list-project-files",
@@ -2797,6 +2859,7 @@ async function safeReadAccountFiles(
 			listOptions?.abortSignal,
 		);
 	} catch (error) {
+		rethrowProviderRequestFailure(error, listOptions);
 		await recordAccountMirrorDomDriftObservation(observation, {
 			surface: input.surface,
 			action: input.action,
@@ -2946,10 +3009,7 @@ async function safeReadConversationContext(
 	} catch (error) {
 		await closeAccountMirrorProviderSession(providerListOptions);
 		if (listOptions) listOptions.providerSession = undefined;
-		const requestState =
-			listOptions?.providerTrafficGovernor?.snapshotAdmissionState?.().backendRequestOutcome;
-		if (isKnownBackendRequestBudgetDenial(error) || (requestState && requestState !== "ready"))
-			throw error;
+		rethrowProviderRequestFailure(error, listOptions);
 		const detail = error instanceof Error ? error.message : String(error);
 		await recordAccountMirrorDomDriftObservation(observation, {
 			surface: "account-mirror-conversation-context",

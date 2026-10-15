@@ -1,3 +1,11 @@
+- Interrupted owned file inventory (provider-free):
+  `pnpm vitest run tests/browser/backendRequestAdmission.test.ts -t 'mode=(files|library)'`.
+  Public collector/owned cleanup prove completed-file retention, incomplete library
+  yield, serialized resume and hard stops for observed/persisted warnings, unknown
+  sends and unsettled actions. The public detail-inventory case `library budget
+  yield preserves` in chatgptMetadataCollector.test.ts protects a prior chunk24 and
+  excludes later reads after denied library admission. Native acceptance is separate.
+
 - Interrupted owned context continuation (provider-free):
   `pnpm vitest run tests/browser/backendRequestAdmission.test.ts -t 'mode=detail'`.
   Shared configured account authority and actual owned cleanup exercise artifact

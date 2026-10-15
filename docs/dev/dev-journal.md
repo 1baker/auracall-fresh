@@ -1,3 +1,12 @@
+## 2026-10-14 | Plan0423 interrupted file inventory continuation
+
+Project-file denial now retains completed files and the unfinished project index.
+Library denial yields incomplete inventory immediately while preserving existing
+attachment/chunk state. Both resume under fresh serialized authority; warnings,
+uncertain sends and unsettled actions hard-stop.110focused tests, typecheck,
+scoped Biome and diff checks pass. Serial Standards/Spec review complete;
+Plan0423 source packet CLOSED. Full issue165 acceptance remains open.
+
 ## 2026-10-14 | Plan0422 interrupted context continuation
 
 Owned request denial no longer disappears in tolerant context reads. Retain

@@ -2254,6 +2254,78 @@ describe("ChatGPT account mirror metadata collector", () => {
 		});
 	});
 
+	test("library budget yield preserves an existing unfinished attachment cursor", async () => {
+		const governor = createProviderTrafficGovernor({
+			attribution: {
+				provider: "chatgpt",
+				runtimeProfileId: "default",
+				managedBrowserProfile: "/fixture/managed",
+				workloadId: "fixture",
+				operationId: "fixture",
+				tabLeaseId: "fixture",
+			},
+			interactionGovernor: { beforeInteraction: async () => undefined },
+			mutationAudit: async () => undefined,
+			admitBackendRequest: async () => {
+				throw new ProviderBackendRequestBudgetExceededError();
+			},
+		});
+		const result = await readBoundedChatgptDetailInventory(
+			{
+				listAccountFiles: async () => {
+					await governor.admitBackendRequest?.("library", async () => undefined);
+					throw new Error("Unreachable after denied request");
+				},
+				listProjectFiles: async () => {
+					throw new Error("No project read after library denial");
+				},
+				listConversationFiles: async () => {
+					throw new Error("No file read after library denial");
+				},
+				getConversationContext: async () => {
+					throw new Error("No context read after library denial");
+				},
+			},
+			[{ id: "project", name: "Project", provider: "chatgpt" }],
+			[{ id: "conversation", title: "Conversation", provider: "chatgpt" }],
+			10,
+			{
+				maxDetailReads: 4,
+				listOptions: { providerTrafficGovernor: governor },
+				cursor: {
+					nextProjectIndex: 0,
+					nextConversationIndex: 0,
+					detailReadLimit: 4,
+					scannedProjects: 0,
+					scannedConversations: 0,
+					conversationDetail: {
+						conversationId: "conversation",
+						nextMessageIndex: 24,
+						messageLimit: 24,
+						totalMessages: 48,
+					},
+				},
+			},
+		);
+		expect(result).toMatchObject({
+			files: [],
+			artifacts: [],
+			visitBundles: [],
+			truncated: true,
+			cursor: {
+				nextProjectIndex: 0,
+				nextConversationIndex: 0,
+				yielded: true,
+				conversationDetail: {
+					conversationId: "conversation",
+					nextMessageIndex: 24,
+					messageLimit: 24,
+					totalMessages: 48,
+				},
+			},
+		});
+	});
+
 	test("does not mark conversation detail complete when context read fails", async () => {
 		const client = {
 			listAccountFiles: vi.fn(async () => []),

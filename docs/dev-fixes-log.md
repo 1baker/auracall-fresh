@@ -1,3 +1,11 @@
+## 2026-10-14 | Empty file inventory is not proof after request denial
+
+Tolerant project/account file readers previously erased owned cleanup denial,
+letting project cursors wrap or unread libraries look complete. Propagate governed
+request failures, yield only qualified pre-send budget denial, retain unfinished
+cursor/chunk state and stop before further surfaces. Plan0423 covers real owned
+collector cleanup and fresh serialized resumption with simulated provider/CDP.
+
 ## 2026-10-14 | Preserve request failures through tolerant context reads
 
 Turning an owned cleanup denial into a generic failed context result allowed the

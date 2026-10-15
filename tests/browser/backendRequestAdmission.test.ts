@@ -314,9 +314,22 @@ test.each([
 	"detail-uncertain",
 	"detail-active-action",
 	"detail-chunk",
+	"files-budget",
+	"files-warning",
+	"files-persisted-warning",
+	"files-uncertain",
+	"files-active-action",
+	"library-budget",
+	"library-warning",
+	"library-persisted-warning",
+	"library-uncertain",
+	"library-active-action",
 ])("unfinished owned read yields only known budget denial; mode=%s", async (mode) => {
 	const detail = mode.startsWith("detail-");
-	const failureMode = mode === "detail-chunk" ? "budget" : mode.replace("detail-", "");
+	const projectFiles = mode.startsWith("files-");
+	const library = mode.startsWith("library-");
+	const failureMode =
+		mode === "detail-chunk" ? "budget" : mode.replace(/^(detail|files|library)-/, "");
 	const home = await mkdtemp(path.join(os.tmpdir(), "auracall-project-request-yield-"));
 	setAuracallHomeDirOverrideForTest(home);
 	fixture.clients.length = 0;
@@ -390,7 +403,7 @@ test.each([
 				maxPageReadsPerCycle: 4,
 			});
 			const transport = fixture.clients[fixture.clients.length - 1];
-			if (mode === "detail-chunk" && pass === 0) {
+			if ((mode === "detail-chunk" || library) && pass === 0) {
 				if (!transport.handler) throw new Error("Expected owned request handler");
 				await transport.handler({
 					requestId: "prior-work",
@@ -399,7 +412,7 @@ test.each([
 			}
 			const readRow = async (projectId: string) => {
 				calls.push(projectId);
-				if (projectId === "project_2" && failureMode === "active-action") {
+				if ((projectId === "project_2" || library) && failureMode === "active-action") {
 					await governor.begin({
 						kind: "navigate",
 						interactionClass: "renavigation",
@@ -408,7 +421,7 @@ test.each([
 					await client.send("Page.navigate", { url: "https://fixture.invalid" });
 				}
 				if (!transport.handler) throw new Error("Expected owned request handler");
-				if (projectId === "project_2" && failureMode === "uncertain")
+				if ((projectId === "project_2" || library) && failureMode === "uncertain")
 					transport.failContinuation = true;
 				await transport.handler({
 					requestId: projectId,
@@ -435,10 +448,26 @@ test.each([
 					({
 						getProviderSessionProof: async () => proof,
 						listProjects: async () =>
-							["project_1", "project_2"].map((id) => ({ id, name: id, provider: "chatgpt" })),
+							(library ? [] : ["project_1", "project_2"]).map((id) => ({
+								id,
+								name: id,
+								provider: "chatgpt",
+							})),
 						listConversations: readRow,
-						listAccountFiles: async () => [],
-						listProjectFiles: async () => [],
+						listAccountFiles: async () => {
+							if (!library) return [];
+							await readRow("library");
+							return [
+								{ id: "library-file", name: "library.csv", provider: "chatgpt", source: "library" },
+							];
+						},
+						listProjectFiles: async (id: string) => {
+							if (!projectFiles) return [];
+							await readRow(id);
+							return [
+								{ id: `file_${id}`, name: `${id}.csv`, provider: "chatgpt", source: "project" },
+							];
+						},
 						listConversationFiles: async () => [],
 						getConversationContext: async (
 							id: string,
@@ -465,7 +494,7 @@ test.each([
 					provider: "chatgpt",
 					runtimeProfileId: "default",
 					expectedIdentityKey: identity.email,
-					sweepMode: "steady_follow",
+					sweepMode: library ? "full_sweep" : "steady_follow",
 					requestedPhase: detail ? "detail-inventory" : "project-conversations",
 					...(detail
 						? {
@@ -505,11 +534,12 @@ test.each([
 								} as never)
 							: undefined),
 					providerTrafficGovernor: controller.governor,
-					providerTrafficPlanController: detail && mode !== "detail-chunk" ? undefined : controller,
+					providerTrafficPlanController:
+						(detail && mode !== "detail-chunk") || projectFiles ? undefined : controller,
 					limits: {
 						maxPageReadsPerCycle: 4,
-						maxConversationRowsPerCycle: 30,
-						maxArtifactRowsPerCycle: detail ? 20 : 0,
+						maxConversationRowsPerCycle: projectFiles || library ? 0 : 30,
+						maxArtifactRowsPerCycle: detail || projectFiles || library ? 20 : 0,
 						maxBrowserInteractionsPerMinute: 0,
 					},
 				});
@@ -522,7 +552,7 @@ test.each([
 			if (failureMode === "persisted-warning") {
 				expect(error).toBeInstanceOf(Error);
 				expect((error as Error).message).toContain("fixture external warning");
-				expect(calls).toEqual(["project_1", "project_2"]);
+				expect(calls).toEqual(library ? ["library"] : ["project_1", "project_2"]);
 				return;
 			}
 			expect(error).toBeInstanceOf(AggregateError);
@@ -539,10 +569,22 @@ test.each([
 						? "Provider traffic lease release failed: invalid-transition."
 						: "Backend request admission denied: minute-backend-request-limit.",
 			);
-			expect(calls).toEqual(["project_1", "project_2"]);
+			expect(calls).toEqual(library ? ["library"] : ["project_1", "project_2"]);
 			return;
 		}
 		const first = await collect(0);
+		if (library) {
+			expect(calls).toEqual(["library"]);
+			expect(first.manifests.files).toEqual([]);
+			expect(first.evidence.truncated.artifacts).toBe(true);
+			expect(first.evidence.attachmentInventory).toMatchObject({ yielded: true });
+			const second = await collect(1, JSON.parse(JSON.stringify(first.evidence)));
+			expect(calls).toEqual(["library", "library"]);
+			expect(second.manifests.files.map((f) => f.id)).toEqual(["library-file"]);
+			expect(second.evidence.truncated.artifacts).toBe(false);
+			expect(second.evidence.attachmentInventory).toMatchObject({ yielded: false });
+			return;
+		}
 		if (mode === "detail-chunk") {
 			expect(calls).toEqual(["project_2"]);
 			expect(first.manifests.artifacts).toEqual([]);
@@ -560,6 +602,22 @@ test.each([
 			return;
 		}
 		expect(calls).toEqual(["project_1", "project_2"]);
+		if (projectFiles) {
+			expect(first.manifests.files.map((f) => f.id)).toEqual(["file_project_1"]);
+			expect(first.evidence.attachmentInventory).toMatchObject({
+				nextProjectIndex: 1,
+				yielded: true,
+			});
+			expect(first.evidence.truncated.artifacts).toBe(true);
+			const second = await collect(1, JSON.parse(JSON.stringify(first.evidence)));
+			expect(calls).toEqual(["project_1", "project_2", "project_2"]);
+			expect(second.manifests.files.map((f) => f.id)).toEqual(["file_project_2"]);
+			expect(second.evidence.attachmentInventory).toMatchObject({
+				nextProjectIndex: 0,
+				yielded: false,
+			});
+			return;
+		}
 		if (detail) {
 			expect(first.manifests.artifacts.map((a) => a.id)).toEqual(["artifact_project_1"]);
 			expect(first.evidence.detailConversationIdsThisPass).toEqual(["project_1"]);
