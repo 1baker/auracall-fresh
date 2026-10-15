@@ -54414,3 +54414,16 @@ reconciliation before integration; ceiling and genuine changed-B remain operator
 inputs. No production edits, installed/provider effects or goal reset. Bounded
 reassessment CLOSED, partial source/build outcome_progress; issue165 OPEN.
 Memory disposition forbidden; no explicit memory-update request.
+
+## 2026-10-15 | Issue165 governance repair research
+
+Research report: docs/dev/notes/2026-10-15-issue165-governance-repair-research.md.
+Git history proves v0.1.32 reintroduced32duplicate wire-in links previously removed
+by126ade11d; all identities already have one canonical file. In-memory real-parser
+probe32to0; older CLOSED header normalization qualifies the33rd finding. No repair
+applied. Exact-branch lane audit still validates90catalog entries and returns107
+findings; Plan0420 lacks Lane/Integration metadata and P92 custody is stale. Direct
+remote readback disproves interpreting its missing catalog remote_ref as deletion.
+Report separates narrow candidate edits from broader owner-led lane reconciliation
+and preserves handoff no-removal boundary. Research complete; no policy/catalog,
+implementation or live effect. Memory disposition forbidden; no memory request.
