@@ -2091,15 +2091,31 @@ export async function readBoundedAttachmentInventory(
 			const telemetryBefore = snapshotAccountMirrorVisitTelemetry(
 				conversationListOptions?.scrapeTelemetry,
 			);
-			const contextResult = await safeReadConversationContext(
-				client,
-				conversation,
-				observation,
-				providerCallTimeoutMs,
-				conversationListOptions,
-				previousConversationDetail,
-				pacer,
-			);
+			let contextResult: Awaited<ReturnType<typeof safeReadConversationContext>>;
+			try {
+				contextResult = await safeReadConversationContext(
+					client,
+					conversation,
+					observation,
+					providerCallTimeoutMs,
+					conversationListOptions,
+					previousConversationDetail,
+					pacer,
+				);
+			} catch (error) {
+				if (!isKnownBackendRequestBudgetDenial(error)) throw error;
+				await throwIfDetailProviderGuardObserved(readProviderGuard, conversation.id);
+				throwIfCollectionAborted(conversationListOptions?.abortSignal);
+				if (
+					conversationListOptions?.providerTrafficGovernor?.snapshotAdmissionState?.()
+						.backendRequestOutcome !== "budget-exhausted"
+				)
+					throw error;
+				conversationDetailCursor = previousConversationDetail;
+				truncated = true;
+				yielded = true;
+				break;
+			}
 			const telemetryAfter = snapshotAccountMirrorVisitTelemetry(
 				conversationListOptions?.scrapeTelemetry,
 			);
@@ -2930,6 +2946,10 @@ async function safeReadConversationContext(
 	} catch (error) {
 		await closeAccountMirrorProviderSession(providerListOptions);
 		if (listOptions) listOptions.providerSession = undefined;
+		const requestState =
+			listOptions?.providerTrafficGovernor?.snapshotAdmissionState?.().backendRequestOutcome;
+		if (isKnownBackendRequestBudgetDenial(error) || (requestState && requestState !== "ready"))
+			throw error;
 		const detail = error instanceof Error ? error.message : String(error);
 		await recordAccountMirrorDomDriftObservation(observation, {
 			surface: "account-mirror-conversation-context",

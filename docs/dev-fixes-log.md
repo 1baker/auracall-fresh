@@ -1,3 +1,12 @@
+## 2026-10-14 | Preserve request failures through tolerant context reads
+
+Turning an owned cleanup denial into a generic failed context result allowed the
+detail cursor to wrap past unread work. Propagate governed request failures to
+the owning loop, yield only on typed pre-send denial plus a final exhausted state,
+and retain any message-chunk offset. Consult persisted warnings before yielding.
+Plan0422 tests completed-artifact retention, serialized resume, chunk24, warning,
+uncertainty and unsettled-action outcomes through the owned collector fixture.
+
 ## 2026-10-14 | Do not lose completed projects on an unfinished owned read
 
 A backend denial can surface from owned-client close as nested aggregate errors.

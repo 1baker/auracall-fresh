@@ -1,3 +1,13 @@
+## 2026-10-14 | Plan0422 interrupted context continuation
+
+Owned request denial no longer disappears in tolerant context reads. Retain
+finished artifacts and the interrupted conversation/chunk cursor; a fresh
+serialized pass resumes only that work. Warnings from the owned observer or
+persisted guard, uncertain sends and unfinished physical actions hard-stop.
+99focused tests, typecheck, scoped Biome and diff checks pass; the final one-read
+controller fixture passes separately. Serial Standards/Spec review complete.
+Plan0422 source packet CLOSED; issue165 and remaining acceptance stay open.
+
 ## 2026-10-14 | Unfinished owned project budget yield
 
 Plan0421 restart packet now retains completed project evidence and the interrupted

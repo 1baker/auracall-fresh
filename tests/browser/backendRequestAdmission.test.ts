@@ -8,6 +8,7 @@ import CDP, {
 import { createChatgptAccountMirrorMetadataCollector } from "../../src/accountMirror/chatgptMetadataCollector.js";
 import { createAccountMirrorMetadataTrafficPlanController } from "../../src/accountMirror/providerTrafficPlan.js";
 import { setAuracallHomeDirOverrideForTest } from "../../src/auracallHome.js";
+import { recordChatgptRateLimitDetection } from "../../src/browser/chatgptRateLimitGuard.js";
 import { createConfiguredProviderTrafficAuthorityFactory } from "../../src/browser/configuredProviderTrafficAuthority.js";
 import {
 	annotateClientMutationContext,
@@ -307,7 +308,15 @@ test.each([
 	"warning",
 	"uncertain",
 	"active-action",
-])("unfinished owned project read yields only known budget denial; mode=%s", async (mode) => {
+	"detail-budget",
+	"detail-warning",
+	"detail-persisted-warning",
+	"detail-uncertain",
+	"detail-active-action",
+	"detail-chunk",
+])("unfinished owned read yields only known budget denial; mode=%s", async (mode) => {
+	const detail = mode.startsWith("detail-");
+	const failureMode = mode === "detail-chunk" ? "budget" : mode.replace("detail-", "");
 	const home = await mkdtemp(path.join(os.tmpdir(), "auracall-project-request-yield-"));
 	setAuracallHomeDirOverrideForTest(home);
 	fixture.clients.length = 0;
@@ -367,7 +376,7 @@ test.each([
 				mutationAudit: async () => undefined,
 				baseOptions: {},
 				now: () => new Date(1792036000000 + pass * 61000),
-				backendRequestLimit: mode === "uncertain" ? 2 : 1,
+				backendRequestLimit: failureMode === "uncertain" ? 2 : 1,
 			});
 			await annotateClientMutationContext(
 				client,
@@ -381,45 +390,73 @@ test.each([
 				maxPageReadsPerCycle: 4,
 			});
 			const transport = fixture.clients[fixture.clients.length - 1];
+			if (mode === "detail-chunk" && pass === 0) {
+				if (!transport.handler) throw new Error("Expected owned request handler");
+				await transport.handler({
+					requestId: "prior-work",
+					request: { url: "https://chatgpt.com/backend-api/conversations" },
+				});
+			}
+			const readRow = async (projectId: string) => {
+				calls.push(projectId);
+				if (projectId === "project_2" && failureMode === "active-action") {
+					await governor.begin({
+						kind: "navigate",
+						interactionClass: "renavigation",
+						source: "fixture:unfinished-project",
+					});
+					await client.send("Page.navigate", { url: "https://fixture.invalid" });
+				}
+				if (!transport.handler) throw new Error("Expected owned request handler");
+				if (projectId === "project_2" && failureMode === "uncertain")
+					transport.failContinuation = true;
+				await transport.handler({
+					requestId: projectId,
+					request: { url: "https://chatgpt.com/backend-api/conversations" },
+				});
+				if (transport.failures.length && failureMode === "persisted-warning") {
+					await recordChatgptRateLimitDetection({
+						profileName: "default",
+						action: "fixture:other-owner",
+						reason: "fixture external warning",
+					});
+				}
+				if (transport.failures.length && failureMode === "warning") {
+					if (!transport.responseHandler) throw new Error("Expected owned warning observer");
+					await transport.responseHandler({
+						response: { url: "https://chatgpt.com/backend-api/conversations", status: 429 },
+					});
+				}
+				if (transport.failures.length) await client.close();
+				return [{ id: `conv_${projectId}`, title: projectId, projectId, provider: "chatgpt" }];
+			};
 			const collector = createChatgptAccountMirrorMetadataCollector(config as never, {
 				createClient: async () =>
 					({
 						getProviderSessionProof: async () => proof,
 						listProjects: async () =>
 							["project_1", "project_2"].map((id) => ({ id, name: id, provider: "chatgpt" })),
-						listConversations: async (projectId: string) => {
-							calls.push(projectId);
-							if (projectId === "project_2" && mode === "active-action") {
-								await governor.begin({
-									kind: "navigate",
-									interactionClass: "renavigation",
-									source: "fixture:unfinished-project",
-								});
-								await client.send("Page.navigate", { url: "https://fixture.invalid" });
-							}
-							if (!transport.handler) throw new Error("Expected owned request handler");
-							if (projectId === "project_2" && mode === "uncertain")
-								transport.failContinuation = true;
-							await transport.handler({
-								requestId: projectId,
-								request: { url: "https://chatgpt.com/backend-api/conversations" },
-							});
-							if (transport.failures.length && mode === "warning") {
-								if (!transport.responseHandler) throw new Error("Expected owned warning observer");
-								await transport.responseHandler({
-									response: { url: "https://chatgpt.com/backend-api/conversations", status: 429 },
-								});
-							}
-							if (transport.failures.length) await client.close();
-							return [
-								{ id: `conv_${projectId}`, title: projectId, projectId, provider: "chatgpt" },
-							];
-						},
+						listConversations: readRow,
 						listAccountFiles: async () => [],
 						listProjectFiles: async () => [],
 						listConversationFiles: async () => [],
-						getConversationContext: async () => {
-							throw new Error("No detail reads authorized");
+						getConversationContext: async (
+							id: string,
+							options: {
+								listOptions: { accountMirrorContextChunk: { startMessageIndex: number } };
+							},
+						) => {
+							if (mode === "detail-chunk")
+								expect(options.listOptions.accountMirrorContextChunk.startMessageIndex).toBe(24);
+							if (!detail) throw new Error("No detail reads authorized");
+							await readRow(id);
+							return {
+								provider: "chatgpt",
+								conversationId: id,
+								messages: [],
+								files: [],
+								artifacts: [{ id: `artifact_${id}`, title: id, kind: "spreadsheet" }],
+							};
 						},
 					}) as never,
 			});
@@ -429,14 +466,50 @@ test.each([
 					runtimeProfileId: "default",
 					expectedIdentityKey: identity.email,
 					sweepMode: "steady_follow",
-					requestedPhase: "project-conversations",
-					previousEvidence,
+					requestedPhase: detail ? "detail-inventory" : "project-conversations",
+					...(detail
+						? {
+								previousConversations: ["project_1", "project_2"].map((id) => ({
+									id,
+									title: id,
+									provider: "chatgpt" as const,
+								})),
+							}
+						: {}),
+					previousEvidence:
+						previousEvidence ??
+						(detail
+							? ({
+									identitySource: "auth-session",
+									truncated: { projects: false, conversations: false, artifacts: true },
+									...(mode === "detail-chunk"
+										? {
+												attachmentInventory: {
+													nextProjectIndex: 0,
+													nextConversationIndex: 1,
+													detailReadLimit: 4,
+													scannedProjects: 0,
+													scannedConversations: 0,
+													conversationDetail: {
+														conversationId: "project_2",
+														nextMessageIndex: 24,
+														messageLimit: 24,
+														totalMessages: 48,
+													},
+												},
+											}
+										: {}),
+									conversationFreshnessFrontier: {
+										selectedConversationIds: ["project_1", "project_2"],
+									},
+								} as never)
+							: undefined),
 					providerTrafficGovernor: controller.governor,
-					providerTrafficPlanController: controller,
+					providerTrafficPlanController: detail && mode !== "detail-chunk" ? undefined : controller,
 					limits: {
 						maxPageReadsPerCycle: 4,
 						maxConversationRowsPerCycle: 30,
-						maxArtifactRowsPerCycle: 0,
+						maxArtifactRowsPerCycle: detail ? 20 : 0,
 						maxBrowserInteractionsPerMinute: 0,
 					},
 				});
@@ -444,8 +517,14 @@ test.each([
 				await client.close();
 			}
 		};
-		if (mode !== "budget") {
+		if (failureMode !== "budget") {
 			const error = await collect(0).catch((error: unknown) => error);
+			if (failureMode === "persisted-warning") {
+				expect(error).toBeInstanceOf(Error);
+				expect((error as Error).message).toContain("fixture external warning");
+				expect(calls).toEqual(["project_1", "project_2"]);
+				return;
+			}
 			expect(error).toBeInstanceOf(AggregateError);
 			const messages = (value: unknown): string[] =>
 				value instanceof AggregateError
@@ -454,9 +533,9 @@ test.each([
 						? [value.message]
 						: [];
 			expect(messages(error)).toContain(
-				mode === "uncertain"
+				failureMode === "uncertain"
 					? "Fixture continuation outcome is unknown"
-					: mode === "active-action"
+					: failureMode === "active-action"
 						? "Provider traffic lease release failed: invalid-transition."
 						: "Backend request admission denied: minute-backend-request-limit.",
 			);
@@ -464,7 +543,41 @@ test.each([
 			return;
 		}
 		const first = await collect(0);
+		if (mode === "detail-chunk") {
+			expect(calls).toEqual(["project_2"]);
+			expect(first.manifests.artifacts).toEqual([]);
+			expect(first.evidence.detailConversationIdsThisPass).toEqual([]);
+			expect(first.evidence.attachmentInventory).toMatchObject({
+				nextConversationIndex: 0,
+				yielded: true,
+				conversationDetail: { conversationId: "project_2", nextMessageIndex: 24 },
+			});
+			const second = await collect(1, JSON.parse(JSON.stringify(first.evidence)));
+			expect(calls).toEqual(["project_2", "project_2"]);
+			expect(second.manifests.artifacts.map((a) => a.id)).toEqual(["artifact_project_2"]);
+			expect(second.evidence.detailConversationIdsThisPass).toEqual(["project_2"]);
+			expect(second.evidence.attachmentInventory?.conversationDetail).toBeNull();
+			return;
+		}
 		expect(calls).toEqual(["project_1", "project_2"]);
+		if (detail) {
+			expect(first.manifests.artifacts.map((a) => a.id)).toEqual(["artifact_project_1"]);
+			expect(first.evidence.detailConversationIdsThisPass).toEqual(["project_1"]);
+			expect(first.evidence.attachmentInventory).toMatchObject({
+				nextConversationIndex: 1,
+				yielded: true,
+			});
+			expect(first.evidence.truncated.artifacts).toBe(true);
+			const second = await collect(1, JSON.parse(JSON.stringify(first.evidence)));
+			expect(calls).toEqual(["project_1", "project_2", "project_2"]);
+			expect(second.manifests.artifacts.map((a) => a.id)).toEqual(["artifact_project_2"]);
+			expect(second.evidence.detailConversationIdsThisPass).toEqual(["project_2"]);
+			expect(second.evidence.attachmentInventory).toMatchObject({
+				nextConversationIndex: 0,
+				yielded: false,
+			});
+			return;
+		}
 		expect(first.manifests.conversations.map((c) => c.id)).toEqual(["conv_project_1"]);
 		expect(first.evidence.projectConversations).toMatchObject({
 			nextProjectIndex: 1,

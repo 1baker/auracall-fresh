@@ -1,3 +1,11 @@
+- Interrupted owned context continuation (provider-free):
+  `pnpm vitest run tests/browser/backendRequestAdmission.test.ts -t 'mode=detail'`.
+  Shared configured account authority and actual owned cleanup exercise artifact
+  retention, serialized conversation/chunk continuation, persisted and observed
+  warning priority, uncertain sends and unsettled physical actions. The chunk
+  variant uses the detail-plan controller's one-read shape. Provider context and
+  CDP remain simulated; project/library and native gates are separate.
+
 - Unfinished owned project continuation (provider-free):
   `pnpm vitest run tests/browser/backendRequestAdmission.test.ts -t 'unfinished owned project'`.
   Public collector, configured shared request authority, phase wrapper and owned
