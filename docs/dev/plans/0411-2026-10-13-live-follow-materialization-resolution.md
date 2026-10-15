@@ -7,6 +7,15 @@ Target: main
 
 ## Current State
 
+Provider-free source checkpoint bf2a9bf2d (draft PR323) qualifies additional owned
+request/cursor/session/cancellation seams through Plans0420–0432. It is unmerged
+and uninstalled; the latest focused148tests are not full GateB or native proof.
+Current acceptance/caller reconciliation:
+[2026-10-15 source-window audit](../notes/2026-10-15-issue165-source-window-reconciliation.md).
+Production callers still omit the optional backend ceiling. Remaining native and
+participant gates stand; runtime receipts below are historical, not fresh readback.
+
+
 Latest source/runtime packet: Plan0416 CLOSED, PR321/source ddea20ec7 integrated
 at a3d143e4a and installed with582compiled-file parity. API62047 healthy, scheduler
 and all17active completions paused; foreign browser process preserved. This removes

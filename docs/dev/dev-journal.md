@@ -54359,3 +54359,12 @@ closing eventual handback. Three late cases qualify once-only close and known/
 unknown lease outcome. No retries, activation or runtime/provider effects. Whole
 native composition and capability propagation remain open. Resource checkpoint
 will precede another implementation packet near conservative1MM stop.
+
+
+### 2026-10-15 Issue165 source-window reconciliation
+
+Audited sourcebf2a9bf2d: production factory/utility callers omit backend ceiling,
+PR323 remains draft/unmerged, and latest focused source checks do not establish
+fullGateB, canonical install or native/wider automatic acceptance. Plan0411 now
+links the exact remaining-gate note and distinguishes historical runtime receipts.
+No implementation/runtime effects; checkpoint before conservative1MM source stop.
