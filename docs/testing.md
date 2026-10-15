@@ -1,3 +1,12 @@
+- Late collector session settlement (provider-free):
+  `pnpm vitest run tests/browser/backendRequestAdmission.test.ts -t detail-cancel-late`.
+  Three controlled settlements after actual five-second drain expiry cover late
+  context, failed late close and late rejection with session handback. Explicit
+  provider/close signals prove one close and unchanged original timeout; lease
+  settles only on confirmed close, otherwise remains unknown. Same actual
+  collector/configured authority/guard/stores; synthetic provider/SDK. Native and
+  caller capability propagation remain separate gates.
+
 - Collector cancellation drain (provider-free):
   `pnpm vitest run tests/browser/backendRequestAdmission.test.ts -t detail-cancel`.
   Actual collector/configured authority/guard/stores use controlled provider

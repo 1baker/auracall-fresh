@@ -1,3 +1,12 @@
+## 2026-10-15 | Drain expiry cannot orphan eventual session handback
+
+A provider returned its retained client after the collector had already timed out;
+no close started. Observe aborted request-aware context settlement on both resolve
+and reject and reuse owned session cleanup. Keep the original timeout terminal,
+close once and retain unknown custody on failed close. Plan0432 qualifies controlled
+late provider settlement through actual collector/configured authority/guard/stores;
+full native composition and caller capability propagation remain separate gates.
+
 ## 2026-10-15 | Collector timeout is not provider cleanup completion
 
 The collector aborted a context call, discarded its later close failure and

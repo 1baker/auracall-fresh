@@ -429,6 +429,9 @@ test.each([
 	"detail-cancel-clean",
 	"detail-cancel-parent",
 	"detail-cancel-stalled",
+	"detail-cancel-late",
+	"detail-cancel-late-failure",
+	"detail-cancel-late-reject",
 	"files-budget",
 	"files-warning",
 	"files-persisted-warning",
@@ -443,6 +446,17 @@ test.each([
 	const detail = mode.startsWith("detail-");
 	const partialSession = mode.startsWith("detail-partial-");
 	const cancelling = mode.startsWith("detail-cancel-");
+	const lateSession = mode.startsWith("detail-cancel-late");
+	let lateCloseCalls = 0;
+	const deferredCleanup = mode === "detail-cancel-stalled" || lateSession;
+	let startLateClose!: () => void;
+	let finishLateClose!: () => void;
+	const lateCloseStarted = new Promise<string>((resolve) => {
+		startLateClose = () => resolve("closing");
+	});
+	const lateCloseFinished = new Promise<void>((resolve) => {
+		finishLateClose = resolve;
+	});
 	const callerAbort = new AbortController();
 	let releaseStall!: () => void;
 	const stallAllowed = new Promise<void>((resolve) => {
@@ -639,7 +653,41 @@ test.each([
 											});
 									});
 									await cleanupAllowed;
-									if (mode === "detail-cancel-stalled") await stallAllowed;
+									if (deferredCleanup) await stallAllowed;
+									if (lateSession) {
+										transport.failClose = mode === "detail-cancel-late-failure";
+										options.listOptions.providerSession = {
+											providerId: "chatgpt",
+											key: id,
+											value: {},
+											close: async () => {
+												lateCloseCalls += 1;
+												startLateClose();
+												try {
+													await client.close();
+												} finally {
+													finishLateClose();
+												}
+											},
+										};
+										if (mode === "detail-cancel-late-reject")
+											throw new Error("fixture late provider rejection");
+										return {
+											provider: "chatgpt",
+											conversationId: id,
+											messages: [],
+											metadata: {
+												accountMirrorContextChunk: {
+													startMessageIndex: 0,
+													endMessageIndex: 24,
+													nextMessageIndex: 24,
+													maxMessages: 24,
+													totalMessages: 48,
+													complete: false,
+												},
+											},
+										};
+									}
 									transport.failClose = mode === "detail-cancel-failure";
 									await client.close();
 									throw new Error("fixture provider aborted");
@@ -788,7 +836,7 @@ test.each([
 				expect(observed).toBe("pending");
 			} finally {
 				releaseCleanup();
-				if (mode !== "detail-cancel-stalled") await providerFinished;
+				if (!deferredCleanup) await providerFinished;
 			}
 			const result = await outcome;
 			expect(result).toHaveProperty("error");
@@ -813,13 +861,13 @@ test.each([
 			expect(
 				(await runtime.registry?.list())?.find((lease) => lease.targetId === "project-pass-0"),
 			).toMatchObject(
-				mode === "detail-cancel-stalled"
+				deferredCleanup
 					? { state: "active" }
 					: mode === "detail-cancel-failure"
 						? { state: "idle", effectState: "outcome-unknown" }
 						: { state: "released", effectState: "settled" },
 			);
-			if (mode === "detail-cancel-stalled") {
+			if (deferredCleanup) {
 				try {
 					expect(leaves(error)).toContain(
 						"Owned collector provider cleanup did not finish within 5000ms.",
@@ -827,6 +875,27 @@ test.each([
 				} finally {
 					releaseStall();
 					await providerFinished;
+				}
+				if (lateSession) {
+					expect(
+						await Promise.race([
+							lateCloseStarted,
+							new Promise<string>((resolve) => setImmediate(() => resolve("stranded"))),
+						]),
+					).toBe("closing");
+					await lateCloseFinished;
+					expect(lateCloseCalls).toBe(1);
+					expect(fixture.clients[0].handler).toBeUndefined();
+					expect(
+						(await runtime.registry?.list())?.find((lease) => lease.targetId === "project-pass-0"),
+					).toMatchObject(
+						mode === "detail-cancel-late-failure"
+							? { state: "idle", effectState: "outcome-unknown" }
+							: { state: "released", effectState: "settled" },
+					);
+					expect(leaves(error)).toContain(
+						"Owned collector provider cleanup did not finish within 5000ms.",
+					);
 				}
 			}
 			expect(calls).toEqual(["project_1"]);

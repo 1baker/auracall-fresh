@@ -54348,3 +54348,14 @@ normal completion. Four controlled provider cases cover failed/confirmed close,
 parent abort and unresolved completion. Explicit observer handles already-aborted
 signal; test budget10s observes real5s bound. Native whole-service composition,
 late-session cleanup after expiry and wider acceptance remain open; no activation.
+
+
+### 2026-10-15 Issue165 late provider session handback
+
+Plan0432: controlled provider first handed back a session after collector drain
+expired; red showed no close started. Aborted request-aware context settlement now
+reuses the session boundary on resolve/reject, preserving prior timeout while
+closing eventual handback. Three late cases qualify once-only close and known/
+unknown lease outcome. No retries, activation or runtime/provider effects. Whole
+native composition and capability propagation remain open. Resource checkpoint
+will precede another implementation packet near conservative1MM stop.

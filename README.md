@@ -875,6 +875,9 @@ Terminology note:
   With request admission active, detail timeout or cancellation drains provider
   completion for at most five seconds and stops the pass. Confirmed cleanup does
   not turn a cancelled read into success; unconfirmed cleanup retains custody.
+  If a request-aware context call hands back a retained session after that drain
+  expires, its eventual settlement still closes the session. The earlier timeout
+  stays terminal; late data does not resume collection.
   History-backed materialization is an explicit separate job surface:
   `POST /v1/account-mirrors/materializations` queues a durable
   `history_materialization_job` by provider conversation id, account-mirror

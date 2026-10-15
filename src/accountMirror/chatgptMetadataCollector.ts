@@ -2991,18 +2991,36 @@ async function safeReadConversationContext(
 					abortSignal,
 					...(chunk ? { accountMirrorContextChunk: chunk } : {}),
 				};
-				return client.getConversationContext(conversation.id, {
-					projectId: conversation.projectId,
-					refresh: true,
-					...(isChatgpt
-						? {
-								allowCacheFallback: false,
-								retryAttempts: 0,
-								...(typeof timeoutMs === "number" && timeoutMs > 0 ? { timeoutMs } : {}),
-							}
-						: {}),
-					listOptions: providerListOptions,
-				});
+				return client
+					.getConversationContext(conversation.id, {
+						projectId: conversation.projectId,
+						refresh: true,
+						...(isChatgpt
+							? {
+									allowCacheFallback: false,
+									retryAttempts: 0,
+									...(typeof timeoutMs === "number" && timeoutMs > 0 ? { timeoutMs } : {}),
+								}
+							: {}),
+						listOptions: providerListOptions,
+					})
+					.then(
+						(context) =>
+							abortSignal.aborted &&
+							providerListOptions?.providerTrafficGovernor?.admitBackendRequest
+								? withCollectorSessionBoundary(providerListOptions, async () => context)
+								: context,
+						(error: unknown) => {
+							if (
+								abortSignal.aborted &&
+								providerListOptions?.providerTrafficGovernor?.admitBackendRequest
+							)
+								return withCollectorSessionBoundary(providerListOptions, async () => {
+									throw error;
+								});
+							throw error;
+						},
+					);
 			},
 			timeoutMs,
 			`Conversation context inventory timed out for ${conversation.id}.`,
