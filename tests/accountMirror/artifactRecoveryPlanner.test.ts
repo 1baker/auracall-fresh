@@ -252,9 +252,9 @@ describe("account mirror artifact recovery planner", () => {
 
 		expect(result.candidates[0]?.counts.retrievableMissingLocal).toMatchObject({
 			artifacts: 0,
-			files: 8,
+			files: 9,
 			media: 0,
-			total: 8,
+			total: 9,
 		});
 		expect(result.candidates[0]?.createRequest).toMatchObject({
 			provider: "chatgpt",
@@ -262,7 +262,7 @@ describe("account mirror artifact recovery planner", () => {
 			boundIdentityKey: "consult@polymerconsultinggroup.com",
 			reconcile: true,
 			assetKinds: ["files"],
-			maxItems: 8,
+			maxItems: 9,
 		});
 	});
 
@@ -441,7 +441,47 @@ describe("account mirror artifact recovery planner", () => {
 		});
 	});
 
-	it("separates retrieval failures from provider-unavailable terminal rows", async () => {
+	it.each([
+		{
+			failureKind: "retrieval_failed" as const,
+			entryStatus: "failed" as const,
+			remainingFiles: 2,
+			remainingTotal: 4,
+			retrievalFailures: 1,
+			terminalFailures: 0,
+		},
+		{
+			failureKind: "provider_unavailable" as const,
+			entryStatus: "failed" as const,
+			remainingFiles: 2,
+			remainingTotal: 4,
+			retrievalFailures: 0,
+			terminalFailures: 1,
+		},
+		{
+			failureKind: undefined,
+			entryStatus: "failed" as const,
+			remainingFiles: 3,
+			remainingTotal: 5,
+			retrievalFailures: 0,
+			terminalFailures: 0,
+		},
+		{
+			failureKind: undefined,
+			entryStatus: "skipped" as const,
+			remainingFiles: 3,
+			remainingTotal: 5,
+			retrievalFailures: 0,
+			terminalFailures: 0,
+		},
+	])("separates typed terminal evidence from legacy $entryStatus/$failureKind", async ({
+		failureKind,
+		entryStatus,
+		remainingFiles,
+		remainingTotal,
+		retrievalFailures,
+		terminalFailures,
+	}) => {
 		const registry = registryWithEntries([
 			statusEntry({
 				provider: "chatgpt",
@@ -559,7 +599,7 @@ describe("account mirror artifact recovery planner", () => {
 								kind: "file" as const,
 								providerId: "file_missing_tile",
 								title: "missing.docx",
-								status: "failed" as const,
+								status: entryStatus,
 								localPath: null,
 								remoteUrl: "chatgpt://file/file_1",
 								cacheKey: null,
@@ -568,7 +608,7 @@ describe("account mirror artifact recovery planner", () => {
 								size: null,
 								materializationMethod: null,
 								reason: "ChatGPT conversation file fetch failed: tile_not_found",
-								failureKind: "retrieval_failed" as const,
+								failureKind,
 								retryable: false,
 								archiveItemId: null,
 								assetRoute: null,
@@ -610,22 +650,24 @@ describe("account mirror artifact recovery planner", () => {
 
 		expect(result.candidates[0]?.counts).toMatchObject({
 			remoteKnownMissingLocal: { artifacts: 4, files: 4, total: 8 },
-			retrievableMissingLocal: { artifacts: 2, files: 2, total: 4 },
+			retrievableMissingLocal: { artifacts: 2, files: remainingFiles, total: remainingTotal },
 			duplicateAliases: { artifacts: 1, files: 0, total: 1 },
 			staticFalsePositive: { artifacts: 1, files: 0, total: 1 },
 			unsupportedMetadataOnly: { artifacts: 0, files: 1, total: 1 },
-			retrievalFailed: { artifacts: 0, files: 1, total: 1 },
-			failedTerminal: { artifacts: 0, files: 0, total: 0 },
+			retrievalFailed: { artifacts: 0, files: retrievalFailures, total: retrievalFailures },
+			failedTerminal: { artifacts: 0, files: terminalFailures, total: terminalFailures },
 		});
 		expect(result.metrics.retrievableMissingLocal).toMatchObject({
 			artifacts: 2,
-			files: 2,
-			total: 4,
+			files: remainingFiles,
+			total: remainingTotal,
 		});
-		expect(result.candidates[0]?.reason).toContain("4 retrievable missing local assets");
+		expect(result.candidates[0]?.reason).toContain(
+			`${remainingTotal} retrievable missing local assets`,
+		);
 		expect(result.candidates[0]?.createRequest).toMatchObject({
 			assetKinds: ["artifacts", "files"],
-			maxItems: 4,
+			maxItems: remainingTotal,
 		});
 	});
 

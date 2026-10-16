@@ -2297,6 +2297,12 @@ function materializationProviderWorkNotBefore(
 	if (!refresh.completedAt || !entry) return null;
 	const completedAtMs = Date.parse(refresh.completedAt);
 	if (!Number.isFinite(completedAtMs)) return null;
+	if (refresh.provider === "chatgpt") {
+		// The child's concrete actions retain their interaction governor. A fixed
+		// quiet period also delays cache reuse and local artifact processing.
+		const cooldownUntil = entry.providerGuard.cooldownUntil;
+		return cooldownUntil && Date.parse(cooldownUntil) > completedAtMs ? cooldownUntil : null;
+	}
 	const quietMs = Math.max(
 		entry.limits.conversationReadCooldownMs,
 		entry.limits.pageRefreshCooldownMs,

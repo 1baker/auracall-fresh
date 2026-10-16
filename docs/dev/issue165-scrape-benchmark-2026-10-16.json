@@ -322,6 +322,21 @@
       "allExpectedOutcomesAccounted": true,
       "acceptedForThisCase": true,
       "actions": []
+    },
+    {
+      "id": "automatic_scoped_before_legacy_admission_repair",
+      "receipt": "measured-automatic-scoped-2026-10-16T20-01-59-109Z.json",
+      "elapsedMs": 173430,
+      "operationalElapsedMs": 167217,
+      "backendRequestsLowerBound": 127,
+      "coverageComplete": false,
+      "savedFiles": 0,
+      "childCreated": false,
+      "freshMessages": 6,
+      "freshArtifacts": 2,
+      "freshFiles": 2,
+      "accepted": false,
+      "reason": "Fresh inventory suppressed by unqualified historical terminal classification; time and request lower bound both exceed clean agentic limits."
     }
   ],
   "comparison": {
@@ -378,5 +393,19 @@
     "passedForThisCase": true,
     "goalComplete": false,
     "remaining": "Automatic completion-to-materialization path and successful multi-artifact harvesting remain unverified."
+  },
+  "automaticAdmissionReplay": {
+    "before": {
+      "retrievableWithoutHistory": 4,
+      "retrievableWithHistory": 0,
+      "failedTerminalWithHistory": 4
+    },
+    "after": {
+      "retrievableWithoutHistory": 4,
+      "retrievableWithHistory": 4,
+      "failedTerminalWithHistory": 0
+    },
+    "rawHistoryEdited": false,
+    "nativeReplayAfterRepair": false
   }
 }

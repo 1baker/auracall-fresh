@@ -664,3 +664,46 @@ completion-to-materializer cost and successful multi-artifact harvesting remain
 unproven. Next address unconditional completion-to-child quiet time and measure
 one exact-conversation automatic pass under the same output/cost contract, without
 resuming the global scheduler or unrelated subscriptions.
+
+## 2026-10-16 | Issue165 automatic admission failure isolated from passing service case
+
+One exact-conversation automatic proof ran through createResponsesHttpServer with
+its built-in accountMirrorProofScope: fresh cache, scheduler/background execution
+and loaded-operation resume disabled. Primary scheduler/17subscriptions untouched.
+It took173430msincluding setup (167217msoperational), observed at least127backend
+requests, and collected6messages/2artifacts/2files. Coverage starts after lease
+publication, so startup traffic is missing. It completed WITHOUT a materialization
+child or saved bytes. This is a failed30percent automatic comparison, not acceptance.
+Receipt:measured-automatic-scoped-2026-10-16T20-01-59-109Z.json in the private
+plan0411diagnostics root. The proof server closed, but its Node process49749
+retained background timers; after verifying the terminal receipt and exact command,
+only that owned controller received SIGTERM. No browser process was signalled.
+
+The completion handoff no longer imposes ChatGPT's blanket max-class120second
+quiet time: actual observed cooldownUntil is preserved, and child concrete actions
+retain their governor. Gemini/other providers keep their previous policy. Regression
+first failed5cases, then76completion tests passed, including a real provider
+cooldown introduced during collection. This timing fix remains source-qualified;
+the native proof never reached child creation and cannot qualify the handoff.
+
+Read-only replay using actual fresh status and historical jobs proved why no child
+was created:without history4retrievable entries; with history0retrievable/4terminal.
+The planner treated generic legacy failed/skipped rows as confirmed provider
+unavailability. It now requires failureKind=provider_unavailable or explicit
+assetAvailability=unavailable for terminal subtraction. Raw historical records stay
+unchanged; typed retrieval failures and explicit terminal results retain their
+classification. Two regression variants went red;10planner/76completion tests now
+pass. Source-build replay of the actual same native data now reports4retrievable
+with OR without historical jobs. Typecheck, compiled TypeScript build, Biome/lint
+and diff pass. Serial Standards/Spec review preserves current warnings, exact
+provider cooldowns, explicit terminal evidence and other-provider timing.
+
+Both isolated compiled admission deltas have rollback hashes in private receipts;
+no full branch promotion. Goal remains ACTIVE and issue165OPEN. Clean service
+case43.666s/72requests versus agentic48.532s/72passes, with identical6trimmed
+messages, same13889byte/hash file and explicit404for the second artifact. Automatic
+still fails:identity completed20:02:23, conversation route changed20:04:19, followed
+by another page-load burst. The precise pacing/identity caller responsible for that
+gap is not yet attributed. Next build a tight caller-level timing/initial-route
+repro, remove redundant setup and pace actual backend effects, then perform one
+new automatic comparison. Successful multi-artifact harvesting remains unproven.

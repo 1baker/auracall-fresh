@@ -2334,8 +2334,10 @@ describe("account mirror completion service", () => {
 		"scoped",
 		"steady_frontier",
 		"retained_only",
+		"guarded_handoff",
 		"quiet_frontier",
 	])("respects materialization frontier and settles owned failure (mode=%s)", async (mode) => {
+		const guardedHandoff = mode === "guarded_handoff";
 		const scoped = mode === "scoped";
 		const quiet = mode === "quiet_frontier";
 		const retainedOnly = mode === "retained_only";
@@ -2385,37 +2387,57 @@ describe("account mirror completion service", () => {
 				message: "History reconciliation failed to retrieve 1 asset.",
 			},
 		}));
-		const requestRefresh = vi.fn(async () => ({
-			...createRefreshResult(),
-			metadataEvidence: {
-				identitySource: "browser_session",
-				projectSampleIds: [],
-				conversationSampleIds: ["conv_collector_fresh_1"],
-				detailConversationIdsThisPass: quiet || retainedOnly ? [] : ["conv_collector_fresh_1"],
-				retainedMaterializationConversationIds: quiet ? [] : ["conv_retained_1"],
-				...(quiet
-					? {
-							changeFrontierPlan: {
-								object: "account_mirror_change_frontier_plan" as const,
-								version: 1 as const,
-								epochId: "quiet-epoch",
-								resumeAfterConversationKey: null,
-								checkpointFound: true,
-								decisions: [
-									{
-										conversationKey: "complete-A",
-										checkpointKey: "complete-A",
-										action: "skip" as const,
-										reason: "unchanged_complete" as const,
-									},
-								],
-								counts: { skip: 1, visit_once: 0, materialize_retained: 0, defer: 0 },
-							},
-						}
-					: {}),
-				truncated: { projects: false, conversations: false, artifacts: false },
-			},
-		}));
+		const requestRefresh = vi.fn(async () => {
+			if (guardedHandoff)
+				registry.updateState(
+					{ provider: "chatgpt", runtimeProfileId: "default" },
+					{
+						detectedIdentityKey: "ecochran76@gmail.com",
+						backfillLedger: completeBackfillLedger,
+						providerGuard: {
+							state: "cooldown",
+							kind: "unknown",
+							summary: "Provider cooldown observed during collector",
+							detectedAtMs: Date.parse("2026-04-30T12:00:00.000Z"),
+							clearedAtMs: null,
+							cooldownUntilMs: Date.parse("2026-04-30T12:15:00.000Z"),
+							url: null,
+							action: "readConversationContext",
+						},
+					},
+				);
+			return {
+				...createRefreshResult(),
+				metadataEvidence: {
+					identitySource: "browser_session",
+					projectSampleIds: [],
+					conversationSampleIds: ["conv_collector_fresh_1"],
+					detailConversationIdsThisPass: quiet || retainedOnly ? [] : ["conv_collector_fresh_1"],
+					retainedMaterializationConversationIds: quiet ? [] : ["conv_retained_1"],
+					...(quiet
+						? {
+								changeFrontierPlan: {
+									object: "account_mirror_change_frontier_plan" as const,
+									version: 1 as const,
+									epochId: "quiet-epoch",
+									resumeAfterConversationKey: null,
+									checkpointFound: true,
+									decisions: [
+										{
+											conversationKey: "complete-A",
+											checkpointKey: "complete-A",
+											action: "skip" as const,
+											reason: "unchanged_complete" as const,
+										},
+									],
+									counts: { skip: 1, visit_once: 0, materialize_retained: 0, defer: 0 },
+								},
+							}
+						: {}),
+					truncated: { projects: false, conversations: false, artifacts: false },
+				},
+			};
+		});
 		const writePersistentState = vi.fn(async () => {});
 		const registry = createAccountMirrorStatusRegistry({
 			config: pacedConfig,
@@ -2493,7 +2515,7 @@ describe("account mirror completion service", () => {
 			refreshSnapshot: true,
 			reuseSnapshotAfter: "2026-04-30T12:00:00.000Z",
 			...(retainedOnly ? {} : { reuseSnapshotConversationIds: ["conv_collector_fresh_1"] }),
-			providerWorkNotBefore: "2026-04-30T12:02:01.000Z",
+			...(guardedHandoff ? { providerWorkNotBefore: "2026-04-30T12:15:00.000Z" } : {}),
 			interactionPolicy: {
 				maxInteractionsPerMinute: 8,
 				conversationReadCooldownMs: 120_000,
@@ -2519,7 +2541,7 @@ describe("account mirror completion service", () => {
 					refreshSnapshot: true,
 					reuseSnapshotAfter: "2026-04-30T12:00:00.000Z",
 					...(retainedOnly ? {} : { reuseSnapshotConversationIds: ["conv_collector_fresh_1"] }),
-					providerWorkNotBefore: "2026-04-30T12:02:01.000Z",
+					...(guardedHandoff ? { providerWorkNotBefore: "2026-04-30T12:15:00.000Z" } : {}),
 					interactionPolicy: {
 						maxInteractionsPerMinute: 8,
 						conversationReadCooldownMs: 120_000,

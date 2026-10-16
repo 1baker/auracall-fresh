@@ -501,9 +501,9 @@ function addHistoryMaterializationClassification(
     if (entry.status === 'failed' || entry.status === 'skipped') {
       if (entry.failureKind === 'retrieval_failed') {
         incrementAssetCount(counts.retrievalFailed, field);
-      } else {
-        // Older manifests did not distinguish retrieval failure from terminal
-        // provider unavailability, so retain their historical interpretation.
+      } else if (entry.failureKind === 'provider_unavailable' || entry.assetAvailability === 'unavailable') {
+        // Only explicit provider unavailability can make a historical failure
+        // terminal. Generic legacy failures cannot suppress fresh inventory.
         incrementAssetCount(counts.failedTerminal, field);
       }
     }
