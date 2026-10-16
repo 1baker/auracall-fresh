@@ -163,6 +163,19 @@ test.each([
 				else if (expression === "location.href") value = pages.get(target);
 				else if (expression.includes("/api/auth/session"))
 					value = { user: { id: "fixture-user", email: "operator@example.test" } };
+				else if (expression.includes("const renderedRoute"))
+					value = runInNewContext(expression, {
+						location: new URL(pages.get(target) ?? "https://chatgpt.com/"),
+						document: {
+							title: "Fixture",
+							querySelectorAll: () => [
+								{
+									textContent: "Known fixture answer",
+									getBoundingClientRect: () => ({ width: 100, height: 40 }),
+								},
+							],
+						},
+					});
 				else if (expression.includes("const rawConversationId")) value = true;
 				else if (expression.includes("document.readyState")) value = true;
 				else if (expression.includes("/backend-api/conversation/")) {
@@ -301,10 +314,7 @@ test.each([
 				messages: [{ role: "assistant", text: "Known fixture answer" }],
 			});
 			expect(opened).toEqual(["about:blank"]);
-			expect(navigated).toEqual([
-				"https://chatgpt.com/c/fixture-conversation",
-				"https://chatgpt.com/c/fixture-conversation",
-			]);
+			expect(navigated).toEqual(["https://chatgpt.com/c/fixture-conversation"]);
 			return;
 		}
 		if (scenario === "project-index" || scenario === "project-index-mixed") {

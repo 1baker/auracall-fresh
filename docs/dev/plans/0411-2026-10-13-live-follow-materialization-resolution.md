@@ -567,3 +567,67 @@ only proves input dispatch plus failed wait, so choosing among hit-test failure,
 preview handling and failed remote content is not yet justified. Do not claim a
 speedup from the two timings: scheduler waits and refresh paths differ. Original
 artifact bytes/hash/manifest/archive/local-copy acceptance remains OPEN.
+
+## 2026-10-16 | Issue165 measured agentic comparison and rendered fallback repair
+
+Current goal: deterministic elapsed time AND backend requests must each be at
+most1.3times the agentic cost for equivalent conversation/artifact results. Stop
+and checkpoint before2million tokens or6hours; goal remains ACTIVE. Prior status
+turn was no progress; this packet supplies new live evidence and a source fix.
+The canonical sanitized action/cost ledger is
+`docs/dev/issue165-scrape-benchmark-2026-10-16.json`. Private receipts include
+per-command timestamps, request counts before/after, click hit tests, page network
+requests/responses and Browser download begin/progress/completion. Page Network is
+enabled on the owned blank target before provider navigation. Browser-wide worker
+and unrelated-tab traffic is not claimed. Both paths use wsl-chrome-3 and the same
+unchanged conversation. No prompt or scheduler/subscription resume was issued.
+
+Agent-driven read plus two artifact attempts took79964ms/71backend requests. It
+saved13889bytes with SHA256
+fd1720c0e3df3579ea567679c642e895a7993a3b558b8743fa47495a201e87ca.
+The second exact hit-tested download returned404 from the interpreter endpoint;
+its sandbox_path names that artifact. This explains why the earlier capped
+automatic attempts on that artifact saved zero bytes. It does not establish that
+all prior failures had the same cause. Earlier37288ms/70request agentic receipt
+incorrectly marked its own complete flag; separate qualification explicitly
+rejects it because only1of2files saved. Raw receipt preserved.
+
+Normal deterministic materialization then timed out after121805ms/68requests
+while six messages were rendered. One traced45000mscontext deadline yielded
+47149ms/66requests and located the stall in forced payload-route fallback after
+API failure. A minimized actual payload-reader test went red on unnecessary
+navigation. After failed API reads, matching project/conversation plus nonempty
+rendered turn content now returns to DOM extraction without reacquiring the route.
+Wrong route/project and empty content retain the original fallback. A composed
+service fixture now proves one navigation instead of two.222focused tests pass,
+typecheck, compiled TypeScript build, scoped Biome and diff checks pass. Serial
+Standards review keeps provider behavior in the adapter and preserves guards;
+Spec review preserves exact route/project qualification and legacy empty-surface
+recovery. This checkpoint does not infer full issue acceptance from source tests.
+
+Live public-service replay after isolated compiled-hunk installation completed
+in67700ms/71requests, one document navigation, two artifacts discovered and one
+file saved with the SAME13889bytes/hash as the agentic file. Raw ratios versus
+the79964msdiagnostic agentic run:time0.84663, requests1.0. These are NOT acceptance:
+the agentic timing includes failed-asset diagnosis, neither saved both files,
+and deterministic still records the unavailable asset as generic skipped.
+Five messages match after whitespace removal; the sixth additionally contains
+two Open file UI labels in deterministic extraction. Full equality is not claimed.
+Agentic and deterministic private contexts and immutable file hashes are retained.
+
+Installed adapter currently contains only reviewed resource-row and rendered-
+payload reuse hunks atop the prior runtime, plus the earlier completion freshness
+delta. Rollback copies/hashes live in the private diagnostics directory. This is
+an isolated runtime delta, not promotion of the entire branch. The normal service
+now proves working-resource-row download; previous capped native failures only
+selected the404asset and did not qualify a successful resource-row transfer.
+All17subscriptions/global scheduler remain paused, queued/running0, warnings0.
+Final lease readback found the terminal helper's lease lost/owner null; process
+custody and retirement remain an explicit pending check.
+
+Next bounded work: correlate exact artifact download404/410events and report
+provider_unavailable immediately, avoiding the30second generic failed-download
+wait; preserve warning/unknown-effect stops. Then obtain a clean equivalent-output
+baseline and deterministic comparison, including successful multi-artifact and
+automatic follow behavior. No raw content, URLs, account identity or artifact
+filenames are copied into the public ledger. Goal remains unachieved.

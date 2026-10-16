@@ -3362,6 +3362,34 @@ export async function readChatgptConversationPayloadWithClient(
 		return null;
 	}
 
+	// A failed payload API read does not invalidate messages already rendered on
+	// this exact conversation/project. Leave that surface intact for DOM extraction.
+	recordBrowserScrapeCdpCall(options, "Runtime.evaluate");
+	const rendered = await withChatgptTimeout(
+		client.Runtime.evaluate({
+			expression: `(() => {
+      const renderedRoute = (${buildConversationRouteExpression(conversationId, _projectId)});
+      if (!renderedRoute) return false;
+      return Array.from(document.querySelectorAll(${JSON.stringify(CHATGPT_CONVERSATION_TURN_SECTION_SELECTOR)}))
+        .some((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0 && Boolean(node.textContent?.trim());
+        });
+    })()`,
+			returnByValue: true,
+			timeout: 3_000,
+		}),
+		3_000,
+		"Timed out checking rendered ChatGPT conversation content before payload fallback.",
+	);
+	if (!rendered.exceptionDetails && rendered.result?.value === true) {
+		recordBrowserScrapeProviderAction(
+			options,
+			"chatgpt.skipPayloadRouteFallback.renderedConversation",
+		);
+		return null;
+	}
+
 	const targetUrl = resolveChatgptConversationApiUrl(conversationId);
 	await client.Network.enable().catch(() => undefined);
 	await client.Page.enable().catch(() => undefined);

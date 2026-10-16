@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
-import { runInNewContext } from "node:vm";
 import os from "node:os";
 import path from "node:path";
+import { runInNewContext } from "node:vm";
 import { describe, expect, test, vi } from "vitest";
 import {
 	awaitChatgptDownloadPromiseWithTimeout,
@@ -878,7 +878,6 @@ describe("clickChatgptViewerDownloadButtonWithClient", () => {
 		});
 	});
 });
-
 
 describe("extractChatgptArtifactFileNameFromUri", () => {
 	test("normalizes sandbox basenames for visible behavior-button matching", () => {
@@ -2637,6 +2636,74 @@ describe("isRetryableConnectionError", () => {
 });
 
 describe("readChatgptConversationPayloadWithClient", () => {
+	test.each([
+		{ path: "/c/conversation-visible", text: "Rendered response", project: null, reuse: true },
+		{ path: "/c/conversation-other", text: "Rendered response", project: null, reuse: false },
+		{ path: "/c/conversation-visible", text: " ", project: null, reuse: false },
+		{
+			path: "/g/g-p-abcdef/c/conversation-visible",
+			text: "Rendered response",
+			project: "g-p-fedcba",
+			reuse: false,
+		},
+	])("rendered payload fallback respects route and content ($path, $text, $project)", async ({
+		path,
+		text,
+		project,
+		reuse,
+	}) => {
+		const location = new URL(`https://chatgpt.com${path}`);
+		const client = {
+			// biome-ignore lint/style/useNamingConvention: CDP protocol domain.
+			Runtime: {
+				evaluate: vi.fn(async ({ expression }: { expression: string }) => {
+					if (expression.includes("/backend-api/conversation/"))
+						return { result: { value: { ok: false, status: 404, body: "{}" } } };
+					if (expression === "location.href") return { result: { value: location.href } };
+					if (expression.includes("const renderedRoute"))
+						return {
+							result: {
+								value: runInNewContext(expression, {
+									location,
+									document: {
+										title: "Fixture",
+										querySelectorAll: () => [
+											{
+												textContent: text,
+												getBoundingClientRect: () => ({ width: 100, height: 40 }),
+											},
+										],
+									},
+								}),
+							},
+						};
+					return { result: { value: true } };
+				}),
+			},
+			// biome-ignore lint/style/useNamingConvention: CDP protocol domain.
+			Network: {
+				enable: vi.fn(async () => undefined),
+				responseReceived: vi.fn(() => () => {}),
+				loadingFinished: vi.fn(() => () => {}),
+			},
+			// biome-ignore lint/style/useNamingConvention: CDP protocol domain.
+			Page: { enable: vi.fn(async () => undefined), navigate: vi.fn(async () => ({})) },
+		};
+		vi.useFakeTimers();
+		try {
+			const pending = readChatgptConversationPayloadWithClient(
+				client as never,
+				"conversation-visible",
+				project,
+				{ allowNavigation: true },
+			);
+			await vi.runAllTimersAsync();
+			await expect(pending).resolves.toBeNull();
+			expect(client.Page.navigate).toHaveBeenCalledTimes(reuse ? 0 : 1);
+		} finally {
+			vi.useRealTimers();
+		}
+	});
 	test("does not force a second route visit for account-mirror payload fallback", async () => {
 		const client = {
 			// biome-ignore lint/style/useNamingConvention: mirrors DevTools protocol domain names.
