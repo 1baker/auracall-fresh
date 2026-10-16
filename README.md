@@ -878,6 +878,10 @@ Terminology note:
   If a request-aware context call hands back a retained session after that drain
   expires, its eventual settlement still closes the session. The earlier timeout
   stays terminal; late data does not resume collection.
+  A ChatGPT detail refresh with explicit conversation IDs acquires its crawler
+  on the first requested conversation and verifies identity on that route,
+  avoiding a preliminary home-page visit. Other refresh phases use the configured
+  starting route. Provider warnings and navigation cooldowns still apply.
   History-backed materialization is an explicit separate job surface:
   `POST /v1/account-mirrors/materializations` queues a durable
   `history_materialization_job` by provider conversation id, account-mirror

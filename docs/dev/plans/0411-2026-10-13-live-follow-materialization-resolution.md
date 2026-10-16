@@ -7,6 +7,17 @@ Target: main
 
 ## Current State
 
+### 2026-10-16 scoped initial-route checkpoint
+
+Source regression confirms detail refresh unnecessarily opened home. Carrying
+the first explicit detail conversation through acquisition and identity options
+passes focused tests. Native isolated proof44394ms/at least59requests failed
+CDP target enablement before context/child creation; no acceptance. Experimental
+three-module runtime route delta rolled back. Full receipt/action record is in
+issue165-scrape-benchmark-2026-10-16.json. Next isolate target readiness, then
+qualify automatic harvesting and successful multi-file parity. Goal stays ACTIVE.
+
+
 ### 2026-10-16 measured automatic workflow
 
 User directed agentic measurement and clarified that prior coarse pacing numbers

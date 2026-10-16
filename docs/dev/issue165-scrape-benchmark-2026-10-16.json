@@ -337,6 +337,28 @@
       "freshFiles": 2,
       "accepted": false,
       "reason": "Fresh inventory suppressed by unqualified historical terminal classification; time and request lower bound both exceed clean agentic limits."
+    },
+    {
+      "id": "automatic_scoped_conversation_initial_route",
+      "receipt": "measured-automatic-scoped-2026-10-16T20-20-26-343Z.json",
+      "elapsedMs": 44394,
+      "operationalElapsedMs": 36402,
+      "backendRequestsLowerBound": 59,
+      "coverageComplete": false,
+      "savedFiles": 0,
+      "childCreated": false,
+      "accepted": false,
+      "reason": "Timed out enabling selected page target on newly observed browser process. No completed context or materialization; elapsed and request figures cannot establish acceptance.",
+      "agentActions": {
+        "productCompletionCreate": 1,
+        "productCompletionPause": 1,
+        "providerPrompt": 0,
+        "observerAttachments": 1,
+        "postFailureInspectionAttempt": 1,
+        "postFailureInspectionReachedBrowser": false,
+        "terminalControllerSigterm": 1
+      },
+      "runtimeDeltaRolledBack": true
     }
   ],
   "comparison": {
@@ -406,6 +428,7 @@
       "failedTerminalWithHistory": 0
     },
     "rawHistoryEdited": false,
-    "nativeReplayAfterRepair": false
+    "nativeReplayAfterRepair": true,
+    "nativeReplayQualification": "Initial-route probe failed before inventory/admission; repaired child selection remains native-unproven."
   }
 }

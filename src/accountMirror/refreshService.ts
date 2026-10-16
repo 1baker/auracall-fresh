@@ -338,6 +338,8 @@ export function createAccountMirrorRefreshService(input: {
 							runtimeProfileId,
 							operationId: request.liveFollowOperationId ?? requestId,
 							workloadKind: request.liveFollowOperationId ? "live-follow" : "ephemeral",
+							initialConversationId:
+								requestedPhase === "detail-inventory" ? request.conversationIds?.[0] : undefined,
 							maxBrowserInteractionsPerMinute:
 								development?.maxBrowserInteractionsPerMinute ??
 								target.limits.maxBrowserInteractionsPerMinute,

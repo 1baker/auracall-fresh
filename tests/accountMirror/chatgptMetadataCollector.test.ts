@@ -1424,6 +1424,14 @@ describe("ChatGPT account mirror metadata collector", () => {
 			expectedIdentityKey: "ecochran76@gmail.com",
 			sweepMode: "steady_follow",
 			requestedPhase: "detail-inventory",
+			tabAffinity: scoped
+				? {
+						host: "127.0.0.1",
+						port: 45011,
+						targetId: "crawler-scoped",
+						configuredUrl: "https://chatgpt.com/c/conv_target",
+					}
+				: undefined,
 			conversationIds: scoped ? ["conv_target"] : undefined,
 			previousEvidence: {
 				identitySource: "auth-session",
@@ -1468,6 +1476,13 @@ describe("ChatGPT account mirror metadata collector", () => {
 			},
 		});
 
+		if (scoped)
+			expect(client.getProviderSessionProof).toHaveBeenCalledWith(
+				expect.objectContaining({
+					configuredUrl: "https://chatgpt.com/c/conv_target",
+					tabTargetId: "crawler-scoped",
+				}),
+			);
 		expect(calls).toEqual(["getConversationContext:conv_target"]);
 		expect(client.getConversationContext).toHaveBeenCalledWith(
 			"conv_target",
@@ -1475,7 +1490,10 @@ describe("ChatGPT account mirror metadata collector", () => {
 				listOptions: expect.objectContaining({
 					accountMirrorInventory: true,
 					skipFeatureSignature: true,
-					tabLifecycle: "dispose-new",
+					tabLifecycle: scoped ? "retain" : "dispose-new",
+					...(scoped
+						? { configuredUrl: "https://chatgpt.com/c/conv_target", tabTargetId: "crawler-scoped" }
+						: {}),
 				}),
 			}),
 		);

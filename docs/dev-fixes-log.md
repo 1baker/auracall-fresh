@@ -1,3 +1,31 @@
+## 2026-10-16 | Issue165 scoped initial-route regression and failed native probe
+
+A scoped detail refresh opened ChatGPT home before its requested conversation.
+The actual refresh/lease fixture went red on that extra route. It now passes the
+first explicit detail conversation to affinity acquisition and carries that URL
+through collector identity verification on the same retained target. Unscoped
+refreshes keep their configured route; governors, account proof and warning stops
+are unchanged. Collector regression verifies both proof and context options.
+12 affinity/lifetime tests and 121 collector/refresh/browser-route tests pass;
+updated collector tests (71) pass. Typecheck, compiled TypeScript and scoped lint
+pass. Serial Standards review found no blocking convention/custody changes;
+Spec review accepts the route reduction but leaves native performance unproven.
+
+One fresh-cache isolated normal automatic probe took44394ms including setup
+(36402ms operational), observed at least59backend requests, and failed enabling
+the selected page target before context collection or child creation. Startup
+coverage is incomplete. This is NOT a passing comparison or successful scrape.
+The observer saw a new browser process and zero rendered turns; the cause of
+CDP target enablement timeout remains unproven. Raw receipt and action costs are
+preserved in issue165-scrape-benchmark-2026-10-16.json and private diagnostics.
+The exact terminal controller66494 was retired without signalling Chrome. A
+read-only follow-up inspection stopped before browser access because its lease
+was lost. The three experimental compiled route deltas were rolled back with
+hash checks; the primary service was not restarted. Earlier qualified deltas
+remain installed. Next: reproduce/isolate target readiness before another native
+comparison, then qualify automatic child creation and a successful multi-file
+case. Issue165 and the goal remain OPEN/ACTIVE.
+
 ## 2026-10-16 | Issue165 automatic admission failure isolated from passing service case
 
 One exact-conversation automatic proof ran through createResponsesHttpServer with

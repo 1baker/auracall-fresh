@@ -160,6 +160,7 @@ export interface AccountMirrorMetadataCollectorInput {
 	providerTrafficGovernor?: ProviderTrafficGovernor;
 	providerTrafficPlanController?: AccountMirrorProviderTrafficPlanController;
 	tabAffinity?: {
+		configuredUrl?: string;
 		host: string;
 		onTargetNavigation?: () => Promise<void> | void;
 		port: number;
@@ -342,6 +343,7 @@ function createAccountMirrorListOptions(
 		...(tabAffinity
 			? {
 					allowNavigation: true,
+					...(tabAffinity.configuredUrl ? { configuredUrl: tabAffinity.configuredUrl } : {}),
 					host: tabAffinity.host,
 					onTargetNavigation: tabAffinity.onTargetNavigation,
 					port: tabAffinity.port,

@@ -13,9 +13,10 @@ import { createBrowserTabConcurrencyRuntime } from "../../src/browser/tabConcurr
 import type { ResolvedUserConfig } from "../../src/config.js";
 
 test.each([
-	undefined,
-	"completion-1",
-])("refresh tab lifetime follows its caller (%s)", async (liveFollowOperationId) => {
+	{ liveFollowOperationId: undefined, scoped: false },
+	{ liveFollowOperationId: "completion-1", scoped: false },
+	{ liveFollowOperationId: "completion-scoped", scoped: true },
+])("refresh tab lifetime follows its caller (%s)", async ({ liveFollowOperationId, scoped }) => {
 	const home = await fs.mkdtemp(path.join(os.tmpdir(), "auracall-refresh-lifetime-"));
 	setAuracallHomeDirOverrideForTest(home);
 	const now = new Date("2026-10-13T12:00:00Z");
@@ -70,18 +71,26 @@ test.each([
 			registry: createAccountMirrorStatusRegistry({ config, now: () => now }),
 			providerGuardCensus: async () => null,
 			metadataCollector: {
-				collect: async () => ({
-					detectedIdentityKey: "operator@example.test",
-					detectedAccountLevel: "Pro",
-					metadataCounts: { projects: 0, conversations: 0, artifacts: 0, files: 0, media: 0 },
-					manifests: { projects: [], conversations: [], artifacts: [], files: [], media: [] },
-					evidence: {
-						identitySource: "profile-menu",
-						projectSampleIds: [],
-						conversationSampleIds: [],
-						truncated: { projects: false, conversations: false, artifacts: false },
-					},
-				}),
+				collect: async (input) => {
+					if (scoped) {
+						expect(pages.get("fixture-target")).toBe("https://chatgpt.com/c/conversation-scoped");
+						expect(input.tabAffinity).toMatchObject({
+							configuredUrl: "https://chatgpt.com/c/conversation-scoped",
+						});
+					}
+					return {
+						detectedIdentityKey: "operator@example.test",
+						detectedAccountLevel: "Pro",
+						metadataCounts: { projects: 0, conversations: 0, artifacts: 0, files: 0, media: 0 },
+						manifests: { projects: [], conversations: [], artifacts: [], files: [], media: [] },
+						evidence: {
+							identitySource: "profile-menu",
+							projectSampleIds: [],
+							conversationSampleIds: [],
+							truncated: { projects: false, conversations: false, artifacts: false },
+						},
+					};
+				},
 			},
 		});
 		await expect(
@@ -90,6 +99,12 @@ test.each([
 				runtimeProfileId: "fixture",
 				explicitRefresh: true,
 				liveFollowOperationId,
+				...(scoped
+					? {
+							requestedPhase: "detail-inventory" as const,
+							conversationIds: ["conversation-scoped"],
+						}
+					: {}),
 			}),
 		).resolves.toMatchObject({ status: "completed" });
 		const runtime = createBrowserTabConcurrencyRuntime(config);
@@ -102,7 +117,7 @@ test.each([
 		expect(lease.state).toBe("idle");
 		expect(lease.retention).toBe(liveFollowOperationId ? "live-follow" : "ttl");
 		expect(isTabLeaseTtlExempt(lease)).toBe(Boolean(liveFollowOperationId));
-		if (liveFollowOperationId) {
+		if (liveFollowOperationId && !scoped) {
 			now.setTime(now.getTime() + 30 * 60_000);
 			await expect(
 				service.requestRefresh({
