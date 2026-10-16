@@ -25454,3 +25454,12 @@ Model setup on a utility tab is not a submitted-page model guarantee. Honor expl
 ## 2026-10-13 — Sidebar history Retry blocked app preparation (#253)
 
 Whole-body app blocking probes confused a sidebar history load failure with an active operation failure. Probe visible text/buttons outside nav/aside, preserving dialog/alert surfaces even nested there. Public adapter red/green regression catches healthy composer plus history Retry and retains active main/dialog failures. No Retry clicking or suppression of provider errors.
+
+
+### 2026-10-16 | Keep production boundaries in isolated scrape benchmarks
+
+Inject the history-service constructor when replacing its store, so the HTTP
+server still supplies cleanup, provider-guard and foreground-work callbacks.
+A real HTTP regression verifies private creation/startup recovery does not mutate
+the default-store running job. Prepared cold measurements remain unrun while
+native browser ownership cannot be verified; no timing acceptance inferred.

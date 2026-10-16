@@ -404,6 +404,7 @@ export interface ResponsesHttpServerDeps {
 	runArchiveService?: RunArchiveService;
 	archiveMaterializationService?: ArchiveMaterializationService;
 	archiveMaterializationJobService?: ArchiveMaterializationJobService;
+	createHistoryMaterializationService?: typeof createHistoryMaterializationService;
 	historyMaterializationService?: HistoryMaterializationService;
 	searchProjectionService?: SearchProjectionService;
 	accountMirrorArtifactRecoveryPlanner?: AccountMirrorArtifactRecoveryPlanner;
@@ -1594,7 +1595,7 @@ export async function createResponsesHttpServer(
 	await archiveMaterializationJobService.recoverInterruptedJobs();
 	historyMaterializationService =
 		historyMaterializationService ??
-		createHistoryMaterializationService({
+		(deps.createHistoryMaterializationService ?? createHistoryMaterializationService)({
 			config: resolvedUserConfig ?? {},
 			catalogService: accountMirrorCatalogService,
 			runArchiveService,

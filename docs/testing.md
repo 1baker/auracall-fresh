@@ -3607,3 +3607,13 @@ The route probe does not replace active-lane/PR/ancestry reconciliation.
 Issue253 process provenance regression: `pnpm vitest run tests/browser/chatgptDeveloperAppLifecycle.test.ts -t "carries managed browser provenance"` exercises actual app/affinity/remote preflight with hermetic transport/storage, including missing legacy PID metadata, unknown process and wrong account. It produces no provider effects.
 
 Developer-app CLI terminal boundary: `pnpm vitest run tests/cli/developerAppTerminalExit.test.ts tests/cli/chatgptDeveloperAppsCommand.test.ts` executes the actual command in isolated child processes and verifies full output/custody before0/1 termination despite retained handles.
+
+
+### Private HTTP history-materialization storage
+
+`ResponsesHttpServerDeps.createHistoryMaterializationService` optionally wraps the
+normal constructor to replace storage while retaining server-provided cleanup,
+guard and foreground-work callbacks. An explicitly injected service takes priority.
+`tests/http.historyMaterializationStoreIsolation.test.ts` exercises real HTTP and
+private/default file stores without provider work; queued work is captured in the
+test. Cold benchmark stores must start empty and retain the production scheduler.

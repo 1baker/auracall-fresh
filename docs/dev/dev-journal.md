@@ -54891,3 +54891,30 @@ ceilings. Concrete bounded automatic acceptance proposal is prepared at
 requirement is explicit numeric backend requests/minute wiring, followed by
 separately authorized install and one normal parent pass. Changed-B is later,
 not a prerequisite to preparing this pass. Memory disposition forbidden.
+
+
+## 2026-10-16 | Issue165 private cold benchmark checkpoint
+
+The HTTP server accepts an optional history-materialization factory, preserving
+its production cleanup, guard observation and foreground-work callbacks. Explicit
+service injection still takes precedence; the default constructor is unchanged.
+A real HTTP/service/store regression proves private job creation and startup
+recovery leave the default-store running fixture unchanged. Six targeted HTTP
+tests pass across two files; eight private-store self-checks pass. Typecheck and
+compiled TypeScript exit0; source lint exits0 with its existing Location warning;
+the new test passes Biome. Whole-server Biome retains existing formatting/import
+debt. Primary serial Standards and Spec review against7f3fa0b0e found no accepted
+findings in this slice; full issue acceptance remains unproven.
+
+Cold multi-artifact automatic and current guarded-agentic drivers are prepared,
+not run. Private snapshots, logs and restoration manifest are under
+~/.auracall/diagnostics/plan0411/cold-preparation-validation-20261016. The profiler
+install/restore self-check confirms the compiled transport is restored. Read-only
+preflight23:00UTC still finds PID12187 without a matching native ownership receipt;
+zero product controls/provider commands issued. Do not adopt or signal that browser.
+Frozen complete automatic97.851s/66requests still fails the63.0916s time ceiling;
+service-only passes do not satisfy automatic acceptance. Next: establish current
+native ownership through the supported runtime, then execute one complete measured
+automatic pass with equivalent texts/files and early Network capture. Keep the
+original faster agentic baselines. Ledger: issue165-scrape-benchmark-2026-10-16.json.
+Memory disposition forbidden: no explicit user memory-update authorization.

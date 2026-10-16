@@ -925,5 +925,33 @@
     "originalAutomaticTimeCeilingUnchangedMs": 63091.6,
     "latestCompleteAutomaticTimeMs": 97851,
     "fullGoalAccepted": false
+  },
+  "coldBenchmarkPreparation": {
+    "accepted": false,
+    "benchmarkAttempt": false,
+    "providerCommandsIssued": 0,
+    "supportsPrivateHistoryFactory": true,
+    "privateEvidenceDirectory": "cold-preparation-validation-20261016",
+    "preflightReceipt": "cold-multi-driver-preflight-20261016.json",
+    "runningBrowserPid": 12187,
+    "verifiedCurrentNativeReceipt": false,
+    "targetedHttpTestsPassed": 6,
+    "testFiles": 2,
+    "privateStoreSelfChecksPassed": 8,
+    "typecheck": "exit0",
+    "compiledTypescript": "exit0",
+    "sourceLint": "exit0, one existing Location naming warning",
+    "newTestBiome": "passed",
+    "fullSourceBiome": "existing formatting/import debt; no broad rewrite",
+    "compiledProfilerRestored": true,
+    "review": {
+      "fixedPoint": "7f3fa0b0e3208df985cfcd9ab017f46e0332b376",
+      "standards": "primary serial review: no accepted findings in two-line factory seam and integration test",
+      "spec": "private storage proven; live timing and fresh multi automatic acceptance remain incomplete"
+    },
+    "frozenOriginalAutomaticMs": 97851,
+    "frozenOriginalAutomaticRequests": 66,
+    "originalAutomaticTimeCeilingMs": 63091.6,
+    "fullGoalAccepted": false
   }
 }
