@@ -8,8 +8,8 @@ import {
 } from "../packages/browser-service/src/service/operationDispatcher.js";
 import { setAuracallHomeDirOverrideForTest } from "../src/auracallHome.js";
 import { createCacheStore } from "../src/browser/llmService/cache/store.js";
-import type { ProviderCacheContext } from "../src/browser/providers/cache.js";
 import { ChatgptService } from "../src/browser/llmService/providers/chatgptService.js";
+import type { ProviderCacheContext } from "../src/browser/providers/cache.js";
 import type { ProviderSessionProof } from "../src/browser/providers/providerSessionAuthority.js";
 import type { RunArchiveItem, RunArchiveService } from "../src/runtime/archiveService.js";
 import {
@@ -58,6 +58,66 @@ describe("history materialization service", () => {
 			{ phase: "materialization", kind: "page_navigate", workKey, limit: 1 },
 			{ phase: "materialization", kind: "in_page_action", workKey, limit: 2 },
 		]);
+	});
+
+	it("preserves terminal artifact unavailability through the real manifest projection", async () => {
+		const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), "auracall-artifact-unavailable-"));
+		setAuracallHomeDirOverrideForTest(homeDir);
+		const manifestPath = path.join(homeDir, "artifact-fetch-manifest.json");
+		await fs.writeFile(
+			manifestPath,
+			JSON.stringify({
+				entries: [
+					{
+						artifactId: "artifact-unavailable",
+						title: "missing.zip",
+						kind: "download",
+						status: "error",
+						error: "chatgpt_artifact_provider_unavailable: HTTP 404",
+						failureKind: "provider_unavailable",
+						retryable: false,
+					},
+				],
+			}),
+		);
+		const provider = vi
+			.spyOn(ChatgptService.prototype, "materializeConversationArtifacts")
+			.mockResolvedValue({ artifacts: [], files: [], manifestPath, unavailableArtifacts: [] });
+		let scheduled: (() => Promise<void>) | undefined;
+		try {
+			const service = createHistoryMaterializationService({
+				config: { browser: { cache: { store: "json" } } },
+				generateId: () => "hmj_artifact_unavailable",
+				schedule: (work) => {
+					scheduled = work;
+				},
+			});
+			await service.createJob({
+				provider: "chatgpt",
+				runtimeProfile: "default",
+				conversationId: "unavailable-conversation",
+				assetKinds: ["artifacts"],
+				refreshSnapshot: false,
+				maxItems: 1,
+			});
+			await scheduled?.();
+			expect(await service.readJob("hmj_artifact_unavailable")).toMatchObject({
+				result: {
+					entries: [
+						{
+							status: "failed",
+							failureKind: "provider_unavailable",
+							retryable: false,
+							assetAvailability: "unavailable",
+							recoverabilityState: "terminally_unavailable",
+						},
+					],
+				},
+			});
+		} finally {
+			provider.mockRestore();
+			await fs.rm(homeDir, { recursive: true, force: true });
+		}
 	});
 
 	it("classifies an all-failed transfer result as failed rather than skipped", () => {
@@ -5443,7 +5503,10 @@ describe("history materialization service", () => {
 		});
 	});
 
-	it.each([false, true])("rotates retryable no-materializable candidates across consecutive reconciliation jobs (frontier=%s)", async (frontier) => {
+	it.each([
+		false,
+		true,
+	])("rotates retryable no-materializable candidates across consecutive reconciliation jobs (frontier=%s)", async (frontier) => {
 		const scheduled: Array<() => Promise<void>> = [];
 		const conversationIds = ["conv_rotate_1", "conv_rotate_2", "conv_rotate_3", "conv_rotate_4"];
 		const materializeConversation = vi.fn(

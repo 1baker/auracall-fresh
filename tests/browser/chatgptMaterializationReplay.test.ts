@@ -66,6 +66,10 @@ const zip = Buffer.from("504b0506000000000000000000000000000000000000", "hex");
 test.each([
 	"clean",
 	"resource-row",
+	"unavailable404",
+	"unavailable410",
+	"neighbor404",
+	"neighbor-conversation404",
 	"stale",
 	"collision",
 	"mismatch",
@@ -77,6 +81,12 @@ test.each([
 	setAuracallHomeDirOverrideForTest(home);
 	let downloadDir = "";
 	const inputs: string[] = [];
+	let requestListener:
+		| ((event: { requestId: string; request: { url: string } }) => void)
+		| undefined;
+	let responseListener:
+		| ((event: { requestId: string; response: { url: string; status: number } }) => void)
+		| undefined;
 	const runtimeWindow: Record<string, unknown> = { open: () => undefined };
 	class FixtureElement {
 		readonly attributes = new Map<string, string>();
@@ -186,6 +196,22 @@ test.each([
 	const client = {
 		// biome-ignore lint/style/useNamingConvention: Browser and CDP names are protocol-defined.
 		Runtime: { evaluate },
+		// biome-ignore lint/style/useNamingConvention: CDP protocol domain.
+		Network: {
+			enable: async () => undefined,
+			requestWillBeSent: (listener: typeof requestListener) => {
+				requestListener = listener;
+				return () => {
+					requestListener = undefined;
+				};
+			},
+			responseReceived: (listener: typeof responseListener) => {
+				responseListener = listener;
+				return () => {
+					responseListener = undefined;
+				};
+			},
+		},
 		send: async (method: string, params: { downloadPath: string }) => {
 			expect(method).toBe("Browser.setDownloadBehavior");
 			downloadDir = params.downloadPath;
@@ -197,6 +223,20 @@ test.each([
 			dispatchMouseEvent: async ({ type, x }: { type: string; x: number }) => {
 				inputs.push(type);
 				if (type === "mouseReleased") {
+					if (
+						scenario === "unavailable404" ||
+						scenario === "unavailable410" ||
+						scenario === "neighbor404" ||
+						scenario === "neighbor-conversation404"
+					) {
+						const url = `https://chatgpt.com/backend-api/conversation/${scenario === "neighbor-conversation404" ? "other-conversation" : conversationId}/interpreter/download?sandbox_path=${encodeURIComponent(`/mnt/data/${scenario === "neighbor404" ? "Neighbor.zip" : fileName}`)}`;
+						requestListener?.({ requestId: "download-request", request: { url } });
+						responseListener?.({
+							requestId: "download-request",
+							response: { url, status: scenario === "unavailable410" ? 410 : 404 },
+						});
+						if (!scenario.startsWith("neighbor")) return;
+					}
 					if (scenario === "resource-row") expect(x).toBe(260);
 					const name =
 						scenario === "collision"
@@ -264,6 +304,23 @@ test.each([
 			},
 		});
 		expect(result.artifacts).toMatchObject([{ title: fileName, kind: "download" }]);
+		if (scenario === "unavailable404" || scenario === "unavailable410") {
+			expect(result.files).toHaveLength(0);
+			const manifest = JSON.parse(await readFile(result.manifestPath as string, "utf8"));
+			expect(manifest.entries).toMatchObject([
+				{
+					status: "error",
+					failureKind: "provider_unavailable",
+					retryable: false,
+					error: expect.stringContaining(`HTTP ${scenario === "unavailable410" ? "410" : "404"}`),
+				},
+			]);
+			expect(telemetry.downloads).toEqual({ attempted: 1, succeeded: 0, failed: 1 });
+			expect(responseListener).toBeUndefined();
+			expect(requestListener).toBeUndefined();
+			expect(inputs).toEqual(["mouseMoved", "mousePressed", "mouseReleased"]);
+			return;
+		}
 		if (scenario === "mismatch" || scenario === "ambiguous" || scenario === "failed-turn") {
 			expect(result.files).toHaveLength(0);
 			const manifest = JSON.parse(await readFile(result.manifestPath as string, "utf8"));

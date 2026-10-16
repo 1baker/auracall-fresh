@@ -12556,9 +12556,11 @@ async function tagChatgptSpreadsheetCardDownloadButtonWithClient(
 async function clickChatgptViewerDownloadButtonWithClient(
 	client: ChromeClient,
 	options?: BrowserProviderListOptions,
+	interrupt?: () => void,
 ): Promise<boolean> {
 	const deadline = Date.now() + 5_000;
 	while (Date.now() < deadline) {
+		interrupt?.();
 		recordBrowserScrapeCdpCall(options, "Runtime.evaluate");
 		const result = await client.Runtime.evaluate({
 			expression: `(() => {
@@ -12773,11 +12775,13 @@ async function waitForChatgptDownloadedFile(
 	baseline: ChatgptDownloadDirectorySnapshot,
 	expectedName: string,
 	timeoutMs = 20_000,
+	interrupt?: () => void,
 ): Promise<string | null> {
 	const deadline = Date.now() + timeoutMs;
 	let lastPath: string | null = null;
 	let lastFingerprint: string | null = null;
 	while (Date.now() < deadline) {
+		interrupt?.();
 		const current = await snapshotChatgptDownloadDirectory(destDir);
 		const fresh = Array.from(current.entries()).filter(
 			([name, fingerprint]) => baseline.get(name) !== fingerprint,
@@ -13076,6 +13080,85 @@ function buildChatgptDeepResearchExportControlExpression(exportLabel: string): s
 export const buildChatgptDeepResearchExportControlExpressionForTest =
 	buildChatgptDeepResearchExportControlExpression;
 
+async function observeChatgptArtifactDownloadFailure(
+	client: ChromeClient,
+	conversationId: string,
+	artifact: ConversationArtifact,
+	options?: BrowserProviderListOptions,
+): Promise<{ arm: () => void; assertNoFailure: () => void; dispose: () => void }> {
+	let armed = false;
+	let failure: Error | null = null;
+	let recordedFailure = false;
+	const requests = new Set<string>();
+	const matches = (rawUrl: string): boolean => {
+		try {
+			const url = new URL(rawUrl);
+			return (
+				(url.origin === "https://chatgpt.com" || url.origin === "https://chat.openai.com") &&
+				url.pathname ===
+					`/backend-api/conversation/${encodeURIComponent(conversationId)}/interpreter/download` &&
+				url.searchParams.get("sandbox_path")?.split("/").at(-1) === artifact.title &&
+				(!artifact.messageId || url.searchParams.get("message_id") === artifact.messageId)
+			);
+		} catch {
+			return false;
+		}
+	};
+	const disposers: Array<() => void> = [];
+	const dispose = () => {
+		for (const unsubscribe of disposers.splice(0)) unsubscribe();
+	};
+	if (client.Network?.requestWillBeSent && client.Network?.responseReceived) {
+		const requestSubscription: unknown = client.Network.requestWillBeSent((event) => {
+			if (armed && matches(event.request.url)) requests.add(event.requestId);
+		});
+		if (typeof requestSubscription === "function")
+			disposers.push(requestSubscription as () => void);
+		const responseSubscription: unknown = client.Network.responseReceived((event) => {
+			const status = event.response.status;
+			if (
+				!requests.has(event.requestId) ||
+				!matches(event.response.url) ||
+				(status !== 404 && status !== 410)
+			)
+				return;
+			failure = Object.assign(
+				new Error(
+					`chatgpt_artifact_provider_unavailable: selected download returned HTTP ${status}.`,
+				),
+				{
+					failureKind: "provider_unavailable",
+					retryable: false,
+					retrievalDiagnostics: { status },
+				},
+			);
+		});
+		if (typeof responseSubscription === "function")
+			disposers.push(responseSubscription as () => void);
+		try {
+			recordBrowserScrapeCdpCall(options, "Network.enable");
+			await client.Network.enable();
+		} catch (error) {
+			dispose();
+			throw error;
+		}
+	}
+	return {
+		arm: () => {
+			armed = true;
+		},
+		assertNoFailure: () => {
+			if (!failure) return;
+			if (!recordedFailure) {
+				recordBrowserScrapeDownloadFailure(options);
+				recordedFailure = true;
+			}
+			throw failure;
+		},
+		dispose,
+	};
+}
+
 async function materializeChatgptConversationArtifactWithClient(
 	client: ChromeClient,
 	conversationId: string,
@@ -13206,84 +13289,99 @@ async function materializeChatgptConversationArtifactWithClient(
 				}
 				const downloadBaseline = await snapshotChatgptDownloadDirectory(destDir);
 				await armDownloadCapture(client.Runtime, { stateKey: CHATGPT_DOWNLOAD_CAPTURE_STATE_KEY });
-				recordBrowserScrapeProviderAction(options, "chatgpt.clickArtifactDownload");
-				if (!(await clickTaggedChatgptDownloadControlWithClient(client, options))) {
-					return null;
-				}
-				const capture = await waitForDownloadCapture(client.Runtime, {
-					stateKey: CHATGPT_DOWNLOAD_CAPTURE_STATE_KEY,
-					timeoutMs: 1500,
-					pollMs: 100,
-				});
-				let remoteUrl = normalizeUiText(capture.href);
-				let downloadName = normalizeUiText(capture.downloadName);
-				if (!remoteUrl && !downloadName) {
-					const clickedViewerDownload = await clickChatgptViewerDownloadButtonWithClient(
-						client,
-						options,
-					);
-					if (clickedViewerDownload) {
-						const viewerCapture = await waitForDownloadCapture(client.Runtime, {
-							stateKey: CHATGPT_DOWNLOAD_CAPTURE_STATE_KEY,
-							timeoutMs: 3_000,
-							pollMs: 100,
-						});
-						remoteUrl = normalizeUiText(viewerCapture.href);
-						downloadName = normalizeUiText(viewerCapture.downloadName);
-					}
-				}
-				recordBrowserScrapeDownloadAttempt(options);
-				const downloadedPath = await waitForChatgptDownloadedFile(
-					destDir,
-					downloadBaseline,
-					sanitizeChatgptArtifactFileName(artifact.title),
-					CHATGPT_ARTIFACT_BROWSER_DOWNLOAD_TIMEOUT_MS,
-				);
-				if (downloadedPath) {
-					recordBrowserScrapeDownloadSuccess(options);
-					return fileRefFromChatgptDownloadedArtifact(artifact, downloadedPath, {
-						materialization: "download-button",
-						capturedAnchorUrl: remoteUrl || undefined,
-						capturedDownloadName: downloadName || undefined,
-					});
-				}
-				if (!remoteUrl) {
-					recordBrowserScrapeDownloadFailure(options);
-					return null;
-				}
-				recordBrowserScrapeDownloadFailure(options);
-				const { buffer, contentType, contentDisposition } = await fetchChatgptBinaryWithClient(
+				const downloadObservation = await observeChatgptArtifactDownloadFailure(
 					client,
-					remoteUrl,
+					conversationId,
+					artifact,
 					options,
 				);
-				const fallbackBaseName =
-					extractFilenameFromContentDisposition(contentDisposition) ||
-					extractFilenameFromArtifactUri(artifact.uri) ||
-					downloadName ||
-					artifact.title;
-				const fileName = ensureChatgptArtifactExtension(
-					fallbackBaseName,
-					contentTypeToExtension(contentType),
-				);
-				const destPath = path.join(destDir, fileName);
-				await fs.writeFile(destPath, buffer);
-				return {
-					id: artifact.id,
-					name: fileName,
-					provider: "chatgpt",
-					source: "conversation",
-					size: buffer.byteLength,
-					mimeType: contentType ?? inferMimeTypeFromArtifactName(fileName),
-					remoteUrl,
-					localPath: destPath,
-					metadata: {
-						artifactKind: artifact.kind,
-						artifactTitle: artifact.title,
-						materialization: "captured-anchor-fetch",
-						...(artifact.metadata ?? {}),
-					},
-				};
+				try {
+					downloadObservation.arm();
+					recordBrowserScrapeProviderAction(options, "chatgpt.clickArtifactDownload");
+					if (!(await clickTaggedChatgptDownloadControlWithClient(client, options))) {
+						return null;
+					}
+					recordBrowserScrapeDownloadAttempt(options);
+					downloadObservation.assertNoFailure();
+					const capture = await waitForDownloadCapture(client.Runtime, {
+						stateKey: CHATGPT_DOWNLOAD_CAPTURE_STATE_KEY,
+						timeoutMs: 1500,
+						pollMs: 100,
+					});
+					downloadObservation.assertNoFailure();
+					let remoteUrl = normalizeUiText(capture.href);
+					let downloadName = normalizeUiText(capture.downloadName);
+					if (!remoteUrl && !downloadName) {
+						const clickedViewerDownload = await clickChatgptViewerDownloadButtonWithClient(
+							client,
+							options,
+							downloadObservation.assertNoFailure,
+						);
+						if (clickedViewerDownload) {
+							const viewerCapture = await waitForDownloadCapture(client.Runtime, {
+								stateKey: CHATGPT_DOWNLOAD_CAPTURE_STATE_KEY,
+								timeoutMs: 3_000,
+								pollMs: 100,
+							});
+							remoteUrl = normalizeUiText(viewerCapture.href);
+							downloadName = normalizeUiText(viewerCapture.downloadName);
+						}
+					}
+					const downloadedPath = await waitForChatgptDownloadedFile(
+						destDir,
+						downloadBaseline,
+						sanitizeChatgptArtifactFileName(artifact.title),
+						CHATGPT_ARTIFACT_BROWSER_DOWNLOAD_TIMEOUT_MS,
+						downloadObservation.assertNoFailure,
+					);
+					if (downloadedPath) {
+						recordBrowserScrapeDownloadSuccess(options);
+						return fileRefFromChatgptDownloadedArtifact(artifact, downloadedPath, {
+							materialization: "download-button",
+							capturedAnchorUrl: remoteUrl || undefined,
+							capturedDownloadName: downloadName || undefined,
+						});
+					}
+					if (!remoteUrl) {
+						recordBrowserScrapeDownloadFailure(options);
+						return null;
+					}
+					recordBrowserScrapeDownloadFailure(options);
+					const { buffer, contentType, contentDisposition } = await fetchChatgptBinaryWithClient(
+						client,
+						remoteUrl,
+						options,
+					);
+					const fallbackBaseName =
+						extractFilenameFromContentDisposition(contentDisposition) ||
+						extractFilenameFromArtifactUri(artifact.uri) ||
+						downloadName ||
+						artifact.title;
+					const fileName = ensureChatgptArtifactExtension(
+						fallbackBaseName,
+						contentTypeToExtension(contentType),
+					);
+					const destPath = path.join(destDir, fileName);
+					await fs.writeFile(destPath, buffer);
+					return {
+						id: artifact.id,
+						name: fileName,
+						provider: "chatgpt",
+						source: "conversation",
+						size: buffer.byteLength,
+						mimeType: contentType ?? inferMimeTypeFromArtifactName(fileName),
+						remoteUrl,
+						localPath: destPath,
+						metadata: {
+							artifactKind: artifact.kind,
+							artifactTitle: artifact.title,
+							materialization: "captured-anchor-fetch",
+							...(artifact.metadata ?? {}),
+						},
+					};
+				} finally {
+					downloadObservation.dispose();
+				}
 			}
 			if (
 				artifact.kind === "spreadsheet" &&

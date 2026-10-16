@@ -2778,7 +2778,8 @@ async function materializeReconciliation(input: {
 			const rightAttemptedAt = retryAttemptedAt.get(right);
 			if (!leftAttemptedAt && rightAttemptedAt) return -1;
 			if (leftAttemptedAt && !rightAttemptedAt) return 1;
-			if (leftAttemptedAt && rightAttemptedAt) return leftAttemptedAt.localeCompare(rightAttemptedAt);
+			if (leftAttemptedAt && rightAttemptedAt)
+				return leftAttemptedAt.localeCompare(rightAttemptedAt);
 			return 0;
 		});
 		for (const conversationId of orderedConversationIds) {
@@ -5843,7 +5844,7 @@ async function reconciliationRetryAttemptedAtByConversationId(input: {
 		for (const attempt of job.result?.attempts ?? []) {
 			if (
 				(attempt.origin !== "reconciliation_candidate" &&
-				attempt.origin !== "selected_conversation_id") ||
+					attempt.origin !== "selected_conversation_id") ||
 				attempt.status !== "skipped" ||
 				attempt.accounting.assetsAttempted !== 0 ||
 				attempt.accounting.candidateMaterialized ||
@@ -5927,6 +5928,8 @@ type ArtifactManifestEntry = {
 	size?: number;
 	materializationMethod?: string;
 	error?: string;
+	failureKind?: "provider_unavailable" | "retrieval_failed";
+	retryable?: boolean;
 };
 
 type FileManifestEntry = {
@@ -5965,6 +5968,11 @@ async function readArtifactManifestEntries(
 		size: readNumber(entry.size) ?? undefined,
 		materializationMethod: readRecordString(entry, ["materializationMethod"]) ?? undefined,
 		error: readRecordString(entry, ["error"]) ?? undefined,
+		failureKind:
+			entry.failureKind === "provider_unavailable" || entry.failureKind === "retrieval_failed"
+				? entry.failureKind
+				: undefined,
+		retryable: typeof entry.retryable === "boolean" ? entry.retryable : undefined,
 	}));
 }
 
@@ -6028,6 +6036,12 @@ async function historyEntryFromArtifactManifest(
 		size: readNumber(entry.size),
 		materializationMethod: entry.materializationMethod ?? null,
 		reason: entry.status === "materialized" ? null : (entry.error ?? entry.status),
+		...(entry.failureKind
+			? { failureKind: entry.failureKind, retryable: entry.retryable ?? null }
+			: {}),
+		...(entry.failureKind === "provider_unavailable"
+			? { assetAvailability: "unavailable" as const }
+			: {}),
 		archiveItemId: null,
 		assetRoute: null,
 	};

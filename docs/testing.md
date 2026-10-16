@@ -1,3 +1,10 @@
+- Matched artifact download failures (provider-free):
+  `pnpm vitest run tests/browser/chatgptMaterializationReplay.test.ts tests/runtime.historyMaterializationService.test.ts`.
+  Click-correlated HTTP404/410 becomes nonretryable provider_unavailable through
+  artifact manifest and history projection. Neighbour-file/conversation failures
+  do not settle the selected download; listeners are released. The measured live
+  comparison is recorded in `docs/dev/issue165-scrape-benchmark-2026-10-16.json`.
+
 - Factory-only context cancellation (provider-free):
   `pnpm vitest run tests/browser/backendRequestAdmission.test.ts tests/browser/llmServiceContext.test.ts -t factory-only`.
   Resolved factory capability selects bounded cleanup without exposing a governor

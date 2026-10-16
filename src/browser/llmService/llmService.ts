@@ -225,6 +225,8 @@ type ConversationArtifactFetchManifestEntry = {
 	size?: number;
 	materializationMethod?: string;
 	error?: string;
+	failureKind?: "provider_unavailable" | "retrieval_failed";
+	retryable?: boolean;
 };
 
 type ConversationArtifactFetchManifest = {
@@ -2166,6 +2168,9 @@ export abstract class LlmService {
 						uri: artifact.uri ?? null,
 						status: "error",
 						error: normalizeArtifactFetchError(error),
+						...(isRecord(error) && error.failureKind === "provider_unavailable"
+							? { failureKind: "provider_unavailable" as const, retryable: false }
+							: {}),
 					});
 				} finally {
 					if (listOptions.useProviderSession === true) {

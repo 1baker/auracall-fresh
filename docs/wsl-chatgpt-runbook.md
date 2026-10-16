@@ -277,3 +277,9 @@ Chat/Work controls. If none appear, one exact visible enabled prompt editor and
 no active current-route `Work` badge may establish Chat; it can never establish
 Work. Project landing pages still require explicit controls, while established
 conversation routes retain their mode-marker compatibility checks.
+
+When a selected artifact's interpreter download returns HTTP404or410, AuraCall
+records `failureKind: provider_unavailable` and `retryable: false` in its artifact
+manifest and history result. The corresponding history asset is unavailable;
+other artifacts continue independently. A visible download control does not
+prove that its remote bytes still exist.

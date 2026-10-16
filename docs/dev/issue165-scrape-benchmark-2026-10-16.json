@@ -217,6 +217,111 @@
           "sha256": "fd1720c0e3df3579ea567679c642e895a7993a3b558b8743fa47495a201e87ca"
         }
       ]
+    },
+    {
+      "id": "agentic_clean",
+      "receipt": "agentic-benchmark-2026-10-16T19-53-22-106Z/receipt.json",
+      "receiptSha256": "6b49b3b53e21d7244ad7c3c8a924bb7a1833408c3c0b47d029409cb6f5852351",
+      "elapsedMs": 48532,
+      "backendRequests": 72,
+      "navigations": 1,
+      "savedFiles": 1,
+      "unavailableArtifacts": 1,
+      "allExpectedOutcomesAccounted": true,
+      "acceptedForThisCase": true,
+      "actions": [
+        {
+          "index": 0,
+          "at": "2026-10-16T19:53:47.340Z",
+          "command": "navigate",
+          "requestCountBefore": 0,
+          "elapsedMs": 414,
+          "requestCountAfter": 0
+        },
+        {
+          "index": 1,
+          "at": "2026-10-16T19:53:50.889Z",
+          "command": "snapshot",
+          "requestCountBefore": 0,
+          "elapsedMs": 525,
+          "requestCountAfter": 0
+        },
+        {
+          "index": 2,
+          "at": "2026-10-16T19:53:54.346Z",
+          "command": "snapshot",
+          "requestCountBefore": 28,
+          "elapsedMs": 1020,
+          "requestCountAfter": 38
+        },
+        {
+          "index": 3,
+          "at": "2026-10-16T19:53:59.500Z",
+          "command": "snapshot",
+          "requestCountBefore": 56,
+          "elapsedMs": 552,
+          "requestCountAfter": 60
+        },
+        {
+          "index": 4,
+          "at": "2026-10-16T19:54:03.228Z",
+          "command": "read",
+          "requestCountBefore": 67,
+          "elapsedMs": 32,
+          "requestCountAfter": 67
+        },
+        {
+          "index": 5,
+          "at": "2026-10-16T19:54:03.261Z",
+          "command": "click",
+          "requestCountBefore": 67,
+          "elapsedMs": 196,
+          "requestCountAfter": 70
+        },
+        {
+          "index": 6,
+          "at": "2026-10-16T19:54:06.922Z",
+          "command": "downloads",
+          "requestCountBefore": 71,
+          "elapsedMs": 11,
+          "requestCountAfter": 71
+        },
+        {
+          "index": 7,
+          "at": "2026-10-16T19:54:06.934Z",
+          "command": "click",
+          "requestCountBefore": 71,
+          "elapsedMs": 105,
+          "requestCountAfter": 71
+        },
+        {
+          "index": 8,
+          "at": "2026-10-16T19:54:10.513Z",
+          "command": "downloads",
+          "requestCountBefore": 72,
+          "elapsedMs": 28,
+          "requestCountAfter": 72
+        },
+        {
+          "index": 9,
+          "at": "2026-10-16T19:54:10.544Z",
+          "command": "finish",
+          "requestCountBefore": 72
+        }
+      ]
+    },
+    {
+      "id": "deterministic_clean_download404",
+      "receipt": "agentic-benchmark-2026-10-16T19-54-21-029Z/receipt.json",
+      "receiptSha256": "48d8fb2eb36763de8af064674bf770af0f8304e1d805a41b5b29aa43da3c329c",
+      "elapsedMs": 43666,
+      "backendRequests": 72,
+      "navigations": 1,
+      "savedFiles": 1,
+      "unavailableArtifacts": 1,
+      "allExpectedOutcomesAccounted": true,
+      "acceptedForThisCase": true,
+      "actions": []
     }
   ],
   "comparison": {
@@ -245,5 +350,33 @@
       },
       "otherMessagesEqualIgnoringWhitespace": true
     }
+  },
+  "cleanComparison": {
+    "agenticRun": "agentic_clean",
+    "deterministicRun": "deterministic_clean_download404",
+    "elapsedTimeRatio": 0.8997362564905629,
+    "backendRequestRatio": 1.0,
+    "limits": {
+      "elapsedMs": 63091.6,
+      "backendRequests": 93
+    },
+    "messagesEqualAfterOuterTrim": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "savedBytes": 13889,
+    "savedSha256": "fd1720c0e3df3579ea567679c642e895a7993a3b558b8743fa47495a201e87ca",
+    "outcomes": {
+      "materialized": 1,
+      "providerUnavailable": 1
+    },
+    "freshDeterministicCache": "fresh per-run root, no force",
+    "passedForThisCase": true,
+    "goalComplete": false,
+    "remaining": "Automatic completion-to-materialization path and successful multi-artifact harvesting remain unverified."
   }
 }

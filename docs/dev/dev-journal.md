@@ -1,3 +1,36 @@
+## 2026-10-16 | Issue165 matched download failures and clean service comparison
+
+A click-correlated interpreter download404/410 now ends promptly as
+provider_unavailable/retryable=false, rather than waiting30seconds and becoming
+generic skipped. Observation is scoped to requests initiated during the selected
+click, the exact conversation, sandbox filename and message ID when available.
+Listeners are disposed on success/failure. Neighbour-file/conversation404s cannot
+terminate the selected transfer. Artifact manifests carry the classification
+through history projection to unavailable/terminally_unavailable. Provider-free
+replay first timed out on this defect; projection first lost terminal semantics.
+367focused tests passed across5files, then12replay cases passed after adding the
+neighbour-conversation case. Typecheck, compiled TypeScript build, Biome/diff clean.
+Serial Standards review preserved provider-local matching and public manifest
+semantics; Spec review retained other HTTP failures and existing identity/guard
+behavior. Isolated compiled deltas/rollback SHA receipts remain private.
+
+Clean same-conversation agentic run:48532ms/72backend requests; deterministic
+public-service run with a fresh cache and force=false:43666ms/72requests. Ratio
+0.899736time/1.0requests is within1.3for BOTH metrics. Six messages match exactly
+after outer trim. Both account for two artifacts:one13889byte file with matching
+SHA256 and one observed HTTP404unavailable artifact. This is successful retrieval
+of available content plus explicit source-unavailable evidence, not two saved
+files. Full action/request/response/download-event receipts and immutable hashes
+are referenced in docs/dev/issue165-scrape-benchmark-2026-10-16.json. Raw contents,
+URLs, filenames and account identity stay private. The earlier partial/failed
+measurements and rejected complete flag remain preserved separately.
+
+Goal stays ACTIVE: this clean service case passes the30percent gate; automatic
+completion-to-materializer cost and successful multi-artifact harvesting remain
+unproven. Next address unconditional completion-to-child quiet time and measure
+one exact-conversation automatic pass under the same output/cost contract, without
+resuming the global scheduler or unrelated subscriptions.
+
 ## 2026-10-16 | Issue165 measured agentic comparison and rendered fallback repair
 
 Current goal: deterministic elapsed time AND backend requests must each be at
