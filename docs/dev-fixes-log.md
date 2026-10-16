@@ -1,3 +1,33 @@
+## 2026-10-16 | Issue165 native freshness replay and resource-row download control
+
+Installed only the compiled completionService.js freshness delta from5ab59efa2,
+with private byte-for-byte rollback copy and SHA256 receipt. Existing runtime
+otherwise remains the project-route-reuse build; this is not full branch promotion.
+Restarted API PID73829 while all17subscriptions and scheduler were paused.
+One ordinary automatic pass16→17 selected the same conversation as the previous
+failure. It took456632ms, observed179backend requests (peak70/rolling minute),
+2document navigations/4route changes, no429/verification warning. Startup coverage
+is incomplete; request totals are lower bounds. Child refreshed successfully in
+11252ms (6messages,2artifacts,2files), then clicked one control and attempted one
+download, which failed; zero bytes saved. This verifies the freshness repair and
+preserves the failed acceptance result. Child provider eligibility separately
+waited111306ms after start. All17subscriptions and global scheduler stayed paused.
+
+Two bounded diagnostic reads captured the actual current resource-row DOM; the
+first captured the loading shell, corrected capture sampled until command exit.
+They took24410/21744ms and observed138/137requests, no warning. These275requests
+are additional diagnostic traffic, excluded from the179automatic total. Raw DOM
+and content remain private under ~/.auracall/diagnostics/plan0411. Current row has
+separate Open preview and Download file controls. The product replay went red on
+preview input and now resolves the artifact identity before selecting the unique,
+enabled Download file control inside that exact resource row. Multiple row
+controls fail closed; legacy controls retain their existing path. No title-only
+matching or global download search is added.11replay/viewer tests pass; typecheck,
+scoped Biome and compiled build checked. Standards and Spec reviewed serially:
+provider-specific row handling stays in the adapter, and turn/message/button
+identity resolution remains authoritative before choosing a row subcontrol.
+Live proof of the resource-row repair remains pending.
+
 ## 2026-10-16 | Issue165 measured retained-inventory freshness failure
 
 One bounded automatic pass observed 195 distinct backend requests (peak 66 per

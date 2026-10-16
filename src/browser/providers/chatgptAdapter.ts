@@ -12489,7 +12489,16 @@ async function tagChatgptArtifactButtonWithClient(
         if (!chosen?.node) {
           return { ok: false };
         }
-        chosen.node.setAttribute(attr, 'true');
+        // Preview and download are separate controls in current resource rows.
+        // Resolve artifact identity first, then stay inside that exact row.
+        const resourceRow = chosen.node.closest('[class~="group/resource-row"]');
+        const rowDownloads = resourceRow
+          ? Array.from(resourceRow.querySelectorAll('button[aria-label="Download file"]'))
+            .filter((node) => isVisible(node) && !node.disabled)
+          : [];
+        if (rowDownloads.length > 1) return { ok: false };
+        const downloadTarget = rowDownloads[0] || chosen.node;
+        downloadTarget.setAttribute(attr, 'true');
         return { ok: true };
       })()`,
 			returnByValue: true,

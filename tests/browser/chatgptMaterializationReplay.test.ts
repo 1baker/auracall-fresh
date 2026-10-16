@@ -3,7 +3,6 @@ import os from "node:os";
 import path from "node:path";
 import { runInNewContext } from "node:vm";
 import { expect, test } from "vitest";
-import { createHistoryMaterializationTrafficOptions } from "../../src/runtime/historyMaterializationService.js";
 import { setAuracallHomeDirOverrideForTest } from "../../src/auracallHome.js";
 import { JsonCacheStore } from "../../src/browser/llmService/cache/store.js";
 import { LlmService } from "../../src/browser/llmService/llmService.js";
@@ -22,6 +21,7 @@ import type { ConversationArtifact } from "../../src/browser/providers/domain.js
 import { createBrowserScrapeTelemetryRecorder } from "../../src/browser/providers/scrapeTelemetry.js";
 import type { BrowserProviderListOptions } from "../../src/browser/providers/types.js";
 import type { ResolvedUserConfig } from "../../src/config.js";
+import { createHistoryMaterializationTrafficOptions } from "../../src/runtime/historyMaterializationService.js";
 
 // Actual product evaluation and transfer logic with an isolated CDP transport.
 class ReplayService extends LlmService {
@@ -65,6 +65,7 @@ const zip = Buffer.from("504b0506000000000000000000000000000000000000", "hex");
 
 test.each([
 	"clean",
+	"resource-row",
 	"stale",
 	"collision",
 	"mismatch",
@@ -80,7 +81,9 @@ test.each([
 	class FixtureElement {
 		readonly attributes = new Map<string, string>();
 		readonly textContent: string;
-		constructor(readonly role: "root" | "control" | "regenerate") {
+		constructor(
+			readonly role: "root" | "control" | "regenerate" | "row-download" | "resource-row",
+		) {
 			this.textContent = role === "control" ? fileName : "fixture response";
 			if (role === "root")
 				this.attributes.set("data-content-search-unit-key", "fallback-turn-4:2:assistant");
@@ -91,7 +94,11 @@ test.each([
 						? scenario === "failed-turn"
 							? "Retry"
 							: "Regenerate response"
-						: `Download ${fileName}`,
+						: role === "row-download"
+							? "Download file"
+							: scenario === "resource-row"
+								? `Open preview of ${fileName}`
+								: `Download ${fileName}`,
 				);
 		}
 		getAttribute(name: string) {
@@ -104,19 +111,27 @@ test.each([
 			this.attributes.delete(name);
 		}
 		getBoundingClientRect() {
-			return { left: 10, top: 20, width: 100, height: 30 };
+			return { left: this.role === "row-download" ? 210 : 10, top: 20, width: 100, height: 30 };
 		}
 		getClientRects() {
 			return [this.getBoundingClientRect()];
 		}
 		scrollIntoView() {}
-		closest() {
+		closest(selector?: string) {
+			if (
+				scenario === "resource-row" &&
+				this.role === "control" &&
+				selector === '[class~="group/resource-row"]'
+			)
+				return resourceRow;
 			return this.role === "regenerate" ? root : null;
 		}
 		querySelector() {
 			return null;
 		}
 		querySelectorAll(selector: string) {
+			if (this.role === "resource-row" && selector === 'button[aria-label="Download file"]')
+				return [rowDownload];
 			return this.role === "root" && selector.includes("Open preview of") ? [control] : [];
 		}
 	}
@@ -126,6 +141,8 @@ test.each([
 	const root = new FixtureElement("root");
 	const control = new FixtureElement("control");
 	const regenerate = new FixtureElement("regenerate");
+	const rowDownload = new FixtureElement("row-download");
+	const resourceRow = new FixtureElement("resource-row");
 	const document = {
 		documentElement: root,
 		querySelectorAll(selector: string) {
@@ -137,9 +154,12 @@ test.each([
 			if (selector.includes("data-content-search-unit-key")) return [root];
 			if (
 				selector.includes("data-auracall-chatgpt-download-button") &&
-				control.getAttribute("data-auracall-chatgpt-download-button")
+				(control.getAttribute("data-auracall-chatgpt-download-button") ||
+					rowDownload.getAttribute("data-auracall-chatgpt-download-button"))
 			)
-				return [control];
+				return [
+					rowDownload.getAttribute("data-auracall-chatgpt-download-button") ? rowDownload : control,
+				];
 			return [];
 		},
 		querySelector(selector: string) {
@@ -174,9 +194,10 @@ test.each([
 		},
 		// biome-ignore lint/style/useNamingConvention: Browser and CDP names are protocol-defined.
 		Input: {
-			dispatchMouseEvent: async ({ type }: { type: string }) => {
+			dispatchMouseEvent: async ({ type, x }: { type: string; x: number }) => {
 				inputs.push(type);
 				if (type === "mouseReleased") {
+					if (scenario === "resource-row") expect(x).toBe(260);
 					const name =
 						scenario === "collision"
 							? fileName.replace(".zip", " (1).zip")
