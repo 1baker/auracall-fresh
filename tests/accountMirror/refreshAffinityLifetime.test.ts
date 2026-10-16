@@ -73,9 +73,10 @@ test.each([
 			metadataCollector: {
 				collect: async (input) => {
 					if (scoped) {
-						expect(pages.get("fixture-target")).toBe("https://chatgpt.com/c/conversation-scoped");
+						expect(pages.get("fixture-target")).toBe("about:blank");
 						expect(input.tabAffinity).toMatchObject({
 							configuredUrl: "https://chatgpt.com/c/conversation-scoped",
+							allowInitialNavigation: true,
 						});
 					}
 					return {

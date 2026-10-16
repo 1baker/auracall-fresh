@@ -196,6 +196,150 @@ describe("history materialization service", () => {
 		}
 	});
 
+	it.each([
+		"matched",
+		"attempt-identity",
+		"unattributed",
+		"foreign",
+		"ambiguous",
+		"retryable",
+		"force",
+		"active",
+		"unmatched",
+	])("returns scoped prior terminal evidence without another transfer (%s)", async (mode) => {
+		const base = buildReconciliationCatalog(["conv-terminal"]);
+		const catalog = {
+			...base,
+			entries: base.entries.map((entry) => ({
+				...entry,
+				manifests: {
+					...entry.manifests,
+					artifacts: [
+						{
+							id: "terminal-artifact",
+							title: "gone.zip",
+							kind: "download" as const,
+							uri: "sandbox:/mnt/data/gone.zip",
+							metadata: { conversationId: "conv-terminal" },
+						},
+					],
+				},
+			})),
+		};
+		const target: HistoryMaterializationTarget = {
+			provider: "chatgpt",
+			runtimeProfile: "default",
+			browserProfile: "default",
+			boundIdentityKey: "user@example.com",
+			conversationId: "conv-terminal",
+			providerConversationUrl: null,
+			projectId: null,
+		};
+		const prior = buildHistoryMaterializationJob({
+			id: "hmj_prior_terminal",
+			status: mode === "active" ? "running" : "failed",
+			request: {
+				provider: "chatgpt",
+				runtimeProfile: "default",
+				boundIdentityKey:
+					mode === "foreign"
+						? "other@example.com"
+						: mode === "attempt-identity" || mode === "unattributed"
+							? null
+							: "user@example.com",
+				conversationIds:
+					mode === "ambiguous" ? ["conv-terminal", "other-conversation"] : ["conv-terminal"],
+				assetKinds: ["artifacts"],
+			},
+			result: {
+				...buildNoMaterializableHistoryResult(target),
+				...(mode === "attempt-identity" || mode === "unattributed" ? { target: null } : {}),
+				...(mode === "attempt-identity"
+					? { attempts: [{ target }] as unknown as HistoryMaterializationResult["attempts"] }
+					: {}),
+				status: "failed",
+				entries: [
+					{
+						kind: "artifact",
+						providerId: "terminal-artifact",
+						title: mode === "unmatched" ? "other.zip" : "gone.zip",
+						status: "failed",
+						localPath: null,
+						remoteUrl:
+							mode === "unmatched" ? "sandbox:/mnt/data/other.zip" : "sandbox:/mnt/data/gone.zip",
+						cacheKey: null,
+						checksumSha256: null,
+						mimeType: null,
+						size: null,
+						materializationMethod: "browser-download",
+						reason: "chatgpt_artifact_provider_unavailable: HTTP 404",
+						assetAvailability: "unavailable",
+						failureKind: "provider_unavailable",
+						retryable: mode === "retryable",
+						archiveItemId: null,
+						assetRoute: null,
+					},
+				],
+			},
+		});
+		let scheduled: (() => Promise<void>) | undefined;
+		const materializeConversation = vi.fn(async (selected: HistoryMaterializationTarget) =>
+			buildNoMaterializableHistoryResult(selected),
+		);
+		const service = createHistoryMaterializationService({
+			config: {},
+			store: createInMemoryHistoryMaterializationJobStore([prior]),
+			catalogService: { readCatalog: vi.fn(async () => catalog), readItem: vi.fn() },
+			runArchiveService: {
+				listItems: vi.fn(async () => ({ items: [] })),
+			} as unknown as RunArchiveService,
+			materializeConversation,
+			generateId: () => `hmj_terminal_${mode}`,
+			schedule: (work) => {
+				scheduled = work;
+			},
+		});
+		await service.createJob({
+			provider: "chatgpt",
+			runtimeProfile: "default",
+			boundIdentityKey: "user@example.com",
+			conversationIds: ["conv-terminal"],
+			reconcile: true,
+			refreshSnapshot: false,
+			assetKinds: ["artifacts"],
+			maxItems: 1,
+			force: mode === "force",
+		});
+		if (!scheduled) throw Error("Expected scheduled job");
+		await scheduled();
+		const job = await service.readJob(`hmj_terminal_${mode}`);
+		expect(job?.error).toBeNull();
+		if (mode === "matched" || mode === "attempt-identity") {
+			expect(materializeConversation).not.toHaveBeenCalled();
+			expect(job?.result?.entries).toEqual([
+				expect.objectContaining({
+					status: "skipped",
+					assetAvailability: "unavailable",
+					failureKind: "provider_unavailable",
+					retryable: false,
+					reason: prior.result?.entries[0]?.reason,
+					priorEvidenceJobId: prior.id,
+					materializationMethod: "prior-terminal-evidence",
+				}),
+			]);
+			expect(job?.result?.metrics).toMatchObject({
+				conversations: 1,
+				materialized: 0,
+				skipped: 1,
+				failed: 0,
+			});
+		} else {
+			expect(job?.result?.entries).not.toContainEqual(
+				expect.objectContaining({ priorEvidenceJobId: prior.id }),
+			);
+		}
+	});
+
 	it("derives one utility affinity identity for a durable job", () => {
 		expect(historyMaterializationUtilityAffinityId(" hmj_123 ")).toBe(
 			"history-materialization:hmj_123",

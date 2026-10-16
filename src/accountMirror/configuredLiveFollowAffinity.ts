@@ -186,10 +186,12 @@ export async function createConfiguredLiveFollowAffinity(input: {
 		scope,
 		operationId: input.operationId,
 		targetUrl: configuredUrl,
+		targetCreationUrl: "about:blank",
 		idleTtlMs: 15 * 60_000,
 		absoluteTtlMs: 8 * 60 * 60_000,
 		now: input.now,
 		coldStartTargetPolicy: "create",
+		allowOwnedUnloadedTarget: true,
 		resolveExistingEndpoint: async () => toEndpoint(initialTarget),
 		verifyBrowserAbsent: () => verifyChromeProcessAbsent(managedBrowserProfile),
 		startBrowser: async () => {
@@ -416,6 +418,7 @@ export async function createConfiguredLiveFollowAffinity(input: {
 			snapshotProviderTrafficAdmissionState = snapshot;
 		},
 		tabAffinity: {
+			...(crawler.unloadedTarget ? { allowInitialNavigation: true } : {}),
 			configuredUrl,
 			host: crawler.endpoint.host,
 			onTargetNavigation: recordTargetNavigation,

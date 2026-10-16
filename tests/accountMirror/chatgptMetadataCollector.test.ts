@@ -144,6 +144,20 @@ describe("ChatGPT account mirror metadata collector", () => {
 		});
 	});
 
+	test("allows initial governed navigation only for an acquired unloaded target", () => {
+		const options = createAccountMirrorListOptionsForTest(undefined, undefined, undefined, {
+			host: "127.0.0.1",
+			port: 45011,
+			targetId: "crawler-blank",
+			allowInitialNavigation: true,
+		});
+		expect(options).toMatchObject({
+			allowNavigation: true,
+			preserveActiveTab: false,
+			tabTargetId: "crawler-blank",
+		});
+	});
+
 	test("binds provider traffic to the collector phase before adapter work", async () => {
 		const begin = vi.fn(async () => ({ id: "action", settle: vi.fn() }));
 		const options = createAccountMirrorListOptionsForTest(

@@ -637,9 +637,9 @@ describe("ensureChatgptConversationSurfaceReadyForRead", () => {
 				`Timed out waiting for ChatGPT conversation ${conversationId} post-payload readiness after 10000ms.`,
 			);
 			expect(
-				evaluate.mock.calls.findLast(([input]) =>
-					input.expression?.includes("hasTurns || hasComposer"),
-				)?.[0],
+				[...evaluate.mock.calls]
+					.reverse()
+					.find(([input]) => input.expression?.includes("hasTurns || hasComposer"))?.[0],
 			).toMatchObject({ timeout: 10_000 });
 			expect(scrapeTelemetry.providerActions).toMatchObject({
 				"chatgpt.skipSameRouteNavigation": 1,

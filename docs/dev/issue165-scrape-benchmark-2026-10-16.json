@@ -604,6 +604,60 @@
         }
       ],
       "reason": "Exact trimmed four message texts and both fresh files byte/hash-equal to actual agentic run; both cost ratios pass."
+    },
+    {
+      "id": "automatic_early_capture_preflight_only",
+      "receipt": "early-capture-preflight-timeout-20261016.json",
+      "elapsedMs": null,
+      "operationalElapsedMs": null,
+      "backendRequests": null,
+      "coverageComplete": false,
+      "accepted": false,
+      "reason": "Initial read-only status preflight hit10000ms and controller exited before creating a completion; no measured provider request coverage.",
+      "observedBackendRequestsLowerBound": null
+    },
+    {
+      "id": "automatic_mixed_runtime_startup_gap",
+      "receipt": "measured-automatic-scoped-2026-10-16T21-41-38-149Z.json",
+      "elapsedMs": 116609,
+      "operationalElapsedMs": 91026,
+      "backendRequests": null,
+      "coverageComplete": false,
+      "accepted": false,
+      "reason": "Installed callback opened provider URL before observation. Later30000ms status timeout caused harness pause and left a queued child. Not acceptance.",
+      "observedBackendRequestsLowerBound": 66
+    },
+    {
+      "id": "automatic_mixed_runtime_orphan_resume",
+      "receipt": "measured-automatic-scoped-2026-10-16T21-46-28-095Z.json",
+      "elapsedMs": 24609,
+      "operationalElapsedMs": 5100,
+      "backendRequests": null,
+      "coverageComplete": false,
+      "accepted": false,
+      "reason": "Startup resumed the exact queued child from the previous diagnostic. Observer WebSocket closed; controller exited and left the child running in storage. No acceptance.",
+      "observedBackendRequestsLowerBound": 0
+    },
+    {
+      "id": "automatic_complete_source_before_crawler_fix",
+      "receipt": "measured-automatic-scoped-2026-10-16T21-49-34-423Z.json",
+      "elapsedMs": 65953,
+      "operationalElapsedMs": 58175,
+      "backendRequests": null,
+      "coverageComplete": false,
+      "accepted": false,
+      "reason": "Complete compiled worktree. Crawler creation still loaded provider URL before attachment; A returned, prior B omitted because identity was recorded in its attempt rather than request. Time exceeds ceiling.",
+      "observedBackendRequestsLowerBound": 68
+    },
+    {
+      "id": "automatic_complete_capture_prior_outcomes",
+      "receipt": "measured-automatic-scoped-2026-10-16T21-58-42-706Z.json",
+      "elapsedMs": 97851,
+      "operationalElapsedMs": 89613,
+      "backendRequests": 66,
+      "coverageComplete": true,
+      "accepted": false,
+      "reason": "Complete compiled worktree with blank crawler acquisition and prior attempt identity attribution. All6texts and A bytes/hash plus prior terminal B explicitly match agentic outcomes. Full page startup capture66requests. Time97851ms exceeds ceiling; no automatic acceptance."
     }
   ],
   "comparison": {
@@ -746,5 +800,63 @@
       "Initial route suite had three stale call-sequence fixtures; converted relevant payload mocks to expression matching.",
       "Project-route fixture left fake timers enabled; full-suite late-rate-limit timed out twice, isolated test passed. Finally cleanup now restores timers; final321+82tests pass."
     ]
+  },
+  "fullAutomaticComparison": {
+    "agenticRun": "agentic_clean",
+    "deterministicRun": "automatic_complete_capture_prior_outcomes",
+    "verificationReceipt": "full-capture-comparison-20261016.json",
+    "messages": 6,
+    "exactTrimmedMessageTextsEqual": true,
+    "artifactBytesAndHashEqual": true,
+    "priorTerminalEvidenceReturned": true,
+    "archiveReuseCount": 1,
+    "newTransfers": 0,
+    "elapsedTimeRatio": 2.016216104838045,
+    "backendRequestRatio": 0.9166666666666666,
+    "accepted": false,
+    "remaining": [
+      "Automatic elapsed time must be at most63091.6ms for this case",
+      "Fresh multi-file automatic pipeline cost/parity comparison"
+    ]
+  },
+  "observationAndRecovery": {
+    "readOnlyObservationTimeoutMs": 30000,
+    "periodicBroadStatusReads": false,
+    "pageNetworkEnabledBeforeNewBlankTargetReturned": true,
+    "readTimeoutsRepollSameHandle": true,
+    "failedReadDoesNotProveWorkTerminal": true,
+    "priorUnsettledChild": "hmj_8e672702e82d4472ab0e7816caa791e0",
+    "priorControllerPidsAbsent": [
+      29898,
+      56235
+    ],
+    "exactRecoveryReceipt": "orphaned-proof-child-interrupted-recovery-20261016.json",
+    "recoveryOutcome": "failed as interrupted through production recoverInterruptedJobs restricted to exact job; no provider commands",
+    "rejectedCancellation": "Running job cancellation returned409; did not mutate it. Interrupted recovery used after authoritative controller absence.",
+    "installedDeltaReceipts": [
+      "terminal-evidence-runtime-delta-20261016.json",
+      "blank-bootstrap-runtime-delta-20261016.json"
+    ],
+    "completeSourceRuntimeReceipt": "full-capture-comparison-20261016.json",
+    "lastCleanupReceipt": "cleanup-measured-automatic-scoped-2026-10-16T21-58-42-706Z.json"
+  },
+  "validationCorrection": {
+    "previousClaim": "The b9536b93a checkpoint incorrectly claimed typecheck passed.",
+    "actualFailure": "TS2550 findLast unsupported and TS7031 implicit input any in the new test.",
+    "repair": "Use reversed copy plus find, compatible with repository TypeScript target.",
+    "tests": 506,
+    "testFiles": 8,
+    "earlierContextAffinityTests": 13,
+    "typecheck": "passed explicit process exit0 after compatible lookup and final source/test edits",
+    "compiledTypescript": "passed explicit process exit0 before full captured native run"
+  },
+  "runtimeCensus": {
+    "receipt": "crawler-checkpoint-process-census-20261016.json",
+    "testControllersAbsent": true,
+    "exactBenchmarkTargetAbsent": true,
+    "benchmarkCleanupBrowserAbsentAt": "2026-10-16T22:02:21.631Z",
+    "differentMatchingProfileBrowserStartedAt": "2026-10-16T22:02:35.440000+00:00",
+    "differentBrowserPreserved": true,
+    "noBlanketBrowserPidSignals": true
   }
 }

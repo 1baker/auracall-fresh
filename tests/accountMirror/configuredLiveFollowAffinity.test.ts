@@ -237,7 +237,15 @@ describe("configured cold-start custody", () => {
 				expect.objectContaining({ configuredUrl: "about:blank", ensurePort: true }),
 			);
 			expect(affinity?.tabAffinity.targetId).toBe("owned-crawler");
+			expect(affinity?.tabAffinity.allowInitialNavigation).toBe(true);
 			expect(open).toHaveBeenCalledTimes(1);
+			expect(open).toHaveBeenCalledWith(
+				45011,
+				"about:blank",
+				"127.0.0.1",
+				undefined,
+				expect.objectContaining({ kind: "pre-lease-target-acquisition" }),
+			);
 			expect(close).not.toHaveBeenCalled();
 			expect((await registry.list()).filter((lease) => lease.state !== "released")).toHaveLength(4);
 			expect((await registry.list()).filter((lease) => lease.processBinding)).toHaveLength(1);

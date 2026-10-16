@@ -65,7 +65,10 @@ A download action outside the conversation-turn cards, used after a selected art
 A local conversation attachment matching a currently discovered artifact ID, filename and URI. Readability, size and any retained checksum are checked before reuse. New transfer budget excludes reused artifacts; explicit force bypasses reuse. Context refresh alone does not force transfer. A requested fresh context read must succeed before artifact materialization; provider failure cannot silently authorize cached download controls. Explicit refresh=false can use cached context.
 
 **Scoped reconciliation reuse**:
-For an explicit conversation batch, a current asset-family match may reuse a same-account archive file only after regular-file, stable-size/mtime and checksum verification. The result includes a duplicate entry, actual bytes/hash and existing archive/asset links. Reuse does not count as a new transfer; force bypasses it. Missing or corrupt files remain eligible for recovery.
+For an explicit conversation batch, a current asset-family match may reuse a same-account archive file only after regular-file, stable-size/mtime and checksum verification. The result includes a duplicate entry, actual bytes/hash and existing archive/asset links. Reuse does not count as a new transfer; force bypasses it. Missing or corrupt files remain eligible for recovery. Explicit non-retryable provider-unavailability evidence from a settled same-account, single-conversation job is returned as a skipped entry with its original reason and priorEvidenceJobId when its current asset family matches. Ambiguous batches do not qualify; force bypasses the projection.
+
+**Unloaded crawler target**:
+A newly created blank crawler target, or a process-owned retained blank explicitly verified during acquisition with known effects. Only that acquisition can authorize the collector's initial governed navigation. Blank target creation uses generic acquisition pacing; provider page navigation keeps its renavigation cooldown. Other retained pages keep preservation semantics.
 
 **Conversation route identity**:
 A root ChatGPT conversation URL may canonicalize into its project URL. Navigation settling and ready-surface reuse follow the exact conversation identity and origin; an explicitly requested project must also match.

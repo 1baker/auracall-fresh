@@ -143,6 +143,7 @@ export type HistoryMaterializationSelectedCatalogAsset =
 	  };
 
 export interface HistoryMaterializationManifestEntry {
+	priorEvidenceJobId?: string | null;
 	kind: "artifact" | "file" | "media";
 	providerId: string | null;
 	title: string | null;
@@ -2712,6 +2713,7 @@ async function materializeReconciliation(input: {
 	}
 	const attemptedAssetFamilySignatures = new Set<string>();
 	const reusedArchiveAssets: ScopedArchiveReuse[] = [];
+	const priorTerminalEvidence: ScopedTerminalEvidence[] = [];
 	const priorJobs = input.request.force === true ? [] : await input.jobStore.listJobs();
 	if (input.request.force !== true) {
 		if (selectedConversationIds.length > 0) {
@@ -2735,6 +2737,20 @@ async function materializeReconciliation(input: {
 					});
 		for (const signature of archiveSignatures) {
 			attemptedAssetFamilySignatures.add(signature);
+		}
+		if (selectedConversationIds.length > 0) {
+			priorTerminalEvidence.push(
+				...readScopedTerminalEvidence({
+					jobs: priorJobs,
+					targets: selectedCatalogTargets,
+					families: selectedCatalogAssetFamilySignatures,
+					selectedKinds,
+					reusedArchiveAssets,
+				}),
+			);
+		}
+		for (const evidence of priorTerminalEvidence) {
+			for (const signature of evidence.signatures) attemptedAssetFamilySignatures.add(signature);
 		}
 		const terminalVolatileSignatures = await terminalVolatileAssetFamilySignatures({
 			jobs: priorJobs,
@@ -3040,6 +3056,7 @@ async function materializeReconciliation(input: {
 	const generatedAt = input.now().toISOString();
 	const entries = [
 		...reusedArchiveAssets.map((reuse) => reuse.entry),
+		...priorTerminalEvidence.map((evidence) => evidence.entry),
 		...results.flatMap((result) => result.entries),
 	];
 	const archiveItems = [
@@ -3056,6 +3073,7 @@ async function materializeReconciliation(input: {
 				new Set(
 					[
 						...reusedArchiveAssets.map((reuse) => reuse.item.providerConversationId),
+						...priorTerminalEvidence.map((evidence) => evidence.conversationId),
 						...results.map((result) => result.target?.conversationId),
 					].filter(Boolean),
 				).size,
@@ -5412,6 +5430,95 @@ interface ScopedArchiveReuse {
 	item: RunArchiveItem;
 	signature: string;
 	entry: HistoryMaterializationManifestEntry;
+}
+
+interface ScopedTerminalEvidence {
+	conversationId: string;
+	signatures: string[];
+	entry: HistoryMaterializationManifestEntry;
+}
+
+function readScopedTerminalEvidence(input: {
+	jobs: HistoryMaterializationJob[];
+	targets: Map<string, HistoryMaterializationTarget>;
+	families: Map<string, string[]>;
+	selectedKinds: HistoryMaterializationAssetKind[];
+	reusedArchiveAssets: ScopedArchiveReuse[];
+}): ScopedTerminalEvidence[] {
+	const evidence: ScopedTerminalEvidence[] = [];
+	const seen = new Set(
+		input.reusedArchiveAssets.map(
+			(reuse) => `${reuse.item.providerConversationId}\0${reuse.signature}`,
+		),
+	);
+	for (const job of input.jobs) {
+		if (isActiveStatus(job.status)) continue;
+		const ids = normalizeConversationIds(job.request.conversationIds);
+		if (ids.length === 0 && (job.request.conversationId || job.result?.target?.conversationId))
+			ids.push((job.request.conversationId || job.result?.target?.conversationId) as string);
+		// A flattened multi-conversation result cannot attribute a title-only family.
+		if (ids.length !== 1) continue;
+		const conversationId = ids[0];
+		if (!conversationId) continue;
+		const target = input.targets.get(conversationId);
+		const priorTargets = [
+			job.result?.target,
+			...(job.result?.attempts ?? []).map((attempt) => attempt.target),
+		].filter((prior): prior is HistoryMaterializationTarget =>
+			Boolean(prior && prior.conversationId === conversationId),
+		);
+		const identities = new Set(
+			[job.request.boundIdentityKey, ...priorTargets.map((prior) => prior.boundIdentityKey)].filter(
+				Boolean,
+			),
+		);
+		if (
+			!target ||
+			!target.boundIdentityKey ||
+			job.request.provider !== target.provider ||
+			(target.runtimeProfile && job.request.runtimeProfile !== target.runtimeProfile) ||
+			identities.size !== 1 ||
+			!identities.has(target.boundIdentityKey) ||
+			priorTargets.some(
+				(prior) =>
+					prior.provider !== target.provider || prior.runtimeProfile !== target.runtimeProfile,
+			) ||
+			(job.result?.target && job.result.target.conversationId !== conversationId)
+		)
+			continue;
+		for (const entry of job.result?.entries ?? []) {
+			if (
+				(entry.status !== "failed" && entry.status !== "skipped") ||
+				entry.assetAvailability !== "unavailable" ||
+				entry.failureKind !== "provider_unavailable" ||
+				entry.retryable !== false
+			)
+				continue;
+			const signatures = historyEntryAssetFamilySignatures(entry, input.selectedKinds);
+			const matched = signatures.filter((signature) =>
+				input.families.get(conversationId)?.includes(signature),
+			);
+			if (
+				matched.length === 0 ||
+				matched.some((signature) => seen.has(`${conversationId}\0${signature}`))
+			)
+				continue;
+			for (const signature of matched) seen.add(`${conversationId}\0${signature}`);
+			evidence.push({
+				conversationId,
+				signatures: matched,
+				entry: {
+					...entry,
+					status: "skipped",
+					localPath: null,
+					materializationMethod: "prior-terminal-evidence",
+					priorEvidenceJobId: entry.priorEvidenceJobId ?? job.id,
+					recoverabilityState: "terminally_unavailable",
+				},
+			});
+		}
+	}
+	return evidence;
 }
 
 async function readScopedArchiveReuse(input: {

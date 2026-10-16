@@ -160,6 +160,7 @@ export interface AccountMirrorMetadataCollectorInput {
 	providerTrafficGovernor?: ProviderTrafficGovernor;
 	providerTrafficPlanController?: AccountMirrorProviderTrafficPlanController;
 	tabAffinity?: {
+		allowInitialNavigation?: boolean;
 		configuredUrl?: string;
 		host: string;
 		onTargetNavigation?: () => Promise<void> | void;
@@ -347,7 +348,7 @@ function createAccountMirrorListOptions(
 					host: tabAffinity.host,
 					onTargetNavigation: tabAffinity.onTargetNavigation,
 					port: tabAffinity.port,
-					preserveActiveTab: true,
+					preserveActiveTab: tabAffinity.allowInitialNavigation !== true,
 					tabLifecycle: "retain" as const,
 					tabTargetId: tabAffinity.targetId,
 				}

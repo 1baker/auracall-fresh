@@ -823,7 +823,11 @@ Terminology note:
   cached artifact/file history; ordinary reconciliation excludes the terminal
   conversation before provider work or `maxItems` budget is spent.
   In tab-affinity mode, a standalone context read acquires the requested
-  conversation route directly and reuses its owned process tab for later reads. ChatGPT may
+  conversation route directly and reuses its owned process tab for later reads.
+  Crawler tab creation starts blank; the provider route loads after exact custody
+  through governed navigation. An owned blank can resume only with observed blank
+  URL and known effects. Blank acquisition does not consume the provider
+  renavigation cooldown. ChatGPT may
   canonicalize a root conversation into its project URL; settling and reuse accept
   that same conversation, while preserving any explicitly requested project and
   the expected origin.
@@ -1003,6 +1007,10 @@ Terminology note:
   with their bytes, SHA-256 and existing archive/asset links. Missing or corrupt
   files stay eligible for recovery; force bypasses reuse. Reused files do not
   consume new-transfer counts.
+  The same batch also returns attributable prior terminal-unavailability evidence
+  as skipped entries, retaining the provider failure reason and `priorEvidenceJobId`.
+  Only explicit non-retryable provider-unavailable evidence for the same account,
+  conversation and current asset family qualifies. Force bypasses this projection.
   Before an exact non-forced catalog-item request enters provider work, AuraCall
   compares that selected asset family with readable archive rows and terminal
   history-materialization entries. A match settles as skipped; `--force`

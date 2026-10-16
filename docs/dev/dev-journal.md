@@ -1,3 +1,64 @@
+## 2026-10-16 | Issue165 full startup capture and prior artifact outcomes
+
+Automatic completion now returns attributable prior terminal-unavailability entries
+alongside verified archive reuse. Each skipped entry retains the original failure
+reason and priorEvidenceJobId. Qualification requires explicit non-retryable
+provider-unavailable evidence, one conversation, matching current asset family and
+one consistent account identity from the request or recorded attempt target.
+Foreign, conflicting/unattributed, ambiguous, active, retryable, unmatched and force
+cases cannot qualify. Nine public-job cases pass. The actual older B job recorded
+identity in its attempt, not request; that native omission drove the attribution
+regression. Qualified family signatures also prevent another transfer.
+
+The source crawler still created its provider tab before observation, separately
+from the already repaired utility path. Cold configured-caller regressions went
+red. Crawler acquisition now creates about:blank; only a newly acquired blank or
+an explicitly opted-in, observed process-owned blank with known effects can grant
+initial governed navigation. Other retained pages keep preservation semantics.
+Blank acquisition uses generic pacing while real provider navigation retains its
+renavigation cooldown. A real governor/coordinator regression proves1000ms ordinary
+spacing instead of charging the120000ms provider cooldown. Required audit omission
+in its first fixture was corrected; that fixture error is not product red evidence.
+
+The private harness now attaches Network before blank target creation returns to
+the product, follows exact ownership, retains context readbacks, and binds compiled
+module hashes. Periodic broad /status reads were removed after measured5-30second
+observer overhead. GET timeouts re-poll the same operation; DOM observation failure
+cannot imply work completion. Capture setup failure returns the original created
+target to the product and makes coverage incomplete rather than inventing a failed
+target creation. The final proof uses the complete compiled worktree, not a mixed
+older installed package with partial deltas. Two isolated installed deltas remain
+receipted; no full installed promotion or main API restart occurred.
+
+Failed setup/measurement attempts remain in the ledger:10s initial read timeout;
+mixed-runtime116609ms/at least66requests with later status timeout; mixed-runtime
+24609ms/0observed requests with observer WebSocket close while startup resumed a
+previous child; complete-source65953ms/at least68requests with incomplete startup
+coverage and omitted B. The queued/running child left by the observer failures was
+reconciled only after both controller PIDs were proven absent. Running cancellation
+returned409 without mutation; production interrupted recovery, restricted to that
+exact job, marked it failed and issued no provider commands. Raw evidence retained.
+
+The new full-capture automatic proof finished97851ms (89613ms operational),66backend
+requests, exact6trimmed texts, A13889bytes with the expected SHA256 and existing asset
+link, plus B's original typed terminal failure and prior job pointer. All outputs
+match the actual clean agentic case; request ratio0.9167passes. Time ratio2.0162
+FAILS1.3. Goal remains ACTIVE; issue165OPEN. A fresh multi-file automatic comparison
+and an automatic elapsed-time pass remain required. Next profile provider/governor,
+archive and history reads; do not shrink acceptance to cached service results.
+
+Final506tests/8files pass; the separate current context-route suite13tests passes.
+Final typecheck and compiled TypeScript have explicit exit0; scoped Biome and diff
+checks pass. Correction: the previous b9536b93a checkpoint prematurely claimed a
+passing typecheck; findLast was unsupported by this TypeScript target. The test now
+uses a reversed copy with find, and the actual prior failure remains in the ledger.
+
+Main API83768 is unchanged:17subscriptions paused, scheduler paused, queued/running0,
+warnings0. Exact test target and controllers are absent. A fresh OS census found a
+different matching-profile browser started after cleanup (22:02:35 versus22:02:21);
+it is unattributed to this proof and preserved. No blanket browser PID signal was
+issued. Evidence: issue165-scrape-benchmark-2026-10-16.json and its private locators.
+
 ## 2026-10-16 | Issue165 verified reuse and canonical project routes
 
 Scoped reconciliation now returns existing same-account/current-family archive
