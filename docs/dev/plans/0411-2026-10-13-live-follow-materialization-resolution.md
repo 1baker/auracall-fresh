@@ -538,3 +538,32 @@ scoped Biome and compiled build checked. Standards and Spec reviewed serially:
 provider-specific row handling stays in the adapter, and turn/message/button
 identity resolution remains authoritative before choosing a row subcontrol.
 Live proof of the resource-row repair remains pending.
+
+## 2026-10-16 | Issue165 resource-row candidate rejected by live acceptance
+
+One second bounded automatic pass17→18 ran with the isolated resource-row hunk.
+Receipt measured-automatic-2026-10-16T19-06-28-438Z.json records445833ms,
+215observed backend requests (peak71/rolling minute),2document navigations and
+6same-document route changes. Child hmj_32d3c38107ff4e53b1fe6c76b6eaa9b4
+refreshed the same6message/2artifact/2file conversation, clicked a control,
+attempted one download and saved zero bytes. Terminal outcome remains skipped.
+Five backend404responses were observed; the current privacy-bounded trace does
+not prove they caused the failed download. No429or verification warning observed.
+The source replay is green but this candidate has NOT fixed native acceptance.
+
+Restored the adapter byte-for-byte from its private pre-candidate backup and
+restarted the API after confirming no queued/running completion work. Keep the
+verified freshness delta installed. Candidate8ced2e9ac remains reviewable on draft
+PR323, explicitly unqualified for deployment. All17subscriptions and the global
+scheduler remain paused. No automatic provider retry follows this result.
+
+This turn's observed provider traffic:179+215automatic requests plus275diagnostic
+requests =669observed requests, excluding unobserved startup traffic. Diagnostic
+instrumentation's early loading-shell capture was preserved as a limitation.
+Next feedback-loop requirement: record the exact resolved click target,
+elementsFromPoint/hit-test identity after scroll/hover, and correlated download
+request/response or Browser.downloadWillBegin/downloadProgress. Existing telemetry
+only proves input dispatch plus failed wait, so choosing among hit-test failure,
+preview handling and failed remote content is not yet justified. Do not claim a
+speedup from the two timings: scheduler waits and refresh paths differ. Original
+artifact bytes/hash/manifest/archive/local-copy acceptance remains OPEN.
