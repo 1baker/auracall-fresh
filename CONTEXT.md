@@ -34,7 +34,7 @@ _Avoid_: Browser prompt, request
 
 **Browser operation**:
 One authorized browser action or read. A single operation may cause several
-provider backend requests; its budget is distinct from their budget.
+provider backend requests; its budget is distinct from their budget. Command-response deadlines start after required desktop admission; total workflow elapsed time still includes coordination and remains subject to caller cancellation.
 
 **Provider backend request permit**:
 An account-wide admission reservation for one uniquely identified backend request
@@ -63,6 +63,9 @@ A download action outside the conversation-turn cards, used after a selected art
 
 **Artifact cache reuse**:
 A local conversation attachment matching a currently discovered artifact ID, filename and URI. Readability, size and any retained checksum are checked before reuse. New transfer budget excludes reused artifacts; explicit force bypasses reuse. Context refresh alone does not force transfer. A requested fresh context read must succeed before artifact materialization; provider failure cannot silently authorize cached download controls. Explicit refresh=false can use cached context.
+
+**Recovery archive evidence**:
+Historical archive availability reduces current missing-asset counts only when its canonical catalog-item locator, provider, AuraCall runtime profile, tenant and asset kind match a current catalog row. Repeated archive copies of the same catalog item count once. Account-wide archive totals do not prove availability of a newly observed asset.
 
 **Provider session custody**:
 A retained browser session must have a reachable caller owner. A proof-only read closes a session created on its private options; it preserves a session supplied by the caller. Deadline-scoped conversation reads and explicit-target utility wrappers return retained-session custody to their session-enabled caller.

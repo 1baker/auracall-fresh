@@ -882,6 +882,10 @@ Terminology note:
   on the first requested conversation and verifies identity on that route,
   avoiding a preliminary home-page visit. Other refresh phases use the configured
   starting route. Provider warnings and navigation cooldowns still apply.
+  Target-enablement response deadlines begin after desktop admission. Admission
+  checks, cancellation and total workflow deadlines still apply. Recovery only
+  subtracts archive availability for the same current catalog item and account
+  scope; repeated historical copies cannot erase unrelated missing assets.
   History-backed materialization is an explicit separate job surface:
   `POST /v1/account-mirrors/materializations` queues a durable
   `history_materialization_job` by provider conversation id, account-mirror

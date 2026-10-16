@@ -1,3 +1,4 @@
+import { AsyncLocalStorage } from 'node:async_hooks';
 import CDP from 'chrome-remote-interface';
 
 export interface CdpCommandAdmission {
@@ -18,6 +19,42 @@ interface ClientAdmissionState {
   closed: boolean;
 }
 const clientAdmissions = new WeakMap<object, ClientAdmissionState>();
+
+interface CdpCommandTimeout {
+  timeoutMs: number;
+  timeoutMessage: string;
+  abortSignal?: AbortSignal;
+}
+const commandTimeouts = new AsyncLocalStorage<CdpCommandTimeout>();
+
+async function runTimedCdpEffect<T>(options: CdpCommandTimeout, effect: () => Promise<T>): Promise<T> {
+  options.abortSignal?.throwIfAborted();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let onAbort: (() => void) | undefined;
+  try {
+    return await Promise.race([
+      Promise.resolve().then(() => { options.abortSignal?.throwIfAborted(); return effect(); }),
+      new Promise<never>((_resolve, reject) => {
+        timer = setTimeout(() => reject(new Error(options.timeoutMessage)), options.timeoutMs);
+        if (options.abortSignal) {
+          onAbort = () => reject(options.abortSignal?.reason ?? new Error('CDP command cancelled.'));
+          options.abortSignal.addEventListener('abort', onAbort, { once: true });
+        }
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+    if (onAbort) options.abortSignal?.removeEventListener('abort', onAbort);
+  }
+}
+
+/** Admission remains mandatory; only the admitted wire effect consumes this deadline. */
+export async function withCdpCommandTimeout<T>(subject: unknown, options: CdpCommandTimeout, effect: () => Promise<T>): Promise<T> {
+  options.abortSignal?.throwIfAborted();
+  return hasCdpCommandAdmission(subject)
+    ? commandTimeouts.run(options, effect)
+    : runTimedCdpEffect(options, effect);
+}
 
 /** A request interceptor must retain this hold until interception cleanup completes. */
 export async function holdCdpCommandAdmission(client: object): Promise<CdpCommandAdmissionHold> {
@@ -72,7 +109,10 @@ function admittedCall(
   args: unknown[],
 ): unknown {
   const callback = typeof args.at(-1) === 'function' ? args.pop() as (error: unknown, result?: unknown) => void : undefined;
-  const result = admission.run(command, async () => invoke(...args));
+  const timeout = commandTimeouts.getStore();
+  const result = admission.run(command, async () => timeout
+    ? runTimedCdpEffect(timeout, async () => invoke(...args))
+    : invoke(...args));
   if (!callback) return result;
   void result.then((value) => callback(null, value), (error: unknown) => callback(error));
   return undefined;

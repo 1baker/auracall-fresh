@@ -1,3 +1,50 @@
+## 2026-10-16 | Issue165 command deadlines and exact archive matching
+
+The target enablement deadline included mandatory desktop command admission.
+A real-caller regression reproduced a false unresponsive-target error before any
+wire command. The shared transport now applies the response deadline after
+admission; ChatGPT enablement uses that scope. Ownership/human control remains
+mandatory, queued cancellation cannot emit later commands, and actual wire stalls
+still time out. Native blank-target diagnostic:raw domains4ms versus guarded1073ms;
+its attempted held comparison was unavailable on the old installed runtime and
+is not evidence. Five target/admission cases pass, including denial and both
+coordinated/uncoordinated stalls. Full selected suite307tests/7files passes;
+typecheck, compiled TypeScript and scoped lint/diff pass.
+
+With isolated route/deadline deltas, normal automatic inventory completed in54932ms
+including setup (50443ms operational), at least70backend requests,6messages and
+2artifacts/2file references. No child was created: NOT acceptance. The earlier
+instrumented probe ended on observer GET500; the harness now re-polls the same
+operation on observation failure, with a local regression proving no restart or
+control mutation. A fresh agentic diagnostic confirmed the same six texts, one
+13889byte/hash file and the second artifact's404. Its76505ms/69requests includes
+setup idle time and one accidental Copy click after DOM indexes changed; it is
+preserved and cannot inflate the clean48532ms/72request baseline.
+
+Full recovery input replay found518historical available archive rows, but zero
+matched the four current catalog items. Aggregate subtraction erased the backlog.
+The planner now requires an exact canonical catalog-item locator plus provider,
+runtime, tenant and kind, deduplicates archive copies, and reuses the same catalog
+queries for classification. Foreign-archive and duplicate regressions went red;
+positive matched availability still subtracts. Real public read-only recovery now
+reports2retrievable artifacts and2unsupported file references instead of zero.
+Before/after replays and all native costs are recorded in the benchmark ledger.
+Serial Standards review preserves domain boundaries and mandatory admission;
+Spec review accepts both repairs but keeps automatic harvesting and complete
+request coverage unproven. The next isolated automatic proof completed at132904ms including setup
+(127472ms operational), at least72requests, and created a real child. The child
+failed with one provider_unavailable/retryable=false entry for the404artifact.
+The other artifact was excluded because a same-conversation archived copy already
+exists:readable13889bytes with the exact expected SHA256. Reuse is legitimate, but
+the child result does not account for that asset. This is NOT acceptance:elapsed
+is2.73846times the clean agentic baseline, startup requests are missing, and no
+successful all-bytes multi-file case exists. The controller exited0 and its browser
+root is now absent after normal history cleanup. All raw outcomes, action counts,
+code identities and verified archive evidence are preserved privately and linked
+from the ledger. No primary service restart, prompt, full promotion or release.
+Next profile admission/collector/child costs and surface verified reuse in the
+result, then measure complete startup traffic and a successful multi-file case.
+
 ## 2026-10-16 | Issue165 scoped initial-route regression and failed native probe
 
 A scoped detail refresh opened ChatGPT home before its requested conversation.

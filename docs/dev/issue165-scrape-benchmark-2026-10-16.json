@@ -359,6 +359,113 @@
         "terminalControllerSigterm": 1
       },
       "runtimeDeltaRolledBack": true
+    },
+    {
+      "id": "automatic_enable_trace_observer_failure",
+      "receipt": "measured-automatic-scoped-2026-10-16T20-24-34-466Z.json",
+      "elapsedMs": 37864,
+      "operationalElapsedMs": 32398,
+      "backendRequestsLowerBound": 59,
+      "coverageComplete": false,
+      "savedFiles": 0,
+      "childCreated": false,
+      "accepted": false,
+      "reason": "GET observation HTTP500 caused the old controller to pause; domain enablement itself succeeded. Observer harness failure, not product acceptance.",
+      "productControls": {
+        "completionCreate": 1,
+        "completionPause": 1,
+        "providerPrompts": 0
+      }
+    },
+    {
+      "id": "automatic_resilient_observer_enable_timeout",
+      "receipt": "measured-automatic-scoped-2026-10-16T20-27-58-496Z.json",
+      "elapsedMs": 22198,
+      "operationalElapsedMs": 16658,
+      "backendRequestsLowerBound": 0,
+      "coverageComplete": false,
+      "savedFiles": 0,
+      "childCreated": false,
+      "accepted": false,
+      "reason": "Already-rendered target still hit a five-second timeout that included desktop admission; no inventory pass or child completed.",
+      "productControls": {
+        "completionCreate": 1,
+        "completionPause": 1,
+        "providerPrompts": 0
+      }
+    },
+    {
+      "id": "automatic_wire_deadline_inventory_only",
+      "receipt": "measured-automatic-scoped-2026-10-16T20-34-10-138Z.json",
+      "elapsedMs": 54932,
+      "operationalElapsedMs": 50443,
+      "backendRequestsLowerBound": 70,
+      "coverageComplete": false,
+      "savedFiles": 0,
+      "childCreated": false,
+      "accepted": false,
+      "reason": "Inventory completed; historical archive aggregate erased actionable backlog, so no materialization child. Not a complete scrape.",
+      "productControls": {
+        "completionCreate": 1,
+        "completionPause": 1,
+        "providerPrompts": 0
+      }
+    },
+    {
+      "id": "agentic_readiness_diagnostic",
+      "receipt": "agentic-benchmark-2026-10-16T20-26-24-458Z/receipt.json",
+      "elapsedMs": 76505,
+      "backendRequests": 69,
+      "coverageComplete": true,
+      "freshMessages": 6,
+      "savedFiles": 1,
+      "providerUnavailableArtifacts": 1,
+      "complete": true,
+      "accepted": false,
+      "reason": "Diagnostic includes operator setup idle time and an accidental Copy click after a DOM index changed. Outcomes and six message texts match the clean baseline; do not inflate the clean comparison ceiling.",
+      "agentActions": {
+        "navigate": 1,
+        "diagnose": 1,
+        "read": 1,
+        "snapshot": 2,
+        "click": 3,
+        "downloads": 1,
+        "finish": 1
+      },
+      "unintendedCopyClicks": 1,
+      "providerPrompts": 0
+    },
+    {
+      "id": "automatic_exact_archive_overlay_child_created",
+      "receipt": "measured-automatic-scoped-2026-10-16T20-44-33-068Z.json",
+      "elapsedMs": 132904,
+      "operationalElapsedMs": 127472,
+      "backendRequestsLowerBound": 72,
+      "coverageComplete": false,
+      "freshMessages": 6,
+      "freshArtifacts": 2,
+      "freshFileReferences": 2,
+      "savedFiles": 0,
+      "verifiedPreviouslyArchivedFiles": 1,
+      "previouslyArchivedBytes": 13889,
+      "previouslyArchivedSha256": "fd1720c0e3df3579ea567679c642e895a7993a3b558b8743fa47495a201e87ca",
+      "existingAssetQualification": "exact-overlay-existing-asset-qualification-20261016.json",
+      "childCreated": true,
+      "childStatus": "failed",
+      "childReceipt": "exact-overlay-child-latest-20261016.json",
+      "childEntries": 1,
+      "providerUnavailableArtifacts": 1,
+      "accepted": false,
+      "reason": "Real child created and observed matched artifact404; available artifact already exists with matching bytes/hash but is omitted from child result. Full elapsed exceeds clean agentic ceiling; startup request coverage remains incomplete.",
+      "agentActions": {
+        "productCompletionCreate": 1,
+        "productCompletionPause": 1,
+        "providerPrompts": 0,
+        "observerAttachments": 2,
+        "readOnlyChildStoreRead": 1,
+        "readOnlyExistingArchiveFileVerification": 1
+      },
+      "elapsedRatioToCleanAgentic": 2.738481826423803
     }
   ],
   "comparison": {
@@ -429,6 +536,30 @@
     },
     "rawHistoryEdited": false,
     "nativeReplayAfterRepair": true,
-    "nativeReplayQualification": "Initial-route probe failed before inventory/admission; repaired child selection remains native-unproven."
+    "nativeReplayQualification": "With exact archive overlay repair, native child creation is observed; full automatic result/performance acceptance remains unproven."
+  },
+  "commandAdmissionTiming": {
+    "receipt": "target-enable-admission-timing-20261016.json",
+    "rawEnableMs": 4,
+    "guardedEnableMs": 1073,
+    "providerNavigations": 0,
+    "backendRequestCountMeasured": false,
+    "heldComparisonCompleted": false,
+    "diagnosticError": "Installed runtime does not expose continuous admission hold; no held result inferred."
+  },
+  "automaticBacklogWithFullSearch": {
+    "inputs": "recovery-search-inputs-after-wire-deadline-20261016.json",
+    "availableArchiveRows": 518,
+    "currentCatalogItems": 4,
+    "archiveRowsMatchingCurrentCatalogItems": 0,
+    "beforeRetrievable": 0,
+    "beforeReceipt": "scoped-backlog-with-search-installed-before-20261016.json",
+    "afterRetrievable": 2,
+    "afterReceipt": "scoped-backlog-with-search-after-20261016.json",
+    "nativeReadOnlyEndpointReceipt": "recovery-public-path-after-exact-overlay-20261016.json",
+    "unsupportedCatalogFileReferences": 2,
+    "scope": "Exact canonical catalog-item locator plus provider/runtime/tenant/kind; each matching catalog item counts once.",
+    "nativeChildCreated": true,
+    "nativeChildReceipt": "measured-automatic-scoped-2026-10-16T20-44-33-068Z.json"
   }
 }

@@ -5,6 +5,7 @@ import {
 	connectToChromeTarget,
 	openOrReuseChromeTarget,
 } from "../../../packages/browser-service/src/chromeLifecycle.js";
+import { withCdpCommandTimeout } from "../../../packages/browser-service/src/guardedCdp.js";
 import type { BrowserInteractionClass } from "../../../packages/browser-service/src/service/interactionGovernor.js";
 import {
 	requireBundledServiceBaseUrl,
@@ -4995,10 +4996,14 @@ async function enableChatgptTargetDomains(
 ): Promise<void> {
 	recordBrowserScrapeCdpCall(options, "Page.enable");
 	recordBrowserScrapeCdpCall(options, "Runtime.enable");
-	await withChatgptTimeout(
-		Promise.all([client.Page.enable(), client.Runtime.enable()]).then(() => undefined),
-		CHATGPT_CDP_LIST_TIMEOUT_MS,
-		`Timed out enabling ChatGPT page target${targetId ? ` ${targetId}` : ""}; the Chrome endpoint is alive but the selected page target is unresponsive.`,
+	await withCdpCommandTimeout(
+		client,
+		{
+			timeoutMs: CHATGPT_CDP_LIST_TIMEOUT_MS,
+			timeoutMessage: `Timed out enabling ChatGPT page target${targetId ? ` ${targetId}` : ""}; the Chrome endpoint is alive but the selected page target is unresponsive.`,
+			abortSignal: options?.abortSignal,
+		},
+		() => Promise.all([client.Page.enable(), client.Runtime.enable()]).then(() => undefined),
 	);
 }
 

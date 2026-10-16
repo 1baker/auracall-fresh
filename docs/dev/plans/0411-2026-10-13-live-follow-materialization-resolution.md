@@ -7,6 +7,22 @@ Target: main
 
 ## Current State
 
+### 2026-10-16 command-admission and recovery overlay repair
+
+False target timeout reproduced at the identity caller:desktop admission consumed
+its five-second wire-response deadline. Response timing now begins after mandatory
+admission; cancellation and actual wire stall limits remain.307selected tests pass.
+Native inventory54932ms/at least70requests completed without a child. Full planner
+replay then proved518unmatched historical archive rows erased current backlog.
+Exact current catalog-item matching/dedup restores2retrievable artifacts on the
+real recovery endpoint. Native automatic proof132904ms/at least72requests now
+creates a child. Its only entry reports404; verified existing13889byte/hash asset
+was excluded but not surfaced in the child result. No performance acceptance.
+Next profile remaining latency and account for verified reuse; complete startup
+request coverage and successful multi-file parity remain required. Benchmark
+ledger retains all failed/diagnostic runs. Goal ACTIVE, issue165OPEN.
+
+
 ### 2026-10-16 scoped initial-route checkpoint
 
 Source regression confirms detail refresh unnecessarily opened home. Carrying
