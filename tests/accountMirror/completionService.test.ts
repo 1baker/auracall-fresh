@@ -2333,11 +2333,13 @@ describe("account mirror completion service", () => {
 		"full_sweep",
 		"scoped",
 		"steady_frontier",
+		"retained_only",
 		"quiet_frontier",
 	])("respects materialization frontier and settles owned failure (mode=%s)", async (mode) => {
 		const scoped = mode === "scoped";
 		const quiet = mode === "quiet_frontier";
-		const frontier = mode === "steady_frontier" || quiet;
+		const retainedOnly = mode === "retained_only";
+		const frontier = mode === "steady_frontier" || retainedOnly || quiet;
 		const pacedConfig = {
 			runtimeProfiles: {
 				default: {
@@ -2389,7 +2391,7 @@ describe("account mirror completion service", () => {
 				identitySource: "browser_session",
 				projectSampleIds: [],
 				conversationSampleIds: ["conv_collector_fresh_1"],
-				detailConversationIdsThisPass: quiet ? [] : ["conv_collector_fresh_1"],
+				detailConversationIdsThisPass: quiet || retainedOnly ? [] : ["conv_collector_fresh_1"],
 				retainedMaterializationConversationIds: quiet ? [] : ["conv_retained_1"],
 				...(quiet
 					? {
@@ -2479,14 +2481,18 @@ describe("account mirror completion service", () => {
 			...(scoped
 				? { conversationIds: ["conv_collector_fresh_1"] }
 				: frontier
-					? { conversationIds: ["conv_collector_fresh_1", "conv_retained_1"] }
+					? {
+							conversationIds: retainedOnly
+								? ["conv_retained_1"]
+								: ["conv_collector_fresh_1", "conv_retained_1"],
+						}
 					: {}),
 			provider: "chatgpt",
 			runtimeProfile: "default",
 			reconcile: true,
 			refreshSnapshot: true,
 			reuseSnapshotAfter: "2026-04-30T12:00:00.000Z",
-			reuseSnapshotConversationIds: ["conv_collector_fresh_1", "conv_retained_1"],
+			...(retainedOnly ? {} : { reuseSnapshotConversationIds: ["conv_collector_fresh_1"] }),
 			providerWorkNotBefore: "2026-04-30T12:02:01.000Z",
 			interactionPolicy: {
 				maxInteractionsPerMinute: 8,
@@ -2512,7 +2518,7 @@ describe("account mirror completion service", () => {
 					reconcile: true,
 					refreshSnapshot: true,
 					reuseSnapshotAfter: "2026-04-30T12:00:00.000Z",
-					reuseSnapshotConversationIds: ["conv_collector_fresh_1", "conv_retained_1"],
+					...(retainedOnly ? {} : { reuseSnapshotConversationIds: ["conv_collector_fresh_1"] }),
 					providerWorkNotBefore: "2026-04-30T12:02:01.000Z",
 					interactionPolicy: {
 						maxInteractionsPerMinute: 8,

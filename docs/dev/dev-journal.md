@@ -1,3 +1,39 @@
+## 2026-10-16 | Issue165 measured retained-inventory freshness failure
+
+One bounded automatic pass observed 195 distinct backend requests (peak 66 per
+rolling minute), two document navigations and four route changes. Coverage starts
+after target attachment, so these are lower bounds. The pass took 571.5 seconds,
+including about 295 seconds before attachment under existing failure backoff.
+Its child waited 111.8 seconds for provider eligibility, then settled in 21.3
+seconds: one artifact skipped, zero download attempts and zero bytes. No observed
+429 or verification warning. A separate exact context read took 20.9 seconds,
+observed 137 backend requests, and returned six messages, two artifacts and two
+files. Its fresh artifact identifiers did not include the retained selected ID.
+
+The automatic collector read zero detail conversations but passed 20 retained
+inventory IDs as reusable snapshots. Completion now keeps retained IDs in the
+materialization frontier while granting snapshot reuse only to actual detail reads
+from this pass. A skipped retained attempt can therefore enter the existing fresh
+snapshot fallback; successful retained transfers and fresh collector reads still
+avoid redundant refreshes. No title-only control matching or production request
+ceiling is introduced. Regression first failed in three completion modes; mixed
+and retained-only frontier cases cover eligibility separately from freshness.
+
+Validation: 174 tests across completion and history materialization pass; typecheck,
+scoped Biome and diff checks pass. Serial Standards review found no new API or
+provider coupling; serial Spec review confirmed retained work stays eligible,
+fresh reads retain reuse, and retained-only work receives no freshness exemption.
+The native outcome after this source change remains unmeasured.
+
+Private receipts remain under ~/.auracall/diagnostics/plan0411, notably
+measured-automatic-2026-10-16T15-20-06-088Z.json and
+measured-selected-context-2026-10-16T15-35-10-213Z-receipt.json. Earlier empty-lock
+failure and qualified reversible quarantine are preserved separately. This source
+fix is not installed or native acceptance; issue165 remains open. Global scheduler
+and completion subscriptions remain paused. Final process readback finds the direct
+read's Chrome PID84086 present with lease lost/owner null; no foreign cleanup was
+attempted and resource retirement is not established.
+
 ## 2026-10-14 | Plan0426 public bootstrap request proof and cleanup failures
 
 Public ChatgptService/utility/adapter/owned-CDP fixture now intercepts first-navigation

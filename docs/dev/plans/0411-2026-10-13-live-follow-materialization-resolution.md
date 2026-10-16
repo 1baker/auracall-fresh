@@ -7,6 +7,22 @@ Target: main
 
 ## Current State
 
+### 2026-10-16 measured automatic workflow
+
+User directed agentic measurement and clarified that prior coarse pacing numbers
+were guesses; backend communication and avoidable navigation are the primary
+optimization targets. Primary serial, one installed normal automatic pass only,
+ten-minute observation bound, no retry on429/verification/identity/custody error.
+Global scheduler and unrelated jobs remain paused; no prompts or forced downloads,
+runtime promotion or governance repair. Existing parent pass15, maxItems1/forcefalse
+is the baseline; observe request IDs/timestamps/categories, route changes and
+parent/child result. Do not substitute response counts for requests, or call
+post-attachment observation complete startup capture. Current API PID47409 differs
+from the prior62047 receipt; verify exact runtime identity before execution.
+Measurement controller /tmp/issue165-measure-automatic.mjs passed syntax and
+read-only preflight. Checkpoint after this one measured pass before any further
+native action. Numeric30requests/min remains unapproved tuning, not a new rule.
+
 ### 2026-10-15 acceptance reassessment and source validation
 
 Base71421809f, owner primary serial. User authorized reassessment after focused
@@ -462,3 +478,33 @@ proves the original PID absent; registry is released/already-missing. Earlier
 retirement audit says preserved, not closed. Exit actor remains unproven. The
 context/terminal successor plans are CLOSED on this bounded evidence; parent
 acceptance remains OPEN.
+
+## 2026-10-16 | Issue165 measured retained-inventory freshness failure
+
+One bounded automatic pass observed 195 distinct backend requests (peak 66 per
+rolling minute), two document navigations and four route changes. Coverage starts
+after target attachment, so these are lower bounds. The pass took 571.5 seconds,
+including about 295 seconds before attachment under existing failure backoff.
+Its child waited 111.8 seconds for provider eligibility, then settled in 21.3
+seconds: one artifact skipped, zero download attempts and zero bytes. No observed
+429 or verification warning. A separate exact context read took 20.9 seconds,
+observed 137 backend requests, and returned six messages, two artifacts and two
+files. Its fresh artifact identifiers did not include the retained selected ID.
+
+The automatic collector read zero detail conversations but passed 20 retained
+inventory IDs as reusable snapshots. Completion now keeps retained IDs in the
+materialization frontier while granting snapshot reuse only to actual detail reads
+from this pass. A skipped retained attempt can therefore enter the existing fresh
+snapshot fallback; successful retained transfers and fresh collector reads still
+avoid redundant refreshes. No title-only control matching or production request
+ceiling is introduced. Regression first failed in three completion modes; mixed
+and retained-only frontier cases cover eligibility separately from freshness.
+
+Private receipts remain under ~/.auracall/diagnostics/plan0411, notably
+measured-automatic-2026-10-16T15-20-06-088Z.json and
+measured-selected-context-2026-10-16T15-35-10-213Z-receipt.json. Earlier empty-lock
+failure and qualified reversible quarantine are preserved separately. This source
+fix is not installed or native acceptance; issue165 remains open. Global scheduler
+and completion subscriptions remain paused. Final process readback finds the direct
+read's Chrome PID84086 present with lease lost/owner null; no foreign cleanup was
+attempted and resource retirement is not established.
