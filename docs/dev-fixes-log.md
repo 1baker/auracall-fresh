@@ -1,3 +1,40 @@
+## 2026-10-16 | Issue165 verified reuse and canonical project routes
+
+Scoped reconciliation now returns existing same-account/current-family archive
+files as duplicate entries with actual bytes/hash and archive/asset links, after
+regular-file, checksum and stable-stat verification. Missing, tampered, foreign
+and forced cases remain eligible for transfer. Five real public-job regression
+cases pass. Native automatic profile39195ms/at least70requests returned verified
+A as duplicate, but omitted prior terminal B and lacked full startup coverage;
+this is not automatic acceptance.32admitted CDP commands spent9847ms summed in
+admission and3650ms summed on wire (overlapping sums, not wall-time components).
+Observer GET failures now re-poll the same handle; heartbeat revisions alone do
+not change custody; broad status polling reduced to15seconds. Temporary timing
+instrumentation was restored. Aborted observer/fenced resume and preflight404
+failures remain in the ledger; exact benchmark target retirement was qualified.
+
+A second actual agentic case read4texts and downloaded2valid files in49510ms/68
+backend requests. Deterministic service initially timed out after canonical root
+conversation navigation redirected into its project URL:49650ms/62requests,
+no files. A real caller regression went red on route settling. Conversation route
+settling now accepts that same conversation under its canonical project; explicit
+project/origin constraints remain. Ready same-route surfaces are reused. With an
+isolated two-function installed delta and fresh cache, the same public service
+completed41859ms/70requests. All4trimmed texts and both files (A6172B, B21186B)
+match exactly, including SHA256. Ratios0.8455time and1.0294requests pass the1.3
+ceiling for this public-service comparison. One nonfatal net::ERR_ABORTED was
+recorded; both artifact downloads completed. Full automatic acceptance remains
+OPEN: complete startup counts and complete selected-artifact outcome accounting
+still required. No prompt, Answer now, or force transfer was used.
+
+Final selected403tests/6files, typecheck, compiled TypeScript and scoped Biome
+pass. Failed runs are retained: archive fixture timeout under concurrent build,
+three call-sequence mocks, and a fake-timer leak in the new route fixture that
+caused the subsequent rate-limit test to time out. The timer cleanup is fixed;
+full affected suites now pass. Public costs and private receipt locators are in
+issue165-scrape-benchmark-2026-10-16.json. Runtime changes are isolated compiled
+deltas, not a full branch promotion or main API restart. Goal ACTIVE; issue165OPEN.
+
 ## 2026-10-16 | Issue165 command deadlines and exact archive matching
 
 The target enablement deadline included mandatory desktop command admission.

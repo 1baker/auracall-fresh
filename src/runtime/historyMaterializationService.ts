@@ -2711,13 +2711,28 @@ async function materializeReconciliation(input: {
 		}
 	}
 	const attemptedAssetFamilySignatures = new Set<string>();
+	const reusedArchiveAssets: ScopedArchiveReuse[] = [];
 	const priorJobs = input.request.force === true ? [] : await input.jobStore.listJobs();
 	if (input.request.force !== true) {
-		const archiveSignatures = await materializedArchiveAssetFamilySignatures({
-			runArchiveService: input.runArchiveService,
-			request: input.request,
-			selectedKinds,
-		});
+		if (selectedConversationIds.length > 0) {
+			reusedArchiveAssets.push(
+				...(await readScopedArchiveReuse({
+					runArchiveService: input.runArchiveService,
+					request: input.request,
+					selectedKinds,
+					targets: selectedCatalogTargets,
+					families: selectedCatalogAssetFamilySignatures,
+				})),
+			);
+		}
+		const archiveSignatures =
+			selectedConversationIds.length > 0
+				? reusedArchiveAssets.map((reuse) => reuse.signature)
+				: await materializedArchiveAssetFamilySignatures({
+						runArchiveService: input.runArchiveService,
+						request: input.request,
+						selectedKinds,
+					});
 		for (const signature of archiveSignatures) {
 			attemptedAssetFamilySignatures.add(signature);
 		}
@@ -3023,18 +3038,36 @@ async function materializeReconciliation(input: {
 		selectedCandidates += mediaReconciliation.selectedCandidates;
 	}
 	const generatedAt = input.now().toISOString();
-	const entries = results.flatMap((result) => result.entries);
-	const archiveItems = results.flatMap((result) => result.archiveItems);
+	const entries = [
+		...reusedArchiveAssets.map((reuse) => reuse.entry),
+		...results.flatMap((result) => result.entries),
+	];
+	const archiveItems = [
+		...reusedArchiveAssets.map((reuse) => reuse.item),
+		...results.flatMap((result) => result.archiveItems),
+	];
 	const manifestPaths = Array.from(new Set(results.flatMap((result) => result.manifestPaths)));
 	const snapshotRefreshes = results.flatMap((result) => snapshotRefreshesFromResult(result));
 	const metrics = {
-		...summarizeEntries(entries, results.length),
+		...summarizeEntries(
+			entries,
+			Math.max(
+				results.length,
+				new Set(
+					[
+						...reusedArchiveAssets.map((reuse) => reuse.item.providerConversationId),
+						...results.map((result) => result.target?.conversationId),
+					].filter(Boolean),
+				).size,
+			),
+		),
 		eligibleCandidates,
 		selectedCandidates,
 		materializedCandidates,
 		...(candidateFunnel ? { candidateFunnel } : {}),
 	};
 	const status = resolveHistoryMaterializationResultStatus(metrics);
+	const duplicateAliases = metrics.duplicateAliases ?? 0;
 	return {
 		object: "history_materialization_result",
 		generatedAt,
@@ -3061,9 +3094,11 @@ async function materializeReconciliation(input: {
 		message:
 			metrics.materialized > 0
 				? `History reconciliation materialized ${metrics.materialized} asset${metrics.materialized === 1 ? "" : "s"} from ${results.length} conversation${results.length === 1 ? "" : "s"}.`
-				: metrics.failed > 0
-					? `History reconciliation failed to materialize ${metrics.failed} asset${metrics.failed === 1 ? "" : "s"} from ${results.length} conversation${results.length === 1 ? "" : "s"}.`
-					: "History reconciliation did not find downloadable assets to materialize.",
+				: duplicateAliases > 0
+					? `History reconciliation reused ${duplicateAliases} verified archive asset${duplicateAliases === 1 ? "" : "s"}${metrics.failed > 0 ? `; ${metrics.failed} selected asset${metrics.failed === 1 ? "" : "s"} failed` : ""}.`
+					: metrics.failed > 0
+						? `History reconciliation failed to materialize ${metrics.failed} asset${metrics.failed === 1 ? "" : "s"} from ${results.length} conversation${results.length === 1 ? "" : "s"}.`
+						: "History reconciliation did not find downloadable assets to materialize.",
 	};
 }
 
@@ -5371,6 +5406,95 @@ function catalogConversationItemAssetFamilySignatures(
 	if (selectedKinds.includes("files")) collect("file", item.files);
 	if (selectedKinds.includes("media")) collect("media", item.media);
 	return Array.from(signatures);
+}
+
+interface ScopedArchiveReuse {
+	item: RunArchiveItem;
+	signature: string;
+	entry: HistoryMaterializationManifestEntry;
+}
+
+async function readScopedArchiveReuse(input: {
+	runArchiveService: RunArchiveService;
+	request: HistoryMaterializationCreateRequest;
+	selectedKinds: HistoryMaterializationAssetKind[];
+	targets: Map<string, HistoryMaterializationTarget>;
+	families: Map<string, string[]>;
+}): Promise<ScopedArchiveReuse[]> {
+	const archive = await input.runArchiveService.listItems({
+		provider: input.request.provider ?? null,
+		runtimeProfile: input.request.runtimeProfile ?? null,
+		assetAvailability: "available",
+		limit: 500,
+	});
+	const reused: ScopedArchiveReuse[] = [];
+	const seen = new Set<string>();
+	for (const item of archive.items) {
+		const conversationId = item.providerConversationId;
+		const target = conversationId ? input.targets.get(conversationId) : null;
+		if (
+			!target ||
+			!conversationId ||
+			item.provider !== target.provider ||
+			(target.runtimeProfile && item.runtimeProfile !== target.runtimeProfile) ||
+			!item.localPath ||
+			item.fileAvailable !== true
+		)
+			continue;
+		const expectedIdentity = input.request.boundIdentityKey ?? target.boundIdentityKey;
+		if (
+			expectedIdentity &&
+			!accountMirrorIdentityKeysMatch({
+				provider: target.provider,
+				expectedIdentityKey: expectedIdentity,
+				detectedIdentityKey: item.boundIdentityKey,
+			})
+		)
+			continue;
+		const signature = archiveItemAssetFamilySignature(item, input.selectedKinds);
+		if (!signature || !input.families.get(conversationId)?.includes(signature)) continue;
+		const key = `${conversationId}\0${signature}`;
+		if (seen.has(key)) continue;
+		const before = await fs.stat(item.localPath).catch(() => null);
+		if (!before?.isFile()) continue;
+		const checksumSha256 = await calculateFileSha256(item.localPath);
+		if (
+			!checksumSha256 ||
+			(item.checksumSha256 && item.checksumSha256.toLowerCase() !== checksumSha256)
+		)
+			continue;
+		const after = await fs.stat(item.localPath).catch(() => null);
+		if (!after?.isFile() || after.size !== before.size || after.mtimeMs !== before.mtimeMs)
+			continue;
+		seen.add(key);
+		const kind =
+			item.kind === "generated_artifact" ? "artifact" : item.kind === "upload" ? "file" : "media";
+		reused.push({
+			item,
+			signature,
+			entry: {
+				kind,
+				providerId:
+					item.artifactId ?? readRecordString(item.metadata, ["providerFileId"]) ?? item.id,
+				title: item.title ?? item.fileName,
+				status: "duplicate",
+				localPath: item.localPath,
+				remoteUrl: item.uri,
+				cacheKey: item.cacheKey,
+				checksumSha256,
+				mimeType: item.mimeType,
+				size: after.size,
+				materializationMethod: "verified-archive-reuse",
+				reason: "already_materialized_archive",
+				assetAvailability: "available",
+				recoverabilityState: "materialized",
+				retryable: false,
+				archiveItemId: item.id,
+				assetRoute: item.links.asset ?? null,
+			},
+		});
+	}
+	return reused;
 }
 
 async function materializedArchiveAssetFamilySignatures(input: {

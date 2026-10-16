@@ -466,6 +466,144 @@
         "readOnlyExistingArchiveFileVerification": 1
       },
       "elapsedRatioToCleanAgentic": 2.738481826423803
+    },
+    {
+      "id": "automatic_observer_revision_false_stop",
+      "receipt": "measured-automatic-scoped-2026-10-16T21-03-20-074Z.json",
+      "elapsedMs": 11010,
+      "operationalElapsedMs": 6302,
+      "backendRequests": null,
+      "observedBackendRequestsLowerBound": 0,
+      "coverageComplete": false,
+      "accepted": false,
+      "reason": "Observer treated a heartbeat revision as ownership loss; paused before provider navigation. No acceptance."
+    },
+    {
+      "id": "automatic_same_parent_fenced_resume",
+      "receipt": "measured-automatic-scoped-2026-10-16T21-07-36-281Z.json",
+      "elapsedMs": 6745,
+      "operationalElapsedMs": 3614,
+      "backendRequests": null,
+      "observedBackendRequestsLowerBound": 0,
+      "coverageComplete": false,
+      "accepted": false,
+      "reason": "Same parent resumed from private store; existing fenced target rejected before provider work. No acceptance."
+    },
+    {
+      "id": "automatic_verified_archive_reuse_profile",
+      "receipt": "measured-automatic-scoped-2026-10-16T21-10-42-716Z.json",
+      "elapsedMs": 39195,
+      "operationalElapsedMs": 33654,
+      "backendRequests": null,
+      "observedBackendRequestsLowerBound": 70,
+      "coverageComplete": false,
+      "accepted": false,
+      "reason": "Verified archive A surfaced as duplicate with its bytes/hash and asset link. Current result omits prior terminal B; startup coverage incomplete. No acceptance."
+    },
+    {
+      "id": "agentic_multi_artifact_clean",
+      "receipt": "agentic-benchmark-2026-10-16T21-14-25-052Z/receipt.json",
+      "elapsedMs": 49510,
+      "backendRequests": 68,
+      "coverageComplete": true,
+      "complete": true,
+      "accepted": false,
+      "actions": [
+        {
+          "index": 0,
+          "at": "2026-10-16T21:14:36.585Z",
+          "command": "navigate",
+          "elapsedMs": 364,
+          "requestCountBefore": 0,
+          "requestCountAfter": 0
+        },
+        {
+          "index": 1,
+          "at": "2026-10-16T21:14:47.735Z",
+          "command": "snapshot",
+          "elapsedMs": 55,
+          "requestCountBefore": 62,
+          "requestCountAfter": 62
+        },
+        {
+          "index": 2,
+          "at": "2026-10-16T21:14:47.791Z",
+          "command": "read",
+          "elapsedMs": 19,
+          "requestCountBefore": 62,
+          "requestCountAfter": 62
+        },
+        {
+          "index": 3,
+          "at": "2026-10-16T21:14:55.233Z",
+          "command": "click",
+          "elapsedMs": 52,
+          "requestCountBefore": 62,
+          "requestCountAfter": 64
+        },
+        {
+          "index": 4,
+          "at": "2026-10-16T21:15:04.202Z",
+          "command": "snapshot",
+          "elapsedMs": 4,
+          "requestCountBefore": 66,
+          "requestCountAfter": 66
+        },
+        {
+          "index": 5,
+          "at": "2026-10-16T21:15:10.149Z",
+          "command": "click",
+          "elapsedMs": 95,
+          "requestCountBefore": 66,
+          "requestCountAfter": 66
+        },
+        {
+          "index": 6,
+          "at": "2026-10-16T21:15:14.501Z",
+          "command": "downloads",
+          "elapsedMs": 4,
+          "requestCountBefore": 68,
+          "requestCountAfter": 68
+        },
+        {
+          "index": 7,
+          "at": "2026-10-16T21:15:14.507Z",
+          "command": "finish",
+          "requestCountBefore": 68
+        }
+      ],
+      "reason": "Four message texts and two fresh successful artifact downloads, A6172 bytes and B21186 bytes. New comparable baseline."
+    },
+    {
+      "id": "deterministic_multi_artifact_route_timeout",
+      "receipt": "agentic-benchmark-2026-10-16T21-18-38-335Z/receipt.json",
+      "elapsedMs": 49650,
+      "backendRequests": 62,
+      "coverageComplete": true,
+      "complete": false,
+      "accepted": false,
+      "actions": [],
+      "reason": "Fresh cache; context timed out at45000ms after provider canonicalized root conversation into project route. No files; failed output parity."
+    },
+    {
+      "id": "deterministic_multi_artifact_canonical_route",
+      "receipt": "agentic-benchmark-2026-10-16T21-32-31-536Z/receipt.json",
+      "elapsedMs": 41859,
+      "backendRequests": 70,
+      "coverageComplete": true,
+      "complete": true,
+      "accepted": true,
+      "acceptanceScope": "direct public materialization service only; automatic workflow still unaccepted",
+      "messages": 4,
+      "savedFiles": 2,
+      "navigations": 1,
+      "nonfatalNetworkErrors": [
+        {
+          "kind": "net::ERR_ABORTED",
+          "count": 1
+        }
+      ],
+      "reason": "Exact trimmed four message texts and both fresh files byte/hash-equal to actual agentic run; both cost ratios pass."
     }
   ],
   "comparison": {
@@ -561,5 +699,52 @@
     "scope": "Exact canonical catalog-item locator plus provider/runtime/tenant/kind; each matching catalog item counts once.",
     "nativeChildCreated": true,
     "nativeChildReceipt": "measured-automatic-scoped-2026-10-16T20-44-33-068Z.json"
+  },
+  "profilingAndObserverRepair": {
+    "receipt": "profiled-v2-analysis-20261016.json",
+    "cdpCommands": 32,
+    "summedAdmissionWaitMs": 9847,
+    "summedWireMs": 3650,
+    "sumIsNotExclusiveWallTime": true,
+    "observerStatusPollIntervalMs": 15000,
+    "observerGetErrorsRepollSameHandle": true,
+    "heartbeatOnlyRevisionDoesNotChangeCustody": true,
+    "temporaryTimingInstrumentationRestored": true,
+    "restorationReceipt": "cdp-phase-profile-restored-20261016.json",
+    "abortedTargetRetirementReceipt": "aborted-profile-target-retirement-20261016.json",
+    "proofscopeResumePreflight404": "No persisted completion loaded in proofscope; no provider or control mutation."
+  },
+  "multiArtifactComparison": {
+    "agenticRun": "agentic_multi_artifact_clean",
+    "maximumElapsedMs": 64363,
+    "maximumIntegerBackendRequests": 88,
+    "deterministicAccepted": true,
+    "artifactA": {
+      "bytes": 6172,
+      "sha256": "465fe0e181aaea03f524abb3a076e05bd2843bc85be62a171399454e6e210ebc"
+    },
+    "artifactB": {
+      "bytes": 21186,
+      "sha256": "42530045a480aed4c7a2391fc09779754434422980ad0f74cb24a7f30b3b76f6"
+    },
+    "deterministicRun": "deterministic_multi_artifact_canonical_route",
+    "elapsedTimeRatio": 0.8454655625126237,
+    "backendRequestRatio": 1.0294117647058822,
+    "messagesEqualIgnoringEdgeWhitespace": true,
+    "artifactBytesAndHashesEqual": true,
+    "verificationReceipt": "multi-artifact-parity-20261016.json",
+    "automaticAcceptance": false
+  },
+  "validationThisSlice": {
+    "selectedTests": 403,
+    "files": 6,
+    "typecheck": "passed",
+    "compiledTypescript": "passed",
+    "scopedBiome": "passed",
+    "retainedFailures": [
+      "Initial valid archive-reuse test exceeded5000ms under concurrent build; isolated rerun passed.",
+      "Initial route suite had three stale call-sequence fixtures; converted relevant payload mocks to expression matching.",
+      "Project-route fixture left fake timers enabled; full-suite late-rate-limit timed out twice, isolated test passed. Finally cleanup now restores timers; final321+82tests pass."
+    ]
   }
 }

@@ -4373,6 +4373,13 @@ function buildProjectDeleteConfirmationExpression(): string {
 
 function buildChatgptUrlRouteExpression(url: string): string {
 	const expected = new URL(url);
+	const conversationId = extractChatgptConversationIdFromUrl(url);
+	if (conversationId) {
+		return `(() => {
+      if (location.origin !== ${JSON.stringify(expected.origin)}) return null;
+      return (${buildConversationRouteExpression(conversationId, extractChatgptProjectIdFromUrl(url))});
+    })()`;
+	}
 	return `(() => {
 		const expectedOrigin = ${JSON.stringify(expected.origin)};
 		const expectedPathname = ${JSON.stringify(expected.pathname)};
@@ -9151,9 +9158,16 @@ async function ensureChatgptConversationSurfaceReadyForRead(
 			`ChatGPT active conversation content not found for ${conversationId}; refusing to navigate the active tab.`,
 		);
 	}
-	if (options?.accountMirrorSingleConversationVisit) {
-		// Project slugs may differ from the canonical URL after the governed visit.
-		// Reuse only a ready surface whose conversation and project both match.
+	recordBrowserScrapeCdpCall(options, "Runtime.evaluate");
+	const currentUrl = await readChatgptLocationHref(client.Runtime);
+	if (
+		isChatgptTargetReusableForPreferredUrl(
+			currentUrl,
+			resolveChatgptConversationUrl(conversationId, projectId),
+		)
+	) {
+		// The provider may canonicalize a root conversation into its project route.
+		// Reuse only the requested conversation and any explicitly requested project.
 		recordBrowserScrapeCdpCall(options, "Runtime.evaluate");
 		const ready = await withChatgptTimeout(
 			client.Runtime.evaluate({

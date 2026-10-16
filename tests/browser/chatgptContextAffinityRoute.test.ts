@@ -30,6 +30,7 @@ test.each([
 	"cold-startup",
 	"cold-denied",
 	"denied-payload",
+	"project-context-redirect",
 	"next",
 	"preserved",
 	"exact-preserved",
@@ -57,7 +58,7 @@ test.each([
 		services: {
 			chatgpt: {
 				identity: { email: "operator@example.test" },
-				...(scenario === "denied-payload"
+				...(scenario === "denied-payload" || scenario === "project-context-redirect"
 					? { liveFollow: { maxBrowserInteractionsPerMinute: 6, renavigationCooldownMs: 120000 } }
 					: {}),
 			},
@@ -176,6 +177,19 @@ test.each([
 							],
 						},
 					});
+				else if (
+					scenario === "project-context-redirect" &&
+					(expression.includes("const expectedOrigin") ||
+						expression.includes("const rawConversationId"))
+				)
+					value = runInNewContext(expression, {
+						location: new URL(pages.get(target) ?? "about:blank"),
+						document: {
+							title: "Fixture",
+							querySelector: (selector: string) =>
+								selector.includes("data-content-search-unit-key") ? {} : null,
+						},
+					});
 				else if (expression.includes("const rawConversationId")) value = true;
 				else if (expression.includes("document.readyState")) value = true;
 				else if (expression.includes("/backend-api/conversation/")) {
@@ -223,7 +237,12 @@ test.each([
 					mutations.some((record) => record.phase === "start" && record.kind === "navigate"),
 				).toBe(true);
 				navigated.push(url);
-				pages.set(target, url);
+				pages.set(
+					target,
+					scenario === "project-context-redirect"
+						? "https://chatgpt.com/g/g-p-11111111111111111111111111111111-fixture/c/fixture-conversation"
+						: url,
+				);
 				return {};
 			},
 		},
@@ -285,7 +304,7 @@ test.each([
 			expect(opened).toHaveLength(1);
 			return;
 		}
-		if (scenario === "denied-payload") {
+		if (scenario === "denied-payload" || scenario === "project-context-redirect") {
 			vi.useFakeTimers();
 			let settled = false;
 			const pending = service
@@ -454,7 +473,7 @@ test.each([
 		}
 		expect(pages.size).toBe(1);
 	} finally {
-		if (scenario === "denied-payload") {
+		if (scenario === "denied-payload" || scenario === "project-context-redirect") {
 			controller.abort(new Error("fixture finished"));
 			await vi.advanceTimersByTimeAsync(200000);
 			vi.useRealTimers();

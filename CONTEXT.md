@@ -64,6 +64,12 @@ A download action outside the conversation-turn cards, used after a selected art
 **Artifact cache reuse**:
 A local conversation attachment matching a currently discovered artifact ID, filename and URI. Readability, size and any retained checksum are checked before reuse. New transfer budget excludes reused artifacts; explicit force bypasses reuse. Context refresh alone does not force transfer. A requested fresh context read must succeed before artifact materialization; provider failure cannot silently authorize cached download controls. Explicit refresh=false can use cached context.
 
+**Scoped reconciliation reuse**:
+For an explicit conversation batch, a current asset-family match may reuse a same-account archive file only after regular-file, stable-size/mtime and checksum verification. The result includes a duplicate entry, actual bytes/hash and existing archive/asset links. Reuse does not count as a new transfer; force bypasses it. Missing or corrupt files remain eligible for recovery.
+
+**Conversation route identity**:
+A root ChatGPT conversation URL may canonicalize into its project URL. Navigation settling and ready-surface reuse follow the exact conversation identity and origin; an explicitly requested project must also match.
+
 **Recovery archive evidence**:
 Historical archive availability reduces current missing-asset counts only when its canonical catalog-item locator, provider, AuraCall runtime profile, tenant and asset kind match a current catalog row. Repeated archive copies of the same catalog item count once. Account-wide archive totals do not prove availability of a newly observed asset.
 

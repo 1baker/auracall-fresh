@@ -823,7 +823,10 @@ Terminology note:
   cached artifact/file history; ordinary reconciliation excludes the terminal
   conversation before provider work or `maxItems` budget is spent.
   In tab-affinity mode, a standalone context read acquires the requested
-  conversation route directly and reuses its owned process tab for later reads.
+  conversation route directly and reuses its owned process tab for later reads. ChatGPT may
+  canonicalize a root conversation into its project URL; settling and reuse accept
+  that same conversation, while preserving any explicitly requested project and
+  the expected origin.
   Explicit navigation restrictions and caller-owned exact targets remain
   authoritative.
   When an initial ChatGPT payload fallback leaves readable conversation DOM,
@@ -995,6 +998,11 @@ Terminology note:
   browser-backed provider work for explicit proofs; MCP parity is
   `history_materialization_create`, `history_materialization_job`,
   `history_materialization_jobs`, and `history_materialization_cancel`.
+  For an explicit `conversationIds` reconciliation batch, verified same-account
+  archive files matching current asset families are returned as duplicate entries
+  with their bytes, SHA-256 and existing archive/asset links. Missing or corrupt
+  files stay eligible for recovery; force bypasses reuse. Reused files do not
+  consume new-transfer counts.
   Before an exact non-forced catalog-item request enters provider work, AuraCall
   compares that selected asset family with readable archive rows and terminal
   history-materialization entries. A match settles as skipped; `--force`

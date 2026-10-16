@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -38,6 +39,161 @@ import {
 describe("history materialization service", () => {
 	afterEach(() => {
 		setAuracallHomeDirOverrideForTest(null);
+	});
+
+	it.each([
+		"valid",
+		"missing",
+		"tampered",
+		"foreign",
+		"force",
+	])("accounts for verified archive reuse in scoped reconciliation (%s)", async (mode) => {
+		const home = await fs.mkdtemp(path.join(os.tmpdir(), "auracall-reuse-result-"));
+		setAuracallHomeDirOverrideForTest(home);
+		const localPath = path.join(home, "cached.txt");
+		const bytes = "verified cached artifact";
+		if (mode !== "missing") await fs.writeFile(localPath, bytes);
+		const checksum = createHash("sha256").update(bytes).digest("hex");
+		const artifactId = "message-1:download:sandbox:/mnt/data/cached.txt";
+		const archive = buildArchiveItem({
+			id: "archive-cached",
+			source: "account_mirror",
+			provider: "chatgpt",
+			runtimeProfile: "default",
+			boundIdentityKey: "user@example.com",
+			providerConversationId: mode === "foreign" ? "another-conversation" : "conv-reuse",
+			artifactId,
+			title: "cached.txt",
+			fileName: "cached.txt",
+			localPath,
+			checksumSha256: mode === "tampered" ? "0".repeat(64) : checksum,
+			fileAvailable: true,
+			metadata: { artifactKind: "download" },
+			links: { asset: "/v1/archive/items/archive-cached/asset" },
+		});
+		const base = buildReconciliationCatalog(["conv-reuse"]);
+		const catalog = {
+			...base,
+			entries: base.entries.map((entry) => ({
+				...entry,
+				manifests: {
+					...entry.manifests,
+					artifacts: [
+						{
+							id: artifactId,
+							title: "cached.txt",
+							kind: "download" as const,
+							uri: "sandbox:/mnt/data/cached.txt",
+							metadata: { conversationId: "conv-reuse" },
+						},
+						{
+							id: "message-1:download:sandbox:/mnt/data/unavailable.txt",
+							title: "unavailable.txt",
+							kind: "download" as const,
+							uri: "sandbox:/mnt/data/unavailable.txt",
+							metadata: { conversationId: "conv-reuse" },
+						},
+					],
+				},
+			})),
+		};
+		let scheduled: (() => Promise<void>) | undefined;
+		const materializeConversation = vi.fn(
+			async (
+				target: HistoryMaterializationTarget,
+				_request: HistoryMaterializationCreateRequest,
+				_jobId: string,
+				_context?: HistoryMaterializationProviderWorkContext,
+			): Promise<HistoryMaterializationResult> => ({
+				...buildNoMaterializableHistoryResult(target),
+				status: "failed",
+				entries: [
+					{
+						kind: "artifact",
+						providerId: "unavailable",
+						title: "unavailable.txt",
+						status: "failed",
+						localPath: null,
+						remoteUrl: null,
+						cacheKey: null,
+						checksumSha256: null,
+						mimeType: null,
+						size: null,
+						materializationMethod: null,
+						reason: "selected download HTTP 404",
+						failureKind: "provider_unavailable",
+						retryable: false,
+						assetAvailability: "unavailable",
+						archiveItemId: null,
+						assetRoute: null,
+					},
+				],
+				metrics: { conversations: 1, materialized: 0, skipped: 0, failed: 1 },
+			}),
+		);
+		const service = createHistoryMaterializationService({
+			config: {},
+			store: createInMemoryHistoryMaterializationJobStore([]),
+			catalogService: { readCatalog: vi.fn(async () => catalog), readItem: vi.fn() },
+			runArchiveService: {
+				listItems: vi.fn(async () => ({ items: [archive] })),
+			} as unknown as RunArchiveService,
+			materializeConversation,
+			generateId: () => `hmj_reuse_${mode}`,
+			schedule: (work) => {
+				scheduled = work;
+			},
+		});
+		try {
+			await service.createJob({
+				provider: "chatgpt",
+				runtimeProfile: "default",
+				boundIdentityKey: "user@example.com",
+				conversationIds: ["conv-reuse"],
+				reconcile: true,
+				refreshSnapshot: false,
+				assetKinds: ["artifacts"],
+				maxItems: 2,
+				force: mode === "force",
+			});
+			if (!scheduled) throw Error("Expected scoped job");
+			await scheduled();
+			const job = await service.readJob(`hmj_reuse_${mode}`);
+			const signatures =
+				materializeConversation.mock.calls[0]?.[3]?.excludedAssetFamilySignatures ?? [];
+			if (mode === "valid") {
+				expect(signatures).toContain("artifact:download:cached.txt");
+				expect(job?.result?.metrics).toMatchObject({
+					duplicateAliases: 1,
+					materialized: 0,
+					conversations: 1,
+					failed: 1,
+				});
+				expect(job?.result?.entries).toEqual(
+					expect.arrayContaining([
+						expect.objectContaining({
+							status: "duplicate",
+							archiveItemId: archive.id,
+							localPath,
+							checksumSha256: checksum,
+							size: Buffer.byteLength(bytes),
+							assetAvailability: "available",
+						}),
+						expect.objectContaining({ failureKind: "provider_unavailable" }),
+					]),
+				);
+				expect(job?.result?.archiveItems).toContainEqual(
+					expect.objectContaining({ id: archive.id }),
+				);
+			} else {
+				expect(signatures).not.toContain("artifact:download:cached.txt");
+				expect(job?.result?.entries?.some((entry) => entry.archiveItemId === archive.id)).toBe(
+					false,
+				);
+			}
+		} finally {
+			await fs.rm(home, { recursive: true, force: true });
+		}
 	});
 
 	it("derives one utility affinity identity for a durable job", () => {
