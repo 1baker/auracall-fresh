@@ -5528,15 +5528,20 @@ async function readScopedArchiveReuse(input: {
 	targets: Map<string, HistoryMaterializationTarget>;
 	families: Map<string, string[]>;
 }): Promise<ScopedArchiveReuse[]> {
-	const archive = await input.runArchiveService.listItems({
+	if (!input.runArchiveService.listItemsBatchAvailability) return [];
+	const requests = Array.from(input.targets.keys(), (providerConversationId) => ({
 		provider: input.request.provider ?? null,
 		runtimeProfile: input.request.runtimeProfile ?? null,
-		assetAvailability: "available",
+		providerConversationId,
+		assetAvailability: "available" as const,
 		limit: 500,
-	});
+	}));
+	// Preserve retained checksums until the selected file is independently verified.
+	// Full archive refresh would rehash unrelated files and replace the comparison hash.
+	const archive = await input.runArchiveService.listItemsBatchAvailability(requests);
 	const reused: ScopedArchiveReuse[] = [];
 	const seen = new Set<string>();
-	for (const item of archive.items) {
+	for (const item of archive.flatMap((result) => result.items)) {
 		const conversationId = item.providerConversationId;
 		const target = conversationId ? input.targets.get(conversationId) : null;
 		if (

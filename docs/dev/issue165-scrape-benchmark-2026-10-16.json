@@ -658,6 +658,17 @@
       "coverageComplete": true,
       "accepted": false,
       "reason": "Complete compiled worktree with blank crawler acquisition and prior attempt identity attribution. All6texts and A bytes/hash plus prior terminal B explicitly match agentic outcomes. Full page startup capture66requests. Time97851ms exceeds ceiling; no automatic acceptance."
+    },
+    {
+      "id": "automatic_latency_profile_native_receipt_block",
+      "receipt": "measured-automatic-scoped-2026-10-16T22-10-08-495Z.json",
+      "elapsedMs": 14303,
+      "operationalElapsedMs": 1791,
+      "backendRequests": null,
+      "observedBackendRequestsLowerBound": 0,
+      "coverageComplete": false,
+      "accepted": false,
+      "reason": "Native runtime rejected a running browser without a matching verified desktop receipt before target creation/provider access. No timing conclusion for scrape latency."
     }
   ],
   "comparison": {
@@ -858,5 +869,61 @@
     "differentMatchingProfileBrowserStartedAt": "2026-10-16T22:02:35.440000+00:00",
     "differentBrowserPreserved": true,
     "noBlanketBrowserPidSignals": true
+  },
+  "localArchiveOptimization": {
+    "retainedChecksumLaunderingRed": "archive-validation-20261016/issue165-real-archive-red.log",
+    "scopedFilesystemReadRed": "archive-validation-20261016/issue165-scoped-archive-red.log",
+    "syntheticReadCostReceipt": "local-archive-read-cost-20261016.json",
+    "syntheticCorpusFiles": 65,
+    "before": {
+      "fileReads": 66,
+      "bytesRead": 16804994,
+      "elapsedMs": 72
+    },
+    "after": {
+      "fileReads": 1,
+      "bytesRead": 13889,
+      "elapsedMs": 1
+    },
+    "selectedHashEqual": true,
+    "providerRequests": 0,
+    "syntheticFixtureRemoved": true,
+    "actualSelectedReadReceipt": "selected-archive-read-20261016.json",
+    "actualSelectedReadMs": 1046,
+    "actualReturnedFiles": 1,
+    "actualSelectedChecksumMatches": true,
+    "endToEndAccepted": false,
+    "semantics": "Filter selected provider conversations before metadata refresh; availability-only read preserves retained checksum; independently verify selected files; absent non-refreshing read leaves asset eligible for recovery."
+  },
+  "latencyProfileAttempt": {
+    "receipt": "measured-automatic-scoped-2026-10-16T22-10-08-495Z.json",
+    "completeScrapeProfile": false,
+    "cdpCommands": 0,
+    "archiveAvailabilityCallMs": 2915,
+    "historyFileReads": 3,
+    "historyBytesRead": 114276579,
+    "historyReadElapsedMsSum": 7265,
+    "otherRuntimeReadElapsedMsSum": 101395,
+    "sumsOverlapAndAreNotExclusiveWallTime": true,
+    "instrumentationRestorationReceipt": "source-cdp-profile-restored-20261016.json",
+    "runtimeReadinessReceipt": "profile-readiness-20261016.json",
+    "readinessAt": "2026-10-16T22:27:17.556Z",
+    "runningBrowserPid": 12187,
+    "verifiedCurrentNativeReceipt": false,
+    "browserLeftUntouched": true,
+    "ownerClarificationPending": true
+  },
+  "archiveOptimizationValidation": {
+    "receipt": "archive-validation-20261016/receipt.json",
+    "passed": 213,
+    "files": 4,
+    "testDeadlineMs": 15000,
+    "default5000msFailuresRetained": true,
+    "typecheck": "passed explicit exit0",
+    "compiledTypescript": "passed explicit exit0",
+    "lint": "passed",
+    "originalAutomaticTimeCeilingUnchangedMs": 63091.6,
+    "latestCompleteAutomaticTimeMs": 97851,
+    "fullGoalAccepted": false
   }
 }

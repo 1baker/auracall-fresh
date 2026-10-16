@@ -28,6 +28,30 @@ describe('run archive service', () => {
     setAuracallHomeDirOverrideForTest(null);
   });
 
+  test('limits availability refresh to the requested provider conversation', async () => {
+    const home = await mkdtemp(path.join(os.tmpdir(), 'auracall-scoped-archive-'));
+    setAuracallHomeDirOverrideForTest(home);
+    const selected = path.join(home, 'selected.txt');
+    const unrelated = path.join(home, 'unrelated.txt');
+    await writeFile(selected, 'selected');
+    await writeFile(unrelated, 'unrelated');
+    const items = [
+      createArchiveItemFixture({ id: 'selected', provider: 'chatgpt', runtimeProfile: 'default', providerConversationId: 'conversation-selected', localPath: selected, fileAvailable: true }),
+      createArchiveItemFixture({ id: 'unrelated', provider: 'chatgpt', runtimeProfile: 'default', providerConversationId: 'conversation-unrelated', localPath: unrelated, fileAvailable: true }),
+    ];
+    const stat = vi.spyOn(fs, 'stat');
+    const indexStore = {
+      readIndex: async () => ({ object: 'run_archive_index', version: 1, updatedAt: new Date().toISOString(), itemCount: items.length, items }),
+      upsertItems: vi.fn(async () => ({ items })),
+    } as unknown as RunArchiveIndexStore;
+    try {
+      const service = createRunArchiveService({ indexStore });
+      const result = await service.listItemsBatchAvailability?.([{ provider: 'chatgpt', runtimeProfile: 'default', providerConversationId: 'conversation-selected', assetAvailability: 'available' }]);
+      expect(result?.[0]?.items.map(item => item.id)).toEqual(['selected']);
+      expect(stat.mock.calls.some(([file]) => String(file) === unrelated)).toBe(false);
+    } finally { await fs.rm(home, { recursive: true, force: true }); }
+  });
+
   test('keeps archive reads available when one indexed local asset is on an unavailable device', async () => {
     const unavailablePath = '/mnt/unavailable/archive-source.docx';
     const deviceError = Object.assign(new Error('device unavailable'), { code: 'ENODEV' });

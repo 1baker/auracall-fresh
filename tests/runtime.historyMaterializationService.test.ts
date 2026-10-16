@@ -12,7 +12,11 @@ import { createCacheStore } from "../src/browser/llmService/cache/store.js";
 import { ChatgptService } from "../src/browser/llmService/providers/chatgptService.js";
 import type { ProviderCacheContext } from "../src/browser/providers/cache.js";
 import type { ProviderSessionProof } from "../src/browser/providers/providerSessionAuthority.js";
-import type { RunArchiveItem, RunArchiveService } from "../src/runtime/archiveService.js";
+import {
+	createRunArchiveService,
+	type RunArchiveItem,
+	type RunArchiveService,
+} from "../src/runtime/archiveService.js";
 import {
 	classifyHistoryMaterializationEntryRecoverability,
 	createHistoryMaterializationService,
@@ -43,6 +47,9 @@ describe("history materialization service", () => {
 
 	it.each([
 		"valid",
+		"real-valid",
+		"real-tampered",
+		"legacy",
 		"missing",
 		"tampered",
 		"foreign",
@@ -66,7 +73,7 @@ describe("history materialization service", () => {
 			title: "cached.txt",
 			fileName: "cached.txt",
 			localPath,
-			checksumSha256: mode === "tampered" ? "0".repeat(64) : checksum,
+			checksumSha256: mode.endsWith("tampered") ? "0".repeat(64) : checksum,
 			fileAvailable: true,
 			metadata: { artifactKind: "download" },
 			links: { asset: "/v1/archive/items/archive-cached/asset" },
@@ -135,9 +142,26 @@ describe("history materialization service", () => {
 			config: {},
 			store: createInMemoryHistoryMaterializationJobStore([]),
 			catalogService: { readCatalog: vi.fn(async () => catalog), readItem: vi.fn() },
-			runArchiveService: {
-				listItems: vi.fn(async () => ({ items: [archive] })),
-			} as unknown as RunArchiveService,
+			runArchiveService: mode.startsWith("real-")
+				? createRunArchiveService({
+						indexStore: {
+							readIndex: async () => ({
+								object: "run_archive_index",
+								version: 1,
+								updatedAt: new Date().toISOString(),
+								itemCount: 1,
+								items: [archive],
+							}),
+							upsertItems: vi.fn(async () => ({ items: [archive] })),
+						} as never,
+					})
+				: ({
+						listItems: vi.fn(async () => ({ items: [archive] })),
+						listItemsBatchAvailability:
+							mode === "legacy"
+								? undefined
+								: vi.fn(async (requests: unknown[]) => requests.map(() => ({ items: [archive] }))),
+					} as unknown as RunArchiveService),
 			materializeConversation,
 			generateId: () => `hmj_reuse_${mode}`,
 			schedule: (work) => {
@@ -161,7 +185,7 @@ describe("history materialization service", () => {
 			const job = await service.readJob(`hmj_reuse_${mode}`);
 			const signatures =
 				materializeConversation.mock.calls[0]?.[3]?.excludedAssetFamilySignatures ?? [];
-			if (mode === "valid") {
+			if (mode === "valid" || mode === "real-valid") {
 				expect(signatures).toContain("artifact:download:cached.txt");
 				expect(job?.result?.metrics).toMatchObject({
 					duplicateAliases: 1,

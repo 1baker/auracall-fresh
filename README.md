@@ -1005,7 +1005,9 @@ Terminology note:
   For an explicit `conversationIds` reconciliation batch, verified same-account
   archive files matching current asset families are returned as duplicate entries
   with their bytes, SHA-256 and existing archive/asset links. Missing or corrupt
-  files stay eligible for recovery; force bypasses reuse. Reused files do not
+  files stay eligible for recovery; force bypasses reuse. Scoped archive reads
+  filter by conversation before inspecting files and preserve recorded checksums
+  for independent verification. Reused files do not
   consume new-transfer counts.
   The same batch also returns attributable prior terminal-unavailability evidence
   as skipped entries, retaining the provider failure reason and `priorEvidenceJobId`.

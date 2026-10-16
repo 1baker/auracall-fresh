@@ -1,5 +1,48 @@
 # Plan 0411 — live-follow/materialization resolution
 
+## 2026-10-16 | Issue165 scoped archive reads retain verification hashes
+
+A real archive-service/public-job regression proved the mocked checksum case was
+insufficient: full archive refresh recomputed the selected file checksum before
+reuse compared it, allowing a changed file to pass. Scoped reuse now requires an
+availability-only read that retains checksum evidence, then independently hashes
+the selected file. A legacy adapter without that read leaves assets eligible for
+recovery. Real valid/tampered and missing/foreign/force/legacy cases pass.
+
+The archive list request now supports an internal providerConversationId filter
+before metadata refresh. Reconciliation batches only the selected conversations.
+The real service regression went red by returning and inspecting an unrelated
+conversation, then passed with no unrelated filesystem inspection. Default reads
+without the optional filter retain their behavior; no new HTTP/CLI alias was added.
+
+A synthetic65file local read benchmark used16804994bytes/66reads/72ms before versus
+13889bytes/1read/1ms after, with the same selected hash and no provider requests.
+The fixture was removed. The actual selected-conversation archive read and file
+verification took1046ms and returned the expected13889byte/hash A. These are local
+cost observations, not end-to-end acceptance. Last complete automatic proof is
+still97851ms/66requests, above its63091.6ms ceiling; full goal remains ACTIVE.
+
+The attempted timing probe failed before provider access on the native desktop
+receipt guard. Its14303ms setup/1791ms operational result observed no requests and
+has incomplete coverage. Its useful local trace records3history reads totaling
+114276579bytes and a2915ms archive-availability call; overlapping sums are not
+exclusive wall time. Temporary compiled CDP timing instrumentation was restored.
+Read-only revalidation at22:27:17 found browser12187 without a verified matching
+receipt. Browser27467 from the earlier census had exited; no origin was inferred.
+Both processes are separate from the retired benchmark controller. No browser was
+closed, adopted or re-registered by this slice. Owner clarification is pending;
+no further provider attempt is justified until runtime ownership is verified.
+
+213affected tests/4files pass with a15000ms runner deadline; typecheck and compiled
+TypeScript have explicit exit0. Legacy-style archive files pass lint, and previously
+formatted files pass Biome checks. Two default5000ms filesystem-fixture timeouts
+are retained, including an852ms isolated pass. Product1.3performance limits are
+unchanged. See issue165-scrape-benchmark-2026-10-16.json and its private validation,
+read-cost, guard-failure and restoration receipts. Next resume full provider/CDP/
+governor profiling and fresh multi-file automatic comparison after verified native
+runtime readiness; local read savings do not close issue165.
+
+
 ## 2026-10-16 | Issue165 full startup capture and prior artifact outcomes
 
 Automatic completion now returns attributable prior terminal-unavailability entries
