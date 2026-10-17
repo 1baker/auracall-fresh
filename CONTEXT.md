@@ -32,6 +32,24 @@ _Avoid_: Browser config, launch profile
 One requested model interaction routed through a provider binding, including its target, attachments, completion posture, and progress evidence.
 _Avoid_: Browser prompt, request
 
+**Browser operation**:
+One authorized browser action or read. A single operation may cause several
+provider backend requests; its budget is distinct from their budget. Command-response deadlines start after required desktop admission; total workflow elapsed time still includes coordination and remains subject to caller cancellation.
+
+**Provider backend request permit**:
+An account-wide admission reservation for one uniquely identified backend request
+from an owned provider client. Repeated observations of the same request do not
+create another permit. A permit is not proof of a completed provider response.
+Admission snapshots distinguish ready request flow, known budget exhaustion,
+unqualified failures and provider warnings. Collection may yield for known budget
+exhaustion; uncertainty or a provider warning requires a hard stop.
+
+A configured authority factory reports `backendRequestAdmissionEnabled` when its
+new authorities admit backend requests. This is cleanup capability metadata, not
+lease authority. Cancellation callers resolve options before reading and respect
+an explicit governor ahead of factory metadata; they never borrow a governor or
+acquire a target lease merely to inspect this capability.
+
 **Materialization attempt**:
 One bounded effort to turn a selected provider asset into a verified local artifact and durable receipt.
 _Avoid_: Download attempt, materialization run
@@ -45,6 +63,18 @@ A download action outside the conversation-turn cards, used after a selected art
 
 **Artifact cache reuse**:
 A local conversation attachment matching a currently discovered artifact ID, filename and URI. Readability, size and any retained checksum are checked before reuse. New transfer budget excludes reused artifacts; explicit force bypasses reuse. Context refresh alone does not force transfer. A requested fresh context read must succeed before artifact materialization; provider failure cannot silently authorize cached download controls. Explicit refresh=false can use cached context.
+
+**Scoped reconciliation reuse**:
+For an explicit conversation batch, archive availability is filtered to those provider conversations before file inspection and retains the recorded checksum. Full checksum refresh cannot authorize reuse; if retained evidence cannot be read independently, the asset stays eligible for recovery. A current asset-family match may reuse a same-account archive file only after regular-file, stable-size/mtime and checksum verification. The result includes a duplicate entry, actual bytes/hash and existing archive/asset links. Reuse does not count as a new transfer; force bypasses it. Missing or corrupt files remain eligible for recovery. Explicit non-retryable provider-unavailability evidence from a settled same-account, single-conversation job is returned as a skipped entry with its original reason and priorEvidenceJobId when its current asset family matches. Ambiguous batches do not qualify; force bypasses the projection.
+
+**Unloaded crawler target**:
+A newly created blank crawler target, or a process-owned retained blank explicitly verified during acquisition with known effects. Only that acquisition can authorize the collector's initial governed navigation. Blank target creation uses generic acquisition pacing; provider page navigation keeps its renavigation cooldown. Other retained pages keep preservation semantics.
+
+**Conversation route identity**:
+A root ChatGPT conversation URL may canonicalize into its project URL. Navigation settling and ready-surface reuse follow the exact conversation identity and origin; an explicitly requested project must also match.
+
+**Recovery archive evidence**:
+Historical archive availability reduces current missing-asset counts only when its canonical catalog-item locator, provider, AuraCall runtime profile, tenant and asset kind match a current catalog row. Repeated archive copies of the same catalog item count once. Account-wide archive totals do not prove availability of a newly observed asset.
 
 **Provider session custody**:
 A retained browser session must have a reachable caller owner. A proof-only read closes a session created on its private options; it preserves a session supplied by the caller. Deadline-scoped conversation reads and explicit-target utility wrappers return retained-session custody to their session-enabled caller.

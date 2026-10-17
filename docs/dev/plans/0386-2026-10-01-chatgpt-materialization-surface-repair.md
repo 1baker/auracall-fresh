@@ -1,5 +1,15 @@
 # ChatGPT Materialization Surface Repair | 0386-2026-10-01
 
+## 2026-10-17 | Installed existing-state follow acceptance
+
+Bounded installed automatic pass verifies6texts, existing A bytes/hash and explicit
+typed unavailable B;46995ms/68requests passes frozen48532ms/72baseline. No fresh
+transfer was needed or proven. Main API reloaded with scheduler/all17subscriptions
+paused. Gate C canonical integration and Gate D fresh installed positive-transfer
+evidence remain open. See
+[installed acceptance](../notes/2026-10-17-installed-follow-acceptance.md).
+
+
 State: OPEN
 Lane: P85
 Source base: `origin/main` at `6a07668e481ef6cb46f816a8e8a2dcca63f25337`

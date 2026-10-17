@@ -1,3 +1,111 @@
+- Matched artifact download failures (provider-free):
+  `pnpm vitest run tests/browser/chatgptMaterializationReplay.test.ts tests/runtime.historyMaterializationService.test.ts`.
+  Click-correlated HTTP404/410 becomes nonretryable provider_unavailable through
+  artifact manifest and history projection. Neighbour-file/conversation failures
+  do not settle the selected download; listeners are released. The measured live
+  comparison is recorded in `docs/dev/issue165-scrape-benchmark-2026-10-16.json`.
+
+- Factory-only context cancellation (provider-free):
+  `pnpm vitest run tests/browser/backendRequestAdmission.test.ts tests/browser/llmServiceContext.test.ts -t factory-only`.
+  Resolved factory capability selects bounded cleanup without exposing a governor
+  or taking another lease. Covers failed close, parent abort, late handback and
+  inner abort/deadline cached-success exclusion. Metadata collector tests retain
+  disabled/no-factory/explicit-no-hook deadlines and prohibit provider reads after
+  cancelled option resolution. Separate source fixtures; combined native
+  composition and materialization remain unqualified.
+
+- Late collector session settlement (provider-free):
+  `pnpm vitest run tests/browser/backendRequestAdmission.test.ts -t detail-cancel-late`.
+  Three controlled settlements after actual five-second drain expiry cover late
+  context, failed late close and late rejection with session handback. Explicit
+  provider/close signals prove one close and unchanged original timeout; lease
+  settles only on confirmed close, otherwise remains unknown. Same actual
+  collector/configured authority/guard/stores; synthetic provider/SDK. Native and
+  caller capability propagation remain separate gates.
+
+- Collector cancellation drain (provider-free):
+  `pnpm vitest run tests/browser/backendRequestAdmission.test.ts -t detail-cancel`.
+  Actual collector/configured authority/guard/stores use controlled provider
+  promises and SDK output. Explicit abort/completion signals prove delayed failed
+  close, confirmed close, parent abort and five-second drain expiry. Unknown close
+  retains idle unknown custody; unresolved provider keeps active lease until
+  fixture teardown. Ten-second test limit permits observing the five-second bound.
+  This is collector/callee-contract proof, not full native service acceptance.
+
+- Partial-chunk collection boundary (provider-free):
+  `pnpm vitest run tests/browser/backendRequestAdmission.test.ts -t detail-partial`.
+  Actual collector/configured authority/guard/store composition proves incomplete
+  cursor24 survives JSON serialization and fresh explicit pass, with two distinct
+  request permits. Normal and per-surface attribution close each client before
+  return; failed close and mixed diagnostic/close failure retain unknown custody.
+  Direct inventory-helper intra-operation session reuse remains covered separately.
+  Collector cancellation races and native acceptance remain separate gates.
+
+- Collector retained-session cleanup (provider-free):
+  `pnpm vitest run tests/browser/backendRequestAdmission.test.ts -t detail-retained`.
+  Actual collector/configured authority/guarded client/stores with synthetic rows
+  prove final-chunk close uncertainty stops before later detail work and fences
+  custody. Mixed read/close preserves both causes; factory-only request ownership
+  propagates tagged cleanup failure even without a caller governor field. Partial
+  chunk/pass lifetime and native acceptance remain separate gates.
+
+- Public utility first-navigation request admission (provider-free):
+  `pnpm vitest run tests/browser/backendRequestAdmission.test.ts -t 'public utility bootstrap'`.
+  Actual ChatgptService, utility, adapter, annotation and guarded CDP process
+  synthetic SDK request events from initial Page.navigate and payload evaluation.
+  Covers allowed read, budget, uncertain send, mixed read/close failure, transport
+  close rejection/timeout, warning and retained-session abort (confirmed, failed,
+  timed out), successful retained-session boundary/fresh explicit reuse, retained
+  budget denial and combined read/close failure. Inherited sessions reject before
+  browser resolution. Explicit utility completion precedes custody assertions. Unknown
+  close keeps lease/desktop custody; fixture-only release is not disconnect proof.
+  `tests/browser/llmServiceContext.test.ts` also covers the five-second request-aware
+  abort drain, preserved abort/deadline codes and cached-success exclusion on
+  uncertain cleanup. Other retained/background lifetimes, bootstrap callers and
+  production activation remain unqualified.
+
+- Utility owned request composition (provider-free):
+  `pnpm vitest run tests/browser/backendRequestAdmission.test.ts -t 'utility request admission'`.
+  Real utility/configured stores and owned-CDP annotation share a fixture permit
+  in both caller orders without acquiring another utility lease. Unknown sends,
+  warnings and reconciliation failures retain fencing; lease loss blocks before
+  reserve/send. Omitted ceiling leaves the hook disabled, invalid ceiling fails
+  before browser resolution. Provider/CDP are simulated; activation/native coverage
+  remains a separate gate.
+
+- ChatGPT utility blank bootstrap (provider-free):
+  `pnpm vitest run tests/browser/chatgptContextAffinityRoute.test.ts tests/accountMirror/liveFollowTabCoordinator.test.ts`.
+  Actual service/utility/coordinator/adapter with simulated endpoint/CDP prove
+  blank startup/target requests, active lease and mutation audit before first
+  provider navigation, denial without load and explicit known-blank resumption.
+  Unknown effects and changed routes reject. This does not prove request-hook
+  composition, retained/background coverage or installed native startup behavior.
+
+- Interrupted owned file inventory (provider-free):
+  `pnpm vitest run tests/browser/backendRequestAdmission.test.ts -t 'mode=(files|library)'`.
+  Public collector/owned cleanup prove completed-file retention, incomplete library
+  yield, serialized resume and hard stops for observed/persisted warnings, unknown
+  sends and unsettled actions. The public detail-inventory case `library budget
+  yield preserves` in chatgptMetadataCollector.test.ts protects a prior chunk24 and
+  excludes later reads after denied library admission. Native acceptance is separate.
+
+- Interrupted owned context continuation (provider-free):
+  `pnpm vitest run tests/browser/backendRequestAdmission.test.ts -t 'mode=detail'`.
+  Shared configured account authority and actual owned cleanup exercise artifact
+  retention, serialized conversation/chunk continuation, persisted and observed
+  warning priority, uncertain sends and unsettled physical actions. The chunk
+  variant uses the detail-plan controller's one-read shape. Provider context and
+  CDP remain simulated; project/library and native gates are separate.
+
+- Unfinished owned project continuation (provider-free):
+  `pnpm vitest run tests/browser/backendRequestAdmission.test.ts -t 'unfinished owned project'`.
+  Public collector, configured shared request authority, phase wrapper and owned
+  CDP cleanup retain earlier completed evidence and the interrupted cursor after
+  known pre-send denial. A fresh pass resumes only that project after virtual
+  account time advances; warning, uncertain-send and unsettled-action variants
+  reject. Provider list results and transport are simulated; this does not prove
+  detail/artifact continuation, bootstrap coverage or native materialization.
+
 - Project discovery physical-budget continuation (provider-free):
   `pnpm vitest run tests/accountMirror/chatgptMetadataCollector.test.ts -t 'physical navigation budget'`.
   Public collector and actual governor/traffic plan hold navigation budget1:
@@ -3499,3 +3607,24 @@ The route probe does not replace active-lane/PR/ancestry reconciliation.
 Issue253 process provenance regression: `pnpm vitest run tests/browser/chatgptDeveloperAppLifecycle.test.ts -t "carries managed browser provenance"` exercises actual app/affinity/remote preflight with hermetic transport/storage, including missing legacy PID metadata, unknown process and wrong account. It produces no provider effects.
 
 Developer-app CLI terminal boundary: `pnpm vitest run tests/cli/developerAppTerminalExit.test.ts tests/cli/chatgptDeveloperAppsCommand.test.ts` executes the actual command in isolated child processes and verifies full output/custody before0/1 termination despite retained handles.
+
+
+### Private HTTP history-materialization storage
+
+`ResponsesHttpServerDeps.createHistoryMaterializationService` optionally wraps the
+normal constructor to replace storage while retaining server-provided cleanup,
+guard and foreground-work callbacks. An explicitly injected service takes priority.
+`tests/http.historyMaterializationStoreIsolation.test.ts` exercises real HTTP and
+private/default file stores without provider work; queued work is captured in the
+test. Cold benchmark stores must start empty and retain the production scheduler.
+
+
+### Native login and direct provider qualification
+
+Manual login and browser-tools honor the selected native desktop launcher. Native
+ownership failures propagate without generic-launch fallback. Tests live in
+`tests/browser/manualLoginNative.test.ts`. Direct ChatGPT provider-session proof
+uses read-only utility affinity unless the caller supplied an exact target;
+`tests/browser/chatgptService.test.ts` covers both paths. A local-only doctor
+missing-proof result does not establish sign-out. Verify the live provider proof
+separately from native process/desktop ownership.

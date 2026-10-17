@@ -1,12 +1,11 @@
-import { CHATGPT_RICH_PROMPT_INPUT_SELECTOR } from "../actions/chatgptComposer.js";
 import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
-import CDP from "../cdp.js";
 import {
 	connectToChromeTarget,
 	openOrReuseChromeTarget,
 } from "../../../packages/browser-service/src/chromeLifecycle.js";
+import { withCdpCommandTimeout } from "../../../packages/browser-service/src/guardedCdp.js";
 import type { BrowserInteractionClass } from "../../../packages/browser-service/src/service/interactionGovernor.js";
 import {
 	requireBundledServiceBaseUrl,
@@ -31,6 +30,7 @@ import {
 	uploadAttachmentFile,
 	waitForAttachmentCompletion,
 } from "../actions/attachments.js";
+import { CHATGPT_RICH_PROMPT_INPUT_SELECTOR } from "../actions/chatgptComposer.js";
 import {
 	ensureChatgptComposerMode,
 	resolveChatgptModelSelectionPlan,
@@ -49,18 +49,20 @@ import { ensureModelSelection, shouldApplyChatgptThinkingTime } from "../actions
 import { ensurePromptReady } from "../actions/navigation.js";
 import { submitPrompt } from "../actions/promptComposer.js";
 import { ensureThinkingTime } from "../actions/thinkingTime.js";
-import type { LibraryFileAttachmentReceipt } from "../libraryFiles.js";
+import CDP from "../cdp.js";
 import {
 	extractChatgptRateLimitSummary,
 	isChatgptRateLimitMessage,
 } from "../chatgptRateLimitGuard.js";
 import { captureBrowserPostmortemSnapshot, persistBrowserPostmortemRecord } from "../domDebug.js";
 import { recordDomDriftObservation } from "../domDriftObservations.js";
+import type { LibraryFileAttachmentReceipt } from "../libraryFiles.js";
 import {
 	recordLibraryInventoryCleanupPhase,
 	recordLibraryInventoryStage,
 } from "../libraryInventoryDiagnostics.js";
 import { ChatgptFeatureSchema } from "../llmService/providers/schema.js";
+import { OwnedBackendRequestCleanupError } from "../ownedBackendRequestAuthority.js";
 import {
 	armDownloadCapture,
 	closeDialog,
@@ -3361,6 +3363,34 @@ export async function readChatgptConversationPayloadWithClient(
 		return null;
 	}
 
+	// A failed payload API read does not invalidate messages already rendered on
+	// this exact conversation/project. Leave that surface intact for DOM extraction.
+	recordBrowserScrapeCdpCall(options, "Runtime.evaluate");
+	const rendered = await withChatgptTimeout(
+		client.Runtime.evaluate({
+			expression: `(() => {
+      const renderedRoute = (${buildConversationRouteExpression(conversationId, _projectId)});
+      if (!renderedRoute) return false;
+      return Array.from(document.querySelectorAll(${JSON.stringify(CHATGPT_CONVERSATION_TURN_SECTION_SELECTOR)}))
+        .some((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0 && Boolean(node.textContent?.trim());
+        });
+    })()`,
+			returnByValue: true,
+			timeout: 3_000,
+		}),
+		3_000,
+		"Timed out checking rendered ChatGPT conversation content before payload fallback.",
+	);
+	if (!rendered.exceptionDetails && rendered.result?.value === true) {
+		recordBrowserScrapeProviderAction(
+			options,
+			"chatgpt.skipPayloadRouteFallback.renderedConversation",
+		);
+		return null;
+	}
+
 	const targetUrl = resolveChatgptConversationApiUrl(conversationId);
 	await client.Network.enable().catch(() => undefined);
 	await client.Page.enable().catch(() => undefined);
@@ -4343,6 +4373,13 @@ function buildProjectDeleteConfirmationExpression(): string {
 
 function buildChatgptUrlRouteExpression(url: string): string {
 	const expected = new URL(url);
+	const conversationId = extractChatgptConversationIdFromUrl(url);
+	if (conversationId) {
+		return `(() => {
+      if (location.origin !== ${JSON.stringify(expected.origin)}) return null;
+      return (${buildConversationRouteExpression(conversationId, extractChatgptProjectIdFromUrl(url))});
+    })()`;
+	}
 	return `(() => {
 		const expectedOrigin = ${JSON.stringify(expected.origin)};
 		const expectedPathname = ${JSON.stringify(expected.pathname)};
@@ -4494,12 +4531,7 @@ async function connectToChatgptTab(
 				enableChatgptTargetDomains(client, options.tabTargetId, options),
 				options.abortSignal,
 			);
-			await annotateClientMutationContext(
-				client,
-				options,
-				"provider:chatgpt",
-				options.tabTargetId,
-			);
+			await annotateClientMutationContext(client, options, "provider:chatgpt", options.tabTargetId);
 			setClientSuppressFocus(client, resolveBrowserTabPolicy(options).suppressFocus);
 			await waitForChatgptOperationWithAbort(
 				dismissCreateProjectDialogIfOpen(client.Runtime),
@@ -4639,27 +4671,27 @@ async function connectToChatgptTab(
 		recordBrowserScrapeCdpCall(options, "Target.createTarget");
 		recordBrowserScrapeProviderAction(options, "chatgpt.openTarget");
 		const opened = await openOrReuseChromeTarget(resolvedPort, preferredUrl, {
-					host,
-					reusePolicy:
-						failedTargetId ||
-						forceNewDisposableTab ||
-						!extractChatgptConversationIdFromUrl(preferredUrl)
-							? "new"
-							: "same-origin",
-					compatibleHosts: CHATGPT_COMPATIBLE_HOSTS,
-					matchingTabLimit: tabPolicy.serviceTabLimit,
-					blankTabLimit: tabPolicy.blankTabLimit,
-					collapseDisposableWindows: tabPolicy.collapseDisposableWindows,
-					cleanupExistingTargets: !forceNewDisposableTab,
-					suppressFocus: tabPolicy.suppressFocus,
-					mutationAudit: resolveMutationAudit(options),
-					providerTrafficGovernor: resolveProviderTrafficGovernor(options),
-					providerTrafficAuthorityFactory: options?.providerTrafficAuthorityFactory,
-					providerTrafficRequired:
-						options?.providerTrafficRequired === true ||
-						resolveProviderTrafficGovernor(options) !== undefined,
-					mutationSource: resolveMutationSource(options, "provider:chatgpt", "connect-tab"),
-				});
+			host,
+			reusePolicy:
+				failedTargetId ||
+				forceNewDisposableTab ||
+				!extractChatgptConversationIdFromUrl(preferredUrl)
+					? "new"
+					: "same-origin",
+			compatibleHosts: CHATGPT_COMPATIBLE_HOSTS,
+			matchingTabLimit: tabPolicy.serviceTabLimit,
+			blankTabLimit: tabPolicy.blankTabLimit,
+			collapseDisposableWindows: tabPolicy.collapseDisposableWindows,
+			cleanupExistingTargets: !forceNewDisposableTab,
+			suppressFocus: tabPolicy.suppressFocus,
+			mutationAudit: resolveMutationAudit(options),
+			providerTrafficGovernor: resolveProviderTrafficGovernor(options),
+			providerTrafficAuthorityFactory: options?.providerTrafficAuthorityFactory,
+			providerTrafficRequired:
+				options?.providerTrafficRequired === true ||
+				resolveProviderTrafficGovernor(options) !== undefined,
+			mutationSource: resolveMutationSource(options, "provider:chatgpt", "connect-tab"),
+		});
 		targetInfo = opened.target ?? undefined;
 		shouldClose = !opened.reused;
 		usedExisting = opened.reused;
@@ -4690,11 +4722,7 @@ async function connectToChatgptTab(
 				providerTrafficRequired:
 					options?.providerTrafficRequired === true ||
 					resolveProviderTrafficGovernor(options) !== undefined,
-				mutationSource: resolveMutationSource(
-					options,
-					"provider:chatgpt",
-					"recover-attach-target",
-				),
+				mutationSource: resolveMutationSource(options, "provider:chatgpt", "recover-attach-target"),
 			});
 			const freshTargetId = resolveChatgptTargetId(opened.target);
 			if (freshTargetId) {
@@ -4782,10 +4810,20 @@ async function closeChatgptTabConnection(
 		| Partial<ChatgptScopedTabSessionValue>
 		| undefined;
 	if (options?.useProviderSession && retainedSession?.connection === connection) return "settled";
+	let closeFailure: unknown;
 	const closeStatus = await waitForChatgptCleanup(
-		connection.client.close(),
+		connection.client.close().catch((error: unknown) => {
+			closeFailure = error;
+		}),
 		CHATGPT_CDP_CLOSE_TIMEOUT_MS,
 	);
+	if (resolveProviderTrafficGovernor(connection.client)?.admitBackendRequest) {
+		if (closeStatus === "timed-out")
+			throw new OwnedBackendRequestCleanupError(
+				new Error("Owned backend request client cleanup timed out."),
+			);
+		if (closeFailure) throw closeFailure;
+	}
 	if (!shouldDisposeChatgptTabConnection(connection, options)) {
 		return closeStatus;
 	}
@@ -4815,6 +4853,8 @@ function bindChatgptAbortCleanup(
 				status === "timed-out" ? "abort-cleanup-timed-out" : "abort-cleanup-settled",
 			);
 		});
+		// The abort listener cannot await; the read path still observes the original promise.
+		void cleanupPromise.catch(() => undefined);
 	};
 	const unbind = (() => {
 		if (signal) signal.removeEventListener("abort", closeAbortedConnection);
@@ -4841,10 +4881,25 @@ async function closeAbortedChatgptTabConnection(
 		(connection.borrowedFromSession || retainedConnection === connection)
 	) {
 		options.providerSession = undefined;
-		return waitForChatgptCleanup(
-			Promise.resolve().then(() => providerSession.close()),
+		let closeFailure: unknown;
+		let closeFailed = false;
+		const status = await waitForChatgptCleanup(
+			Promise.resolve()
+				.then(() => providerSession.close())
+				.catch((error: unknown) => {
+					closeFailed = true;
+					closeFailure = error;
+				}),
 			CHATGPT_CDP_CLOSE_TIMEOUT_MS,
 		);
+		if (options.providerTrafficGovernor?.admitBackendRequest) {
+			if (status === "timed-out")
+				throw new OwnedBackendRequestCleanupError(
+					new Error("Owned backend request retained-session cleanup timed out."),
+				);
+			if (closeFailed) throw new OwnedBackendRequestCleanupError(closeFailure);
+		}
+		return status;
 	}
 	return closeChatgptTabConnection(connection, options);
 }
@@ -4857,21 +4912,39 @@ async function runWithChatgptAbortBoundConnection<T>(
 	read: (client: ChromeClient) => Promise<T>,
 ): Promise<T> {
 	const unbindAbortCleanup = bindChatgptAbortCleanup(connection, options);
+	let result: { ok: true; value: T } | { ok: false; error: unknown };
+	let cleanupFailed = false;
+	let cleanupFailure: unknown;
 	try {
 		options?.abortSignal?.throwIfAborted();
-		return await waitForChatgptOperationWithAbort(read(connection.client), options?.abortSignal);
+		result = {
+			ok: true,
+			value: await waitForChatgptOperationWithAbort(read(connection.client), options?.abortSignal),
+		};
 	} catch (error) {
+		result = { ok: false, error };
 		recordLibraryInventoryCleanupPhase(options, "read-rejected");
-		throw error;
 	} finally {
 		const cleanupStarted = unbindAbortCleanup.cleanupStarted();
 		unbindAbortCleanup();
-		if (cleanupStarted) {
-			await unbindAbortCleanup.waitForCleanup();
-		} else {
-			await closeChatgptTabConnection(connection, options);
+		try {
+			if (cleanupStarted) await unbindAbortCleanup.waitForCleanup();
+			else await closeChatgptTabConnection(connection, options);
+		} catch (error) {
+			cleanupFailed = true;
+			cleanupFailure = error;
 		}
 	}
+	if (cleanupFailed) {
+		if (!result.ok)
+			throw new AggregateError(
+				[result.error, cleanupFailure],
+				"ChatGPT provider read and cleanup failed.",
+			);
+		throw cleanupFailure;
+	}
+	if (!result.ok) throw result.error;
+	return result.value;
 }
 
 export const runWithChatgptAbortBoundConnectionForTest = runWithChatgptAbortBoundConnection;
@@ -4930,10 +5003,14 @@ async function enableChatgptTargetDomains(
 ): Promise<void> {
 	recordBrowserScrapeCdpCall(options, "Page.enable");
 	recordBrowserScrapeCdpCall(options, "Runtime.enable");
-	await withChatgptTimeout(
-		Promise.all([client.Page.enable(), client.Runtime.enable()]).then(() => undefined),
-		CHATGPT_CDP_LIST_TIMEOUT_MS,
-		`Timed out enabling ChatGPT page target${targetId ? ` ${targetId}` : ""}; the Chrome endpoint is alive but the selected page target is unresponsive.`,
+	await withCdpCommandTimeout(
+		client,
+		{
+			timeoutMs: CHATGPT_CDP_LIST_TIMEOUT_MS,
+			timeoutMessage: `Timed out enabling ChatGPT page target${targetId ? ` ${targetId}` : ""}; the Chrome endpoint is alive but the selected page target is unresponsive.`,
+			abortSignal: options?.abortSignal,
+		},
+		() => Promise.all([client.Page.enable(), client.Runtime.enable()]).then(() => undefined),
 	);
 }
 
@@ -9081,9 +9158,16 @@ async function ensureChatgptConversationSurfaceReadyForRead(
 			`ChatGPT active conversation content not found for ${conversationId}; refusing to navigate the active tab.`,
 		);
 	}
-	if (options?.accountMirrorSingleConversationVisit) {
-		// Project slugs may differ from the canonical URL after the governed visit.
-		// Reuse only a ready surface whose conversation and project both match.
+	recordBrowserScrapeCdpCall(options, "Runtime.evaluate");
+	const currentUrl = await readChatgptLocationHref(client.Runtime);
+	if (
+		isChatgptTargetReusableForPreferredUrl(
+			currentUrl,
+			resolveChatgptConversationUrl(conversationId, projectId),
+		)
+	) {
+		// The provider may canonicalize a root conversation into its project route.
+		// Reuse only the requested conversation and any explicitly requested project.
 		recordBrowserScrapeCdpCall(options, "Runtime.evaluate");
 		const ready = await withChatgptTimeout(
 			client.Runtime.evaluate({
@@ -12452,7 +12536,16 @@ async function tagChatgptArtifactButtonWithClient(
         if (!chosen?.node) {
           return { ok: false };
         }
-        chosen.node.setAttribute(attr, 'true');
+        // Preview and download are separate controls in current resource rows.
+        // Resolve artifact identity first, then stay inside that exact row.
+        const resourceRow = chosen.node.closest('[class~="group/resource-row"]');
+        const rowDownloads = resourceRow
+          ? Array.from(resourceRow.querySelectorAll('button[aria-label="Download file"]'))
+            .filter((node) => isVisible(node) && !node.disabled)
+          : [];
+        if (rowDownloads.length > 1) return { ok: false };
+        const downloadTarget = rowDownloads[0] || chosen.node;
+        downloadTarget.setAttribute(attr, 'true');
         return { ok: true };
       })()`,
 			returnByValue: true,
@@ -12482,9 +12575,11 @@ async function tagChatgptSpreadsheetCardDownloadButtonWithClient(
 async function clickChatgptViewerDownloadButtonWithClient(
 	client: ChromeClient,
 	options?: BrowserProviderListOptions,
+	interrupt?: () => void,
 ): Promise<boolean> {
 	const deadline = Date.now() + 5_000;
 	while (Date.now() < deadline) {
+		interrupt?.();
 		recordBrowserScrapeCdpCall(options, "Runtime.evaluate");
 		const result = await client.Runtime.evaluate({
 			expression: `(() => {
@@ -12519,10 +12614,16 @@ async function clickChatgptViewerDownloadButtonWithClient(
 			returnByValue: true,
 		});
 		if (
-			isRecord(result.result?.value) && result.result.value.ok === true &&
-			typeof result.result.value.x === "number" && typeof result.result.value.y === "number"
+			isRecord(result.result?.value) &&
+			result.result.value.ok === true &&
+			typeof result.result.value.x === "number" &&
+			typeof result.result.value.y === "number"
 		) {
-			await dispatchChatgptArtifactPointerInput(client, { x: result.result.value.x, y: result.result.value.y }, options);
+			await dispatchChatgptArtifactPointerInput(
+				client,
+				{ x: result.result.value.x, y: result.result.value.y },
+				options,
+			);
 			recordBrowserScrapeProviderAction(options, "chatgpt.clickArtifactViewerDownload");
 			const matchedLabel = normalizeUiText(
 				typeof result.result.value.label === "string" ? result.result.value.label : null,
@@ -12693,11 +12794,13 @@ async function waitForChatgptDownloadedFile(
 	baseline: ChatgptDownloadDirectorySnapshot,
 	expectedName: string,
 	timeoutMs = 20_000,
+	interrupt?: () => void,
 ): Promise<string | null> {
 	const deadline = Date.now() + timeoutMs;
 	let lastPath: string | null = null;
 	let lastFingerprint: string | null = null;
 	while (Date.now() < deadline) {
+		interrupt?.();
 		const current = await snapshotChatgptDownloadDirectory(destDir);
 		const fresh = Array.from(current.entries()).filter(
 			([name, fingerprint]) => baseline.get(name) !== fingerprint,
@@ -12996,6 +13099,85 @@ function buildChatgptDeepResearchExportControlExpression(exportLabel: string): s
 export const buildChatgptDeepResearchExportControlExpressionForTest =
 	buildChatgptDeepResearchExportControlExpression;
 
+async function observeChatgptArtifactDownloadFailure(
+	client: ChromeClient,
+	conversationId: string,
+	artifact: ConversationArtifact,
+	options?: BrowserProviderListOptions,
+): Promise<{ arm: () => void; assertNoFailure: () => void; dispose: () => void }> {
+	let armed = false;
+	let failure: Error | null = null;
+	let recordedFailure = false;
+	const requests = new Set<string>();
+	const matches = (rawUrl: string): boolean => {
+		try {
+			const url = new URL(rawUrl);
+			return (
+				(url.origin === "https://chatgpt.com" || url.origin === "https://chat.openai.com") &&
+				url.pathname ===
+					`/backend-api/conversation/${encodeURIComponent(conversationId)}/interpreter/download` &&
+				url.searchParams.get("sandbox_path")?.split("/").at(-1) === artifact.title &&
+				(!artifact.messageId || url.searchParams.get("message_id") === artifact.messageId)
+			);
+		} catch {
+			return false;
+		}
+	};
+	const disposers: Array<() => void> = [];
+	const dispose = () => {
+		for (const unsubscribe of disposers.splice(0)) unsubscribe();
+	};
+	if (client.Network?.requestWillBeSent && client.Network?.responseReceived) {
+		const requestSubscription: unknown = client.Network.requestWillBeSent((event) => {
+			if (armed && matches(event.request.url)) requests.add(event.requestId);
+		});
+		if (typeof requestSubscription === "function")
+			disposers.push(requestSubscription as () => void);
+		const responseSubscription: unknown = client.Network.responseReceived((event) => {
+			const status = event.response.status;
+			if (
+				!requests.has(event.requestId) ||
+				!matches(event.response.url) ||
+				(status !== 404 && status !== 410)
+			)
+				return;
+			failure = Object.assign(
+				new Error(
+					`chatgpt_artifact_provider_unavailable: selected download returned HTTP ${status}.`,
+				),
+				{
+					failureKind: "provider_unavailable",
+					retryable: false,
+					retrievalDiagnostics: { status },
+				},
+			);
+		});
+		if (typeof responseSubscription === "function")
+			disposers.push(responseSubscription as () => void);
+		try {
+			recordBrowserScrapeCdpCall(options, "Network.enable");
+			await client.Network.enable();
+		} catch (error) {
+			dispose();
+			throw error;
+		}
+	}
+	return {
+		arm: () => {
+			armed = true;
+		},
+		assertNoFailure: () => {
+			if (!failure) return;
+			if (!recordedFailure) {
+				recordBrowserScrapeDownloadFailure(options);
+				recordedFailure = true;
+			}
+			throw failure;
+		},
+		dispose,
+	};
+}
+
 async function materializeChatgptConversationArtifactWithClient(
 	client: ChromeClient,
 	conversationId: string,
@@ -13126,84 +13308,99 @@ async function materializeChatgptConversationArtifactWithClient(
 				}
 				const downloadBaseline = await snapshotChatgptDownloadDirectory(destDir);
 				await armDownloadCapture(client.Runtime, { stateKey: CHATGPT_DOWNLOAD_CAPTURE_STATE_KEY });
-				recordBrowserScrapeProviderAction(options, "chatgpt.clickArtifactDownload");
-				if (!(await clickTaggedChatgptDownloadControlWithClient(client, options))) {
-					return null;
-				}
-				const capture = await waitForDownloadCapture(client.Runtime, {
-					stateKey: CHATGPT_DOWNLOAD_CAPTURE_STATE_KEY,
-					timeoutMs: 1500,
-					pollMs: 100,
-				});
-				let remoteUrl = normalizeUiText(capture.href);
-				let downloadName = normalizeUiText(capture.downloadName);
-				if (!remoteUrl && !downloadName) {
-					const clickedViewerDownload = await clickChatgptViewerDownloadButtonWithClient(
-						client,
-						options,
-					);
-					if (clickedViewerDownload) {
-						const viewerCapture = await waitForDownloadCapture(client.Runtime, {
-							stateKey: CHATGPT_DOWNLOAD_CAPTURE_STATE_KEY,
-							timeoutMs: 3_000,
-							pollMs: 100,
-						});
-						remoteUrl = normalizeUiText(viewerCapture.href);
-						downloadName = normalizeUiText(viewerCapture.downloadName);
-					}
-				}
-				recordBrowserScrapeDownloadAttempt(options);
-				const downloadedPath = await waitForChatgptDownloadedFile(
-					destDir,
-					downloadBaseline,
-					sanitizeChatgptArtifactFileName(artifact.title),
-					CHATGPT_ARTIFACT_BROWSER_DOWNLOAD_TIMEOUT_MS,
-				);
-				if (downloadedPath) {
-					recordBrowserScrapeDownloadSuccess(options);
-					return fileRefFromChatgptDownloadedArtifact(artifact, downloadedPath, {
-						materialization: "download-button",
-						capturedAnchorUrl: remoteUrl || undefined,
-						capturedDownloadName: downloadName || undefined,
-					});
-				}
-				if (!remoteUrl) {
-					recordBrowserScrapeDownloadFailure(options);
-					return null;
-				}
-				recordBrowserScrapeDownloadFailure(options);
-				const { buffer, contentType, contentDisposition } = await fetchChatgptBinaryWithClient(
+				const downloadObservation = await observeChatgptArtifactDownloadFailure(
 					client,
-					remoteUrl,
+					conversationId,
+					artifact,
 					options,
 				);
-				const fallbackBaseName =
-					extractFilenameFromContentDisposition(contentDisposition) ||
-					extractFilenameFromArtifactUri(artifact.uri) ||
-					downloadName ||
-					artifact.title;
-				const fileName = ensureChatgptArtifactExtension(
-					fallbackBaseName,
-					contentTypeToExtension(contentType),
-				);
-				const destPath = path.join(destDir, fileName);
-				await fs.writeFile(destPath, buffer);
-				return {
-					id: artifact.id,
-					name: fileName,
-					provider: "chatgpt",
-					source: "conversation",
-					size: buffer.byteLength,
-					mimeType: contentType ?? inferMimeTypeFromArtifactName(fileName),
-					remoteUrl,
-					localPath: destPath,
-					metadata: {
-						artifactKind: artifact.kind,
-						artifactTitle: artifact.title,
-						materialization: "captured-anchor-fetch",
-						...(artifact.metadata ?? {}),
-					},
-				};
+				try {
+					downloadObservation.arm();
+					recordBrowserScrapeProviderAction(options, "chatgpt.clickArtifactDownload");
+					if (!(await clickTaggedChatgptDownloadControlWithClient(client, options))) {
+						return null;
+					}
+					recordBrowserScrapeDownloadAttempt(options);
+					downloadObservation.assertNoFailure();
+					const capture = await waitForDownloadCapture(client.Runtime, {
+						stateKey: CHATGPT_DOWNLOAD_CAPTURE_STATE_KEY,
+						timeoutMs: 1500,
+						pollMs: 100,
+					});
+					downloadObservation.assertNoFailure();
+					let remoteUrl = normalizeUiText(capture.href);
+					let downloadName = normalizeUiText(capture.downloadName);
+					if (!remoteUrl && !downloadName) {
+						const clickedViewerDownload = await clickChatgptViewerDownloadButtonWithClient(
+							client,
+							options,
+							downloadObservation.assertNoFailure,
+						);
+						if (clickedViewerDownload) {
+							const viewerCapture = await waitForDownloadCapture(client.Runtime, {
+								stateKey: CHATGPT_DOWNLOAD_CAPTURE_STATE_KEY,
+								timeoutMs: 3_000,
+								pollMs: 100,
+							});
+							remoteUrl = normalizeUiText(viewerCapture.href);
+							downloadName = normalizeUiText(viewerCapture.downloadName);
+						}
+					}
+					const downloadedPath = await waitForChatgptDownloadedFile(
+						destDir,
+						downloadBaseline,
+						sanitizeChatgptArtifactFileName(artifact.title),
+						CHATGPT_ARTIFACT_BROWSER_DOWNLOAD_TIMEOUT_MS,
+						downloadObservation.assertNoFailure,
+					);
+					if (downloadedPath) {
+						recordBrowserScrapeDownloadSuccess(options);
+						return fileRefFromChatgptDownloadedArtifact(artifact, downloadedPath, {
+							materialization: "download-button",
+							capturedAnchorUrl: remoteUrl || undefined,
+							capturedDownloadName: downloadName || undefined,
+						});
+					}
+					if (!remoteUrl) {
+						recordBrowserScrapeDownloadFailure(options);
+						return null;
+					}
+					recordBrowserScrapeDownloadFailure(options);
+					const { buffer, contentType, contentDisposition } = await fetchChatgptBinaryWithClient(
+						client,
+						remoteUrl,
+						options,
+					);
+					const fallbackBaseName =
+						extractFilenameFromContentDisposition(contentDisposition) ||
+						extractFilenameFromArtifactUri(artifact.uri) ||
+						downloadName ||
+						artifact.title;
+					const fileName = ensureChatgptArtifactExtension(
+						fallbackBaseName,
+						contentTypeToExtension(contentType),
+					);
+					const destPath = path.join(destDir, fileName);
+					await fs.writeFile(destPath, buffer);
+					return {
+						id: artifact.id,
+						name: fileName,
+						provider: "chatgpt",
+						source: "conversation",
+						size: buffer.byteLength,
+						mimeType: contentType ?? inferMimeTypeFromArtifactName(fileName),
+						remoteUrl,
+						localPath: destPath,
+						metadata: {
+							artifactKind: artifact.kind,
+							artifactTitle: artifact.title,
+							materialization: "captured-anchor-fetch",
+							...(artifact.metadata ?? {}),
+						},
+					};
+				} finally {
+					downloadObservation.dispose();
+				}
 			}
 			if (
 				artifact.kind === "spreadsheet" &&
@@ -13372,7 +13569,10 @@ async function prepareChatgptPromptWorkbenchInClient(
 	if (
 		chatgptMode === "chat" &&
 		thinkingTime &&
-		shouldApplyChatgptThinkingTime(modelStrategy === "current" ? selectedModel : desiredModel, selectedModel)
+		shouldApplyChatgptThinkingTime(
+			modelStrategy === "current" ? selectedModel : desiredModel,
+			selectedModel,
+		)
 	) {
 		await ensureThinkingTime(Runtime, thinkingTime, logger);
 	}
@@ -13528,13 +13728,10 @@ export function createChatgptAdapter(): Pick<
 							"ChatGPT composer tools currently belong to Chat mode. Request Chat mode or omit --browser-composer-tool for Work.",
 						);
 					}
-					const capabilitySelection = await ensureChatgptComposerTool(
-						client,
-						composerTool,
-						logger,
-					);
+					const capabilitySelection = await ensureChatgptComposerTool(client, composerTool, logger);
 					composerCapability = capabilitySelection.receipt;
-					selectedEcosystemMention = capabilitySelection.ecosystemMention ?? selectedEcosystemMention;
+					selectedEcosystemMention =
+						capabilitySelection.ecosystemMention ?? selectedEcosystemMention;
 					await ensurePromptReady(Runtime, inputTimeoutMs, logger);
 				}
 				if (input.ecosystemMention) {
@@ -13989,36 +14186,25 @@ export function createChatgptAdapter(): Pick<
 					() => connectToChatgptTab(scopedOptions, CHATGPT_LIBRARY_URL),
 					CHATGPT_LIBRARY_CONNECT_STAGE_TIMEOUT_MS,
 				);
-				return runWithChatgptAbortBoundConnection(
-					connection,
-					scopedOptions,
-					async (client) => {
-						await runStage("identity", () =>
-							assertChatgptExpectedIdentity(client, scopedOptions),
-						);
-						await runStage(
-							"dialog-cleanup",
-							() =>
-								dismissCreateProjectDialogIfOpen(client.Runtime, {
-									strict: true,
-									source: "list-account-files",
-								}),
-							CHATGPT_LIBRARY_DIALOG_STAGE_TIMEOUT_MS,
-						);
-						await runStage("route-readiness", () =>
-							navigateToChatgptUrl(
-								client,
-								CHATGPT_LIBRARY_URL,
-								undefined,
-								scopedOptions,
-							),
-						);
-						const inventory = await runStage("dom-inventory", () =>
-							readChatgptLibraryItemsWithClient(client),
-						);
-						return inventory.files;
-					},
-				);
+				return runWithChatgptAbortBoundConnection(connection, scopedOptions, async (client) => {
+					await runStage("identity", () => assertChatgptExpectedIdentity(client, scopedOptions));
+					await runStage(
+						"dialog-cleanup",
+						() =>
+							dismissCreateProjectDialogIfOpen(client.Runtime, {
+								strict: true,
+								source: "list-account-files",
+							}),
+						CHATGPT_LIBRARY_DIALOG_STAGE_TIMEOUT_MS,
+					);
+					await runStage("route-readiness", () =>
+						navigateToChatgptUrl(client, CHATGPT_LIBRARY_URL, undefined, scopedOptions),
+					);
+					const inventory = await runStage("dom-inventory", () =>
+						readChatgptLibraryItemsWithClient(client),
+					);
+					return inventory.files;
+				});
 			});
 		},
 		async downloadAccountFile(

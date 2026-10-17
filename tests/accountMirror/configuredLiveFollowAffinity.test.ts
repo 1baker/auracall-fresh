@@ -119,10 +119,10 @@ describe("live-follow final warning transport", () => {
 				operationId: "op-1",
 				maxBrowserInteractionsPerMinute: 20,
 			});
+			registry.list.mockResolvedValue([lease] as never);
 			const staleEvaluate = vi.fn(async () => ({ result: { value: null } }));
 			await affinity?.providerTrafficGovernor.checkWarning?.({ evaluate: staleEvaluate });
 			staleEvaluate.mockRejectedValue(new Error("WebSocket is not open: readyState 3 (CLOSED)"));
-			registry.list.mockResolvedValue([lease] as never);
 			if (outcome === "probe-stall") {
 				vi.useFakeTimers();
 				const pending = affinity?.completeSuccess().then(
@@ -237,7 +237,15 @@ describe("configured cold-start custody", () => {
 				expect.objectContaining({ configuredUrl: "about:blank", ensurePort: true }),
 			);
 			expect(affinity?.tabAffinity.targetId).toBe("owned-crawler");
+			expect(affinity?.tabAffinity.allowInitialNavigation).toBe(true);
 			expect(open).toHaveBeenCalledTimes(1);
+			expect(open).toHaveBeenCalledWith(
+				45011,
+				"about:blank",
+				"127.0.0.1",
+				undefined,
+				expect.objectContaining({ kind: "pre-lease-target-acquisition" }),
+			);
 			expect(close).not.toHaveBeenCalled();
 			expect((await registry.list()).filter((lease) => lease.state !== "released")).toHaveLength(4);
 			expect((await registry.list()).filter((lease) => lease.processBinding)).toHaveLength(1);

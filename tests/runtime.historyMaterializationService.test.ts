@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -8,10 +9,14 @@ import {
 } from "../packages/browser-service/src/service/operationDispatcher.js";
 import { setAuracallHomeDirOverrideForTest } from "../src/auracallHome.js";
 import { createCacheStore } from "../src/browser/llmService/cache/store.js";
-import type { ProviderCacheContext } from "../src/browser/providers/cache.js";
 import { ChatgptService } from "../src/browser/llmService/providers/chatgptService.js";
+import type { ProviderCacheContext } from "../src/browser/providers/cache.js";
 import type { ProviderSessionProof } from "../src/browser/providers/providerSessionAuthority.js";
-import type { RunArchiveItem, RunArchiveService } from "../src/runtime/archiveService.js";
+import {
+	createRunArchiveService,
+	type RunArchiveItem,
+	type RunArchiveService,
+} from "../src/runtime/archiveService.js";
 import {
 	classifyHistoryMaterializationEntryRecoverability,
 	createHistoryMaterializationService,
@@ -40,6 +45,325 @@ describe("history materialization service", () => {
 		setAuracallHomeDirOverrideForTest(null);
 	});
 
+	it.each([
+		"valid",
+		"real-valid",
+		"real-tampered",
+		"legacy",
+		"missing",
+		"tampered",
+		"foreign",
+		"force",
+	])("accounts for verified archive reuse in scoped reconciliation (%s)", async (mode) => {
+		const home = await fs.mkdtemp(path.join(os.tmpdir(), "auracall-reuse-result-"));
+		setAuracallHomeDirOverrideForTest(home);
+		const localPath = path.join(home, "cached.txt");
+		const bytes = "verified cached artifact";
+		if (mode !== "missing") await fs.writeFile(localPath, bytes);
+		const checksum = createHash("sha256").update(bytes).digest("hex");
+		const artifactId = "message-1:download:sandbox:/mnt/data/cached.txt";
+		const archive = buildArchiveItem({
+			id: "archive-cached",
+			source: "account_mirror",
+			provider: "chatgpt",
+			runtimeProfile: "default",
+			boundIdentityKey: "user@example.com",
+			providerConversationId: mode === "foreign" ? "another-conversation" : "conv-reuse",
+			artifactId,
+			title: "cached.txt",
+			fileName: "cached.txt",
+			localPath,
+			checksumSha256: mode.endsWith("tampered") ? "0".repeat(64) : checksum,
+			fileAvailable: true,
+			metadata: { artifactKind: "download" },
+			links: { asset: "/v1/archive/items/archive-cached/asset" },
+		});
+		const base = buildReconciliationCatalog(["conv-reuse"]);
+		const catalog = {
+			...base,
+			entries: base.entries.map((entry) => ({
+				...entry,
+				manifests: {
+					...entry.manifests,
+					artifacts: [
+						{
+							id: artifactId,
+							title: "cached.txt",
+							kind: "download" as const,
+							uri: "sandbox:/mnt/data/cached.txt",
+							metadata: { conversationId: "conv-reuse" },
+						},
+						{
+							id: "message-1:download:sandbox:/mnt/data/unavailable.txt",
+							title: "unavailable.txt",
+							kind: "download" as const,
+							uri: "sandbox:/mnt/data/unavailable.txt",
+							metadata: { conversationId: "conv-reuse" },
+						},
+					],
+				},
+			})),
+		};
+		let scheduled: (() => Promise<void>) | undefined;
+		const materializeConversation = vi.fn(
+			async (
+				target: HistoryMaterializationTarget,
+				_request: HistoryMaterializationCreateRequest,
+				_jobId: string,
+				_context?: HistoryMaterializationProviderWorkContext,
+			): Promise<HistoryMaterializationResult> => ({
+				...buildNoMaterializableHistoryResult(target),
+				status: "failed",
+				entries: [
+					{
+						kind: "artifact",
+						providerId: "unavailable",
+						title: "unavailable.txt",
+						status: "failed",
+						localPath: null,
+						remoteUrl: null,
+						cacheKey: null,
+						checksumSha256: null,
+						mimeType: null,
+						size: null,
+						materializationMethod: null,
+						reason: "selected download HTTP 404",
+						failureKind: "provider_unavailable",
+						retryable: false,
+						assetAvailability: "unavailable",
+						archiveItemId: null,
+						assetRoute: null,
+					},
+				],
+				metrics: { conversations: 1, materialized: 0, skipped: 0, failed: 1 },
+			}),
+		);
+		const service = createHistoryMaterializationService({
+			config: {},
+			store: createInMemoryHistoryMaterializationJobStore([]),
+			catalogService: { readCatalog: vi.fn(async () => catalog), readItem: vi.fn() },
+			runArchiveService: mode.startsWith("real-")
+				? createRunArchiveService({
+						indexStore: {
+							readIndex: async () => ({
+								object: "run_archive_index",
+								version: 1,
+								updatedAt: new Date().toISOString(),
+								itemCount: 1,
+								items: [archive],
+							}),
+							upsertItems: vi.fn(async () => ({ items: [archive] })),
+						} as never,
+					})
+				: ({
+						listItems: vi.fn(async () => ({ items: [archive] })),
+						listItemsBatchAvailability:
+							mode === "legacy"
+								? undefined
+								: vi.fn(async (requests: unknown[]) => requests.map(() => ({ items: [archive] }))),
+					} as unknown as RunArchiveService),
+			materializeConversation,
+			generateId: () => `hmj_reuse_${mode}`,
+			schedule: (work) => {
+				scheduled = work;
+			},
+		});
+		try {
+			await service.createJob({
+				provider: "chatgpt",
+				runtimeProfile: "default",
+				boundIdentityKey: "user@example.com",
+				conversationIds: ["conv-reuse"],
+				reconcile: true,
+				refreshSnapshot: false,
+				assetKinds: ["artifacts"],
+				maxItems: 2,
+				force: mode === "force",
+			});
+			if (!scheduled) throw Error("Expected scoped job");
+			await scheduled();
+			const job = await service.readJob(`hmj_reuse_${mode}`);
+			const signatures =
+				materializeConversation.mock.calls[0]?.[3]?.excludedAssetFamilySignatures ?? [];
+			if (mode === "valid" || mode === "real-valid") {
+				expect(signatures).toContain("artifact:download:cached.txt");
+				expect(job?.result?.metrics).toMatchObject({
+					duplicateAliases: 1,
+					materialized: 0,
+					conversations: 1,
+					failed: 1,
+				});
+				expect(job?.result?.entries).toEqual(
+					expect.arrayContaining([
+						expect.objectContaining({
+							status: "duplicate",
+							archiveItemId: archive.id,
+							localPath,
+							checksumSha256: checksum,
+							size: Buffer.byteLength(bytes),
+							assetAvailability: "available",
+						}),
+						expect.objectContaining({ failureKind: "provider_unavailable" }),
+					]),
+				);
+				expect(job?.result?.archiveItems).toContainEqual(
+					expect.objectContaining({ id: archive.id }),
+				);
+			} else {
+				expect(signatures).not.toContain("artifact:download:cached.txt");
+				expect(job?.result?.entries?.some((entry) => entry.archiveItemId === archive.id)).toBe(
+					false,
+				);
+			}
+		} finally {
+			await fs.rm(home, { recursive: true, force: true });
+		}
+	});
+
+	it.each([
+		"matched",
+		"attempt-identity",
+		"unattributed",
+		"foreign",
+		"ambiguous",
+		"retryable",
+		"force",
+		"active",
+		"unmatched",
+	])("returns scoped prior terminal evidence without another transfer (%s)", async (mode) => {
+		const base = buildReconciliationCatalog(["conv-terminal"]);
+		const catalog = {
+			...base,
+			entries: base.entries.map((entry) => ({
+				...entry,
+				manifests: {
+					...entry.manifests,
+					artifacts: [
+						{
+							id: "terminal-artifact",
+							title: "gone.zip",
+							kind: "download" as const,
+							uri: "sandbox:/mnt/data/gone.zip",
+							metadata: { conversationId: "conv-terminal" },
+						},
+					],
+				},
+			})),
+		};
+		const target: HistoryMaterializationTarget = {
+			provider: "chatgpt",
+			runtimeProfile: "default",
+			browserProfile: "default",
+			boundIdentityKey: "user@example.com",
+			conversationId: "conv-terminal",
+			providerConversationUrl: null,
+			projectId: null,
+		};
+		const prior = buildHistoryMaterializationJob({
+			id: "hmj_prior_terminal",
+			status: mode === "active" ? "running" : "failed",
+			request: {
+				provider: "chatgpt",
+				runtimeProfile: "default",
+				boundIdentityKey:
+					mode === "foreign"
+						? "other@example.com"
+						: mode === "attempt-identity" || mode === "unattributed"
+							? null
+							: "user@example.com",
+				conversationIds:
+					mode === "ambiguous" ? ["conv-terminal", "other-conversation"] : ["conv-terminal"],
+				assetKinds: ["artifacts"],
+			},
+			result: {
+				...buildNoMaterializableHistoryResult(target),
+				...(mode === "attempt-identity" || mode === "unattributed" ? { target: null } : {}),
+				...(mode === "attempt-identity"
+					? { attempts: [{ target }] as unknown as HistoryMaterializationResult["attempts"] }
+					: {}),
+				status: "failed",
+				entries: [
+					{
+						kind: "artifact",
+						providerId: "terminal-artifact",
+						title: mode === "unmatched" ? "other.zip" : "gone.zip",
+						status: "failed",
+						localPath: null,
+						remoteUrl:
+							mode === "unmatched" ? "sandbox:/mnt/data/other.zip" : "sandbox:/mnt/data/gone.zip",
+						cacheKey: null,
+						checksumSha256: null,
+						mimeType: null,
+						size: null,
+						materializationMethod: "browser-download",
+						reason: "chatgpt_artifact_provider_unavailable: HTTP 404",
+						assetAvailability: "unavailable",
+						failureKind: "provider_unavailable",
+						retryable: mode === "retryable",
+						archiveItemId: null,
+						assetRoute: null,
+					},
+				],
+			},
+		});
+		let scheduled: (() => Promise<void>) | undefined;
+		const materializeConversation = vi.fn(async (selected: HistoryMaterializationTarget) =>
+			buildNoMaterializableHistoryResult(selected),
+		);
+		const service = createHistoryMaterializationService({
+			config: {},
+			store: createInMemoryHistoryMaterializationJobStore([prior]),
+			catalogService: { readCatalog: vi.fn(async () => catalog), readItem: vi.fn() },
+			runArchiveService: {
+				listItems: vi.fn(async () => ({ items: [] })),
+			} as unknown as RunArchiveService,
+			materializeConversation,
+			generateId: () => `hmj_terminal_${mode}`,
+			schedule: (work) => {
+				scheduled = work;
+			},
+		});
+		await service.createJob({
+			provider: "chatgpt",
+			runtimeProfile: "default",
+			boundIdentityKey: "user@example.com",
+			conversationIds: ["conv-terminal"],
+			reconcile: true,
+			refreshSnapshot: false,
+			assetKinds: ["artifacts"],
+			maxItems: 1,
+			force: mode === "force",
+		});
+		if (!scheduled) throw Error("Expected scheduled job");
+		await scheduled();
+		const job = await service.readJob(`hmj_terminal_${mode}`);
+		expect(job?.error).toBeNull();
+		if (mode === "matched" || mode === "attempt-identity") {
+			expect(materializeConversation).not.toHaveBeenCalled();
+			expect(job?.result?.entries).toEqual([
+				expect.objectContaining({
+					status: "skipped",
+					assetAvailability: "unavailable",
+					failureKind: "provider_unavailable",
+					retryable: false,
+					reason: prior.result?.entries[0]?.reason,
+					priorEvidenceJobId: prior.id,
+					materializationMethod: "prior-terminal-evidence",
+				}),
+			]);
+			expect(job?.result?.metrics).toMatchObject({
+				conversations: 1,
+				materialized: 0,
+				skipped: 1,
+				failed: 0,
+			});
+		} else {
+			expect(job?.result?.entries).not.toContainEqual(
+				expect.objectContaining({ priorEvidenceJobId: prior.id }),
+			);
+		}
+	});
+
 	it("derives one utility affinity identity for a durable job", () => {
 		expect(historyMaterializationUtilityAffinityId(" hmj_123 ")).toBe(
 			"history-materialization:hmj_123",
@@ -58,6 +382,66 @@ describe("history materialization service", () => {
 			{ phase: "materialization", kind: "page_navigate", workKey, limit: 1 },
 			{ phase: "materialization", kind: "in_page_action", workKey, limit: 2 },
 		]);
+	});
+
+	it("preserves terminal artifact unavailability through the real manifest projection", async () => {
+		const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), "auracall-artifact-unavailable-"));
+		setAuracallHomeDirOverrideForTest(homeDir);
+		const manifestPath = path.join(homeDir, "artifact-fetch-manifest.json");
+		await fs.writeFile(
+			manifestPath,
+			JSON.stringify({
+				entries: [
+					{
+						artifactId: "artifact-unavailable",
+						title: "missing.zip",
+						kind: "download",
+						status: "error",
+						error: "chatgpt_artifact_provider_unavailable: HTTP 404",
+						failureKind: "provider_unavailable",
+						retryable: false,
+					},
+				],
+			}),
+		);
+		const provider = vi
+			.spyOn(ChatgptService.prototype, "materializeConversationArtifacts")
+			.mockResolvedValue({ artifacts: [], files: [], manifestPath, unavailableArtifacts: [] });
+		let scheduled: (() => Promise<void>) | undefined;
+		try {
+			const service = createHistoryMaterializationService({
+				config: { browser: { cache: { store: "json" } } },
+				generateId: () => "hmj_artifact_unavailable",
+				schedule: (work) => {
+					scheduled = work;
+				},
+			});
+			await service.createJob({
+				provider: "chatgpt",
+				runtimeProfile: "default",
+				conversationId: "unavailable-conversation",
+				assetKinds: ["artifacts"],
+				refreshSnapshot: false,
+				maxItems: 1,
+			});
+			await scheduled?.();
+			expect(await service.readJob("hmj_artifact_unavailable")).toMatchObject({
+				result: {
+					entries: [
+						{
+							status: "failed",
+							failureKind: "provider_unavailable",
+							retryable: false,
+							assetAvailability: "unavailable",
+							recoverabilityState: "terminally_unavailable",
+						},
+					],
+				},
+			});
+		} finally {
+			provider.mockRestore();
+			await fs.rm(homeDir, { recursive: true, force: true });
+		}
 	});
 
 	it("classifies an all-failed transfer result as failed rather than skipped", () => {
@@ -5443,7 +5827,10 @@ describe("history materialization service", () => {
 		});
 	});
 
-	it.each([false, true])("rotates retryable no-materializable candidates across consecutive reconciliation jobs (frontier=%s)", async (frontier) => {
+	it.each([
+		false,
+		true,
+	])("rotates retryable no-materializable candidates across consecutive reconciliation jobs (frontier=%s)", async (frontier) => {
 		const scheduled: Array<() => Promise<void>> = [];
 		const conversationIds = ["conv_rotate_1", "conv_rotate_2", "conv_rotate_3", "conv_rotate_4"];
 		const materializeConversation = vi.fn(

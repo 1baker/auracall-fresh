@@ -7,6 +7,7 @@ import {
 	createBrowserInteractionGovernor,
 } from "../../../packages/browser-service/src/service/interactionGovernor.js";
 import { createInMemoryBrowserMutationLog } from "../../../packages/browser-service/src/service/mutationDispatcher.js";
+import { hasProviderBackendRequestAdmission } from "../../../packages/browser-service/src/service/providerTrafficGovernor.js";
 import { getPreferredRuntimeProfile, getPreferredRuntimeProfileName } from "../../config/model.js";
 import { resolveConfiguredServiceAccountId } from "../../config/serviceAccountIdentity.js";
 import type { ResolvedUserConfig } from "../../config.js";
@@ -33,6 +34,10 @@ import {
 import { createConfiguredProviderTrafficAuthorityFactory } from "../configuredProviderTrafficAuthority.js";
 import { CHATGPT_URL, GEMINI_URL, GROK_URL } from "../constants.js";
 import { recordLibraryInventoryStage } from "../libraryInventoryDiagnostics.js";
+import {
+	hasUnknownOwnedRequestCleanup,
+	OwnedBackendRequestCleanupError,
+} from "../ownedBackendRequestAuthority.js";
 import {
 	type ConversationContextReadOutcome,
 	type ConversationContextReadReceipt,
@@ -131,6 +136,7 @@ export class ConversationContextReadError extends Error {
 		conversationId: string;
 		timeoutMs: number;
 		outcome: "timed_out" | "aborted";
+		cause?: unknown;
 	}) {
 		const code =
 			input.outcome === "timed_out"
@@ -140,6 +146,7 @@ export class ConversationContextReadError extends Error {
 			input.outcome === "timed_out"
 				? `${input.provider} conversation context read timed out after ${input.timeoutMs}ms for "${input.conversationId}".`
 				: `${input.provider} conversation context read was aborted for "${input.conversationId}".`,
+			{ cause: input.cause },
 		);
 		this.name = "ConversationContextReadError";
 		this.code = code;
@@ -218,6 +225,8 @@ type ConversationArtifactFetchManifestEntry = {
 	size?: number;
 	materializationMethod?: string;
 	error?: string;
+	failureKind?: "provider_unavailable" | "retrieval_failed";
+	retryable?: boolean;
 };
 
 type ConversationArtifactFetchManifest = {
@@ -2159,6 +2168,9 @@ export abstract class LlmService {
 						uri: artifact.uri ?? null,
 						status: "error",
 						error: normalizeArtifactFetchError(error),
+						...(isRecord(error) && error.failureKind === "provider_unavailable"
+							? { failureKind: "provider_unavailable" as const, retryable: false }
+							: {}),
 					});
 				} finally {
 					if (listOptions.useProviderSession === true) {
@@ -2832,6 +2844,7 @@ export abstract class LlmService {
 		let abortError: ConversationContextReadError | null = null;
 		let listOptions: BrowserProviderListOptions = providedListOptions ?? {};
 		let scopedListOptions: BrowserProviderListOptions | undefined;
+		let pendingProviderRead: Promise<unknown> | undefined;
 		let cacheContext = await this.resolveCacheContext(
 			{ ...listOptions, skipFeatureSignature: true },
 			{ detect: false, prompt: false },
@@ -2969,14 +2982,12 @@ export abstract class LlmService {
 			const context = await this.withRetry(
 				() => {
 					attemptCount += 1;
-					return waitForPromiseWithAbort(
-						this.provider.readConversationContext?.(
-							conversationId,
-							options?.projectId,
-							scopedListOptions,
-						) as Promise<unknown>,
-						controller.signal,
-					);
+					pendingProviderRead = this.provider.readConversationContext?.(
+						conversationId,
+						options?.projectId,
+						scopedListOptions,
+					) as Promise<unknown>;
+					return waitForPromiseWithAbort(pendingProviderRead, controller.signal);
 				},
 				{
 					action: "readConversationContext",
@@ -3012,11 +3023,48 @@ export abstract class LlmService {
 			await writeReceipt("succeeded", null);
 			return normalized;
 		} catch (error) {
-			const terminalError = abortError ?? error;
+			let terminalError = abortError ?? error;
+			const contextAbort =
+				controller.signal.aborted && terminalError instanceof ConversationContextReadError
+					? terminalError
+					: undefined;
+			if (
+				contextAbort &&
+				pendingProviderRead &&
+				hasProviderBackendRequestAdmission(scopedListOptions)
+			) {
+				// Admission owns custody until adapter cleanup confirms or this bounded drain expires.
+				let drainTimer: ReturnType<typeof scheduleTimer> | undefined;
+				const cleanupFailure = await Promise.race([
+					pendingProviderRead.then(
+						() => undefined,
+						(failure: unknown) => failure,
+					),
+					new Promise<unknown>((resolve) => {
+						drainTimer = scheduleTimer(
+							() =>
+								resolve(
+									new OwnedBackendRequestCleanupError(
+										new Error("Owned backend request abort cleanup did not finish within 5000ms."),
+									),
+								),
+							5000,
+						);
+					}),
+				]);
+				if (drainTimer) cancelTimer(drainTimer);
+				terminalError = new ConversationContextReadError({
+					provider: this.providerId,
+					conversationId,
+					timeoutMs,
+					outcome: contextAbort.outcome,
+					cause: cleanupFailure,
+				});
+			}
 			const outcome: ConversationContextReadOutcome =
 				terminalError instanceof ConversationContextReadError ? terminalError.outcome : "failed";
 			await writeReceipt(outcome, terminalError);
-			if (options?.allowCacheFallback === false) {
+			if (options?.allowCacheFallback === false || hasUnknownOwnedRequestCleanup(terminalError)) {
 				throw terminalError;
 			}
 			const cached = await this.cacheStore.readConversationContext(cacheContext, conversationId);

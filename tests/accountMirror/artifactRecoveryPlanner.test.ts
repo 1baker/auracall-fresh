@@ -6,7 +6,10 @@ import type {
 	AccountMirrorStatusRegistry,
 	AccountMirrorStatusSummary,
 } from "../../src/accountMirror/statusRegistry.js";
-import type { SearchProjectionService } from "../../src/runtime/searchProjectionService.js";
+import type {
+	SearchProjectionRow,
+	SearchProjectionService,
+} from "../../src/runtime/searchProjectionService.js";
 
 describe("account mirror artifact recovery planner", () => {
 	it("classifies remote-known missing local assets without launching browser work", async () => {
@@ -252,9 +255,9 @@ describe("account mirror artifact recovery planner", () => {
 
 		expect(result.candidates[0]?.counts.retrievableMissingLocal).toMatchObject({
 			artifacts: 0,
-			files: 8,
+			files: 9,
 			media: 0,
-			total: 8,
+			total: 9,
 		});
 		expect(result.candidates[0]?.createRequest).toMatchObject({
 			provider: "chatgpt",
@@ -262,7 +265,7 @@ describe("account mirror artifact recovery planner", () => {
 			boundIdentityKey: "consult@polymerconsultinggroup.com",
 			reconcile: true,
 			assetKinds: ["files"],
-			maxItems: 8,
+			maxItems: 9,
 		});
 	});
 
@@ -342,6 +345,68 @@ describe("account mirror artifact recovery planner", () => {
 		});
 	});
 
+	it.each([
+		"foreign",
+		"matched",
+		"duplicate",
+	])("matches archive availability to current catalog items (%s)", async (mode) => {
+		const registry = registryWithEntries([
+			statusEntry({
+				provider: "chatgpt",
+				runtimeProfileId: "wsl-chrome-3",
+				tenantKey: "operator@example.com",
+				expectedIdentityKey: "operator@example.com",
+				assetInventory: assetInventory({
+					remoteKnownMissingLocal: { artifacts: 2, files: 0, media: 0 },
+				}),
+			}),
+		]);
+		const catalogItem = "/v1/account-mirrors/catalog/current-artifact";
+		const catalogRow = {
+			...searchRow({
+				id: "current-artifact",
+				source: "account_mirror",
+				sourceKind: "artifacts",
+				kind: "artifact",
+				tenant: "operator@example.com",
+			}),
+			links: { catalogItem },
+		};
+		const archiveRow = {
+			...searchRow({
+				id: "archive:available",
+				source: "run_archive",
+				sourceKind: "generated_artifact",
+				kind: "artifact",
+				tenant: "operator@example.com",
+			}),
+			links: {
+				catalogItem:
+					mode === "foreign" ? "/v1/account-mirrors/catalog/other-artifact" : catalogItem,
+			},
+		};
+		const search = vi.fn(async (request) => ({
+			rows:
+				request.kind !== "artifact"
+					? []
+					: request.assetAvailability === "available"
+						? mode === "duplicate"
+							? [archiveRow, { ...archiveRow, id: "archive:copy" }]
+							: [archiveRow]
+						: [catalogRow],
+		}));
+		const planner = createAccountMirrorArtifactRecoveryPlanner({
+			registry,
+			searchProjectionService: { search } as unknown as SearchProjectionService,
+		});
+		const result = await planner.plan({
+			provider: "chatgpt",
+			runtimeProfileId: "wsl-chrome-3",
+			includeSearchRows: false,
+		});
+		expect(result.metrics.retrievableMissingLocal.total).toBe(mode === "foreign" ? 2 : 1);
+	});
+
 	it("subtracts materialized archive evidence from remote-known missing counts", async () => {
 		const registry = registryWithEntries([
 			statusEntry({
@@ -377,6 +442,7 @@ describe("account mirror artifact recovery planner", () => {
 						? [
 								searchRow({
 									id: "archive:artifact_1",
+									catalogItemId: "artifact_1",
 									source: "run_archive",
 									sourceKind: "generated_artifact",
 									kind: "artifact",
@@ -386,6 +452,7 @@ describe("account mirror artifact recovery planner", () => {
 						: [
 								searchRow({
 									id: "archive:file_1",
+									catalogItemId: "file_1",
 									source: "run_archive",
 									sourceKind: "upload",
 									kind: "upload",
@@ -393,13 +460,23 @@ describe("account mirror artifact recovery planner", () => {
 								}),
 								searchRow({
 									id: "archive:file_2",
+									catalogItemId: "file_2",
 									source: "run_archive",
 									sourceKind: "upload",
 									kind: "upload",
 									tenant: "operator@example.com",
 								}),
 							]
-					: [],
+					: (request.kind === "artifact" ? ["artifact_1"] : ["file_1", "file_2"]).map((id) =>
+							searchRow({
+								id,
+								catalogItemId: id,
+								source: "account_mirror",
+								sourceKind: request.kind === "artifact" ? "artifacts" : "files",
+								kind: request.kind,
+								tenant: "operator@example.com",
+							}),
+						),
 			nextCursor: null,
 			metrics: { total: 0, returned: 0 },
 			facets: {
@@ -441,7 +518,47 @@ describe("account mirror artifact recovery planner", () => {
 		});
 	});
 
-	it("separates retrieval failures from provider-unavailable terminal rows", async () => {
+	it.each([
+		{
+			failureKind: "retrieval_failed" as const,
+			entryStatus: "failed" as const,
+			remainingFiles: 2,
+			remainingTotal: 4,
+			retrievalFailures: 1,
+			terminalFailures: 0,
+		},
+		{
+			failureKind: "provider_unavailable" as const,
+			entryStatus: "failed" as const,
+			remainingFiles: 2,
+			remainingTotal: 4,
+			retrievalFailures: 0,
+			terminalFailures: 1,
+		},
+		{
+			failureKind: undefined,
+			entryStatus: "failed" as const,
+			remainingFiles: 3,
+			remainingTotal: 5,
+			retrievalFailures: 0,
+			terminalFailures: 0,
+		},
+		{
+			failureKind: undefined,
+			entryStatus: "skipped" as const,
+			remainingFiles: 3,
+			remainingTotal: 5,
+			retrievalFailures: 0,
+			terminalFailures: 0,
+		},
+	])("separates typed terminal evidence from legacy $entryStatus/$failureKind", async ({
+		failureKind,
+		entryStatus,
+		remainingFiles,
+		remainingTotal,
+		retrievalFailures,
+		terminalFailures,
+	}) => {
 		const registry = registryWithEntries([
 			statusEntry({
 				provider: "chatgpt",
@@ -559,7 +676,7 @@ describe("account mirror artifact recovery planner", () => {
 								kind: "file" as const,
 								providerId: "file_missing_tile",
 								title: "missing.docx",
-								status: "failed" as const,
+								status: entryStatus,
 								localPath: null,
 								remoteUrl: "chatgpt://file/file_1",
 								cacheKey: null,
@@ -568,7 +685,7 @@ describe("account mirror artifact recovery planner", () => {
 								size: null,
 								materializationMethod: null,
 								reason: "ChatGPT conversation file fetch failed: tile_not_found",
-								failureKind: "retrieval_failed" as const,
+								failureKind,
 								retryable: false,
 								archiveItemId: null,
 								assetRoute: null,
@@ -610,22 +727,24 @@ describe("account mirror artifact recovery planner", () => {
 
 		expect(result.candidates[0]?.counts).toMatchObject({
 			remoteKnownMissingLocal: { artifacts: 4, files: 4, total: 8 },
-			retrievableMissingLocal: { artifacts: 2, files: 2, total: 4 },
+			retrievableMissingLocal: { artifacts: 2, files: remainingFiles, total: remainingTotal },
 			duplicateAliases: { artifacts: 1, files: 0, total: 1 },
 			staticFalsePositive: { artifacts: 1, files: 0, total: 1 },
 			unsupportedMetadataOnly: { artifacts: 0, files: 1, total: 1 },
-			retrievalFailed: { artifacts: 0, files: 1, total: 1 },
-			failedTerminal: { artifacts: 0, files: 0, total: 0 },
+			retrievalFailed: { artifacts: 0, files: retrievalFailures, total: retrievalFailures },
+			failedTerminal: { artifacts: 0, files: terminalFailures, total: terminalFailures },
 		});
 		expect(result.metrics.retrievableMissingLocal).toMatchObject({
 			artifacts: 2,
-			files: 2,
-			total: 4,
+			files: remainingFiles,
+			total: remainingTotal,
 		});
-		expect(result.candidates[0]?.reason).toContain("4 retrievable missing local assets");
+		expect(result.candidates[0]?.reason).toContain(
+			`${remainingTotal} retrievable missing local assets`,
+		);
 		expect(result.candidates[0]?.createRequest).toMatchObject({
 			assetKinds: ["artifacts", "files"],
-			maxItems: 4,
+			maxItems: remainingTotal,
 		});
 	});
 
@@ -858,6 +977,7 @@ describe("account mirror artifact recovery planner", () => {
 
 function searchRow(input: {
 	id: string;
+	catalogItemId?: string;
 	source: "account_mirror" | "run_archive";
 	sourceKind: string;
 	kind: string;
@@ -865,7 +985,7 @@ function searchRow(input: {
 	eligibilityState?: string;
 	libraryRouteKind?: string;
 	remoteUrl?: string;
-}) {
+}): SearchProjectionRow {
 	return {
 		id: input.id,
 		object: "search_result_row" as const,
@@ -889,7 +1009,9 @@ function searchRow(input: {
 			files: input.kind === "upload" ? 1 : 0,
 			artifacts: input.kind === "artifact" ? 1 : 0,
 		},
-		links: {},
+		links: input.catalogItemId
+			? { catalogItem: `/v1/account-mirrors/catalog/${input.catalogItemId}` }
+			: {},
 		metadata: {
 			fileAvailable: input.source === "run_archive" ? true : null,
 			raw: input.eligibilityState

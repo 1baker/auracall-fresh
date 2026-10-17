@@ -234,6 +234,7 @@ export function createAccountMirrorProviderTrafficPlanController(
 	const budgetedGovernor: ProviderTrafficGovernor = {
 		attribution: governor.attribution,
 		checkWarning: governor.checkWarning?.bind(governor),
+		admitBackendRequest: governor.admitBackendRequest?.bind(governor),
 		snapshotAdmissionState: () => {
 			const byBudget = new Map<
 				string,
@@ -274,7 +275,8 @@ export function createAccountMirrorProviderTrafficPlanController(
 				current.limit += entry.limit;
 				byPhase.set(entry.phase, current);
 			}
-			const recentEffects = governor.snapshotAdmissionState?.().recentEffects;
+			const baseState = governor.snapshotAdmissionState?.();
+			const recentEffects = baseState?.recentEffects;
 			return {
 				version: 1,
 				phases: [...byPhase.values()].map((entry) => ({
@@ -283,6 +285,9 @@ export function createAccountMirrorProviderTrafficPlanController(
 				})),
 				budgets: budgetState,
 				...(recentEffects ? { recentEffects } : {}),
+				...(baseState?.backendRequestOutcome
+					? { backendRequestOutcome: baseState.backendRequestOutcome }
+					: {}),
 			};
 		},
 		async begin(input) {

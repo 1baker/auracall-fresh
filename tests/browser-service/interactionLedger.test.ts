@@ -16,6 +16,205 @@ const foregroundScope: ProviderInteractionScope = {
 };
 
 describe("interactionLedger (package)", () => {
+	test("simultaneous backend callers share one request ceiling and one identity reservation", async () => {
+		const directory = await mkdtemp(path.join(os.tmpdir(), "auracall-backend-race-"));
+		try {
+			const callers = Array.from({ length: 3 }, () =>
+				createFileBackedProviderInteractionLedger({ ledgerRoot: directory }),
+			);
+			const request = {
+				scope: foregroundScope,
+				workloadId: "fixture",
+				operationId: "request",
+				tabLeaseId: "lease",
+				interactionClass: "backend-request" as const,
+				mutability: "read-only" as const,
+				startsNewConversation: false,
+				now: "2026-10-14T12:00:00Z",
+				reservationTtlMs: 30000,
+				policy: {
+					maxConcurrentChats: null,
+					maxConversationStartsPerHour: null,
+					maxConversationStartsPerDay: null,
+					maxBackendRequestsPerMinute: 1,
+				},
+			};
+			const outcomes = await Promise.all(
+				callers.map((ledger, index) =>
+					ledger.reserve({ ...request, backendRequestKey: `sha256:${String(index).repeat(64)}` }),
+				),
+			);
+			expect(outcomes.filter((outcome) => outcome.allowed)).toHaveLength(1);
+			expect(
+				outcomes.filter((outcome) => !outcome.allowed).map((outcome) => outcome.reason),
+			).toEqual(["minute-backend-request-limit", "minute-backend-request-limit"]);
+			const winner = outcomes.find((outcome) => outcome.allowed);
+			if (!winner?.allowed) throw new Error("Expected a winning request");
+			const duplicates = await Promise.all(
+				callers.map((ledger) =>
+					ledger.reserve({ ...request, backendRequestKey: winner.reservation.backendRequestKey }),
+				),
+			);
+			for (const duplicate of duplicates)
+				expect(duplicate).toMatchObject({
+					allowed: true,
+					duplicate: true,
+					reservation: { reservationId: winner.reservation.reservationId },
+				});
+			expect(await callers[0].list()).toHaveLength(1);
+		} finally {
+			await rm(directory, { recursive: true, force: true });
+		}
+	});
+	test("backend request identity deduplicates across restart without bypassing a shared warning", async () => {
+		const directory = await mkdtemp(path.join(os.tmpdir(), "auracall-backend-identity-"));
+		try {
+			const ledger = createFileBackedProviderInteractionLedger({ ledgerRoot: directory });
+			const request = {
+				scope: foregroundScope,
+				workloadId: "fixture",
+				operationId: "operation",
+				tabLeaseId: "lease",
+				interactionClass: "backend-request" as const,
+				mutability: "read-only" as const,
+				startsNewConversation: false,
+				now: "2026-10-14T12:00:00Z",
+				reservationTtlMs: 30000,
+				backendRequestKey: `sha256:${"b".repeat(64)}`,
+				policy: {
+					maxConcurrentChats: null,
+					maxConversationStartsPerHour: null,
+					maxConversationStartsPerDay: null,
+					maxInteractionsPerMinute: 1,
+					maxBackendRequestsPerMinute: 1,
+				},
+			};
+			const first = await ledger.reserve(request);
+			if (!first.allowed) throw new Error("Expected first backend permit");
+			await ledger.start({
+				reservationId: first.reservation.reservationId,
+				startedAt: request.now,
+			});
+			await ledger.settle({
+				reservationId: first.reservation.reservationId,
+				settledAt: request.now,
+				effectState: "settled",
+				outcome: "succeeded",
+			});
+			const restarted = createFileBackedProviderInteractionLedger({ ledgerRoot: directory });
+			expect(await restarted.reserve(request)).toMatchObject({
+				allowed: true,
+				duplicate: true,
+				reservation: { reservationId: first.reservation.reservationId },
+			});
+			expect(await restarted.reserve({ ...request, tabLeaseId: "foreign-lease" })).toMatchObject({
+				allowed: false,
+				reason: "backend-request-identity-conflict",
+			});
+			expect(await restarted.list()).toHaveLength(1);
+			await ledger.recordProviderWarning({
+				scope: foregroundScope,
+				classification: "rate-limit",
+				reason: "fixture",
+				observedAt: request.now,
+				evidence: {
+					classifierVersion: "fixture",
+					visibleSummary: "fixture warning",
+					sourceTargetClass: "leased-page",
+				},
+			});
+			expect(
+				(await restarted.listActiveProviderWarnings({ now: request.now }))[0].evidence
+					?.cumulativeCounts,
+			).toMatchObject({ interactions: 0, backendRequests: 1 });
+			expect(await restarted.reserve(request)).toMatchObject({
+				allowed: false,
+				reason: "provider-warning",
+			});
+		} finally {
+			await rm(directory, { recursive: true, force: true });
+		}
+	});
+	test("backend request permits do not consume or inherit the browser-operation minute budget", async () => {
+		const directory = await mkdtemp(path.join(os.tmpdir(), "auracall-backend-budget-"));
+		try {
+			const ledger = createFileBackedProviderInteractionLedger({ ledgerRoot: directory });
+			const request = {
+				scope: foregroundScope,
+				workloadId: "fixture",
+				operationId: "operation",
+				tabLeaseId: "lease",
+				interactionClass: "navigation" as const,
+				mutability: "read-only" as const,
+				startsNewConversation: false,
+				now: "2026-10-14T12:00:00Z",
+				reservationTtlMs: 30000,
+				policy: {
+					maxConcurrentChats: null,
+					maxConversationStartsPerHour: null,
+					maxConversationStartsPerDay: null,
+					maxInteractionsPerMinute: 1,
+					maxBackendRequestsPerMinute: 2,
+				},
+			};
+			const operation = await ledger.reserve(request);
+			if (!operation.allowed) throw new Error("Expected initial operation permit");
+			await ledger.start({
+				reservationId: operation.reservation.reservationId,
+				startedAt: request.now,
+			});
+			await ledger.settle({
+				reservationId: operation.reservation.reservationId,
+				settledAt: request.now,
+				effectState: "settled",
+				outcome: "succeeded",
+			});
+			const restarted = createFileBackedProviderInteractionLedger({ ledgerRoot: directory });
+			const backend = await restarted.reserve({
+				...request,
+				interactionClass: "backend-request",
+				operationId: "backend",
+				backendRequestKey: `sha256:${"a".repeat(64)}`,
+			});
+			expect(backend.allowed).toBe(true);
+			const second = await restarted.reserve({
+				...request,
+				scope: {
+					...foregroundScope,
+					runtimeProfileId: "runtime-b",
+					managedBrowserProfile: "managed-b",
+				},
+				interactionClass: "backend-request",
+				operationId: "backend-second",
+				backendRequestKey: `sha256:${"c".repeat(64)}`,
+			});
+			expect(second.allowed).toBe(true);
+			expect(
+				await ledger.reserve({
+					...request,
+					interactionClass: "backend-request",
+					operationId: "backend-third",
+					backendRequestKey: `sha256:${"d".repeat(64)}`,
+				}),
+			).toMatchObject({ allowed: false, reason: "minute-backend-request-limit" });
+			expect(
+				await restarted.summarizeUsage({
+					provider: "chatgpt",
+					tenantKey: "account-a",
+					now: request.now,
+				}),
+			).toMatchObject({ interactionsLastMinute: 1, activeChats: 0 });
+			expect(
+				await restarted.summarizeBackendRequestUsage({
+					provider: "chatgpt",
+					tenantKey: "account-a",
+					now: request.now,
+				}),
+			).toEqual({ admittedRequestsLastMinute: 2, activeRequests: 2 });
+		} finally {
+			await rm(directory, { recursive: true, force: true });
+		}
+	});
 	test("a stricter account cap expires with its contributing interaction rather than being renewed by other callers", async () => {
 		const ledger = createInMemoryProviderInteractionLedger();
 		const reserve = async (operationId: string, now: string, limit: number) => {

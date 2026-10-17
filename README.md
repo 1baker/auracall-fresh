@@ -730,6 +730,11 @@ Terminology note:
   interrupt pending admission pacing within a one-second polling interval plus
   store-read latency. This budget counts admitted operations, not every request
   generated internally by a provider page.
+  On an attached owned ChatGPT connection, native backend429responses are
+  propagated to the shared account warning guard before waiting for a visible
+  dialog or the next DOM warning probe. Foreign-origin and static-resource
+  responses do not establish that provider warning. This warning delivery does
+  not supply a separate backend-request admission budget.
   Project conversation reads retain an already-ready same-origin project route
   whose URL carries a display-name suffix after the stable project ID, avoiding
   an extra navigation solely to canonicalize its URL. A different project still
@@ -819,6 +824,13 @@ Terminology note:
   conversation before provider work or `maxItems` budget is spent.
   In tab-affinity mode, a standalone context read acquires the requested
   conversation route directly and reuses its owned process tab for later reads.
+  Crawler tab creation starts blank; the provider route loads after exact custody
+  through governed navigation. An owned blank can resume only with observed blank
+  URL and known effects. Blank acquisition does not consume the provider
+  renavigation cooldown. ChatGPT may
+  canonicalize a root conversation into its project URL; settling and reuse accept
+  that same conversation, while preserving any explicitly requested project and
+  the expected origin.
   Explicit navigation restrictions and caller-owned exact targets remain
   authoritative.
   When an initial ChatGPT payload fallback leaves readable conversation DOM,
@@ -853,6 +865,34 @@ Terminology note:
   `cache context get` returns the receipt as `terminalReceipt` without
   contacting a browser.
   An explicit `--refresh` never substitutes stale cached context for a timeout.
+  Programmatic context reads with owned backend request admission allow up to five
+  additional seconds after abort/deadline for adapter cleanup. They retain the
+  original abort/timeout code; failed or unconfirmed cleanup fences custody and
+  prevents cached fallback. Reads without request admission keep their existing
+  deadline behavior. Request-aware utilities close sessions retained during their
+  operation before settling the lease; later calls connect with fresh authority.
+  They reject inherited provider sessions rather than borrow a prior authority.
+  Confirmed pre-send budget denial retains its typed, resumable outcome.
+  Account Mirror detail collection propagates owned retained-session cleanup
+  failures before accepting completion or starting the next detail row; combined
+  read/cleanup failures retain both causes.
+  Each top-level collection pass closes its retained detail client, including
+  partial chunks. Completed evidence and the continuation cursor cross passes;
+  the next explicit pass reconnects. Per-surface attribution shares that lifetime.
+  With request admission active, detail timeout or cancellation drains provider
+  completion for at most five seconds and stops the pass. Confirmed cleanup does
+  not turn a cancelled read into success; unconfirmed cleanup retains custody.
+  If a request-aware context call hands back a retained session after that drain
+  expires, its eventual settlement still closes the session. The earlier timeout
+  stays terminal; late data does not resume collection.
+  A ChatGPT detail refresh with explicit conversation IDs acquires its crawler
+  on the first requested conversation and verifies identity on that route,
+  avoiding a preliminary home-page visit. Other refresh phases use the configured
+  starting route. Provider warnings and navigation cooldowns still apply.
+  Target-enablement response deadlines begin after desktop admission. Admission
+  checks, cancellation and total workflow deadlines still apply. Recovery only
+  subtracts archive availability for the same current catalog item and account
+  scope; repeated historical copies cannot erase unrelated missing assets.
   History-backed materialization is an explicit separate job surface:
   `POST /v1/account-mirrors/materializations` queues a durable
   `history_materialization_job` by provider conversation id, account-mirror
@@ -962,6 +1002,17 @@ Terminology note:
   browser-backed provider work for explicit proofs; MCP parity is
   `history_materialization_create`, `history_materialization_job`,
   `history_materialization_jobs`, and `history_materialization_cancel`.
+  For an explicit `conversationIds` reconciliation batch, verified same-account
+  archive files matching current asset families are returned as duplicate entries
+  with their bytes, SHA-256 and existing archive/asset links. Missing or corrupt
+  files stay eligible for recovery; force bypasses reuse. Scoped archive reads
+  filter by conversation before inspecting files and preserve recorded checksums
+  for independent verification. Reused files do not
+  consume new-transfer counts.
+  The same batch also returns attributable prior terminal-unavailability evidence
+  as skipped entries, retaining the provider failure reason and `priorEvidenceJobId`.
+  Only explicit non-retryable provider-unavailable evidence for the same account,
+  conversation and current asset family qualifies. Force bypasses this projection.
   Before an exact non-forced catalog-item request enters provider work, AuraCall
   compares that selected asset family with readable archive rows and terminal
   history-materialization entries. A match settles as skipped; `--force`

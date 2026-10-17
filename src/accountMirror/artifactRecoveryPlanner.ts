@@ -197,11 +197,14 @@ export function createAccountMirrorArtifactRecoveryPlanner(input: {
         provider: normalized.provider,
         runtimeProfileId: normalized.runtimeProfileId,
       });
+      const catalogRows = input.searchProjectionService
+        ? await readRecoveryCatalogRows(input.searchProjectionService, normalized)
+        : [];
       const materializedOverlay = input.searchProjectionService
-        ? await readMaterializedArchiveOverlay(input.searchProjectionService, normalized)
+        ? await readMaterializedArchiveOverlay(input.searchProjectionService, normalized, catalogRows)
         : new Map<string, AccountMirrorArtifactRecoveryCandidate['counts']['localMaterialized']>();
       const classificationOverlay = await readRecoveryClassificationOverlay({
-        searchProjectionService: input.searchProjectionService ?? null,
+        catalogRows,
         historyMaterializationService: input.historyMaterializationService ?? null,
         request: normalized,
       });
@@ -408,20 +411,24 @@ interface RecoveryClassificationCounts {
   accountLibrary: AccountLibraryRecoveryCounts;
 }
 
+async function readRecoveryCatalogRows(
+  searchProjectionService: SearchProjectionService,
+  request: NormalizedAccountMirrorArtifactRecoveryPlanRequest,
+): Promise<SearchProjectionRow[]> {
+  const results = await Promise.all([
+    searchProjectionService.search(classificationCatalogSearchRequest(request, 'artifact')),
+    searchProjectionService.search(classificationCatalogSearchRequest(request, 'upload')),
+  ]);
+  return results.flatMap(result => result.rows);
+}
+
 async function readRecoveryClassificationOverlay(input: {
-  searchProjectionService: SearchProjectionService | null;
+  catalogRows: SearchProjectionRow[];
   historyMaterializationService: Pick<HistoryMaterializationService, 'listJobs'> | null;
   request: NormalizedAccountMirrorArtifactRecoveryPlanRequest;
 }): Promise<Map<string, RecoveryClassificationCounts>> {
   const overlay = new Map<string, RecoveryClassificationCounts>();
-  if (input.searchProjectionService) {
-    const [artifactRows, uploadRows] = await Promise.all([
-      input.searchProjectionService.search(classificationCatalogSearchRequest(input.request, 'artifact')),
-      input.searchProjectionService.search(classificationCatalogSearchRequest(input.request, 'upload')),
-    ]);
-    for (const row of artifactRows.rows) addCatalogClassificationRow(overlay, row);
-    for (const row of uploadRows.rows) addCatalogClassificationRow(overlay, row);
-  }
+  for (const row of input.catalogRows) addCatalogClassificationRow(overlay, row);
   if (input.historyMaterializationService) {
     const jobs = await input.historyMaterializationService.listJobs({
       status: 'terminal',
@@ -501,9 +508,9 @@ function addHistoryMaterializationClassification(
     if (entry.status === 'failed' || entry.status === 'skipped') {
       if (entry.failureKind === 'retrieval_failed') {
         incrementAssetCount(counts.retrievalFailed, field);
-      } else {
-        // Older manifests did not distinguish retrieval failure from terminal
-        // provider unavailability, so retain their historical interpretation.
+      } else if (entry.failureKind === 'provider_unavailable' || entry.assetAvailability === 'unavailable') {
+        // Only explicit provider unavailability can make a historical failure
+        // terminal. Generic legacy failures cannot suppress fresh inventory.
         incrementAssetCount(counts.failedTerminal, field);
       }
     }
@@ -848,19 +855,31 @@ function classificationOnlyStatus(
 async function readMaterializedArchiveOverlay(
   searchProjectionService: SearchProjectionService,
   request: NormalizedAccountMirrorArtifactRecoveryPlanRequest,
+  catalogRows: SearchProjectionRow[],
 ): Promise<Map<string, AccountMirrorArtifactRecoveryCandidate['counts']['localMaterialized']>> {
   const [artifactRows, uploadRows] = await Promise.all([
     searchProjectionService.search(materializedArchiveSearchRequest(request, 'artifact')),
     searchProjectionService.search(materializedArchiveSearchRequest(request, 'upload')),
   ]);
   const overlay = new Map<string, AccountMirrorArtifactRecoveryCandidate['counts']['localMaterialized']>();
-  for (const row of artifactRows.rows) {
-    addMaterializedArchiveRow(overlay, row, 'artifacts');
-  }
-  for (const row of uploadRows.rows) {
-    addMaterializedArchiveRow(overlay, row, 'files');
+  const currentItems = new Set(catalogRows.filter(row => row.source === 'account_mirror')
+    .map(catalogAssetKey).filter((key): key is string => key !== null));
+  const countedItems = new Set<string>();
+  for (const row of [...artifactRows.rows, ...uploadRows.rows]) {
+    const key = catalogAssetKey(row);
+    if (row.source !== 'run_archive' || !key || !currentItems.has(key) || countedItems.has(key)) continue;
+    const field = row.kind === 'artifact' ? 'artifacts' : row.kind === 'upload' ? 'files' : null;
+    if (!field) continue;
+    countedItems.add(key);
+    addMaterializedArchiveRow(overlay, row, field);
   }
   return overlay;
+}
+
+function catalogAssetKey(row: SearchProjectionRow): string | null {
+  const locator = normalizeString(row.links.catalogItem);
+  if (!locator || !row.provider || !row.runtimeProfileId || !row.tenant) return null;
+  return [row.provider, row.runtimeProfileId, normalizeTenantKey(row.tenant), row.kind, locator].join('\0');
 }
 
 function materializedArchiveSearchRequest(

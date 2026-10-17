@@ -59,6 +59,7 @@ async function resolvePortOrLaunch(options: BrowserToolsPortResolverOptions): Pr
     : DEFAULT_DEBUG_PORT_RANGE;
   const logger = (message: string) => console.log(message);
   const { chrome } = await launchManualLoginSession({
+    browserConfig: launchProfile,
     chromePath: options.chromePath ?? launchProfile.chromePath ?? resolved.chromePath ?? DEFAULT_CHROME_BIN,
     profileName: launchProfile.chromeProfile ?? resolved.chromeProfile ?? 'Default',
     userDataDir,

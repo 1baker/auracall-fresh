@@ -10,6 +10,26 @@ type RuntimeEvaluator = {
 export async function probeChatgptRateLimitWarning(
 	context: unknown,
 ): Promise<ProviderTrafficWarning | null> {
+	const response = (
+		context as { nativeProviderResponse?: { url?: string; status?: number } } | null
+	)?.nativeProviderResponse;
+	if (response?.status === 429 && typeof response.url === "string") {
+		try {
+			const url = new URL(response.url);
+			if (
+				["https://chatgpt.com", "https://chat.openai.com"].includes(url.origin) &&
+				url.pathname.startsWith("/backend-api/")
+			) {
+				return {
+					classification: "rate-limit",
+					reason: "Owned ChatGPT backend response returned HTTP 429.",
+				};
+			}
+		} catch {
+			/* An invalid or foreign response is not provider evidence. */
+		}
+		return null;
+	}
 	const runtime = context as Partial<RuntimeEvaluator> | null;
 	if (!runtime?.evaluate) return null;
 	const evaluated = await runtime.evaluate({

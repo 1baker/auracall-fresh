@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
-import { runInNewContext } from "node:vm";
 import os from "node:os";
 import path from "node:path";
+import { runInNewContext } from "node:vm";
 import { describe, expect, test, vi } from "vitest";
 import {
 	awaitChatgptDownloadPromiseWithTimeout,
@@ -325,6 +325,46 @@ describe("normalizeChatgptFeatureSignature", () => {
 });
 
 describe("buildChatgptUrlRouteExpression", () => {
+	test.each([
+		{
+			expected: "https://chatgpt.com/c/route-conversation",
+			actual:
+				"https://chatgpt.com/g/g-p-11111111111111111111111111111111-fixture/c/route-conversation",
+			ready: true,
+		},
+		{
+			expected: "https://chatgpt.com/g/g-p-11111111111111111111111111111111/c/route-conversation",
+			actual:
+				"https://chatgpt.com/g/g-p-11111111111111111111111111111111-fixture/c/route-conversation",
+			ready: true,
+		},
+		{
+			expected: "https://chatgpt.com/g/g-p-11111111111111111111111111111111/c/route-conversation",
+			actual: "https://chatgpt.com/g/g-p-22222222222222222222222222222222/c/route-conversation",
+			ready: false,
+		},
+		{
+			expected: "https://chatgpt.com/c/route-conversation",
+			actual: "https://example.test/c/route-conversation",
+			ready: false,
+		},
+		{
+			expected: "https://chatgpt.com/c/route-conversation",
+			actual: "https://chatgpt.com/c/another-conversation",
+			ready: false,
+		},
+	])("qualifies canonical conversation identity and origin ($actual)", ({
+		expected,
+		actual,
+		ready,
+	}) => {
+		const value = runInNewContext(buildChatgptUrlRouteExpressionForTest(expected), {
+			location: new URL(actual),
+			document: { title: "Fixture" },
+		});
+		expect(Boolean(value)).toBe(ready);
+	});
+
 	test("uses the requested origin and pathname for non-project navigation", () => {
 		const expression = buildChatgptUrlRouteExpressionForTest(
 			"https://chatgpt.com/plugins#settings/Plugins",
@@ -533,7 +573,7 @@ describe("ensureChatgptConversationSurfaceReadyForRead", () => {
 		]);
 
 		expect(outcome).toBe("ready");
-		expect(evaluate).toHaveBeenCalledTimes(4);
+		expect(evaluate).toHaveBeenCalledTimes(2);
 		expect(scrapeTelemetry.providerActions).toMatchObject({
 			"chatgpt.skipSameRouteNavigation": 1,
 		});
@@ -544,29 +584,20 @@ describe("ensureChatgptConversationSurfaceReadyForRead", () => {
 		try {
 			const conversationId = "same-route-post-payload-stall";
 			const url = `https://chatgpt.com/c/${conversationId}`;
-			const evaluate = vi.fn((_input: { expression?: string }) => {
-				const call = evaluate.mock.calls.length;
-				if (call <= 2) {
-					return Promise.resolve({ result: { value: [] } });
-				}
-				if (call === 3) {
-					return Promise.resolve({ result: { value: url } });
-				}
-				if (call <= 6) {
-					return Promise.resolve({ result: { value: true } });
-				}
-				if (call === 7) {
+			let payloadRead = false;
+			const evaluate = vi.fn((input: { expression?: string }) => {
+				const expression = input.expression ?? "";
+				if (expression.includes("fetch(") && expression.includes("/backend-api/conversation/")) {
+					payloadRead = true;
 					return Promise.resolve({
-						result: {
-							value: {
-								ok: true,
-								body: JSON.stringify({ mapping: {} }),
-							},
-						},
+						result: { value: { ok: true, body: JSON.stringify({ mapping: {} }) } },
 					});
 				}
-				if (call === 8) {
-					return new Promise<never>(() => undefined);
+				if (expression.trim() === "location.href")
+					return Promise.resolve({ result: { value: url } });
+				if (expression.includes("hasTurns || hasComposer")) {
+					if (payloadRead) return new Promise<never>(() => undefined);
+					return Promise.resolve({ result: { value: true } });
 				}
 				return Promise.resolve({ result: { value: [] } });
 			});
@@ -590,15 +621,26 @@ describe("ensureChatgptConversationSurfaceReadyForRead", () => {
 				new Promise<string>((resolve) => setTimeout(() => resolve("outer-stalled"), 10_001)),
 			]);
 
-			for (let index = 0; index < 20 && evaluate.mock.calls.length < 8; index += 1) {
+			for (
+				let index = 0;
+				index < 20 &&
+				!evaluate.mock.calls.some(
+					([input]) => input.expression?.includes("hasTurns || hasComposer") && payloadRead,
+				);
+				index += 1
+			) {
 				await vi.advanceTimersByTimeAsync(0);
 			}
-			expect(evaluate).toHaveBeenCalledTimes(8);
+			expect(payloadRead).toBe(true);
 			await vi.advanceTimersByTimeAsync(10_001);
 			expect(await outcome).toBe(
 				`Timed out waiting for ChatGPT conversation ${conversationId} post-payload readiness after 10000ms.`,
 			);
-			expect(evaluate.mock.calls[7]?.[0]).toMatchObject({ timeout: 10_000 });
+			expect(
+				[...evaluate.mock.calls]
+					.reverse()
+					.find(([input]) => input.expression?.includes("hasTurns || hasComposer"))?.[0],
+			).toMatchObject({ timeout: 10_000 });
 			expect(scrapeTelemetry.providerActions).toMatchObject({
 				"chatgpt.skipSameRouteNavigation": 1,
 				"chatgpt.waitPostPayloadReadiness": 1,
@@ -725,10 +767,8 @@ describe("ensureChatgptConversationSurfaceReadyForRead", () => {
 			if (expression.includes("fetch(") && expression.includes("/backend-api/conversation/")) {
 				return { result: { value: { ok: false, status: 404, body: "{}" } } };
 			}
-			const call = evaluate.mock.calls.length;
-			if (call <= 2) return { result: { value: [] } };
-			if (call === 3) return { result: { value: url } };
-			if (call <= 6) return { result: { value: true } };
+			if (expression.trim() === "location.href") return { result: { value: url } };
+			if (expression.includes("hasTurns || hasComposer")) return { result: { value: true } };
 			return { result: { value: [] } };
 		});
 		const scrapeTelemetry = createBrowserScrapeTelemetryRecorder();
@@ -878,7 +918,6 @@ describe("clickChatgptViewerDownloadButtonWithClient", () => {
 		});
 	});
 });
-
 
 describe("extractChatgptArtifactFileNameFromUri", () => {
 	test("normalizes sandbox basenames for visible behavior-button matching", () => {
@@ -2637,6 +2676,74 @@ describe("isRetryableConnectionError", () => {
 });
 
 describe("readChatgptConversationPayloadWithClient", () => {
+	test.each([
+		{ path: "/c/conversation-visible", text: "Rendered response", project: null, reuse: true },
+		{ path: "/c/conversation-other", text: "Rendered response", project: null, reuse: false },
+		{ path: "/c/conversation-visible", text: " ", project: null, reuse: false },
+		{
+			path: "/g/g-p-abcdef/c/conversation-visible",
+			text: "Rendered response",
+			project: "g-p-fedcba",
+			reuse: false,
+		},
+	])("rendered payload fallback respects route and content ($path, $text, $project)", async ({
+		path,
+		text,
+		project,
+		reuse,
+	}) => {
+		const location = new URL(`https://chatgpt.com${path}`);
+		const client = {
+			// biome-ignore lint/style/useNamingConvention: CDP protocol domain.
+			Runtime: {
+				evaluate: vi.fn(async ({ expression }: { expression: string }) => {
+					if (expression.includes("/backend-api/conversation/"))
+						return { result: { value: { ok: false, status: 404, body: "{}" } } };
+					if (expression === "location.href") return { result: { value: location.href } };
+					if (expression.includes("const renderedRoute"))
+						return {
+							result: {
+								value: runInNewContext(expression, {
+									location,
+									document: {
+										title: "Fixture",
+										querySelectorAll: () => [
+											{
+												textContent: text,
+												getBoundingClientRect: () => ({ width: 100, height: 40 }),
+											},
+										],
+									},
+								}),
+							},
+						};
+					return { result: { value: true } };
+				}),
+			},
+			// biome-ignore lint/style/useNamingConvention: CDP protocol domain.
+			Network: {
+				enable: vi.fn(async () => undefined),
+				responseReceived: vi.fn(() => () => {}),
+				loadingFinished: vi.fn(() => () => {}),
+			},
+			// biome-ignore lint/style/useNamingConvention: CDP protocol domain.
+			Page: { enable: vi.fn(async () => undefined), navigate: vi.fn(async () => ({})) },
+		};
+		vi.useFakeTimers();
+		try {
+			const pending = readChatgptConversationPayloadWithClient(
+				client as never,
+				"conversation-visible",
+				project,
+				{ allowNavigation: true },
+			);
+			await vi.runAllTimersAsync();
+			await expect(pending).resolves.toBeNull();
+			expect(client.Page.navigate).toHaveBeenCalledTimes(reuse ? 0 : 1);
+		} finally {
+			vi.useRealTimers();
+		}
+	});
 	test("does not force a second route visit for account-mirror payload fallback", async () => {
 		const client = {
 			// biome-ignore lint/style/useNamingConvention: mirrors DevTools protocol domain names.

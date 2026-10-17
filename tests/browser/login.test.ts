@@ -28,6 +28,7 @@ describe('resolveBrowserLoginOptionsFromUserConfig', () => {
       { target: 'grok', managedProfileSeedPolicy: 'reseed-if-source-newer' },
     );
 
+    expect(options.browserConfig).toMatchObject({ chromePath: options.chromePath });
     expect(options).toMatchObject({
       target: 'grok',
       chromePath: '/mnt/c/Program Files/Google/Chrome/Application/chrome.exe',

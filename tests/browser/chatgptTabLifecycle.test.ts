@@ -7,6 +7,8 @@ const chatgptTabLifecycleMocks = vi.hoisted(() => ({
 vi.mock("chrome-remote-interface", () => {
 	const defaultExport = {};
 	Object.defineProperty(defaultExport, "Close", {
+		configurable: true,
+		writable: true,
 		enumerable: true,
 		value: chatgptTabLifecycleMocks.cdpClose,
 	});

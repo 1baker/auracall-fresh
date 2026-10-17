@@ -1,11 +1,81 @@
+import { AsyncLocalStorage } from 'node:async_hooks';
 import CDP from 'chrome-remote-interface';
 
 export interface CdpCommandAdmission {
   run<T>(command: string, effect: () => Promise<T>): Promise<T>;
+  hold?(): Promise<CdpCommandAdmissionHold>;
+}
+export interface CdpCommandAdmissionHold {
+  run<T>(command: string, effect: () => Promise<T>): Promise<T>;
+  close(): Promise<void>;
 }
 export interface CdpEndpoint { host: string; port: number }
 let resolveAdmission: ((endpoint: CdpEndpoint) => Promise<CdpCommandAdmission | undefined>) | undefined;
 const coordinatedSubjects = new WeakSet<object>();
+interface ClientAdmissionState {
+  admission: CdpCommandAdmission;
+  hold?: CdpCommandAdmissionHold;
+  acquiring?: boolean;
+  closed: boolean;
+}
+const clientAdmissions = new WeakMap<object, ClientAdmissionState>();
+
+interface CdpCommandTimeout {
+  timeoutMs: number;
+  timeoutMessage: string;
+  abortSignal?: AbortSignal;
+}
+const commandTimeouts = new AsyncLocalStorage<CdpCommandTimeout>();
+
+async function runTimedCdpEffect<T>(options: CdpCommandTimeout, effect: () => Promise<T>): Promise<T> {
+  options.abortSignal?.throwIfAborted();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let onAbort: (() => void) | undefined;
+  try {
+    return await Promise.race([
+      Promise.resolve().then(() => { options.abortSignal?.throwIfAborted(); return effect(); }),
+      new Promise<never>((_resolve, reject) => {
+        timer = setTimeout(() => reject(new Error(options.timeoutMessage)), options.timeoutMs);
+        if (options.abortSignal) {
+          onAbort = () => reject(options.abortSignal?.reason ?? new Error('CDP command cancelled.'));
+          options.abortSignal.addEventListener('abort', onAbort, { once: true });
+        }
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+    if (onAbort) options.abortSignal?.removeEventListener('abort', onAbort);
+  }
+}
+
+/** Admission remains mandatory; only the admitted wire effect consumes this deadline. */
+export async function withCdpCommandTimeout<T>(subject: unknown, options: CdpCommandTimeout, effect: () => Promise<T>): Promise<T> {
+  options.abortSignal?.throwIfAborted();
+  return hasCdpCommandAdmission(subject)
+    ? commandTimeouts.run(options, effect)
+    : runTimedCdpEffect(options, effect);
+}
+
+/** A request interceptor must retain this hold until interception cleanup completes. */
+export async function holdCdpCommandAdmission(client: object): Promise<CdpCommandAdmissionHold> {
+  const state = clientAdmissions.get(client);
+  if (!state?.admission.hold) throw new Error('Continuous CDP ownership is unavailable for this client.');
+  if (state.closed) throw new Error('CDP client is closed.');
+  if (state.hold || state.acquiring) throw new Error('Continuous CDP ownership is already held for this client.');
+  state.acquiring = true;
+  try {
+    const hold = await state.admission.hold();
+    if (state.closed) {
+      await hold.close();
+      throw new Error('CDP client closed during continuous ownership acquisition.');
+    }
+    state.hold = hold;
+    return { run: (command, effect) => hold.run(command, effect), close: async () => {
+      await hold.close();
+      if (state.hold === hold) state.hold = undefined;
+    } };
+  } finally { state.acquiring = false; }
+}
 
 /** Observation code can choose bounded commands without weakening admission. */
 export function hasCdpCommandAdmission(subject: unknown): boolean {
@@ -39,7 +109,10 @@ function admittedCall(
   args: unknown[],
 ): unknown {
   const callback = typeof args.at(-1) === 'function' ? args.pop() as (error: unknown, result?: unknown) => void : undefined;
-  const result = admission.run(command, async () => invoke(...args));
+  const timeout = commandTimeouts.getStore();
+  const result = admission.run(command, async () => timeout
+    ? runTimedCdpEffect(timeout, async () => invoke(...args))
+    : invoke(...args));
   if (!callback) return result;
   void result.then((value) => callback(null, value), (error: unknown) => callback(error));
   return undefined;
@@ -61,7 +134,18 @@ const guardedCdp: typeof CDP = new Proxy(CDP, {
       coordinatedSubjects.add(client);
       if (client.Runtime && typeof client.Runtime === 'object') coordinatedSubjects.add(client.Runtime);
       const send = client.send.bind(client);
-      client.send = (...commandArgs: unknown[]) => admittedCall(admission, String(commandArgs[0]), send, commandArgs);
+      const state: ClientAdmissionState = { admission, closed: false };
+      clientAdmissions.set(client, state);
+      client.send = (...commandArgs: unknown[]) => admittedCall(state.hold ?? state.admission, String(commandArgs[0]), send, commandArgs);
+      if (typeof client.close === 'function') {
+        const close = client.close.bind(client);
+        client.close = async () => {
+          state.closed = true;
+          await close();
+          await state.hold?.close();
+          state.hold = undefined;
+        };
+      }
       return client;
     });
   },

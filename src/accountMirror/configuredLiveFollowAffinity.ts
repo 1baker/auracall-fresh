@@ -20,6 +20,7 @@ import { classifyStructuredProviderWarning } from "../browser/chatgptAffinityRun
 import { probeChatgptRateLimitWarning } from "../browser/chatgptProviderTraffic.js";
 import { recordChatgptRateLimitDetection } from "../browser/chatgptRateLimitGuard.js";
 import { retireExpiredChatgptTabLeases } from "../browser/chatgptTabRetirement.js";
+import { resolveChatgptConversationUrl } from "../browser/providers/chatgptAdapter.js";
 import { BrowserService } from "../browser/service/browserService.js";
 import { resolveRuntimeProfileUserConfig } from "../browser/service/profileConfig.js";
 import { createBrowserTabConcurrencyRuntime } from "../browser/tabConcurrencyRuntime.js";
@@ -58,6 +59,7 @@ export async function createConfiguredLiveFollowAffinity(input: {
 	runtimeProfileId: string;
 	operationId: string;
 	workloadKind?: "live-follow" | "ephemeral";
+	initialConversationId?: string;
 	maxBrowserInteractionsPerMinute: number;
 	conversationReadCooldownMs?: number;
 	pageRefreshCooldownMs?: number;
@@ -84,8 +86,9 @@ export async function createConfiguredLiveFollowAffinity(input: {
 		throw new Error("Live-follow tab affinity requires a configured ChatGPT tenant identity.");
 	}
 	const browserService = BrowserService.fromConfig(clientConfig, "chatgpt");
-	const configuredUrl =
-		clientConfig.browser?.chatgptUrl ?? clientConfig.browser?.url ?? "https://chatgpt.com/";
+	const configuredUrl = input.initialConversationId
+		? resolveChatgptConversationUrl(input.initialConversationId)
+		: (clientConfig.browser?.chatgptUrl ?? clientConfig.browser?.url ?? "https://chatgpt.com/");
 	const initialTarget = await browserService.resolveServiceTarget({
 		serviceId: "chatgpt",
 		configuredUrl,
@@ -183,10 +186,12 @@ export async function createConfiguredLiveFollowAffinity(input: {
 		scope,
 		operationId: input.operationId,
 		targetUrl: configuredUrl,
+		targetCreationUrl: "about:blank",
 		idleTtlMs: 15 * 60_000,
 		absoluteTtlMs: 8 * 60 * 60_000,
 		now: input.now,
 		coldStartTargetPolicy: "create",
+		allowOwnedUnloadedTarget: true,
 		resolveExistingEndpoint: async () => toEndpoint(initialTarget),
 		verifyBrowserAbsent: () => verifyChromeProcessAbsent(managedBrowserProfile),
 		startBrowser: async () => {
@@ -263,6 +268,7 @@ export async function createConfiguredLiveFollowAffinity(input: {
 			workloadId: `${workloadKind}:${input.operationId}`,
 			operationId: input.operationId,
 			tabLeaseId: crawler.lease.leaseId,
+			targetId: crawler.lease.targetId,
 		},
 		interactionGovernor,
 		mutationAudit: browserService.getMutationAuditSink(),
@@ -412,6 +418,8 @@ export async function createConfiguredLiveFollowAffinity(input: {
 			snapshotProviderTrafficAdmissionState = snapshot;
 		},
 		tabAffinity: {
+			...(crawler.unloadedTarget ? { allowInitialNavigation: true } : {}),
+			configuredUrl,
 			host: crawler.endpoint.host,
 			onTargetNavigation: recordTargetNavigation,
 			port: crawler.endpoint.port,

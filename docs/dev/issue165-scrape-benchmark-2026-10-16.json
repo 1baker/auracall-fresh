@@ -1,0 +1,1084 @@
+{
+  "objective": {
+    "maximumTimeRatio": 1.3,
+    "maximumBackendRequestRatio": 1.3,
+    "requireEquivalentOutputs": true
+  },
+  "scope": "Same conversation contents and discovered artifacts; unavailable artifacts must have explicit evidence. Partial/failed runs cannot pass acceptance.",
+  "coverage": "CDP page Network enabled on owned blank target before provider navigation; browser-wide/background worker coverage not claimed.",
+  "privateReceiptRoot": "~/.auracall/diagnostics/plan0411",
+  "runs": [
+    {
+      "id": "agentic_partial",
+      "receipt": "agentic-benchmark-2026-10-16T19-32-17-009Z/receipt.json",
+      "elapsedMs": 37288,
+      "backendRequests": 70,
+      "navigations": 1,
+      "savedFiles": 1,
+      "accepted": false,
+      "actions": [
+        {
+          "index": 0,
+          "at": "2026-10-16T19:32:27.976Z",
+          "command": "navigate",
+          "elapsedMs": 390,
+          "requestCountBefore": 0,
+          "requestCountAfter": 0
+        },
+        {
+          "index": 1,
+          "at": "2026-10-16T19:32:31.374Z",
+          "command": "snapshot",
+          "elapsedMs": 26,
+          "requestCountBefore": 0,
+          "requestCountAfter": 0
+        },
+        {
+          "index": 2,
+          "at": "2026-10-16T19:32:35.221Z",
+          "command": "snapshot",
+          "elapsedMs": 1401,
+          "requestCountBefore": 42,
+          "requestCountAfter": 47
+        },
+        {
+          "index": 3,
+          "at": "2026-10-16T19:32:46.988Z",
+          "command": "read",
+          "elapsedMs": 79,
+          "requestCountBefore": 65,
+          "requestCountAfter": 65
+        },
+        {
+          "index": 4,
+          "at": "2026-10-16T19:32:47.068Z",
+          "command": "click",
+          "elapsedMs": 186,
+          "requestCountBefore": 65,
+          "requestCountAfter": 68
+        },
+        {
+          "index": 5,
+          "at": "2026-10-16T19:32:51.128Z",
+          "command": "downloads",
+          "elapsedMs": 4,
+          "requestCountBefore": 69,
+          "requestCountAfter": 69
+        },
+        {
+          "index": 6,
+          "at": "2026-10-16T19:32:51.133Z",
+          "command": "click",
+          "elapsedMs": 80,
+          "requestCountBefore": 69,
+          "requestCountAfter": 69
+        },
+        {
+          "index": 7,
+          "at": "2026-10-16T19:32:54.259Z",
+          "command": "downloads",
+          "elapsedMs": 3,
+          "requestCountBefore": 70,
+          "requestCountAfter": 70
+        },
+        {
+          "index": 8,
+          "at": "2026-10-16T19:32:54.263Z",
+          "command": "finish",
+          "elapsedMs": null,
+          "requestCountBefore": 70,
+          "requestCountAfter": null
+        }
+      ]
+    },
+    {
+      "id": "agentic_404_diagnosis",
+      "receipt": "agentic-benchmark-2026-10-16T19-33-42-251Z/receipt.json",
+      "elapsedMs": 79964,
+      "backendRequests": 71,
+      "navigations": 1,
+      "savedFiles": 1,
+      "accepted": false,
+      "actions": [
+        {
+          "index": 0,
+          "at": "2026-10-16T19:33:51.951Z",
+          "command": "navigate",
+          "elapsedMs": 242,
+          "requestCountBefore": 0,
+          "requestCountAfter": 0
+        },
+        {
+          "index": 1,
+          "at": "2026-10-16T19:33:55.558Z",
+          "command": "snapshot",
+          "elapsedMs": 11,
+          "requestCountBefore": 7,
+          "requestCountAfter": 7
+        },
+        {
+          "index": 2,
+          "at": "2026-10-16T19:33:59.079Z",
+          "command": "snapshot",
+          "elapsedMs": 810,
+          "requestCountBefore": 38,
+          "requestCountAfter": 43
+        },
+        {
+          "index": 3,
+          "at": "2026-10-16T19:34:02.616Z",
+          "command": "read",
+          "elapsedMs": 32,
+          "requestCountBefore": 64,
+          "requestCountAfter": 64
+        },
+        {
+          "index": 4,
+          "at": "2026-10-16T19:34:02.649Z",
+          "command": "click",
+          "elapsedMs": 126,
+          "requestCountBefore": 64,
+          "requestCountAfter": 67
+        },
+        {
+          "index": 5,
+          "at": "2026-10-16T19:34:05.788Z",
+          "command": "downloads",
+          "elapsedMs": 2,
+          "requestCountBefore": 67,
+          "requestCountAfter": 67
+        },
+        {
+          "index": 6,
+          "at": "2026-10-16T19:34:05.791Z",
+          "command": "snapshot",
+          "elapsedMs": 4,
+          "requestCountBefore": 67,
+          "requestCountAfter": 67
+        },
+        {
+          "index": 7,
+          "at": "2026-10-16T19:34:49.808Z",
+          "command": "click",
+          "elapsedMs": 59,
+          "requestCountBefore": 68,
+          "requestCountAfter": 68
+        },
+        {
+          "index": 8,
+          "at": "2026-10-16T19:35:02.150Z",
+          "command": "downloads",
+          "elapsedMs": 3,
+          "requestCountBefore": 71,
+          "requestCountAfter": 71
+        },
+        {
+          "index": 9,
+          "at": "2026-10-16T19:35:02.154Z",
+          "command": "finish",
+          "elapsedMs": null,
+          "requestCountBefore": 71,
+          "requestCountAfter": null
+        }
+      ]
+    },
+    {
+      "id": "deterministic_before",
+      "receipt": "agentic-benchmark-2026-10-16T19-35-47-734Z/receipt.json",
+      "elapsedMs": 121805,
+      "backendRequests": 68,
+      "navigations": 1,
+      "savedFiles": 0,
+      "accepted": false,
+      "actions": []
+    },
+    {
+      "id": "deterministic_traced_before",
+      "receipt": "agentic-benchmark-2026-10-16T19-38-24-773Z/receipt.json",
+      "elapsedMs": 47149,
+      "backendRequests": 66,
+      "navigations": 1,
+      "savedFiles": 0,
+      "accepted": false,
+      "actions": []
+    },
+    {
+      "id": "deterministic_rendered_reuse",
+      "receipt": "agentic-benchmark-2026-10-16T19-42-10-655Z/receipt.json",
+      "elapsedMs": 67700,
+      "backendRequests": 71,
+      "navigations": 1,
+      "savedFiles": 1,
+      "accepted": false,
+      "sourceFix": "rendered conversation payload fallback reuse",
+      "artifactHashes": [
+        {
+          "bytes": 13889,
+          "sha256": "fd1720c0e3df3579ea567679c642e895a7993a3b558b8743fa47495a201e87ca"
+        }
+      ]
+    },
+    {
+      "id": "agentic_clean",
+      "receipt": "agentic-benchmark-2026-10-16T19-53-22-106Z/receipt.json",
+      "receiptSha256": "6b49b3b53e21d7244ad7c3c8a924bb7a1833408c3c0b47d029409cb6f5852351",
+      "elapsedMs": 48532,
+      "backendRequests": 72,
+      "navigations": 1,
+      "savedFiles": 1,
+      "unavailableArtifacts": 1,
+      "allExpectedOutcomesAccounted": true,
+      "acceptedForThisCase": true,
+      "actions": [
+        {
+          "index": 0,
+          "at": "2026-10-16T19:53:47.340Z",
+          "command": "navigate",
+          "requestCountBefore": 0,
+          "elapsedMs": 414,
+          "requestCountAfter": 0
+        },
+        {
+          "index": 1,
+          "at": "2026-10-16T19:53:50.889Z",
+          "command": "snapshot",
+          "requestCountBefore": 0,
+          "elapsedMs": 525,
+          "requestCountAfter": 0
+        },
+        {
+          "index": 2,
+          "at": "2026-10-16T19:53:54.346Z",
+          "command": "snapshot",
+          "requestCountBefore": 28,
+          "elapsedMs": 1020,
+          "requestCountAfter": 38
+        },
+        {
+          "index": 3,
+          "at": "2026-10-16T19:53:59.500Z",
+          "command": "snapshot",
+          "requestCountBefore": 56,
+          "elapsedMs": 552,
+          "requestCountAfter": 60
+        },
+        {
+          "index": 4,
+          "at": "2026-10-16T19:54:03.228Z",
+          "command": "read",
+          "requestCountBefore": 67,
+          "elapsedMs": 32,
+          "requestCountAfter": 67
+        },
+        {
+          "index": 5,
+          "at": "2026-10-16T19:54:03.261Z",
+          "command": "click",
+          "requestCountBefore": 67,
+          "elapsedMs": 196,
+          "requestCountAfter": 70
+        },
+        {
+          "index": 6,
+          "at": "2026-10-16T19:54:06.922Z",
+          "command": "downloads",
+          "requestCountBefore": 71,
+          "elapsedMs": 11,
+          "requestCountAfter": 71
+        },
+        {
+          "index": 7,
+          "at": "2026-10-16T19:54:06.934Z",
+          "command": "click",
+          "requestCountBefore": 71,
+          "elapsedMs": 105,
+          "requestCountAfter": 71
+        },
+        {
+          "index": 8,
+          "at": "2026-10-16T19:54:10.513Z",
+          "command": "downloads",
+          "requestCountBefore": 72,
+          "elapsedMs": 28,
+          "requestCountAfter": 72
+        },
+        {
+          "index": 9,
+          "at": "2026-10-16T19:54:10.544Z",
+          "command": "finish",
+          "requestCountBefore": 72
+        }
+      ]
+    },
+    {
+      "id": "deterministic_clean_download404",
+      "receipt": "agentic-benchmark-2026-10-16T19-54-21-029Z/receipt.json",
+      "receiptSha256": "48d8fb2eb36763de8af064674bf770af0f8304e1d805a41b5b29aa43da3c329c",
+      "elapsedMs": 43666,
+      "backendRequests": 72,
+      "navigations": 1,
+      "savedFiles": 1,
+      "unavailableArtifacts": 1,
+      "allExpectedOutcomesAccounted": true,
+      "acceptedForThisCase": true,
+      "actions": []
+    },
+    {
+      "id": "automatic_scoped_before_legacy_admission_repair",
+      "receipt": "measured-automatic-scoped-2026-10-16T20-01-59-109Z.json",
+      "elapsedMs": 173430,
+      "operationalElapsedMs": 167217,
+      "backendRequestsLowerBound": 127,
+      "coverageComplete": false,
+      "savedFiles": 0,
+      "childCreated": false,
+      "freshMessages": 6,
+      "freshArtifacts": 2,
+      "freshFiles": 2,
+      "accepted": false,
+      "reason": "Fresh inventory suppressed by unqualified historical terminal classification; time and request lower bound both exceed clean agentic limits."
+    },
+    {
+      "id": "automatic_scoped_conversation_initial_route",
+      "receipt": "measured-automatic-scoped-2026-10-16T20-20-26-343Z.json",
+      "elapsedMs": 44394,
+      "operationalElapsedMs": 36402,
+      "backendRequestsLowerBound": 59,
+      "coverageComplete": false,
+      "savedFiles": 0,
+      "childCreated": false,
+      "accepted": false,
+      "reason": "Timed out enabling selected page target on newly observed browser process. No completed context or materialization; elapsed and request figures cannot establish acceptance.",
+      "agentActions": {
+        "productCompletionCreate": 1,
+        "productCompletionPause": 1,
+        "providerPrompt": 0,
+        "observerAttachments": 1,
+        "postFailureInspectionAttempt": 1,
+        "postFailureInspectionReachedBrowser": false,
+        "terminalControllerSigterm": 1
+      },
+      "runtimeDeltaRolledBack": true
+    },
+    {
+      "id": "automatic_enable_trace_observer_failure",
+      "receipt": "measured-automatic-scoped-2026-10-16T20-24-34-466Z.json",
+      "elapsedMs": 37864,
+      "operationalElapsedMs": 32398,
+      "backendRequestsLowerBound": 59,
+      "coverageComplete": false,
+      "savedFiles": 0,
+      "childCreated": false,
+      "accepted": false,
+      "reason": "GET observation HTTP500 caused the old controller to pause; domain enablement itself succeeded. Observer harness failure, not product acceptance.",
+      "productControls": {
+        "completionCreate": 1,
+        "completionPause": 1,
+        "providerPrompts": 0
+      }
+    },
+    {
+      "id": "automatic_resilient_observer_enable_timeout",
+      "receipt": "measured-automatic-scoped-2026-10-16T20-27-58-496Z.json",
+      "elapsedMs": 22198,
+      "operationalElapsedMs": 16658,
+      "backendRequestsLowerBound": 0,
+      "coverageComplete": false,
+      "savedFiles": 0,
+      "childCreated": false,
+      "accepted": false,
+      "reason": "Already-rendered target still hit a five-second timeout that included desktop admission; no inventory pass or child completed.",
+      "productControls": {
+        "completionCreate": 1,
+        "completionPause": 1,
+        "providerPrompts": 0
+      }
+    },
+    {
+      "id": "automatic_wire_deadline_inventory_only",
+      "receipt": "measured-automatic-scoped-2026-10-16T20-34-10-138Z.json",
+      "elapsedMs": 54932,
+      "operationalElapsedMs": 50443,
+      "backendRequestsLowerBound": 70,
+      "coverageComplete": false,
+      "savedFiles": 0,
+      "childCreated": false,
+      "accepted": false,
+      "reason": "Inventory completed; historical archive aggregate erased actionable backlog, so no materialization child. Not a complete scrape.",
+      "productControls": {
+        "completionCreate": 1,
+        "completionPause": 1,
+        "providerPrompts": 0
+      }
+    },
+    {
+      "id": "agentic_readiness_diagnostic",
+      "receipt": "agentic-benchmark-2026-10-16T20-26-24-458Z/receipt.json",
+      "elapsedMs": 76505,
+      "backendRequests": 69,
+      "coverageComplete": true,
+      "freshMessages": 6,
+      "savedFiles": 1,
+      "providerUnavailableArtifacts": 1,
+      "complete": true,
+      "accepted": false,
+      "reason": "Diagnostic includes operator setup idle time and an accidental Copy click after a DOM index changed. Outcomes and six message texts match the clean baseline; do not inflate the clean comparison ceiling.",
+      "agentActions": {
+        "navigate": 1,
+        "diagnose": 1,
+        "read": 1,
+        "snapshot": 2,
+        "click": 3,
+        "downloads": 1,
+        "finish": 1
+      },
+      "unintendedCopyClicks": 1,
+      "providerPrompts": 0
+    },
+    {
+      "id": "automatic_exact_archive_overlay_child_created",
+      "receipt": "measured-automatic-scoped-2026-10-16T20-44-33-068Z.json",
+      "elapsedMs": 132904,
+      "operationalElapsedMs": 127472,
+      "backendRequestsLowerBound": 72,
+      "coverageComplete": false,
+      "freshMessages": 6,
+      "freshArtifacts": 2,
+      "freshFileReferences": 2,
+      "savedFiles": 0,
+      "verifiedPreviouslyArchivedFiles": 1,
+      "previouslyArchivedBytes": 13889,
+      "previouslyArchivedSha256": "fd1720c0e3df3579ea567679c642e895a7993a3b558b8743fa47495a201e87ca",
+      "existingAssetQualification": "exact-overlay-existing-asset-qualification-20261016.json",
+      "childCreated": true,
+      "childStatus": "failed",
+      "childReceipt": "exact-overlay-child-latest-20261016.json",
+      "childEntries": 1,
+      "providerUnavailableArtifacts": 1,
+      "accepted": false,
+      "reason": "Real child created and observed matched artifact404; available artifact already exists with matching bytes/hash but is omitted from child result. Full elapsed exceeds clean agentic ceiling; startup request coverage remains incomplete.",
+      "agentActions": {
+        "productCompletionCreate": 1,
+        "productCompletionPause": 1,
+        "providerPrompts": 0,
+        "observerAttachments": 2,
+        "readOnlyChildStoreRead": 1,
+        "readOnlyExistingArchiveFileVerification": 1
+      },
+      "elapsedRatioToCleanAgentic": 2.738481826423803
+    },
+    {
+      "id": "automatic_observer_revision_false_stop",
+      "receipt": "measured-automatic-scoped-2026-10-16T21-03-20-074Z.json",
+      "elapsedMs": 11010,
+      "operationalElapsedMs": 6302,
+      "backendRequests": null,
+      "observedBackendRequestsLowerBound": 0,
+      "coverageComplete": false,
+      "accepted": false,
+      "reason": "Observer treated a heartbeat revision as ownership loss; paused before provider navigation. No acceptance."
+    },
+    {
+      "id": "automatic_same_parent_fenced_resume",
+      "receipt": "measured-automatic-scoped-2026-10-16T21-07-36-281Z.json",
+      "elapsedMs": 6745,
+      "operationalElapsedMs": 3614,
+      "backendRequests": null,
+      "observedBackendRequestsLowerBound": 0,
+      "coverageComplete": false,
+      "accepted": false,
+      "reason": "Same parent resumed from private store; existing fenced target rejected before provider work. No acceptance."
+    },
+    {
+      "id": "automatic_verified_archive_reuse_profile",
+      "receipt": "measured-automatic-scoped-2026-10-16T21-10-42-716Z.json",
+      "elapsedMs": 39195,
+      "operationalElapsedMs": 33654,
+      "backendRequests": null,
+      "observedBackendRequestsLowerBound": 70,
+      "coverageComplete": false,
+      "accepted": false,
+      "reason": "Verified archive A surfaced as duplicate with its bytes/hash and asset link. Current result omits prior terminal B; startup coverage incomplete. No acceptance."
+    },
+    {
+      "id": "agentic_multi_artifact_clean",
+      "receipt": "agentic-benchmark-2026-10-16T21-14-25-052Z/receipt.json",
+      "elapsedMs": 49510,
+      "backendRequests": 68,
+      "coverageComplete": true,
+      "complete": true,
+      "accepted": false,
+      "actions": [
+        {
+          "index": 0,
+          "at": "2026-10-16T21:14:36.585Z",
+          "command": "navigate",
+          "elapsedMs": 364,
+          "requestCountBefore": 0,
+          "requestCountAfter": 0
+        },
+        {
+          "index": 1,
+          "at": "2026-10-16T21:14:47.735Z",
+          "command": "snapshot",
+          "elapsedMs": 55,
+          "requestCountBefore": 62,
+          "requestCountAfter": 62
+        },
+        {
+          "index": 2,
+          "at": "2026-10-16T21:14:47.791Z",
+          "command": "read",
+          "elapsedMs": 19,
+          "requestCountBefore": 62,
+          "requestCountAfter": 62
+        },
+        {
+          "index": 3,
+          "at": "2026-10-16T21:14:55.233Z",
+          "command": "click",
+          "elapsedMs": 52,
+          "requestCountBefore": 62,
+          "requestCountAfter": 64
+        },
+        {
+          "index": 4,
+          "at": "2026-10-16T21:15:04.202Z",
+          "command": "snapshot",
+          "elapsedMs": 4,
+          "requestCountBefore": 66,
+          "requestCountAfter": 66
+        },
+        {
+          "index": 5,
+          "at": "2026-10-16T21:15:10.149Z",
+          "command": "click",
+          "elapsedMs": 95,
+          "requestCountBefore": 66,
+          "requestCountAfter": 66
+        },
+        {
+          "index": 6,
+          "at": "2026-10-16T21:15:14.501Z",
+          "command": "downloads",
+          "elapsedMs": 4,
+          "requestCountBefore": 68,
+          "requestCountAfter": 68
+        },
+        {
+          "index": 7,
+          "at": "2026-10-16T21:15:14.507Z",
+          "command": "finish",
+          "requestCountBefore": 68
+        }
+      ],
+      "reason": "Four message texts and two fresh successful artifact downloads, A6172 bytes and B21186 bytes. New comparable baseline."
+    },
+    {
+      "id": "deterministic_multi_artifact_route_timeout",
+      "receipt": "agentic-benchmark-2026-10-16T21-18-38-335Z/receipt.json",
+      "elapsedMs": 49650,
+      "backendRequests": 62,
+      "coverageComplete": true,
+      "complete": false,
+      "accepted": false,
+      "actions": [],
+      "reason": "Fresh cache; context timed out at45000ms after provider canonicalized root conversation into project route. No files; failed output parity."
+    },
+    {
+      "id": "deterministic_multi_artifact_canonical_route",
+      "receipt": "agentic-benchmark-2026-10-16T21-32-31-536Z/receipt.json",
+      "elapsedMs": 41859,
+      "backendRequests": 70,
+      "coverageComplete": true,
+      "complete": true,
+      "accepted": true,
+      "acceptanceScope": "direct public materialization service only; automatic workflow still unaccepted",
+      "messages": 4,
+      "savedFiles": 2,
+      "navigations": 1,
+      "nonfatalNetworkErrors": [
+        {
+          "kind": "net::ERR_ABORTED",
+          "count": 1
+        }
+      ],
+      "reason": "Exact trimmed four message texts and both fresh files byte/hash-equal to actual agentic run; both cost ratios pass."
+    },
+    {
+      "id": "automatic_early_capture_preflight_only",
+      "receipt": "early-capture-preflight-timeout-20261016.json",
+      "elapsedMs": null,
+      "operationalElapsedMs": null,
+      "backendRequests": null,
+      "coverageComplete": false,
+      "accepted": false,
+      "reason": "Initial read-only status preflight hit10000ms and controller exited before creating a completion; no measured provider request coverage.",
+      "observedBackendRequestsLowerBound": null
+    },
+    {
+      "id": "automatic_mixed_runtime_startup_gap",
+      "receipt": "measured-automatic-scoped-2026-10-16T21-41-38-149Z.json",
+      "elapsedMs": 116609,
+      "operationalElapsedMs": 91026,
+      "backendRequests": null,
+      "coverageComplete": false,
+      "accepted": false,
+      "reason": "Installed callback opened provider URL before observation. Later30000ms status timeout caused harness pause and left a queued child. Not acceptance.",
+      "observedBackendRequestsLowerBound": 66
+    },
+    {
+      "id": "automatic_mixed_runtime_orphan_resume",
+      "receipt": "measured-automatic-scoped-2026-10-16T21-46-28-095Z.json",
+      "elapsedMs": 24609,
+      "operationalElapsedMs": 5100,
+      "backendRequests": null,
+      "coverageComplete": false,
+      "accepted": false,
+      "reason": "Startup resumed the exact queued child from the previous diagnostic. Observer WebSocket closed; controller exited and left the child running in storage. No acceptance.",
+      "observedBackendRequestsLowerBound": 0
+    },
+    {
+      "id": "automatic_complete_source_before_crawler_fix",
+      "receipt": "measured-automatic-scoped-2026-10-16T21-49-34-423Z.json",
+      "elapsedMs": 65953,
+      "operationalElapsedMs": 58175,
+      "backendRequests": null,
+      "coverageComplete": false,
+      "accepted": false,
+      "reason": "Complete compiled worktree. Crawler creation still loaded provider URL before attachment; A returned, prior B omitted because identity was recorded in its attempt rather than request. Time exceeds ceiling.",
+      "observedBackendRequestsLowerBound": 68
+    },
+    {
+      "id": "automatic_complete_capture_prior_outcomes",
+      "receipt": "measured-automatic-scoped-2026-10-16T21-58-42-706Z.json",
+      "elapsedMs": 97851,
+      "operationalElapsedMs": 89613,
+      "backendRequests": 66,
+      "coverageComplete": true,
+      "accepted": false,
+      "reason": "Complete compiled worktree with blank crawler acquisition and prior attempt identity attribution. All6texts and A bytes/hash plus prior terminal B explicitly match agentic outcomes. Full page startup capture66requests. Time97851ms exceeds ceiling; no automatic acceptance."
+    },
+    {
+      "id": "automatic_latency_profile_native_receipt_block",
+      "receipt": "measured-automatic-scoped-2026-10-16T22-10-08-495Z.json",
+      "elapsedMs": 14303,
+      "operationalElapsedMs": 1791,
+      "backendRequests": null,
+      "observedBackendRequestsLowerBound": 0,
+      "coverageComplete": false,
+      "accepted": false,
+      "reason": "Native runtime rejected a running browser without a matching verified desktop receipt before target creation/provider access. No timing conclusion for scrape latency."
+    },
+    {
+      "id": "automatic_cold_multi_incomplete_observer_20261017",
+      "receipt": "measured-automatic-scoped-2026-10-17T02-33-00-394Z.json",
+      "elapsedMs": 63468,
+      "backendRequestsLowerBound": 68,
+      "coverageComplete": false,
+      "accepted": false,
+      "reason": "Observer detached during parent-child custody handoff; files and four trimmed texts match."
+    },
+    {
+      "id": "automatic_cold_multi_complete_20261017",
+      "automaticReceipt": "measured-automatic-scoped-2026-10-17T02-34-40-144Z.json",
+      "agenticReceipt": "agentic-benchmark-2026-10-16T21-14-25-052Z/receipt.json",
+      "scope": "fresh private stores; automatic parent plus real materialization child; force=false",
+      "messages": 4,
+      "allContextTextReadbacksEqual": true,
+      "filesEqualAndLinked": true,
+      "fullElapsedMs": 54168,
+      "agenticElapsedMs": 49510,
+      "elapsedRatio": 1.0940820036356291,
+      "backendRequests": 70,
+      "agenticRequests": 68,
+      "backendRatio": 1.0294117647058822,
+      "coverageComplete": true,
+      "noHardStop": true,
+      "childSucceeded": true,
+      "passed": true,
+      "accepted": true
+    },
+    {
+      "id": "automatic_original_profile_pre_target_custody_gap_20261017",
+      "receipt": "measured-automatic-scoped-2026-10-17T02-35-48-259Z.json",
+      "elapsedMs": 58457,
+      "backendRequestsLowerBound": 66,
+      "coverageComplete": false,
+      "accepted": false,
+      "outputsEquivalent": true,
+      "reason": "Conservative raw coverage false: custody gap before captured target creation. Retained separately; clean repeat governs acceptance."
+    },
+    {
+      "id": "automatic_original_complete_20261017",
+      "receipt": "measured-automatic-scoped-2026-10-17T02-37-15-742Z.json",
+      "outputsReceipt": "original-complete-outputs-20261017.json",
+      "messages": 6,
+      "exactTrimmedTextsEqual": true,
+      "artifactFileVerified": true,
+      "typedPriorUnavailableEvidenceVerified": true,
+      "outputsEquivalent": true,
+      "fullDurationMs": 66178,
+      "operationalElapsedMs": 59750,
+      "backendRequests": 66,
+      "coverageComplete": true,
+      "elapsedTimeRatio": 1.363595153713014,
+      "backendRequestRatio": 0.9166666666666666,
+      "timeCeilingMs": 63091.6,
+      "timeOverCeilingMs": 3086.4000000000015,
+      "accepted": false
+    },
+    {
+      "id": "installed_before_final_repair_20261017",
+      "receipt": "measured-automatic-scoped-2026-10-17T14-08-59-912Z.json",
+      "elapsedMs": 31832,
+      "backendRequestsLowerBound": 71,
+      "coverageComplete": false,
+      "outputsEquivalent": false,
+      "accepted": false,
+      "reason": "Installed history omitted prior unavailable B; provider target created before capture."
+    },
+    {
+      "id": "installed_final_scoped_follow_20261017",
+      "receipt": "measured-automatic-scoped-2026-10-17T14-10-33-153Z.json",
+      "outputReceipt": "installed-final-follow-outputs-20261017.json",
+      "runtime": "installed runtime with recorded narrow compiled deltas",
+      "fullDurationMs": 46995,
+      "backendRequests": 68,
+      "agenticDurationMs": 48532,
+      "agenticRequests": 72,
+      "elapsedTimeRatio": 0.9683301739058765,
+      "backendRequestRatio": 0.9444444444444444,
+      "sixTrimmedTextsEqual": true,
+      "artifactAFileHashVerified": true,
+      "artifactBPriorTypedNonretryableUnavailableVerified": true,
+      "coverageComplete": true,
+      "parentPassCount": 1,
+      "parentPausedAfterBoundedPass": true,
+      "childTerminal": "skipped",
+      "childDuplicateAliases": 1,
+      "childSkipped": 1,
+      "noProviderHardStop": true,
+      "newArtifactTransfers": 0,
+      "freshInstalledArtifactTransferProven": false,
+      "canonicalMergeProven": false,
+      "scopedAcceptancePassed": true,
+      "accepted": true
+    }
+  ],
+  "comparison": {
+    "agenticRun": "agentic_404_diagnosis",
+    "deterministicRun": "deterministic_rendered_reuse",
+    "rawTimeRatio": 0.8466309839427743,
+    "rawBackendRequestRatio": 1.0,
+    "messages": 6,
+    "messagesEqualIgnoringWhitespace": [
+      true,
+      false,
+      true,
+      true,
+      true,
+      true
+    ],
+    "artifactABytes": 13889,
+    "artifactASha256": "fd1720c0e3df3579ea567679c642e895a7993a3b558b8743fa47495a201e87ca",
+    "artifactB": "Observed interpreter download HTTP404 after exact hit-tested manual click; deterministic still generic skipped",
+    "accepted": false,
+    "reason": "Unavailable artifact must be classified explicitly; successful complete multi-artifact case and end-to-end automatic comparison remain unproven. Agentic 80s includes failed-asset diagnosis and is not a clean speed baseline.",
+    "contentDifferences": {
+      "messageIndex": 1,
+      "productOnlyUiLabels": {
+        "Open file": 2
+      },
+      "otherMessagesEqualIgnoringWhitespace": true
+    }
+  },
+  "cleanComparison": {
+    "agenticRun": "agentic_clean",
+    "deterministicRun": "deterministic_clean_download404",
+    "elapsedTimeRatio": 0.8997362564905629,
+    "backendRequestRatio": 1.0,
+    "limits": {
+      "elapsedMs": 63091.6,
+      "backendRequests": 93
+    },
+    "messagesEqualAfterOuterTrim": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "savedBytes": 13889,
+    "savedSha256": "fd1720c0e3df3579ea567679c642e895a7993a3b558b8743fa47495a201e87ca",
+    "outcomes": {
+      "materialized": 1,
+      "providerUnavailable": 1
+    },
+    "freshDeterministicCache": "fresh per-run root, no force",
+    "passedForThisCase": true,
+    "goalComplete": false,
+    "remaining": "Automatic completion-to-materialization path and successful multi-artifact harvesting remain unverified."
+  },
+  "automaticAdmissionReplay": {
+    "before": {
+      "retrievableWithoutHistory": 4,
+      "retrievableWithHistory": 0,
+      "failedTerminalWithHistory": 4
+    },
+    "after": {
+      "retrievableWithoutHistory": 4,
+      "retrievableWithHistory": 4,
+      "failedTerminalWithHistory": 0
+    },
+    "rawHistoryEdited": false,
+    "nativeReplayAfterRepair": true,
+    "nativeReplayQualification": "With exact archive overlay repair, native child creation is observed; full automatic result/performance acceptance remains unproven."
+  },
+  "commandAdmissionTiming": {
+    "receipt": "target-enable-admission-timing-20261016.json",
+    "rawEnableMs": 4,
+    "guardedEnableMs": 1073,
+    "providerNavigations": 0,
+    "backendRequestCountMeasured": false,
+    "heldComparisonCompleted": false,
+    "diagnosticError": "Installed runtime does not expose continuous admission hold; no held result inferred."
+  },
+  "automaticBacklogWithFullSearch": {
+    "inputs": "recovery-search-inputs-after-wire-deadline-20261016.json",
+    "availableArchiveRows": 518,
+    "currentCatalogItems": 4,
+    "archiveRowsMatchingCurrentCatalogItems": 0,
+    "beforeRetrievable": 0,
+    "beforeReceipt": "scoped-backlog-with-search-installed-before-20261016.json",
+    "afterRetrievable": 2,
+    "afterReceipt": "scoped-backlog-with-search-after-20261016.json",
+    "nativeReadOnlyEndpointReceipt": "recovery-public-path-after-exact-overlay-20261016.json",
+    "unsupportedCatalogFileReferences": 2,
+    "scope": "Exact canonical catalog-item locator plus provider/runtime/tenant/kind; each matching catalog item counts once.",
+    "nativeChildCreated": true,
+    "nativeChildReceipt": "measured-automatic-scoped-2026-10-16T20-44-33-068Z.json"
+  },
+  "profilingAndObserverRepair": {
+    "receipt": "profiled-v2-analysis-20261016.json",
+    "cdpCommands": 32,
+    "summedAdmissionWaitMs": 9847,
+    "summedWireMs": 3650,
+    "sumIsNotExclusiveWallTime": true,
+    "observerStatusPollIntervalMs": 15000,
+    "observerGetErrorsRepollSameHandle": true,
+    "heartbeatOnlyRevisionDoesNotChangeCustody": true,
+    "temporaryTimingInstrumentationRestored": true,
+    "restorationReceipt": "cdp-phase-profile-restored-20261016.json",
+    "abortedTargetRetirementReceipt": "aborted-profile-target-retirement-20261016.json",
+    "proofscopeResumePreflight404": "No persisted completion loaded in proofscope; no provider or control mutation."
+  },
+  "multiArtifactComparison": {
+    "agenticRun": "agentic_multi_artifact_clean",
+    "maximumElapsedMs": 64363,
+    "maximumIntegerBackendRequests": 88,
+    "deterministicAccepted": true,
+    "artifactA": {
+      "bytes": 6172,
+      "sha256": "465fe0e181aaea03f524abb3a076e05bd2843bc85be62a171399454e6e210ebc"
+    },
+    "artifactB": {
+      "bytes": 21186,
+      "sha256": "42530045a480aed4c7a2391fc09779754434422980ad0f74cb24a7f30b3b76f6"
+    },
+    "deterministicRun": "deterministic_multi_artifact_canonical_route",
+    "elapsedTimeRatio": 0.8454655625126237,
+    "backendRequestRatio": 1.0294117647058822,
+    "messagesEqualIgnoringEdgeWhitespace": true,
+    "artifactBytesAndHashesEqual": true,
+    "verificationReceipt": "multi-artifact-parity-20261016.json",
+    "automaticAcceptance": false
+  },
+  "validationThisSlice": {
+    "selectedTests": 403,
+    "files": 6,
+    "typecheck": "passed",
+    "compiledTypescript": "passed",
+    "scopedBiome": "passed",
+    "retainedFailures": [
+      "Initial valid archive-reuse test exceeded5000ms under concurrent build; isolated rerun passed.",
+      "Initial route suite had three stale call-sequence fixtures; converted relevant payload mocks to expression matching.",
+      "Project-route fixture left fake timers enabled; full-suite late-rate-limit timed out twice, isolated test passed. Finally cleanup now restores timers; final321+82tests pass."
+    ]
+  },
+  "fullAutomaticComparison": {
+    "agenticRun": "agentic_clean",
+    "deterministicRun": "automatic_complete_capture_prior_outcomes",
+    "verificationReceipt": "full-capture-comparison-20261016.json",
+    "messages": 6,
+    "exactTrimmedMessageTextsEqual": true,
+    "artifactBytesAndHashEqual": true,
+    "priorTerminalEvidenceReturned": true,
+    "archiveReuseCount": 1,
+    "newTransfers": 0,
+    "elapsedTimeRatio": 2.016216104838045,
+    "backendRequestRatio": 0.9166666666666666,
+    "accepted": false,
+    "remaining": [
+      "Automatic elapsed time must be at most63091.6ms for this case",
+      "Fresh multi-file automatic pipeline cost/parity comparison"
+    ]
+  },
+  "observationAndRecovery": {
+    "readOnlyObservationTimeoutMs": 30000,
+    "periodicBroadStatusReads": false,
+    "pageNetworkEnabledBeforeNewBlankTargetReturned": true,
+    "readTimeoutsRepollSameHandle": true,
+    "failedReadDoesNotProveWorkTerminal": true,
+    "priorUnsettledChild": "hmj_8e672702e82d4472ab0e7816caa791e0",
+    "priorControllerPidsAbsent": [
+      29898,
+      56235
+    ],
+    "exactRecoveryReceipt": "orphaned-proof-child-interrupted-recovery-20261016.json",
+    "recoveryOutcome": "failed as interrupted through production recoverInterruptedJobs restricted to exact job; no provider commands",
+    "rejectedCancellation": "Running job cancellation returned409; did not mutate it. Interrupted recovery used after authoritative controller absence.",
+    "installedDeltaReceipts": [
+      "terminal-evidence-runtime-delta-20261016.json",
+      "blank-bootstrap-runtime-delta-20261016.json"
+    ],
+    "completeSourceRuntimeReceipt": "full-capture-comparison-20261016.json",
+    "lastCleanupReceipt": "cleanup-measured-automatic-scoped-2026-10-16T21-58-42-706Z.json"
+  },
+  "validationCorrection": {
+    "previousClaim": "The b9536b93a checkpoint incorrectly claimed typecheck passed.",
+    "actualFailure": "TS2550 findLast unsupported and TS7031 implicit input any in the new test.",
+    "repair": "Use reversed copy plus find, compatible with repository TypeScript target.",
+    "tests": 506,
+    "testFiles": 8,
+    "earlierContextAffinityTests": 13,
+    "typecheck": "passed explicit process exit0 after compatible lookup and final source/test edits",
+    "compiledTypescript": "passed explicit process exit0 before full captured native run"
+  },
+  "runtimeCensus": {
+    "receipt": "crawler-checkpoint-process-census-20261016.json",
+    "testControllersAbsent": true,
+    "exactBenchmarkTargetAbsent": true,
+    "benchmarkCleanupBrowserAbsentAt": "2026-10-16T22:02:21.631Z",
+    "differentMatchingProfileBrowserStartedAt": "2026-10-16T22:02:35.440000+00:00",
+    "differentBrowserPreserved": true,
+    "noBlanketBrowserPidSignals": true
+  },
+  "localArchiveOptimization": {
+    "retainedChecksumLaunderingRed": "archive-validation-20261016/issue165-real-archive-red.log",
+    "scopedFilesystemReadRed": "archive-validation-20261016/issue165-scoped-archive-red.log",
+    "syntheticReadCostReceipt": "local-archive-read-cost-20261016.json",
+    "syntheticCorpusFiles": 65,
+    "before": {
+      "fileReads": 66,
+      "bytesRead": 16804994,
+      "elapsedMs": 72
+    },
+    "after": {
+      "fileReads": 1,
+      "bytesRead": 13889,
+      "elapsedMs": 1
+    },
+    "selectedHashEqual": true,
+    "providerRequests": 0,
+    "syntheticFixtureRemoved": true,
+    "actualSelectedReadReceipt": "selected-archive-read-20261016.json",
+    "actualSelectedReadMs": 1046,
+    "actualReturnedFiles": 1,
+    "actualSelectedChecksumMatches": true,
+    "endToEndAccepted": false,
+    "semantics": "Filter selected provider conversations before metadata refresh; availability-only read preserves retained checksum; independently verify selected files; absent non-refreshing read leaves asset eligible for recovery."
+  },
+  "latencyProfileAttempt": {
+    "receipt": "measured-automatic-scoped-2026-10-16T22-10-08-495Z.json",
+    "completeScrapeProfile": false,
+    "cdpCommands": 0,
+    "archiveAvailabilityCallMs": 2915,
+    "historyFileReads": 3,
+    "historyBytesRead": 114276579,
+    "historyReadElapsedMsSum": 7265,
+    "otherRuntimeReadElapsedMsSum": 101395,
+    "sumsOverlapAndAreNotExclusiveWallTime": true,
+    "instrumentationRestorationReceipt": "source-cdp-profile-restored-20261016.json",
+    "runtimeReadinessReceipt": "profile-readiness-20261016.json",
+    "readinessAt": "2026-10-16T22:27:17.556Z",
+    "runningBrowserPid": 12187,
+    "verifiedCurrentNativeReceipt": false,
+    "browserLeftUntouched": true,
+    "ownerClarificationPending": true
+  },
+  "archiveOptimizationValidation": {
+    "receipt": "archive-validation-20261016/receipt.json",
+    "passed": 213,
+    "files": 4,
+    "testDeadlineMs": 15000,
+    "default5000msFailuresRetained": true,
+    "typecheck": "passed explicit exit0",
+    "compiledTypescript": "passed explicit exit0",
+    "lint": "passed",
+    "originalAutomaticTimeCeilingUnchangedMs": 63091.6,
+    "latestCompleteAutomaticTimeMs": 97851,
+    "fullGoalAccepted": false
+  },
+  "coldBenchmarkPreparation": {
+    "accepted": false,
+    "benchmarkAttempt": false,
+    "providerCommandsIssued": 0,
+    "supportsPrivateHistoryFactory": true,
+    "privateEvidenceDirectory": "cold-preparation-validation-20261016",
+    "preflightReceipt": "cold-multi-driver-preflight-20261016.json",
+    "runningBrowserPid": 12187,
+    "verifiedCurrentNativeReceipt": false,
+    "targetedHttpTestsPassed": 6,
+    "testFiles": 2,
+    "privateStoreSelfChecksPassed": 8,
+    "typecheck": "exit0",
+    "compiledTypescript": "exit0",
+    "sourceLint": "exit0, one existing Location naming warning",
+    "newTestBiome": "passed",
+    "fullSourceBiome": "existing formatting/import debt; no broad rewrite",
+    "compiledProfilerRestored": true,
+    "review": {
+      "fixedPoint": "7f3fa0b0e3208df985cfcd9ab017f46e0332b376",
+      "standards": "primary serial review: no accepted findings in two-line factory seam and integration test",
+      "spec": "private storage proven; live timing and fresh multi automatic acceptance remain incomplete"
+    },
+    "frozenOriginalAutomaticMs": 97851,
+    "frozenOriginalAutomaticRequests": 66,
+    "originalAutomaticTimeCeilingMs": 63091.6,
+    "fullGoalAccepted": false
+  },
+  "nativeBrowserRecovery": {
+    "receipt": "native-relaunch-20261017.json",
+    "userAuthorized": true,
+    "oldProcessesAbsent": [
+      12187,
+      27467,
+      53103
+    ],
+    "newPid": 59717,
+    "verifiedCurrentNativeReceipt": true,
+    "promptsSent": 0,
+    "schedulerControls": 0
+  },
+  "currentAcceptance": {
+    "coldMultiAutomatic": "source-compiled private-store case passed with equivalent four texts/two files; time1.094082 requests1.029412",
+    "originalExistingStateAutomatic": "installed repaired runtime passed strict ceilings with equivalent six texts, verified A and explicit typed unavailable B",
+    "fullGoalAccepted": false,
+    "next": "Canonical integration/install Gate C and any required fresh installed transfer evidence remain distinct; no scheduler resume authorized."
+  },
+  "performanceToleranceException": {
+    "acceptedByUser": true,
+    "decisionDate": "2026-10-17",
+    "scope": "Accept original existing-state automatic timing as good enough for performance; retain frozen numeric result and failed strict threshold. Does not close remaining functional/login acceptance.",
+    "originalTimeMs": 66178,
+    "originalStrictCeilingMs": 63091.6,
+    "overCeilingMs": 3086.4,
+    "strictTimePassed": false,
+    "originalRequests": 66,
+    "agenticRequests": 72,
+    "outputsEquivalent": true,
+    "freshMultiCasePassedBothLimits": true
+  }
+}

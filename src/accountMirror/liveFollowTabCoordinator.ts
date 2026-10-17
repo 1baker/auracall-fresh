@@ -1,5 +1,5 @@
-import type { ProviderTrafficGovernor } from "../../packages/browser-service/src/service/providerTrafficGovernor.js";
 import { withProcessTabAcquisition } from "../../packages/browser-service/src/service/processTabAcquisition.js";
+import type { ProviderTrafficGovernor } from "../../packages/browser-service/src/service/providerTrafficGovernor.js";
 import {
 	registerUnownedBrowserTabDeadlines,
 	releaseAbsentBrowserTabLeases,
@@ -21,6 +21,7 @@ export interface LiveFollowBrowserEndpoint {
 }
 
 export interface LiveFollowCrawlerTab {
+	unloadedTarget?: boolean;
 	lease: BrowserTabLease;
 	claim: TabLeaseClaim;
 	endpoint: LiveFollowBrowserEndpoint;
@@ -31,6 +32,7 @@ export interface DedicatedBrowserTabInput {
 	scope: TabLeaseScope;
 	operationId: string;
 	targetUrl: string;
+	targetCreationUrl?: string;
 	idleTtlMs: number;
 	absoluteTtlMs: number;
 	profileControlTtlMs?: number;
@@ -42,6 +44,7 @@ export interface DedicatedBrowserTabInput {
 		endpoint: LiveFollowBrowserEndpoint,
 	) => Promise<Array<{ targetId: string; url: string }>>;
 	requireExistingTarget?: boolean;
+	allowOwnedUnloadedTarget?: boolean;
 	coldStartTargetPolicy?: "adopt" | "create";
 	preLeaseProviderTrafficGovernor?: ProviderTrafficGovernor;
 	inspectTarget: (
@@ -114,11 +117,20 @@ async function acquireDedicatedBrowserTab(
 		}
 		assertEndpoint(endpoint, input.scope.managedBrowserProfile);
 		const inspected = await input.inspectTarget(endpoint, existing.targetId);
+		const ownedUnloadedTarget =
+			!input.requireExistingTarget &&
+			Boolean(existing.processBinding) &&
+			(existing.workload.kind === "ephemeral" ||
+				(existing.workload.kind === "live-follow" && input.allowOwnedUnloadedTarget === true)) &&
+			existing.targetFingerprint === "about:blank" &&
+			inspected?.url === "about:blank" &&
+			(existing.effectState === "none" || existing.effectState === "settled");
 		if (
 			inspected &&
-			(input.requireExistingTarget
-				? isExactProviderRoute(inspected.url, input.targetUrl)
-				: isProviderRoute(inspected.url, input.targetUrl))
+			(ownedUnloadedTarget ||
+				(input.requireExistingTarget
+					? isExactProviderRoute(inspected.url, input.targetUrl)
+					: isProviderRoute(inspected.url, input.targetUrl)))
 		) {
 			const acquired = existing.processBinding
 				? await input.registry.acquireProcess({
@@ -152,7 +164,11 @@ async function acquireDedicatedBrowserTab(
 					`Live-follow crawler adoption accounting failed: ${adopted.conflict.kind}.`,
 				);
 			}
-			return { ...adopted.value, endpoint };
+			return {
+				...adopted.value,
+				endpoint,
+				...(ownedUnloadedTarget ? { unloadedTarget: true } : {}),
+			};
 		}
 		if (inspected) {
 			if (
@@ -340,7 +356,11 @@ async function acquireDedicatedBrowserTab(
 			);
 		}
 	}
-	return { ...provisioned.value, endpoint };
+	return {
+		...provisioned.value,
+		endpoint,
+		...(target.url === "about:blank" ? { unloadedTarget: true } : {}),
+	};
 }
 
 async function confirmColdStartTargetRetirement(
@@ -374,12 +394,13 @@ async function openPlannedPreLeaseTarget(
 	input: DedicatedBrowserTabInput,
 	endpoint: LiveFollowBrowserEndpoint,
 ): Promise<{ targetId: string; url: string }> {
+	const targetUrl = input.targetCreationUrl ?? input.targetUrl;
 	const action = await input.preLeaseProviderTrafficGovernor?.begin({
 		kind: "target-open-or-reuse",
-		interactionClass: "renavigation",
+		interactionClass: targetUrl === "about:blank" ? "generic" : "renavigation",
 		source: "account-mirror:pre-lease-target",
-		requestedUrl: input.targetUrl,
-		toUrl: input.targetUrl,
+		requestedUrl: targetUrl,
+		toUrl: targetUrl,
 		reused: false,
 		reason: "dedicated crawler target creation",
 	});
@@ -388,7 +409,7 @@ async function openPlannedPreLeaseTarget(
 		target = await input.openTarget({
 			host: endpoint.host,
 			port: endpoint.port,
-			url: input.targetUrl,
+			url: targetUrl,
 		});
 		await action?.settle({
 			outcome: "succeeded",

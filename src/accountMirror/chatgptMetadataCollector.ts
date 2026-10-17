@@ -7,6 +7,8 @@ import {
 	createBrowserInteractionGovernor,
 } from "../../packages/browser-service/src/service/interactionGovernor.js";
 import {
+	hasProviderBackendRequestAdmission,
+	isKnownBackendRequestBudgetDenial,
 	type ProviderTrafficGovernor,
 	withProviderTrafficContext,
 } from "../../packages/browser-service/src/service/providerTrafficGovernor.js";
@@ -15,6 +17,10 @@ import { readChatgptRateLimitGuardState } from "../browser/chatgptRateLimitGuard
 import { BrowserAutomationClient } from "../browser/client.js";
 import { recordDomDriftObservation } from "../browser/domDriftObservations.js";
 import type { AccountMirrorMediaManifestEntry } from "../browser/llmService/cache/store.js";
+import {
+	hasUnknownOwnedRequestCleanup,
+	OwnedBackendRequestCleanupError,
+} from "../browser/ownedBackendRequestAuthority.js";
 import type {
 	Conversation,
 	ConversationArtifact,
@@ -154,6 +160,8 @@ export interface AccountMirrorMetadataCollectorInput {
 	providerTrafficGovernor?: ProviderTrafficGovernor;
 	providerTrafficPlanController?: AccountMirrorProviderTrafficPlanController;
 	tabAffinity?: {
+		allowInitialNavigation?: boolean;
+		configuredUrl?: string;
 		host: string;
 		onTargetNavigation?: () => Promise<void> | void;
 		port: number;
@@ -336,10 +344,11 @@ function createAccountMirrorListOptions(
 		...(tabAffinity
 			? {
 					allowNavigation: true,
+					...(tabAffinity.configuredUrl ? { configuredUrl: tabAffinity.configuredUrl } : {}),
 					host: tabAffinity.host,
 					onTargetNavigation: tabAffinity.onTargetNavigation,
 					port: tabAffinity.port,
-					preserveActiveTab: true,
+					preserveActiveTab: tabAffinity.allowInitialNavigation !== true,
 					tabLifecycle: "retain" as const,
 					tabTargetId: tabAffinity.targetId,
 				}
@@ -605,16 +614,28 @@ export function createChatgptAccountMirrorMetadataCollector(
 							input,
 							"conversation-read",
 						),
-						shouldYield: async () =>
-							(await input.shouldYield?.()) === true ||
-							input.providerTrafficGovernor
-								?.snapshotAdmissionState?.()
-								.budgets.some(
+						shouldYield: async () => {
+							const callerYield = await input.shouldYield?.();
+							const state = input.providerTrafficGovernor?.snapshotAdmissionState?.();
+							if (state?.backendRequestOutcome === "guarded") {
+								await input.providerTrafficGovernor?.checkWarning?.();
+								throw new Error("Provider backend requests are guarded; collection stopped.");
+							}
+							if (state?.backendRequestOutcome === "uncertain")
+								throw new Error(
+									"Provider backend request outcome is uncertain; collection stopped.",
+								);
+							return (
+								callerYield === true ||
+								state?.backendRequestOutcome === "budget-exhausted" ||
+								state?.budgets.some(
 									(budget) =>
 										budget.phase === "index" &&
 										budget.kind === "page_navigate" &&
 										budget.remaining === 0,
-								) === true,
+								) === true
+							);
+						},
 					}),
 				);
 				projectConversations.push(...result.items);
@@ -768,7 +789,7 @@ export function createChatgptAccountMirrorMetadataCollector(
 					workKeys: selectedDetailWorkKey ? [selectedDetailWorkKey] : [],
 				});
 			}
-			const inventory =
+			const inventory = await withCollectorSessionBoundary(detailListOptions, async () =>
 				input.provider === "chatgpt"
 					? await readBoundedChatgptDetailInventory(
 							client,
@@ -843,7 +864,8 @@ export function createChatgptAccountMirrorMetadataCollector(
 									media: [],
 									truncated: false,
 									cursor: null,
-								};
+								},
+			);
 			await reportCollectorProgress(input, {
 				phase: "detail-inventory",
 				event: "completed",
@@ -1767,18 +1789,27 @@ export async function readBoundedProjectConversations(
 		}
 		const remainingProjects = projects.length - projectIndex;
 		const perProjectRows = Math.max(1, Math.ceil(remainingRows / remainingProjects));
-		const result = await readBoundedConversations(
-			client,
-			projects[projectIndex].id,
-			perProjectRows,
-			{
+		let result: Awaited<ReturnType<typeof readBoundedConversations>>;
+		try {
+			result = await readBoundedConversations(client, projects[projectIndex].id, perProjectRows, {
 				listOptions: options.listOptions,
 				pacer: options.pacer,
 				observation: options.observation,
 				tolerateReadFailure: options.tolerateReadFailure,
 				providerCallTimeoutMs: options.providerCallTimeoutMs,
-			},
-		);
+			});
+		} catch (error) {
+			if (!isKnownBackendRequestBudgetDenial(error)) throw error;
+			throwIfCollectionAborted(options.abortSignal);
+			const governor = options.listOptions?.providerTrafficGovernor;
+			const state = governor?.snapshotAdmissionState?.();
+			if (state?.backendRequestOutcome !== "budget-exhausted") throw error;
+			// The interrupted project produced no qualified row. Resume this index
+			// in a fresh authorized pass and retain only earlier completed reads.
+			truncated = true;
+			yielded = true;
+			break;
+		}
 		scannedProjects += 1;
 		conversations.push(...result.items);
 		remainingRows -= result.items.length;
@@ -1956,14 +1987,29 @@ export async function readBoundedAttachmentInventory(
 			progress.scannedProjectIds.push(project.id);
 			const stageStartedAt = performance.now();
 			await reportDiagnostic({ stage: "project-files", event: "started", projectId: project.id });
-			const projectFiles = await safeReadProjectFiles(
-				client,
-				project,
-				projectListOptions,
-				observation,
-				providerCallTimeoutMs,
-				pacer,
-			);
+			let projectFiles: FileRef[];
+			try {
+				projectFiles = await safeReadProjectFiles(
+					client,
+					project,
+					projectListOptions,
+					observation,
+					providerCallTimeoutMs,
+					pacer,
+				);
+			} catch (error) {
+				if (!isKnownBackendRequestBudgetDenial(error)) throw error;
+				await throwIfDetailProviderGuardObserved(readProviderGuard, project.id);
+				throwIfCollectionAborted(projectListOptions?.abortSignal);
+				if (
+					projectListOptions?.providerTrafficGovernor?.snapshotAdmissionState?.()
+						.backendRequestOutcome !== "budget-exhausted"
+				)
+					throw error;
+				truncated = true;
+				yielded = true;
+				break;
+			}
 			await reportDiagnostic({
 				stage: "project-files",
 				event: "completed",
@@ -2069,15 +2115,35 @@ export async function readBoundedAttachmentInventory(
 			const telemetryBefore = snapshotAccountMirrorVisitTelemetry(
 				conversationListOptions?.scrapeTelemetry,
 			);
-			const contextResult = await safeReadConversationContext(
-				client,
-				conversation,
-				observation,
-				providerCallTimeoutMs,
-				conversationListOptions,
-				previousConversationDetail,
-				pacer,
-			);
+			let contextResult: Awaited<ReturnType<typeof safeReadConversationContext>>;
+			try {
+				contextResult = await safeReadConversationContext(
+					client,
+					conversation,
+					observation,
+					providerCallTimeoutMs,
+					conversationListOptions,
+					previousConversationDetail,
+					pacer,
+				);
+			} catch (error) {
+				if (!isKnownBackendRequestBudgetDenial(error)) throw error;
+				await throwIfDetailProviderGuardObserved(readProviderGuard, conversation.id);
+				throwIfCollectionAborted(conversationListOptions?.abortSignal);
+				if (
+					conversationListOptions?.providerTrafficGovernor?.snapshotAdmissionState?.()
+						.backendRequestOutcome !== "budget-exhausted"
+				)
+					throw error;
+				conversationDetailCursor = previousConversationDetail;
+				truncated = true;
+				yielded = true;
+				break;
+			} finally {
+				// Per-surface attribution borrows the collector's session lifetime.
+				if (listOptions && conversationListOptions !== listOptions)
+					listOptions.providerSession = conversationListOptions?.providerSession;
+			}
 			const telemetryAfter = snapshotAccountMirrorVisitTelemetry(
 				conversationListOptions?.scrapeTelemetry,
 			);
@@ -2363,14 +2429,50 @@ export async function readBoundedChatgptDetailInventory(
 		typeof options !== "number" && options.usePerSurfaceTrafficContext
 			? withDetailProviderTrafficContext(listOptions, "scope:account-library")
 			: listOptions;
-	const library = skipAccountLibraryInventory
-		? { artifacts: [], files: [], truncated: false }
-		: await readBoundedChatgptLibraryInventory(client, limit, {
-				listOptions: libraryListOptions,
-				pacer,
-				observation,
-				providerCallTimeoutMs,
-			});
+	let library: Awaited<ReturnType<typeof readBoundedChatgptLibraryInventory>>;
+	try {
+		library = skipAccountLibraryInventory
+			? { artifacts: [], files: [], truncated: false }
+			: await readBoundedChatgptLibraryInventory(client, limit, {
+					listOptions: libraryListOptions,
+					pacer,
+					observation,
+					providerCallTimeoutMs,
+				});
+	} catch (error) {
+		if (!isKnownBackendRequestBudgetDenial(error)) throw error;
+		if (typeof options !== "number")
+			await throwIfDetailProviderGuardObserved(options.readProviderGuard, "account-library");
+		throwIfCollectionAborted(libraryListOptions?.abortSignal);
+		if (
+			libraryListOptions?.providerTrafficGovernor?.snapshotAdmissionState?.()
+				.backendRequestOutcome !== "budget-exhausted"
+		)
+			throw error;
+		return {
+			artifacts: [],
+			files: [],
+			media: [],
+			visitBundles: [],
+			truncated: true,
+			cursor: createAttachmentInventoryCursor(typeof options === "number" ? null : options.cursor, {
+				projectsLength: projects.length,
+				conversationsLength: conversations.length,
+				detailReadLimit: 0,
+				conversationDetail: typeof options === "number" ? null : options.cursor?.conversationDetail,
+				scannedProjects: 0,
+				scannedConversations: 0,
+				yielded: true,
+				yieldCause: {
+					observedAt: null,
+					ownerCommand: null,
+					kind: "backend-request-budget",
+					operationClass: "backend-request",
+				},
+			}),
+			progress: createAttachmentInventoryProgress(),
+		};
+	}
 	if (typeof options !== "number") {
 		await throwIfDetailProviderGuardObserved(options.readProviderGuard, "account-library");
 	}
@@ -2691,6 +2793,20 @@ function createProjectConversationCursor(
 	};
 }
 
+function rethrowProviderRequestFailure(
+	error: unknown,
+	listOptions?: BrowserProviderListOptions,
+): void {
+	const requestState =
+		listOptions?.providerTrafficGovernor?.snapshotAdmissionState?.().backendRequestOutcome;
+	if (
+		isKnownBackendRequestBudgetDenial(error) ||
+		hasUnknownOwnedRequestCleanup(error) ||
+		(requestState && requestState !== "ready")
+	)
+		throw error;
+}
+
 async function safeReadProjectFiles(
 	client: Pick<BrowserAutomationClient, "listProjectFiles">,
 	project: Project,
@@ -2716,6 +2832,7 @@ async function safeReadProjectFiles(
 			listOptions?.abortSignal,
 		);
 	} catch (error) {
+		rethrowProviderRequestFailure(error, listOptions);
 		await recordAccountMirrorDomDriftObservation(observation, {
 			surface: "account-mirror-project-files",
 			action: "list-project-files",
@@ -2759,6 +2876,7 @@ async function safeReadAccountFiles(
 			listOptions?.abortSignal,
 		);
 	} catch (error) {
+		rethrowProviderRequestFailure(error, listOptions);
 		await recordAccountMirrorDomDriftObservation(observation, {
 			surface: input.surface,
 			action: input.action,
@@ -2825,7 +2943,8 @@ async function safeReadConversationFiles(
 }
 
 async function safeReadConversationContext(
-	client: Pick<BrowserAutomationClient, "getConversationContext">,
+	client: Pick<BrowserAutomationClient, "getConversationContext"> &
+		Partial<Pick<BrowserAutomationClient, "buildListOptions">>,
 	conversation: Conversation,
 	observation?: AccountMirrorDomDriftObservationContext,
 	timeoutMs?: number | null,
@@ -2871,28 +2990,50 @@ async function safeReadConversationContext(
 			};
 		}
 		const context = await withProviderCallTimeout(
-			(abortSignal) => {
+			async (abortSignal) => {
 				providerListOptions = {
 					...(providerListOptions ?? {}),
 					abortSignal,
 					...(chunk ? { accountMirrorContextChunk: chunk } : {}),
 				};
-				return client.getConversationContext(conversation.id, {
-					projectId: conversation.projectId,
-					refresh: true,
-					...(isChatgpt
-						? {
-								allowCacheFallback: false,
-								retryAttempts: 0,
-								...(typeof timeoutMs === "number" && timeoutMs > 0 ? { timeoutMs } : {}),
-							}
-						: {}),
-					listOptions: providerListOptions,
-				});
+				if (isChatgpt && !providerListOptions.providerTrafficGovernor && client.buildListOptions) {
+					providerListOptions = await client.buildListOptions(providerListOptions, {
+						ensurePort: false,
+					});
+				}
+				// Resolution grants no lease. If it outlives cancellation, never start the read.
+				abortSignal.throwIfAborted();
+				return client
+					.getConversationContext(conversation.id, {
+						projectId: conversation.projectId,
+						refresh: true,
+						...(isChatgpt
+							? {
+									allowCacheFallback: false,
+									retryAttempts: 0,
+									...(typeof timeoutMs === "number" && timeoutMs > 0 ? { timeoutMs } : {}),
+								}
+							: {}),
+						listOptions: providerListOptions,
+					})
+					.then(
+						(context) =>
+							abortSignal.aborted && hasProviderBackendRequestAdmission(providerListOptions)
+								? withCollectorSessionBoundary(providerListOptions, async () => context)
+								: context,
+						(error: unknown) => {
+							if (abortSignal.aborted && hasProviderBackendRequestAdmission(providerListOptions))
+								return withCollectorSessionBoundary(providerListOptions, async () => {
+									throw error;
+								});
+							throw error;
+						},
+					);
 			},
 			timeoutMs,
 			`Conversation context inventory timed out for ${conversation.id}.`,
 			listOptions?.abortSignal,
+			() => hasProviderBackendRequestAdmission(providerListOptions),
 		);
 		if (isChatgpt) {
 			const contextChunk = readAccountMirrorContextChunkMetadata(context);
@@ -2906,8 +3047,22 @@ async function safeReadConversationContext(
 		}
 		return { context, observed: context !== null, outcome: "completed", detail: null };
 	} catch (error) {
-		await closeAccountMirrorProviderSession(providerListOptions);
+		let failure = error;
+		try {
+			await closeAccountMirrorProviderSession(providerListOptions);
+		} catch (cleanupError) {
+			failure = new AggregateError(
+				[error, cleanupError],
+				"Conversation read and retained-session cleanup failed.",
+			);
+		}
 		if (listOptions) listOptions.providerSession = undefined;
+		if (
+			hasProviderBackendRequestAdmission(providerListOptions) &&
+			providerListOptions?.abortSignal?.aborted
+		)
+			throw failure;
+		rethrowProviderRequestFailure(failure, listOptions);
 		const detail = error instanceof Error ? error.message : String(error);
 		await recordAccountMirrorDomDriftObservation(observation, {
 			surface: "account-mirror-conversation-context",
@@ -2932,13 +3087,43 @@ async function safeReadConversationContext(
 	}
 }
 
+/** A collection pass owns its retained client; only its cursor crosses pass boundaries. */
+async function withCollectorSessionBoundary<TResult>(
+	listOptions: BrowserProviderListOptions | undefined,
+	run: () => Promise<TResult>,
+): Promise<TResult> {
+	const result = await Promise.resolve()
+		.then(run)
+		.then(
+			(value) => ({ ok: true as const, value }),
+			(error: unknown) => ({ ok: false as const, error }),
+		);
+	try {
+		await closeAccountMirrorProviderSession(listOptions);
+	} catch (cleanupError) {
+		if (!result.ok)
+			throw new AggregateError(
+				[result.error, cleanupError],
+				"Collector detail read and retained-session cleanup failed.",
+			);
+		throw cleanupError;
+	}
+	if (!result.ok) throw result.error;
+	return result.value;
+}
+
 async function closeAccountMirrorProviderSession(
 	listOptions: BrowserProviderListOptions | undefined,
 ): Promise<void> {
 	const session = listOptions?.providerSession;
 	if (!session) return;
 	listOptions.providerSession = undefined;
-	await session.close().catch(() => undefined);
+	await session.close().catch((error: unknown) => {
+		if (isKnownBackendRequestBudgetDenial(error) || hasUnknownOwnedRequestCleanup(error))
+			throw error;
+		if (!hasProviderBackendRequestAdmission(listOptions)) return;
+		throw new OwnedBackendRequestCleanupError(error);
+	});
 }
 
 function isProviderGuardFailureDetail(detail: string | null): boolean {
@@ -2997,34 +3182,77 @@ function withProviderCallTimeout<T>(
 	timeoutMs: number | null | undefined,
 	message: string,
 	parentSignal?: AbortSignal,
+	drainOnAbort: boolean | (() => boolean) = false,
 ): Promise<T> {
+	const shouldDrain = () => (typeof drainOnAbort === "function" ? drainOnAbort() : drainOnAbort);
 	const controller = new AbortController();
 	const abortSignal = parentSignal
 		? AbortSignal.any([parentSignal, controller.signal])
 		: controller.signal;
 	const promise = operation(abortSignal);
-	if (typeof timeoutMs !== "number" || !Number.isFinite(timeoutMs) || timeoutMs <= 0) {
-		return promise;
-	}
-	let timeout: NodeJS.Timeout | null = null;
+	const hasTimeout = typeof timeoutMs === "number" && Number.isFinite(timeoutMs) && timeoutMs > 0;
+	if (!hasTimeout && !drainOnAbort) return promise;
 	return new Promise<T>((resolve, reject) => {
-		timeout = setTimeout(
-			() => {
-				controller.abort(new Error(message));
-				reject(new Error(message));
-			},
-			Math.max(1, Math.floor(timeoutMs)),
-		);
+		let timeout: NodeJS.Timeout | undefined;
+		let drainTimeout: NodeJS.Timeout | undefined;
+		let cancelling = false;
+		let settled = false;
+		const clear = () => {
+			if (timeout) clearTimeout(timeout);
+			if (drainTimeout) clearTimeout(drainTimeout);
+			parentSignal?.removeEventListener("abort", onParentAbort);
+		};
+		const fail = (error: unknown) => {
+			if (settled) return;
+			settled = true;
+			clear();
+			reject(error);
+		};
+		const cancel = (reason: unknown) => {
+			if (settled || cancelling) return;
+			cancelling = true;
+			controller.abort(reason);
+			if (!shouldDrain()) {
+				fail(reason);
+				return;
+			}
+			const cancellation = reason instanceof Error ? reason : new Error(message, { cause: reason });
+			drainTimeout = setTimeout(
+				() =>
+					fail(
+						new Error(cancellation.message, {
+							cause: new OwnedBackendRequestCleanupError(
+								new Error("Owned collector provider cleanup did not finish within 5000ms."),
+							),
+						}),
+					),
+				5000,
+			);
+			promise.then(
+				() => fail(cancellation),
+				(error: unknown) => fail(new Error(cancellation.message, { cause: error })),
+			);
+		};
+		const onParentAbort = () => {
+			if (shouldDrain()) cancel(parentSignal?.reason ?? new Error(message));
+		};
 		promise.then(
 			(value) => {
-				if (timeout) clearTimeout(timeout);
+				if (settled || cancelling) return;
+				settled = true;
+				clear();
 				resolve(value);
 			},
-			(error) => {
-				if (timeout) clearTimeout(timeout);
-				reject(error);
+			(error: unknown) => {
+				if (!cancelling) fail(error);
 			},
 		);
+		if (hasTimeout)
+			timeout = setTimeout(() => cancel(new Error(message)), Math.max(1, Math.floor(timeoutMs)));
+		if (drainOnAbort && parentSignal) {
+			parentSignal.addEventListener("abort", onParentAbort, { once: true });
+			if (parentSignal.aborted) onParentAbort();
+		}
 	});
 }
 

@@ -17,6 +17,59 @@ const scope = {
 };
 
 describe("live-follow crawler tab coordinator", () => {
+	test("blank acquisition does not consume the provider renavigation cooldown", async () => {
+		const { createBrowserInteractionGovernor } = await import(
+			"../../packages/browser-service/src/service/interactionGovernor.js"
+		);
+		const { createProviderTrafficGovernor } = await import(
+			"../../packages/browser-service/src/service/providerTrafficGovernor.js"
+		);
+		let now = 1000;
+		const sleeps: number[] = [];
+		const governor = createBrowserInteractionGovernor({
+			maxInteractionsPerMinute: 60,
+			cooldownsByClass: { renavigation: 120000 },
+			now: () => now,
+			sleep: async (ms) => {
+				sleeps.push(ms);
+				now += ms;
+			},
+		});
+		const traffic = createProviderTrafficGovernor({
+			attribution: {
+				provider: "chatgpt",
+				runtimeProfileId: scope.runtimeProfileId,
+				managedBrowserProfile: scope.managedBrowserProfile,
+				workloadId: "crawler",
+				operationId: "blank-cooldown",
+				tabLeaseId: "pre-lease:blank",
+			},
+			interactionGovernor: governor,
+			mutationAudit: async () => undefined,
+		});
+		await acquireLiveFollowCrawlerTab({
+			registry: createInMemoryBrowserTabLeaseRegistry(),
+			scope,
+			operationId: "blank-cooldown",
+			targetUrl: "https://chatgpt.com/c/fixture",
+			targetCreationUrl: "about:blank",
+			idleTtlMs: 60000,
+			absoluteTtlMs: 3600000,
+			resolveExistingEndpoint: async () => ({
+				host: "127.0.0.1",
+				port: 45011,
+				managedBrowserProfile: scope.managedBrowserProfile,
+			}),
+			startBrowser: vi.fn(),
+			inspectTarget: vi.fn(),
+			closeTarget: vi.fn(),
+			preLeaseProviderTrafficGovernor: traffic,
+			openTarget: async ({ url }) => ({ targetId: "blank-cooldown-target", url }),
+		});
+		await governor.beforeInteraction("renavigation");
+		expect(sleeps).toEqual([1000]);
+	});
+
 	test("concurrent acquisitions in one process never open a second physical target", async () => {
 		const registry = createInMemoryBrowserTabLeaseRegistry();
 		let opened = 0;
@@ -529,6 +582,77 @@ describe("live-follow crawler tab coordinator", () => {
 			targetId: "utility-tab",
 			workload: { kind: "ephemeral", operationId: "utility-1" },
 		});
+	});
+
+	test.each([
+		"none",
+		"settled",
+		"outcome-unknown",
+		"changed-route",
+		"live-follow-default",
+		"live-follow-opt-in",
+		"live-follow-unknown",
+	] as const)("reuses only a known owned unloaded target (%s)", async (mode) => {
+		const registry = createInMemoryBrowserTabLeaseRegistry();
+		const common = {
+			registry,
+			scope,
+			operationId: "utility-blank",
+			targetUrl: "https://chatgpt.com/",
+			idleTtlMs: 60000,
+			absoluteTtlMs: 3600000,
+			resolveExistingEndpoint: async () => ({
+				host: "127.0.0.1",
+				port: 45011,
+				managedBrowserProfile: scope.managedBrowserProfile,
+			}),
+			startBrowser: vi.fn(),
+			closeTarget: vi.fn(),
+			inspectTarget: vi.fn(),
+		};
+		const acquire = mode.startsWith("live-follow-")
+			? acquireLiveFollowCrawlerTab
+			: acquireEphemeralBrowserTab;
+		const original = await acquire({
+			...common,
+			openTarget: async () => ({ targetId: "owned-blank", url: "about:blank" }),
+		});
+		const idle = await registry.idle({
+			claim: original.claim,
+			now: new Date().toISOString(),
+			effectState:
+				mode === "outcome-unknown" || mode === "live-follow-unknown"
+					? "outcome-unknown"
+					: mode === "none"
+						? "none"
+						: "settled",
+		});
+		expect(idle.ok).toBe(true);
+		const openTarget = vi.fn();
+		const next = acquire({
+			allowOwnedUnloadedTarget: mode === "live-follow-opt-in" || mode === "live-follow-unknown",
+			...common,
+			operationId: "next-utility",
+			inspectTarget: async () => ({
+				url: mode === "changed-route" ? "https://foreign.invalid/" : "about:blank",
+			}),
+			openTarget,
+		});
+		if (
+			mode === "outcome-unknown" ||
+			mode === "changed-route" ||
+			mode === "live-follow-default" ||
+			mode === "live-follow-unknown"
+		)
+			await expect(next).rejects.toThrow();
+		else
+			expect((await next).lease).toMatchObject({
+				targetId: "owned-blank",
+				targetFingerprint: "about:blank",
+				state: "active",
+			});
+		expect(openTarget).not.toHaveBeenCalled();
+		expect(common.closeTarget).not.toHaveBeenCalled();
 	});
 
 	test("replaces a retained blank lease by adopting an existing exact target", async () => {

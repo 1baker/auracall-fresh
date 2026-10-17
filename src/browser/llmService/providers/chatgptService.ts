@@ -227,6 +227,17 @@ export class ChatgptService extends LlmService {
 		);
 	}
 
+	override getProviderSessionProof(
+		options: BrowserProviderListOptions = {},
+	): ReturnType<LlmService["getProviderSessionProof"]> {
+		if (!this.usesUtilityAffinity() || options.tabTargetId) {
+			return super.getProviderSessionProof(options);
+		}
+		return this.runWithUtilityAffinity(options, (exactOptions) =>
+			super.getProviderSessionProof(exactOptions),
+		);
+	}
+
 	async getUserIdentity(
 		options?: BrowserProviderListOptions,
 	): Promise<ProviderUserIdentity | null> {

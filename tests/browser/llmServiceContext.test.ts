@@ -14,6 +14,10 @@ import type {
 	PromptInput,
 	PromptResult,
 } from "../../src/browser/llmService/types.js";
+import {
+	hasUnknownOwnedRequestCleanup,
+	OwnedBackendRequestCleanupError,
+} from "../../src/browser/ownedBackendRequestAuthority.js";
 import type { ProviderCacheContext } from "../../src/browser/providers/cache.js";
 import { readConversationContextReadReceipt } from "../../src/browser/providers/cache.js";
 import { readChatgptConversationContextWithClientForTest } from "../../src/browser/providers/chatgptAdapter.js";
@@ -862,15 +866,14 @@ describe("project-scoped conversation context normalization", () => {
 		const payloadStarted = new Promise<void>((resolve) => {
 			resolvePayloadStarted = resolve;
 		});
-		const evaluate = vi.fn(() => {
-			const call = evaluate.mock.calls.length;
-			if (call <= 2) return Promise.resolve({ result: { value: [] } });
-			if (call === 3) return Promise.resolve({ result: { value: url } });
-			if (call <= 6) return Promise.resolve({ result: { value: true } });
-			if (call === 7) {
+		const evaluate = vi.fn(({ expression }: { expression: string }) => {
+			if (expression === "location.href") return Promise.resolve({ result: { value: url } });
+			if (expression.includes(`/backend-api/conversation/${conversationId}`)) {
 				resolvePayloadStarted?.();
 				return new Promise<never>(() => undefined);
 			}
+			if (expression.includes("composer-plus-btn"))
+				return Promise.resolve({ result: { value: true } });
 			return Promise.resolve({ result: { value: [] } });
 		});
 		const client = {
@@ -903,7 +906,11 @@ describe("project-scoped conversation context normalization", () => {
 				listOptions: { allowNavigation: true },
 			});
 			await payloadStarted;
-			expect(evaluate).toHaveBeenCalledTimes(7);
+			expect(evaluate).toHaveBeenCalledWith(
+				expect.objectContaining({
+					expression: expect.stringContaining(`/backend-api/conversation/${conversationId}`),
+				}),
+			);
 			await vi.advanceTimersByTimeAsync(25);
 			await expect(read).rejects.toMatchObject({
 				code: "conversation_context_timeout",
@@ -923,3 +930,96 @@ describe("project-scoped conversation context normalization", () => {
 		}
 	});
 });
+
+test.each([
+	"failed",
+	"stalled",
+	"clean",
+	"deadline",
+	"failed-factory-only",
+	"deadline-factory-only",
+])("request-aware abort drains cleanup before considering cached context: %s", async (testMode) => {
+	const factoryOnly = testMode.endsWith("-factory-only");
+	const mode = testMode.replace(/-factory-only$/, "");
+	const homeDir = await mkdtemp(path.join(os.tmpdir(), "auracall-context-abort-drain-"));
+	setAuracallHomeDirOverrideForTest(homeDir);
+	const cacheContext: ProviderCacheContext = {
+		provider: "chatgpt",
+		userConfig: {} as ProviderCacheContext["userConfig"],
+		listOptions: {},
+		identityKey: "fixture@example.test",
+	};
+	const store = new JsonCacheStore();
+	const cached: ConversationContext = {
+		provider: "chatgpt",
+		conversationId: "fixture-abort",
+		messages: [{ role: "assistant", text: "cached fixture answer" }],
+	};
+	await store.writeConversationContext(cacheContext, "fixture-abort", cached);
+	const controller = new AbortController();
+	const read = vi.fn(
+		async (_id: string, _project: unknown, options: BrowserProviderListOptions) => {
+			if (mode === "deadline") {
+				await new Promise<void>((resolve) =>
+					options.abortSignal?.addEventListener("abort", () => resolve(), { once: true }),
+				);
+				throw new OwnedBackendRequestCleanupError(new Error("fixture deadline cleanup unknown"));
+			}
+			controller.abort();
+			if (mode === "stalled") return new Promise<never>(() => {});
+			if (mode === "failed")
+				throw new OwnedBackendRequestCleanupError(new Error("fixture cleanup unknown"));
+			throw controller.signal.reason;
+		},
+	);
+	const service = new TestContextLlmService(
+		{
+			id: "chatgpt",
+			config: { id: "chatgpt", selectors: {} },
+			readConversationContext: read,
+		} as never,
+		store,
+		cacheContext,
+	);
+	try {
+		const reading = service.getConversationContext("fixture-abort", {
+			refresh: true,
+			retryAttempts: 0,
+			timeoutMs: mode === "deadline" ? 25 : 10000,
+			listOptions: {
+				abortSignal: controller.signal,
+				...(factoryOnly
+					? {
+							providerTrafficAuthorityFactory: {
+								backendRequestAdmissionEnabled: true,
+								acquire: async () => {
+									throw new Error("Cleanup capability must not acquire a lease");
+								},
+							},
+						}
+					: {
+							providerTrafficGovernor: {
+								admitBackendRequest: async (_key: string, effect: () => Promise<void>) => effect(),
+							} as never,
+						}),
+			},
+		});
+		if (mode === "clean")
+			await expect(reading).resolves.toMatchObject({ messages: cached.messages });
+		else {
+			const error = await reading.catch((failure: unknown) => failure);
+			expect(error).toMatchObject(
+				mode === "deadline"
+					? { code: "conversation_context_timeout", outcome: "timed_out" }
+					: { code: "conversation_context_aborted", outcome: "aborted" },
+			);
+			expect(hasUnknownOwnedRequestCleanup(error)).toBe(true);
+			expect(await store.readConversationContext(cacheContext, "fixture-abort")).toMatchObject({
+				items: { messages: cached.messages },
+			});
+		}
+		expect(read).toHaveBeenCalledTimes(1);
+	} finally {
+		await rm(homeDir, { recursive: true, force: true });
+	}
+}, 10000);

@@ -1,3 +1,584 @@
+## 2026-10-16 | Issue165 scoped archive reads retain verification hashes
+
+A real archive-service/public-job regression proved the mocked checksum case was
+insufficient: full archive refresh recomputed the selected file checksum before
+reuse compared it, allowing a changed file to pass. Scoped reuse now requires an
+availability-only read that retains checksum evidence, then independently hashes
+the selected file. A legacy adapter without that read leaves assets eligible for
+recovery. Real valid/tampered and missing/foreign/force/legacy cases pass.
+
+The archive list request now supports an internal providerConversationId filter
+before metadata refresh. Reconciliation batches only the selected conversations.
+The real service regression went red by returning and inspecting an unrelated
+conversation, then passed with no unrelated filesystem inspection. Default reads
+without the optional filter retain their behavior; no new HTTP/CLI alias was added.
+
+A synthetic65file local read benchmark used16804994bytes/66reads/72ms before versus
+13889bytes/1read/1ms after, with the same selected hash and no provider requests.
+The fixture was removed. The actual selected-conversation archive read and file
+verification took1046ms and returned the expected13889byte/hash A. These are local
+cost observations, not end-to-end acceptance. Last complete automatic proof is
+still97851ms/66requests, above its63091.6ms ceiling; full goal remains ACTIVE.
+
+The attempted timing probe failed before provider access on the native desktop
+receipt guard. Its14303ms setup/1791ms operational result observed no requests and
+has incomplete coverage. Its useful local trace records3history reads totaling
+114276579bytes and a2915ms archive-availability call; overlapping sums are not
+exclusive wall time. Temporary compiled CDP timing instrumentation was restored.
+Read-only revalidation at22:27:17 found browser12187 without a verified matching
+receipt. Browser27467 from the earlier census had exited; no origin was inferred.
+Both processes are separate from the retired benchmark controller. No browser was
+closed, adopted or re-registered by this slice. Owner clarification is pending;
+no further provider attempt is justified until runtime ownership is verified.
+
+213affected tests/4files pass with a15000ms runner deadline; typecheck and compiled
+TypeScript have explicit exit0. Legacy-style archive files pass lint, and previously
+formatted files pass Biome checks. Two default5000ms filesystem-fixture timeouts
+are retained, including an852ms isolated pass. Product1.3performance limits are
+unchanged. See issue165-scrape-benchmark-2026-10-16.json and its private validation,
+read-cost, guard-failure and restoration receipts. Next resume full provider/CDP/
+governor profiling and fresh multi-file automatic comparison after verified native
+runtime readiness; local read savings do not close issue165.
+
+## 2026-10-16 | Issue165 full startup capture and prior artifact outcomes
+
+Automatic completion now returns attributable prior terminal-unavailability entries
+alongside verified archive reuse. Each skipped entry retains the original failure
+reason and priorEvidenceJobId. Qualification requires explicit non-retryable
+provider-unavailable evidence, one conversation, matching current asset family and
+one consistent account identity from the request or recorded attempt target.
+Foreign, conflicting/unattributed, ambiguous, active, retryable, unmatched and force
+cases cannot qualify. Nine public-job cases pass. The actual older B job recorded
+identity in its attempt, not request; that native omission drove the attribution
+regression. Qualified family signatures also prevent another transfer.
+
+The source crawler still created its provider tab before observation, separately
+from the already repaired utility path. Cold configured-caller regressions went
+red. Crawler acquisition now creates about:blank; only a newly acquired blank or
+an explicitly opted-in, observed process-owned blank with known effects can grant
+initial governed navigation. Other retained pages keep preservation semantics.
+Blank acquisition uses generic pacing while real provider navigation retains its
+renavigation cooldown. A real governor/coordinator regression proves1000ms ordinary
+spacing instead of charging the120000ms provider cooldown. Required audit omission
+in its first fixture was corrected; that fixture error is not product red evidence.
+
+The private harness now attaches Network before blank target creation returns to
+the product, follows exact ownership, retains context readbacks, and binds compiled
+module hashes. Periodic broad /status reads were removed after measured5-30second
+observer overhead. GET timeouts re-poll the same operation; DOM observation failure
+cannot imply work completion. Capture setup failure returns the original created
+target to the product and makes coverage incomplete rather than inventing a failed
+target creation. The final proof uses the complete compiled worktree, not a mixed
+older installed package with partial deltas. Two isolated installed deltas remain
+receipted; no full installed promotion or main API restart occurred.
+
+Failed setup/measurement attempts remain in the ledger:10s initial read timeout;
+mixed-runtime116609ms/at least66requests with later status timeout; mixed-runtime
+24609ms/0observed requests with observer WebSocket close while startup resumed a
+previous child; complete-source65953ms/at least68requests with incomplete startup
+coverage and omitted B. The queued/running child left by the observer failures was
+reconciled only after both controller PIDs were proven absent. Running cancellation
+returned409 without mutation; production interrupted recovery, restricted to that
+exact job, marked it failed and issued no provider commands. Raw evidence retained.
+
+The new full-capture automatic proof finished97851ms (89613ms operational),66backend
+requests, exact6trimmed texts, A13889bytes with the expected SHA256 and existing asset
+link, plus B's original typed terminal failure and prior job pointer. All outputs
+match the actual clean agentic case; request ratio0.9167passes. Time ratio2.0162
+FAILS1.3. Goal remains ACTIVE; issue165OPEN. A fresh multi-file automatic comparison
+and an automatic elapsed-time pass remain required. Next profile provider/governor,
+archive and history reads; do not shrink acceptance to cached service results.
+
+Final506tests/8files pass; the separate current context-route suite13tests passes.
+Final typecheck and compiled TypeScript have explicit exit0; scoped Biome and diff
+checks pass. Correction: the previous b9536b93a checkpoint prematurely claimed a
+passing typecheck; findLast was unsupported by this TypeScript target. The test now
+uses a reversed copy with find, and the actual prior failure remains in the ledger.
+
+Main API83768 is unchanged:17subscriptions paused, scheduler paused, queued/running0,
+warnings0. Exact test target and controllers are absent. A fresh OS census found a
+different matching-profile browser started after cleanup (22:02:35 versus22:02:21);
+it is unattributed to this proof and preserved. No blanket browser PID signal was
+issued. Evidence: issue165-scrape-benchmark-2026-10-16.json and its private locators.
+
+## 2026-10-16 | Issue165 verified reuse and canonical project routes
+
+Scoped reconciliation now returns existing same-account/current-family archive
+files as duplicate entries with actual bytes/hash and archive/asset links, after
+regular-file, checksum and stable-stat verification. Missing, tampered, foreign
+and forced cases remain eligible for transfer. Five real public-job regression
+cases pass. Native automatic profile39195ms/at least70requests returned verified
+A as duplicate, but omitted prior terminal B and lacked full startup coverage;
+this is not automatic acceptance.32admitted CDP commands spent9847ms summed in
+admission and3650ms summed on wire (overlapping sums, not wall-time components).
+Observer GET failures now re-poll the same handle; heartbeat revisions alone do
+not change custody; broad status polling reduced to15seconds. Temporary timing
+instrumentation was restored. Aborted observer/fenced resume and preflight404
+failures remain in the ledger; exact benchmark target retirement was qualified.
+
+A second actual agentic case read4texts and downloaded2valid files in49510ms/68
+backend requests. Deterministic service initially timed out after canonical root
+conversation navigation redirected into its project URL:49650ms/62requests,
+no files. A real caller regression went red on route settling. Conversation route
+settling now accepts that same conversation under its canonical project; explicit
+project/origin constraints remain. Ready same-route surfaces are reused. With an
+isolated two-function installed delta and fresh cache, the same public service
+completed41859ms/70requests. All4trimmed texts and both files (A6172B, B21186B)
+match exactly, including SHA256. Ratios0.8455time and1.0294requests pass the1.3
+ceiling for this public-service comparison. One nonfatal net::ERR_ABORTED was
+recorded; both artifact downloads completed. Full automatic acceptance remains
+OPEN: complete startup counts and complete selected-artifact outcome accounting
+still required. No prompt, Answer now, or force transfer was used.
+
+Final selected403tests/6files, typecheck, compiled TypeScript and scoped Biome
+pass. Failed runs are retained: archive fixture timeout under concurrent build,
+three call-sequence mocks, and a fake-timer leak in the new route fixture that
+caused the subsequent rate-limit test to time out. The timer cleanup is fixed;
+full affected suites now pass. Public costs and private receipt locators are in
+issue165-scrape-benchmark-2026-10-16.json. Runtime changes are isolated compiled
+deltas, not a full branch promotion or main API restart. Goal ACTIVE; issue165OPEN.
+
+## 2026-10-16 | Issue165 command deadlines and exact archive matching
+
+The target enablement deadline included mandatory desktop command admission.
+A real-caller regression reproduced a false unresponsive-target error before any
+wire command. The shared transport now applies the response deadline after
+admission; ChatGPT enablement uses that scope. Ownership/human control remains
+mandatory, queued cancellation cannot emit later commands, and actual wire stalls
+still time out. Native blank-target diagnostic:raw domains4ms versus guarded1073ms;
+its attempted held comparison was unavailable on the old installed runtime and
+is not evidence. Five target/admission cases pass, including denial and both
+coordinated/uncoordinated stalls. Full selected suite307tests/7files passes;
+typecheck, compiled TypeScript and scoped lint/diff pass.
+
+With isolated route/deadline deltas, normal automatic inventory completed in54932ms
+including setup (50443ms operational), at least70backend requests,6messages and
+2artifacts/2file references. No child was created: NOT acceptance. The earlier
+instrumented probe ended on observer GET500; the harness now re-polls the same
+operation on observation failure, with a local regression proving no restart or
+control mutation. A fresh agentic diagnostic confirmed the same six texts, one
+13889byte/hash file and the second artifact's404. Its76505ms/69requests includes
+setup idle time and one accidental Copy click after DOM indexes changed; it is
+preserved and cannot inflate the clean48532ms/72request baseline.
+
+Full recovery input replay found518historical available archive rows, but zero
+matched the four current catalog items. Aggregate subtraction erased the backlog.
+The planner now requires an exact canonical catalog-item locator plus provider,
+runtime, tenant and kind, deduplicates archive copies, and reuses the same catalog
+queries for classification. Foreign-archive and duplicate regressions went red;
+positive matched availability still subtracts. Real public read-only recovery now
+reports2retrievable artifacts and2unsupported file references instead of zero.
+Before/after replays and all native costs are recorded in the benchmark ledger.
+Serial Standards review preserves domain boundaries and mandatory admission;
+Spec review accepts both repairs but keeps automatic harvesting and complete
+request coverage unproven. The next isolated automatic proof completed at132904ms including setup
+(127472ms operational), at least72requests, and created a real child. The child
+failed with one provider_unavailable/retryable=false entry for the404artifact.
+The other artifact was excluded because a same-conversation archived copy already
+exists:readable13889bytes with the exact expected SHA256. Reuse is legitimate, but
+the child result does not account for that asset. This is NOT acceptance:elapsed
+is2.73846times the clean agentic baseline, startup requests are missing, and no
+successful all-bytes multi-file case exists. The controller exited0 and its browser
+root is now absent after normal history cleanup. All raw outcomes, action counts,
+code identities and verified archive evidence are preserved privately and linked
+from the ledger. No primary service restart, prompt, full promotion or release.
+Next profile admission/collector/child costs and surface verified reuse in the
+result, then measure complete startup traffic and a successful multi-file case.
+
+## 2026-10-16 | Issue165 scoped initial-route regression and failed native probe
+
+A scoped detail refresh opened ChatGPT home before its requested conversation.
+The actual refresh/lease fixture went red on that extra route. It now passes the
+first explicit detail conversation to affinity acquisition and carries that URL
+through collector identity verification on the same retained target. Unscoped
+refreshes keep their configured route; governors, account proof and warning stops
+are unchanged. Collector regression verifies both proof and context options.
+12 affinity/lifetime tests and 121 collector/refresh/browser-route tests pass;
+updated collector tests (71) pass. Typecheck, compiled TypeScript and scoped lint
+pass. Serial Standards review found no blocking convention/custody changes;
+Spec review accepts the route reduction but leaves native performance unproven.
+
+One fresh-cache isolated normal automatic probe took44394ms including setup
+(36402ms operational), observed at least59backend requests, and failed enabling
+the selected page target before context collection or child creation. Startup
+coverage is incomplete. This is NOT a passing comparison or successful scrape.
+The observer saw a new browser process and zero rendered turns; the cause of
+CDP target enablement timeout remains unproven. Raw receipt and action costs are
+preserved in issue165-scrape-benchmark-2026-10-16.json and private diagnostics.
+The exact terminal controller66494 was retired without signalling Chrome. A
+read-only follow-up inspection stopped before browser access because its lease
+was lost. The three experimental compiled route deltas were rolled back with
+hash checks; the primary service was not restarted. Earlier qualified deltas
+remain installed. Next: reproduce/isolate target readiness before another native
+comparison, then qualify automatic child creation and a successful multi-file
+case. Issue165 and the goal remain OPEN/ACTIVE.
+
+## 2026-10-16 | Issue165 automatic admission failure isolated from passing service case
+
+One exact-conversation automatic proof ran through createResponsesHttpServer with
+its built-in accountMirrorProofScope: fresh cache, scheduler/background execution
+and loaded-operation resume disabled. Primary scheduler/17subscriptions untouched.
+It took173430msincluding setup (167217msoperational), observed at least127backend
+requests, and collected6messages/2artifacts/2files. Coverage starts after lease
+publication, so startup traffic is missing. It completed WITHOUT a materialization
+child or saved bytes. This is a failed30percent automatic comparison, not acceptance.
+Receipt:measured-automatic-scoped-2026-10-16T20-01-59-109Z.json in the private
+plan0411diagnostics root. The proof server closed, but its Node process49749
+retained background timers; after verifying the terminal receipt and exact command,
+only that owned controller received SIGTERM. No browser process was signalled.
+
+The completion handoff no longer imposes ChatGPT's blanket max-class120second
+quiet time: actual observed cooldownUntil is preserved, and child concrete actions
+retain their governor. Gemini/other providers keep their previous policy. Regression
+first failed5cases, then76completion tests passed, including a real provider
+cooldown introduced during collection. This timing fix remains source-qualified;
+the native proof never reached child creation and cannot qualify the handoff.
+
+Read-only replay using actual fresh status and historical jobs proved why no child
+was created:without history4retrievable entries; with history0retrievable/4terminal.
+The planner treated generic legacy failed/skipped rows as confirmed provider
+unavailability. It now requires failureKind=provider_unavailable or explicit
+assetAvailability=unavailable for terminal subtraction. Raw historical records stay
+unchanged; typed retrieval failures and explicit terminal results retain their
+classification. Two regression variants went red;10planner/76completion tests now
+pass. Source-build replay of the actual same native data now reports4retrievable
+with OR without historical jobs. Typecheck, compiled TypeScript build, Biome/lint
+and diff pass. Serial Standards/Spec review preserves current warnings, exact
+provider cooldowns, explicit terminal evidence and other-provider timing.
+
+Both isolated compiled admission deltas have rollback hashes in private receipts;
+no full branch promotion. Goal remains ACTIVE and issue165OPEN. Clean service
+case43.666s/72requests versus agentic48.532s/72passes, with identical6trimmed
+messages, same13889byte/hash file and explicit404for the second artifact. Automatic
+still fails:identity completed20:02:23, conversation route changed20:04:19, followed
+by another page-load burst. The precise pacing/identity caller responsible for that
+gap is not yet attributed. Next build a tight caller-level timing/initial-route
+repro, remove redundant setup and pace actual backend effects, then perform one
+new automatic comparison. Successful multi-artifact harvesting remains unproven.
+
+## 2026-10-16 | Issue165 matched download failures and clean service comparison
+
+A click-correlated interpreter download404/410 now ends promptly as
+provider_unavailable/retryable=false, rather than waiting30seconds and becoming
+generic skipped. Observation is scoped to requests initiated during the selected
+click, the exact conversation, sandbox filename and message ID when available.
+Listeners are disposed on success/failure. Neighbour-file/conversation404s cannot
+terminate the selected transfer. Artifact manifests carry the classification
+through history projection to unavailable/terminally_unavailable. Provider-free
+replay first timed out on this defect; projection first lost terminal semantics.
+367focused tests passed across5files, then12replay cases passed after adding the
+neighbour-conversation case. Typecheck, compiled TypeScript build, Biome/diff clean.
+Serial Standards review preserved provider-local matching and public manifest
+semantics; Spec review retained other HTTP failures and existing identity/guard
+behavior. Isolated compiled deltas/rollback SHA receipts remain private.
+
+Clean same-conversation agentic run:48532ms/72backend requests; deterministic
+public-service run with a fresh cache and force=false:43666ms/72requests. Ratio
+0.899736time/1.0requests is within1.3for BOTH metrics. Six messages match exactly
+after outer trim. Both account for two artifacts:one13889byte file with matching
+SHA256 and one observed HTTP404unavailable artifact. This is successful retrieval
+of available content plus explicit source-unavailable evidence, not two saved
+files. Full action/request/response/download-event receipts and immutable hashes
+are referenced in docs/dev/issue165-scrape-benchmark-2026-10-16.json. Raw contents,
+URLs, filenames and account identity stay private. The earlier partial/failed
+measurements and rejected complete flag remain preserved separately.
+
+Goal stays ACTIVE: this clean service case passes the30percent gate; automatic
+completion-to-materializer cost and successful multi-artifact harvesting remain
+unproven. Next address unconditional completion-to-child quiet time and measure
+one exact-conversation automatic pass under the same output/cost contract, without
+resuming the global scheduler or unrelated subscriptions.
+
+## 2026-10-16 | Issue165 measured agentic comparison and rendered fallback repair
+
+Current goal: deterministic elapsed time AND backend requests must each be at
+most1.3times the agentic cost for equivalent conversation/artifact results. Stop
+and checkpoint before2million tokens or6hours; goal remains ACTIVE. Prior status
+turn was no progress; this packet supplies new live evidence and a source fix.
+The canonical sanitized action/cost ledger is
+`docs/dev/issue165-scrape-benchmark-2026-10-16.json`. Private receipts include
+per-command timestamps, request counts before/after, click hit tests, page network
+requests/responses and Browser download begin/progress/completion. Page Network is
+enabled on the owned blank target before provider navigation. Browser-wide worker
+and unrelated-tab traffic is not claimed. Both paths use wsl-chrome-3 and the same
+unchanged conversation. No prompt or scheduler/subscription resume was issued.
+
+Agent-driven read plus two artifact attempts took79964ms/71backend requests. It
+saved13889bytes with SHA256
+fd1720c0e3df3579ea567679c642e895a7993a3b558b8743fa47495a201e87ca.
+The second exact hit-tested download returned404 from the interpreter endpoint;
+its sandbox_path names that artifact. This explains why the earlier capped
+automatic attempts on that artifact saved zero bytes. It does not establish that
+all prior failures had the same cause. Earlier37288ms/70request agentic receipt
+incorrectly marked its own complete flag; separate qualification explicitly
+rejects it because only1of2files saved. Raw receipt preserved.
+
+Normal deterministic materialization then timed out after121805ms/68requests
+while six messages were rendered. One traced45000mscontext deadline yielded
+47149ms/66requests and located the stall in forced payload-route fallback after
+API failure. A minimized actual payload-reader test went red on unnecessary
+navigation. After failed API reads, matching project/conversation plus nonempty
+rendered turn content now returns to DOM extraction without reacquiring the route.
+Wrong route/project and empty content retain the original fallback. A composed
+service fixture now proves one navigation instead of two.222focused tests pass,
+typecheck, compiled TypeScript build, scoped Biome and diff checks pass. Serial
+Standards review keeps provider behavior in the adapter and preserves guards;
+Spec review preserves exact route/project qualification and legacy empty-surface
+recovery. This checkpoint does not infer full issue acceptance from source tests.
+
+Live public-service replay after isolated compiled-hunk installation completed
+in67700ms/71requests, one document navigation, two artifacts discovered and one
+file saved with the SAME13889bytes/hash as the agentic file. Raw ratios versus
+the79964msdiagnostic agentic run:time0.84663, requests1.0. These are NOT acceptance:
+the agentic timing includes failed-asset diagnosis, neither saved both files,
+and deterministic still records the unavailable asset as generic skipped.
+Five messages match after whitespace removal; the sixth additionally contains
+two Open file UI labels in deterministic extraction. Full equality is not claimed.
+Agentic and deterministic private contexts and immutable file hashes are retained.
+
+Installed adapter currently contains only reviewed resource-row and rendered-
+payload reuse hunks atop the prior runtime, plus the earlier completion freshness
+delta. Rollback copies/hashes live in the private diagnostics directory. This is
+an isolated runtime delta, not promotion of the entire branch. The normal service
+now proves working-resource-row download; previous capped native failures only
+selected the404asset and did not qualify a successful resource-row transfer.
+All17subscriptions/global scheduler remain paused, queued/running0, warnings0.
+Final lease readback found the terminal helper's lease lost/owner null; process
+custody and retirement remain an explicit pending check.
+
+Next bounded work: correlate exact artifact download404/410events and report
+provider_unavailable immediately, avoiding the30second generic failed-download
+wait; preserve warning/unknown-effect stops. Then obtain a clean equivalent-output
+baseline and deterministic comparison, including successful multi-artifact and
+automatic follow behavior. No raw content, URLs, account identity or artifact
+filenames are copied into the public ledger. Goal remains unachieved.
+
+## 2026-10-16 | Issue165 resource-row candidate rejected by live acceptance
+
+One second bounded automatic pass17→18 ran with the isolated resource-row hunk.
+Receipt measured-automatic-2026-10-16T19-06-28-438Z.json records445833ms,
+215observed backend requests (peak71/rolling minute),2document navigations and
+6same-document route changes. Child hmj_32d3c38107ff4e53b1fe6c76b6eaa9b4
+refreshed the same6message/2artifact/2file conversation, clicked a control,
+attempted one download and saved zero bytes. Terminal outcome remains skipped.
+Five backend404responses were observed; the current privacy-bounded trace does
+not prove they caused the failed download. No429or verification warning observed.
+The source replay is green but this candidate has NOT fixed native acceptance.
+
+Restored the adapter byte-for-byte from its private pre-candidate backup and
+restarted the API after confirming no queued/running completion work. Keep the
+verified freshness delta installed. Candidate8ced2e9ac remains reviewable on draft
+PR323, explicitly unqualified for deployment. All17subscriptions and the global
+scheduler remain paused. No automatic provider retry follows this result.
+
+This turn's observed provider traffic:179+215automatic requests plus275diagnostic
+requests =669observed requests, excluding unobserved startup traffic. Diagnostic
+instrumentation's early loading-shell capture was preserved as a limitation.
+Next feedback-loop requirement: record the exact resolved click target,
+elementsFromPoint/hit-test identity after scroll/hover, and correlated download
+request/response or Browser.downloadWillBegin/downloadProgress. Existing telemetry
+only proves input dispatch plus failed wait, so choosing among hit-test failure,
+preview handling and failed remote content is not yet justified. Do not claim a
+speedup from the two timings: scheduler waits and refresh paths differ. Original
+artifact bytes/hash/manifest/archive/local-copy acceptance remains OPEN.
+
+## 2026-10-16 | Issue165 native freshness replay and resource-row download control
+
+Installed only the compiled completionService.js freshness delta from5ab59efa2,
+with private byte-for-byte rollback copy and SHA256 receipt. Existing runtime
+otherwise remains the project-route-reuse build; this is not full branch promotion.
+Restarted API PID73829 while all17subscriptions and scheduler were paused.
+One ordinary automatic pass16→17 selected the same conversation as the previous
+failure. It took456632ms, observed179backend requests (peak70/rolling minute),
+2document navigations/4route changes, no429/verification warning. Startup coverage
+is incomplete; request totals are lower bounds. Child refreshed successfully in
+11252ms (6messages,2artifacts,2files), then clicked one control and attempted one
+download, which failed; zero bytes saved. This verifies the freshness repair and
+preserves the failed acceptance result. Child provider eligibility separately
+waited111306ms after start. All17subscriptions and global scheduler stayed paused.
+
+Two bounded diagnostic reads captured the actual current resource-row DOM; the
+first captured the loading shell, corrected capture sampled until command exit.
+They took24410/21744ms and observed138/137requests, no warning. These275requests
+are additional diagnostic traffic, excluded from the179automatic total. Raw DOM
+and content remain private under ~/.auracall/diagnostics/plan0411. Current row has
+separate Open preview and Download file controls. The product replay went red on
+preview input and now resolves the artifact identity before selecting the unique,
+enabled Download file control inside that exact resource row. Multiple row
+controls fail closed; legacy controls retain their existing path. No title-only
+matching or global download search is added.11replay/viewer tests pass; typecheck,
+scoped Biome and compiled build checked. Standards and Spec reviewed serially:
+provider-specific row handling stays in the adapter, and turn/message/button
+identity resolution remains authoritative before choosing a row subcontrol.
+Live proof of the resource-row repair remains pending.
+
+## 2026-10-16 | Issue165 measured retained-inventory freshness failure
+
+One bounded automatic pass observed 195 distinct backend requests (peak 66 per
+rolling minute), two document navigations and four route changes. Coverage starts
+after target attachment, so these are lower bounds. The pass took 571.5 seconds,
+including about 295 seconds before attachment under existing failure backoff.
+Its child waited 111.8 seconds for provider eligibility, then settled in 21.3
+seconds: one artifact skipped, zero download attempts and zero bytes. No observed
+429 or verification warning. A separate exact context read took 20.9 seconds,
+observed 137 backend requests, and returned six messages, two artifacts and two
+files. Its fresh artifact identifiers did not include the retained selected ID.
+
+The automatic collector read zero detail conversations but passed 20 retained
+inventory IDs as reusable snapshots. Completion now keeps retained IDs in the
+materialization frontier while granting snapshot reuse only to actual detail reads
+from this pass. A skipped retained attempt can therefore enter the existing fresh
+snapshot fallback; successful retained transfers and fresh collector reads still
+avoid redundant refreshes. No title-only control matching or production request
+ceiling is introduced. Regression first failed in three completion modes; mixed
+and retained-only frontier cases cover eligibility separately from freshness.
+
+Validation: 174 tests across completion and history materialization pass; typecheck,
+scoped Biome and diff checks pass. Serial Standards review found no new API or
+provider coupling; serial Spec review confirmed retained work stays eligible,
+fresh reads retain reuse, and retained-only work receives no freshness exemption.
+The native outcome after this source change remains unmeasured.
+
+Private receipts remain under ~/.auracall/diagnostics/plan0411, notably
+measured-automatic-2026-10-16T15-20-06-088Z.json and
+measured-selected-context-2026-10-16T15-35-10-213Z-receipt.json. Earlier empty-lock
+failure and qualified reversible quarantine are preserved separately. This source
+fix is not installed or native acceptance; issue165 remains open. Global scheduler
+and completion subscriptions remain paused. Final process readback finds the direct
+read's Chrome PID84086 present with lease lost/owner null; no foreign cleanup was
+attempted and resource retirement is not established.
+
+## 2026-10-14 | Plan0426 public bootstrap request proof and cleanup failures
+
+Public ChatgptService/utility/adapter/owned-CDP fixture now intercepts first-navigation
+and payload requests. Known denial no longer disappears in normal cleanup; mixed
+read/close causes survive. Transport-close failure/timeout retains unknown lease
+and desktop custody. Warning and uncertain-send cases hard-stop.88focused tests,
+typecheck, Biome/diff checks pass (2existing lifecycle infos); serial Standards/Spec
+review complete. Source packet CLOSED; abort/retained/other caller/native gates stay
+open. No production activation or provider effect.
+
+## 2026-10-14 | Plan0425 utility request authority composition
+
+Configured clients and utility now share request permits/effect reconciliation
+under their own exact leases. Optional explicit fixture ceiling enables utility
+interception without another lease; production callers remain disabled. Cross-
+caller order, warning/unknown fencing, lease loss, disabled/invalid limit and
+operation+reconciliation error preservation pass.144focused tests, typecheck,
+Biome and diff checks pass; serial Standards/Spec review complete. Plan0425 source
+packet CLOSED; broader caller/native/production ceiling gates remain open.
+
+## 2026-10-14 | Plan0424 utility blank bootstrap
+
+ChatGPT utility acquisition now requests blank startup/targets, then performs the
+first provider route under exact lease and operation admission. Denied initial
+navigation leaves a reusable known owned blank; unknown effects and changed routes
+hard-stop.50focused tests, typecheck, scoped Biome and diff checks pass; serial
+Standards/Spec review complete. Plan0424 source packet CLOSED. Utility request-hook
+composition, other bootstrap/retained paths and full issue165 acceptance remain.
+
+## 2026-10-14 | Plan0423 interrupted file inventory continuation
+
+Project-file denial now retains completed files and the unfinished project index.
+Library denial yields incomplete inventory immediately while preserving existing
+attachment/chunk state. Both resume under fresh serialized authority; warnings,
+uncertain sends and unsettled actions hard-stop.110focused tests, typecheck,
+scoped Biome and diff checks pass. Serial Standards/Spec review complete;
+Plan0423 source packet CLOSED. Full issue165 acceptance remains open.
+
+## 2026-10-14 | Plan0422 interrupted context continuation
+
+Owned request denial no longer disappears in tolerant context reads. Retain
+finished artifacts and the interrupted conversation/chunk cursor; a fresh
+serialized pass resumes only that work. Warnings from the owned observer or
+persisted guard, uncertain sends and unfinished physical actions hard-stop.
+99focused tests, typecheck, scoped Biome and diff checks pass; the final one-read
+controller fixture passes separately. Serial Standards/Spec review complete.
+Plan0422 source packet CLOSED; issue165 and remaining acceptance stay open.
+
+## 2026-10-14 | Unfinished owned project budget yield
+
+Plan0421 restart packet now retains completed project evidence and the interrupted
+project cursor when real owned-client cleanup contains only pre-send budget denials.
+Public collector/actual authority/phase wrapper/CDP fixture observes red, then green;
+serialized evidence resumes only the unfinished project in a fresh authorized pass.
+Warnings, uncertain sends and unsettled physical actions reject.93focused tests,
+typecheck, scoped Biome and diff checks pass. Serial Standards/Spec review complete;
+source checkpoint only. Issue165 and native/detail/materialization gates stay open.
+
+## 2026-10-14 | Plan0421 source checkpoint and resource stop
+
+Backend exhaustion and unqualified request failures now stop later browser actions.
+Project discovery yields a serialized cursor for known request-budget exhaustion;
+warnings and uncertainty remain hard stops, including a warning delivered during
+the awaited external yield predicate.100focused tests/6files, typecheck and full
+build pass. Scoped formatting has only3existing CDP naming warnings. Source review
+complete for the packet; production activation and full issue165 acceptance remain
+open. Goal meter reached1,648,195tokens/6,645seconds: stop new implementation and
+prepare a temporary handoff before the user's2million-token boundary.
+
+## 2026-10-14 | Owned Fetch source review checkpoint
+
+Plan0420 source fixture now denies backend sends across two runtime clients under
+an explicit fixture ceiling and deduplicates request events. Known denial releases
+only ledger-qualified custody; pending actions, mixed dispatch failures and warning-
+frozen requests remain fenced. Account-mirror phase wrapper preserves the hook;
+warning observation stays active while admitted callbacks drain.31affected tests,
+typecheck and full build pass; scoped formatting/diff checks pass. No production
+caller enables the hook yet. Collector yield, bootstrap, retained targets, mixed
+runtime participation and production ceiling remain integration gates. No provider
+probe, install, scheduler change or guard clearance.
+
+## 2026-10-14 | Owned Fetch admission regression in progress
+
+Plan0420 actual annotation/guarded-CDP/configured-factory fixture went red on the
+missing request observer. An explicit fixture request ceiling now denies a second
+runtime before send and deduplicates events through the durable ledger. Production
+callers do not enable the hook yet. Cleanup exposed masked budget/lease-settlement
+errors; both are now preserved, with unknown tab custody fenced. Collector yield
+semantics, bootstrap/retained targets and the production ceiling remain integration
+gates. Changes uncommitted; no install or provider probe.
+
+## 2026-10-14 | Continuous owned-client custody hold
+
+Plan0419 follow-up adds a guarded-client hold for request callbacks outside original
+async context. Native/legacy adapters retain generation verification; disconnect
+releases custody, and close during acquisition releases an unpublished hold. Nine
+desktop control/observation plus two local wire/native-store fixtures pass. Typecheck
+and full build pass after a context narrowing correction. No production interceptor,
+quota, installation or provider probe. Actual pre-send wiring remains next.
+
+# 2026-10-14 — Plan0419 interceptor custody prerequisite
+
+Nested real guarded-CDP Fetch.enable reproduced a desktop-control deadlock inside
+an outer automation scope. Exact-owner async context now lets nested commands
+revalidate and reuse the outer hold, while human takeover and stale inherited
+callbacks remain blocked. Provider-free source only; final checks/review and actual
+owned-request wiring remain open. No install or provider probes.
+
+## 2026-10-14 | Backend-request ledger foundation
+
+Plan0418 vertical public/file-backed ledger regressions separate request permits
+from operation budget and active-chat counters, enforce a shared fixture request
+ceiling, deduplicate hashed identity across restart, and preserve warning/ownership
+fences.26focused tests/5files passed; the ledger's supplemental concurrent case
+then passed with16ledger tests. Source checkpoint694435163 pushed. No production
+request-path wiring, selected
+ceiling, installation or native traffic. Next pre-send unit must qualify actual
+automation custody, bootstrap, retained targets and human takeover; a lease alone
+is insufficient authority for a browser-wide interceptor. Full issue165 still OPEN.
+
+## 2026-10-14 | Fresh issue165 goal; owned backend warning observer
+
+User created fresh active goal with2million-token/6hour checkpoint limits. Plan0417
+owns a provider-free warning-delivery unit at the actual client annotation path.
+Configured factory/real file-backed ledger loop goes red when another runtime's
+admission succeeds after a native429. Owned-target listener and lease-checked
+warning probe make it green; separate OS processes also prove shared denial.
+Setup-failure cleanup and foreign/static response exclusions verified. No live
+probe, guard clearing, deployment or job resumption. Request counting/admission
+and numeric ceiling remain separate outstanding units; full issue165 remains OPEN.
+
 ## 2026-10-14 | Project-route reuse integrated and installed
 
 PR321/source ddea20ec7/merge a3d143e4a.267focused checks, typecheck/build pass;
@@ -54162,3 +54743,270 @@ PR305 installed592exactparity/API98570. Canonical no-submit app selection passes
 ### 2026-10-13 Issue253 installed native acceptance PASS
 
 Packet2 completed native exit0 in584.438s beforeguarddeadline. Exact existing app/account/inventory, frozenoneprompt/backend5.6Instant/providerfinal and wholeanswer normalized equality verified.49/65workflowcalls;5newSession167KEEP, priorbaselinepreserved.2/10 used, no furtherpackets. Plans0405/0406-1/0409/0410 CLOSED with boundedclaims; observergap/PNGcollision and unknownhistoricalexitactor preserved. Numericalresearchvalidation andactiveidleexpiry are separate. Memory forbidden; no wakes.
+
+
+### 2026-10-14 Issue165 request-aware abort cleanup
+
+Plan0427: retained-session abort fixture reproduced settled lease after failed
+close. Preserving adapter close failure alone stayed red: service abort raced
+cleanup. Request-aware context reads now drain at most five seconds, preserve
+abort/deadline codes with cleanup causes, and fence uncertain cleanup instead of
+returning cached success. Retained close is separately bounded to three seconds;
+confirmed close retains known custody. Fixture ceilings only; wider lifetime,
+production and native Plan0386 gates remain open. No probes or activation.
+
+
+### 2026-10-14 Issue165 request-aware utility session boundary
+
+Plan0428: a successful retained read left its request interceptor/client alive
+while utility lease settled. Scope request-aware session lifetime to the utility:
+close/drain before settlement, preserve mixed failures, reject inherited sessions,
+and reconnect with fresh authority on an explicit later call. Actual public
+fixture qualifies repeat without another navigation and three distinct permits.
+Review found/reproduced false unknown fencing of pure budget denial; preserve
+its known typed outcome. Production activation and other background/exact-tab
+lifetimes remain open; no native provider effects.
+
+
+### 2026-10-15 Issue165 collector retained close failures
+
+Plan0429: actual collector/configured authority fixture reproduced successful
+collection after final-chunk transport close failed. Preserve request-aware and
+already-tagged close uncertainty, combining primary/cleanup failure and stopping
+before another detail row. Three source cases cover normal read, mixed failure
+and factory-owned hook without caller governor. Partial-chunk pass lifetime and
+other background/native gates remain open. No provider/runtime effects.
+
+
+### 2026-10-15 Issue165 partial-chunk session boundary
+
+Plan0430: partial collector return left owned Fetch/client alive. Add a top-level
+session boundary around detail inventory; retain cursor/evidence for fresh-pass
+continuation. Per-surface option copy independently reproduced the leak and now
+hands session back in finally. Confirmed close releases known lease; failure and
+mixed diagnostic/cleanup preserve errors and unknown custody. Direct helper
+session reuse stays intact. Outer cancellation/teardown race is needs_evidence;
+no live/native/activation effect or wider completion claim.
+
+
+### 2026-10-15 Issue165 request-aware collector cancellation
+
+Plan0431: collector timeout returned normal result after delayed failed provider
+close. Request-aware context calls now drain cancellation at most five seconds,
+retain timeout/parent reason and provider cause, and stop instead of accepting
+normal completion. Four controlled provider cases cover failed/confirmed close,
+parent abort and unresolved completion. Explicit observer handles already-aborted
+signal; test budget10s observes real5s bound. Native whole-service composition,
+late-session cleanup after expiry and wider acceptance remain open; no activation.
+
+
+### 2026-10-15 Issue165 late provider session handback
+
+Plan0432: controlled provider first handed back a session after collector drain
+expired; red showed no close started. Aborted request-aware context settlement now
+reuses the session boundary on resolve/reject, preserving prior timeout while
+closing eventual handback. Three late cases qualify once-only close and known/
+unknown lease outcome. No retries, activation or runtime/provider effects. Whole
+native composition and capability propagation remain open. Resource checkpoint
+will precede another implementation packet near conservative1MM stop.
+
+
+### 2026-10-15 Issue165 source-window reconciliation
+
+Audited sourcebf2a9bf2d: production factory/utility callers omit backend ceiling,
+PR323 remains draft/unmerged, and latest focused source checks do not establish
+fullGateB, canonical install or native/wider automatic acceptance. Plan0411 now
+links the exact remaining-gate note and distinguishes historical runtime receipts.
+No implementation/runtime effects; checkpoint before conservative1MM source stop.
+
+
+### 2026-10-15 Issue165 planning validation checkpoint
+
+plans:audit exit1/39: fixed six introduced noncanonical CLOSED headers0427–0432;
+rerun exit1/33. Residual32missing policy targets and0406-1 state header are unchanged
+from inheritedbasecb9330a66. Preserve failures and separate governance lane; full
+GateB remains failed/unmet. Source/runtime unchanged; diffcheck passes.
+
+## 2026-10-15 | Issue165 bounded factory-only cancellation diagnostic
+
+At checkout 1ad31aa97, one caller-level repro returns before provider cleanup is
+permitted when only the client factory owns request admission. Restoring only the
+collector governor makes the same scenario pass. Two executions, 2.97s red / 2.42s
+control; diagnostic test edits restored, no production change or live effect.
+Reproducer and exact procedure are in the existing source-window reconciliation
+note and adjacent patch. Diagnostic slice ends here; issue165 acceptance remains
+open. Next recommended work is one capability-propagation fix with exact ownership
+and no-hook controls, not another speculative hardening chain. No goal/allocation
+reset. Memory disposition forbidden: no explicit memory-update request.
+
+## 2026-10-15 | Issue165 focused caller-capability repair
+
+Factory-only cancellation now selects bounded cleanup in collector and inner
+LlmService. Shared capability metadata preserves explicit governor precedence
+without another lease. Original collector red and two inner cached-success reds
+reproduced before fixes. Final affected146tests/3files pass; unchanged inner21,
+traffic13 and authority5 receipts remain applicable. Final typecheck passes.
+Late close, parent abort, legacy deadlines and cancelled preflight covered. Serial
+Standards/Spec review repaired the inner cached-success finding; no bounded blocking
+finding remains. Exact evidence and limits in source-window reconciliation. Source
+checkpoint only, blocker_reduction; no combined native proof, production activation,
+install or live effect. Issue165 remains open. Memory disposition forbidden.
+
+## 2026-10-15 | Issue165 acceptance reassessment and missing source validation
+
+At71421809f, new324surface/guard/endpoint/lifecycle tests plus99automatic
+materialization tests pass, local production build passes. Reuse prior185tests,
+typecheck and affected lint receipts. Full GateB remains failed: refreshed33plan
+audit findings exactly match prior receipt; canonical main catalog blob
+c2242cfc1440e43e6d90f44f9c5b94fbbab9b9f2 lacks this repair branch. Existing source-
+window note has exact commands, evidence and gate table. Next is governance/lane
+reconciliation before integration; ceiling and genuine changed-B remain operator
+inputs. No production edits, installed/provider effects or goal reset. Bounded
+reassessment CLOSED, partial source/build outcome_progress; issue165 OPEN.
+Memory disposition forbidden; no explicit memory-update request.
+
+## 2026-10-15 | Issue165 governance repair research
+
+Research report: docs/dev/notes/2026-10-15-issue165-governance-repair-research.md.
+Git history proves v0.1.32 reintroduced32duplicate wire-in links previously removed
+by126ade11d; all identities already have one canonical file. In-memory real-parser
+probe32to0; older CLOSED header normalization qualifies the33rd finding. No repair
+applied. Exact-branch lane audit still validates90catalog entries and returns107
+findings; Plan0420 lacks Lane/Integration metadata and P92 custody is stale. Direct
+remote readback disproves interpreting its missing catalog remote_ref as deletion.
+Report separates narrow candidate edits from broader owner-led lane reconciliation
+and preserves handoff no-removal boundary. Research complete; no policy/catalog,
+implementation or live effect. Memory disposition forbidden; no memory request.
+
+## 2026-10-15 | Return to actual live-follow failure and acceptance
+
+Governance parked by user. Read-only live reanchor confirms API62047, scheduler and
+all17active completions paused,0queued/running/warnings; original parent still
+pass15 with its historical successful21186byte automatic child. Latest failed
+native attempt was separate discovery5:429 then collector timeout/API500. Wrapper
+still selects old route-reuse runtime; four sampled modules differ and the new
+request-authority module is absent. Current source still omits production request
+ceilings. Concrete bounded automatic acceptance proposal is prepared at
+/tmp/issue165-live-follow-next-acceptance.md; no effects run. Next production source
+requirement is explicit numeric backend requests/minute wiring, followed by
+separately authorized install and one normal parent pass. Changed-B is later,
+not a prerequisite to preparing this pass. Memory disposition forbidden.
+
+
+## 2026-10-16 | Issue165 private cold benchmark checkpoint
+
+The HTTP server accepts an optional history-materialization factory, preserving
+its production cleanup, guard observation and foreground-work callbacks. Explicit
+service injection still takes precedence; the default constructor is unchanged.
+A real HTTP/service/store regression proves private job creation and startup
+recovery leave the default-store running fixture unchanged. Six targeted HTTP
+tests pass across two files; eight private-store self-checks pass. Typecheck and
+compiled TypeScript exit0; source lint exits0 with its existing Location warning;
+the new test passes Biome. Whole-server Biome retains existing formatting/import
+debt. Primary serial Standards and Spec review against7f3fa0b0e found no accepted
+findings in this slice; full issue acceptance remains unproven.
+
+Cold multi-artifact automatic and current guarded-agentic drivers are prepared,
+not run. Private snapshots, logs and restoration manifest are under
+~/.auracall/diagnostics/plan0411/cold-preparation-validation-20261016. The profiler
+install/restore self-check confirms the compiled transport is restored. Read-only
+preflight23:00UTC still finds PID12187 without a matching native ownership receipt;
+zero product controls/provider commands issued. Do not adopt or signal that browser.
+Frozen complete automatic97.851s/66requests still fails the63.0916s time ceiling;
+service-only passes do not satisfy automatic acceptance. Next: establish current
+native ownership through the supported runtime, then execute one complete measured
+automatic pass with equivalent texts/files and early Network capture. Keep the
+original faster agentic baselines. Ledger: issue165-scrape-benchmark-2026-10-16.json.
+Memory disposition forbidden: no explicit user memory-update authorization.
+
+
+## 2026-10-17 | Renewed live measurement after browser restart
+
+User authorized stopping the mismatched browsers and relaunching. Historical
+PID27467 was absent; exact managed PID12187 and manual-login replacement53103
+were stopped. Native launcher produced verified PID59717; subsequent product
+lifecycle may replace it through normal cleanup/relaunch. No prompts, global
+scheduler controls or full installed-source promotion. Private recovery receipt:
+`native-relaunch-20261017.json`. Current compiled source base is bda5adfe2.
+
+Fresh multi-artifact automatic pass now PASSES its frozen clean agentic baseline:
+54168ms/70requests versus49510ms/68 (time1.094082, requests1.029412). Four exact
+trimmed texts and both saved file byte counts/SHA256 match; archive links present;
+private stores began empty, child materialized2, force=false. Page Network capture
+is complete from owned blank target before provider navigation. Receipt:
+`measured-automatic-scoped-2026-10-17T02-34-40-144Z.json`; independent readback:
+`cold-multi-automatic-parity-20261017.json`. An earlier63468ms/at-least68run remains
+unaccepted because the observer closed during parent-child custody handoff.
+Harness now retains the exact-target early Network observer across the gap,
+while DOM observation still requires current custody. Both parent/child attachments
+retain earlyCapture=true; no provider behavior or pacing was changed.
+
+Original existing-state automatic clean repeat still FAILS time:66178ms/66requests
+versus48532ms/72, ceiling63091.6ms. Over by3086.4ms; full setup cost is retained.
+Six exact trimmed texts, verified13889byte A checksum, and typed nonretryable
+provider-unavailable B evidence all match. Complete page capture; no warning/429.
+Receipt `measured-automatic-scoped-2026-10-17T02-37-15-742Z.json`; comparison
+`original-complete-comparison-20261017.json`. Faster58457ms profile is separately
+unaccepted because raw coverage reports a custody change before target creation;
+do not choose the faster sample to erase the failed clean repeat. Profiler restored
+with hash-checked receipt `source-cdp-profile-original-recheck-20261017.restored.json`.
+
+Profile identifies repeated shared-store reads, including four archive list calls
+from recovery search projections and large history files. Next bounded source
+packet: reduce repeated archive/history planning reads through an existing public
+seam with a regression, preserve live file verification/typed terminal evidence,
+then repeat the original full measured automatic comparison. Do not simply replace
+shared stores with empty ones for this acceptance. Main installed API readback
+retains scheduler paused,17paused,0queued/running and0warnings. Goal remains ACTIVE
+and issue165OPEN; no merge/release. Ledger and private renewed-measurement-20261017
+snapshots preserve all attempts. Serial Standards/Spec evidence review: no accepted
+findings in this documentation packet; full time criterion remains unmet.
+Memory disposition forbidden: no explicit user memory-update request.
+
+
+## 2026-10-17 | Performance tolerance accepted; client login complaints
+
+User accepted original66178ms result as good enough:3086.4ms over strict ceiling,
+66requests vs72, equivalent outputs; fresh multi case passes both limits. Numeric
+failures remain unchanged in ledger; no claim strict30percent passed. Issue165
+remains open pending functional acceptance. User reports clients complaining about
+login state. Read-only installed API check confirms PID83768 running; historical
+preflight records are not current provider-authentication evidence. Investigating
+installed local/browser status; client names and exact error requested. No prompts
+or scheduler controls. Memory disposition forbidden: no explicit update request.
+
+
+## 2026-10-17 | Restore shared ChatGPT qualification
+
+Fixed manual-login native desktop configuration loss and direct session-proof
+utility-affinity omission. Both public-seam regressions red/green;48tests/9files,
+typecheck/build/lint pass. Five rollback-backed compiled deltas installed; exact
+idle mismatched browser restarted under earlier user authority, data retained.
+Installed BrowserAutomationClient proof verdict match in11542ms; no prompts or
+scheduler controls. Details and qualified receipts:
+docs/dev/notes/2026-10-17-provider-login-ownership-repair.md. Client retries are
+not yet observed; stale static records were not treated as live ownership proof.
+Memory disposition forbidden.
+
+
+## 2026-10-17 | Installed bounded follow check passes
+
+Actual installed first pass omitted typed unavailable B and had incomplete startup
+capture. Installed five rollback-backed tested deltas;245tests/5files pass. Repeat
+46995ms/68requests vs agentic48532ms/72 passes strict1.3limits, all6texts equal,
+A file/hash verified, explicit typed unavailable B retained. Child duplicate1/skip1
+settles, parent one pass then paused. No new transfer. Reloaded idle main API;
+scheduler/all17subscriptions remain paused,0queued/running/warnings. Details:
+docs/dev/notes/2026-10-17-installed-follow-acceptance.md. Gate C canonical integration
+and required fresh installed transfer evidence remain open; PR323 remains draft,
+issue165OPEN. Memory disposition forbidden.
+
+
+## 2026-10-17 | Issue165 integration validation
+
+743affected tests/26files pass after replacing an ordinal CDP fixture stall with
+the actual payload request. Production build and full lint/typecheck pass; existing
+239warnings/17infos remain.33planning-audit findings are inherited and their source
+authorities match currentmain. See2026-10-17-issue165-integration.md. PR323 merge,
+canonical side-by-side install and fresh installed transfer are next. Memory
+disposition forbidden.

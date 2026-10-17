@@ -1,3 +1,4 @@
+import { AsyncLocalStorage } from "node:async_hooks";
 import { createHash, randomUUID } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -10,6 +11,13 @@ interface GateOwner {
 	binding: string;
 	ownerPid: number;
 	acquiredAt: string;
+}
+
+const automationScopes = new AsyncLocalStorage<ReadonlyMap<string, GateOwner>>();
+
+export interface DesktopAutomationHold {
+	run<T>(effect: () => Promise<T>): Promise<T>;
+	close(): Promise<void>;
 }
 
 /** A clock alone never releases a human lease; exact provider revocation must qualify handoff. */
@@ -144,7 +152,49 @@ export class DesktopControlGate {
 		});
 	}
 
+	async holdAutomation(binding: string): Promise<DesktopAutomationHold> {
+		let publish!: (hold: DesktopAutomationHold) => void;
+		let reject!: (error: unknown) => void;
+		const ready = new Promise<DesktopAutomationHold>((resolve, fail) => { publish = resolve; reject = fail; });
+		let release!: () => void;
+		const released = new Promise<void>(resolve => { release = resolve; });
+		let closed = false;
+		const pending = new Set<Promise<unknown>>();
+		const lifetime = this.withAutomation(binding, async () => {
+			const scopes = automationScopes.getStore();
+			if (!scopes) throw new Error("Desktop automation scope is unavailable.");
+			publish({
+				run: <T>(effect: () => Promise<T>): Promise<T> => {
+					if (closed) return Promise.reject(new Error("Desktop automation hold is closed."));
+					const task = automationScopes.run(scopes, () => this.withAutomation(binding, effect));
+					pending.add(task);
+					void task.then(() => pending.delete(task), () => pending.delete(task));
+					return task;
+				},
+				close: async () => {
+					closed = true;
+					await Promise.allSettled(pending);
+					release();
+					await lifetime;
+				},
+			});
+			await released;
+		});
+		void lifetime.catch(reject);
+		return ready;
+	}
+
 	async withAutomation<T>(binding: string, effect: () => Promise<T>): Promise<T> {
+		const inherited = automationScopes.getStore()?.get(this.lockPath);
+		if (inherited) {
+			const current = await this.owner();
+			if (
+				!current || current.id !== inherited.id || current.role !== "automation" ||
+				current.binding !== binding || inherited.binding !== binding ||
+				current.ownerPid !== process.pid
+			) throw new Error("Desktop automation ownership changed; refusing stale scope.");
+			return effect();
+		}
 		let owner: GateOwner | undefined;
 		for (let attempt = 0; attempt < 100; attempt += 1) {
 			try {
@@ -160,7 +210,9 @@ export class DesktopControlGate {
 		}
 		if (!owner) throw new Error("Desktop automation admission unavailable.");
 		try {
-			return await effect();
+			const scopes = new Map(automationScopes.getStore());
+			scopes.set(this.lockPath, owner);
+			return await automationScopes.run(scopes, effect);
 		} finally {
 			await this.transition(async () => {
 				const current = await this.owner();

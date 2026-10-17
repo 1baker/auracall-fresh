@@ -47,6 +47,7 @@ export type RunArchiveItemKind =
   | 'evidence';
 
 export interface RunArchiveListRequest {
+  providerConversationId?: string | null;
   kind?: RunArchiveItemKind | 'all' | null;
   provider?: string | null;
   runtimeProfile?: string | null;
@@ -1229,6 +1230,7 @@ function matchesStableRequest(
 ): boolean {
   if (request.kind !== 'all' && item.kind !== request.kind) return false;
   if (request.provider && item.provider !== request.provider) return false;
+  if (request.providerConversationId && item.providerConversationId !== request.providerConversationId) return false;
   if (request.runtimeProfile && item.runtimeProfile !== request.runtimeProfile) return false;
   if (request.projectId && item.projectId !== request.projectId) return false;
   if (request.agent && item.agentId !== request.agent) return false;

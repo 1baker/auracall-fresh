@@ -2,7 +2,11 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, test, vi } from "vitest";
-import { createProviderTrafficGovernor } from "../../packages/browser-service/src/service/providerTrafficGovernor.js";
+import {
+	createProviderTrafficGovernor,
+	ProviderBackendRequestBudgetExceededError,
+	ProviderTrafficWarningError,
+} from "../../packages/browser-service/src/service/providerTrafficGovernor.js";
 import {
 	type AccountMirrorConversationWorkState,
 	fingerprintAccountMirrorConversationIndexRow,
@@ -137,6 +141,20 @@ describe("ChatGPT account mirror metadata collector", () => {
 			interactionGovernor: governor,
 			providerTrafficGovernor,
 			onTargetNavigation,
+		});
+	});
+
+	test("allows initial governed navigation only for an acquired unloaded target", () => {
+		const options = createAccountMirrorListOptionsForTest(undefined, undefined, undefined, {
+			host: "127.0.0.1",
+			port: 45011,
+			targetId: "crawler-blank",
+			allowInitialNavigation: true,
+		});
+		expect(options).toMatchObject({
+			allowNavigation: true,
+			preserveActiveTab: false,
+			tabTargetId: "crawler-blank",
 		});
 	});
 
@@ -1420,6 +1438,14 @@ describe("ChatGPT account mirror metadata collector", () => {
 			expectedIdentityKey: "ecochran76@gmail.com",
 			sweepMode: "steady_follow",
 			requestedPhase: "detail-inventory",
+			tabAffinity: scoped
+				? {
+						host: "127.0.0.1",
+						port: 45011,
+						targetId: "crawler-scoped",
+						configuredUrl: "https://chatgpt.com/c/conv_target",
+					}
+				: undefined,
 			conversationIds: scoped ? ["conv_target"] : undefined,
 			previousEvidence: {
 				identitySource: "auth-session",
@@ -1464,6 +1490,13 @@ describe("ChatGPT account mirror metadata collector", () => {
 			},
 		});
 
+		if (scoped)
+			expect(client.getProviderSessionProof).toHaveBeenCalledWith(
+				expect.objectContaining({
+					configuredUrl: "https://chatgpt.com/c/conv_target",
+					tabTargetId: "crawler-scoped",
+				}),
+			);
 		expect(calls).toEqual(["getConversationContext:conv_target"]);
 		expect(client.getConversationContext).toHaveBeenCalledWith(
 			"conv_target",
@@ -1471,7 +1504,10 @@ describe("ChatGPT account mirror metadata collector", () => {
 				listOptions: expect.objectContaining({
 					accountMirrorInventory: true,
 					skipFeatureSignature: true,
-					tabLifecycle: "dispose-new",
+					tabLifecycle: scoped ? "retain" : "dispose-new",
+					...(scoped
+						? { configuredUrl: "https://chatgpt.com/c/conv_target", tabTargetId: "crawler-scoped" }
+						: {}),
 				}),
 			}),
 		);
@@ -2076,7 +2112,13 @@ describe("ChatGPT account mirror metadata collector", () => {
 		});
 	});
 
-	test("yields project discovery at its physical navigation budget and resumes the cursor", async () => {
+	test.each([
+		"physical-navigation",
+		"backend-request",
+		"uncertain",
+		"guarded",
+		"guarded-during-yield",
+	])("project discovery preserves its cursor or hard stop; mode=%s", async (budgetKind) => {
 		const calls: string[] = [];
 		const projects = ["project_1", "project_2"].map((id) => ({
 			id,
@@ -2101,6 +2143,26 @@ describe("ChatGPT account mirror metadata collector", () => {
 				});
 				calls.push(projectId);
 				await action.settle({ outcome: "succeeded" });
+				if (budgetKind !== "physical-navigation" && projectId === "project_1") {
+					if (!governor.admitBackendRequest) throw new Error("Expected backend admission");
+					await governor
+						.admitBackendRequest("fixture-request", async () => undefined)
+						.catch((error) => {
+							if (
+								!(error instanceof ProviderBackendRequestBudgetExceededError) &&
+								!(
+									budgetKind === "uncertain" &&
+									error instanceof Error &&
+									error.message === "fixture-uncertain-dispatch"
+								)
+							)
+								throw error;
+						});
+					if (budgetKind === "guarded")
+						await governor.checkWarning?.({ fixtureGuard: true }).catch((error) => {
+							if (!(error instanceof ProviderTrafficWarningError)) throw error;
+						});
+				}
 				return [
 					{
 						id: `conv_${projectId}`,
@@ -2131,22 +2193,40 @@ describe("ChatGPT account mirror metadata collector", () => {
 		const collector = createChatgptAccountMirrorMetadataCollector(config as never, {
 			createClient: async () => client as never,
 		});
-		const makeController = () =>
-			createAccountMirrorMetadataTrafficPlanController(
-				createProviderTrafficGovernor({
-					attribution: {
-						provider: "chatgpt",
-						runtimeProfileId: "default",
-						managedBrowserProfile: "/fixture/managed",
-						workloadId: "fixture",
-						operationId: "fixture",
-						tabLeaseId: "fixture",
-					},
-					interactionGovernor: { beforeInteraction: async () => undefined },
-					mutationAudit: async () => undefined,
-				}),
-				{ maxPageReadsPerCycle: 4 },
-			);
+		const makeController = () => {
+			const governor = createProviderTrafficGovernor({
+				attribution: {
+					provider: "chatgpt",
+					runtimeProfileId: "default",
+					managedBrowserProfile: "/fixture/managed",
+					workloadId: "fixture",
+					operationId: "fixture",
+					tabLeaseId: "fixture",
+				},
+				interactionGovernor: { beforeInteraction: async () => undefined },
+				mutationAudit: async () => undefined,
+				admitBackendRequest:
+					budgetKind !== "physical-navigation"
+						? async () => {
+								if (budgetKind === "uncertain") throw new Error("fixture-uncertain-dispatch");
+								throw new ProviderBackendRequestBudgetExceededError();
+							}
+						: undefined,
+				probeWarning: async (context) =>
+					budgetKind.startsWith("guarded") &&
+					typeof context === "object" &&
+					context !== null &&
+					"fixtureGuard" in context
+						? { classification: "rate-limit", reason: "fixture429" }
+						: null,
+				persistWarning: async () => undefined,
+			});
+			const controller =
+				budgetKind !== "backend-request"
+					? createAccountMirrorMetadataTrafficPlanController(governor, { maxPageReadsPerCycle: 4 })
+					: undefined;
+			return { governor: controller?.governor ?? governor, controller };
+		};
 		const collect = (
 			controller: ReturnType<typeof makeController>,
 			previousEvidence?: Parameters<typeof collector.collect>[0]["previousEvidence"],
@@ -2159,7 +2239,19 @@ describe("ChatGPT account mirror metadata collector", () => {
 				requestedPhase: "project-conversations",
 				previousEvidence,
 				providerTrafficGovernor: controller.governor,
-				providerTrafficPlanController: controller,
+				providerTrafficPlanController: controller.controller,
+				shouldYield: async () => {
+					if (
+						budgetKind === "guarded-during-yield" &&
+						controller.governor.snapshotAdmissionState?.().backendRequestOutcome ===
+							"budget-exhausted"
+					) {
+						await controller.governor.checkWarning?.({ fixtureGuard: true }).catch((error) => {
+							if (!(error instanceof ProviderTrafficWarningError)) throw error;
+						});
+					}
+					return false;
+				},
 				limits: {
 					maxPageReadsPerCycle: 4,
 					maxConversationRowsPerCycle: 30,
@@ -2167,6 +2259,14 @@ describe("ChatGPT account mirror metadata collector", () => {
 					maxBrowserInteractionsPerMinute: 0,
 				},
 			});
+		if (budgetKind === "uncertain" || budgetKind.startsWith("guarded")) {
+			const collecting = collect(makeController());
+			if (budgetKind.startsWith("guarded"))
+				await expect(collecting).rejects.toBeInstanceOf(ProviderTrafficWarningError);
+			else await expect(collecting).rejects.toThrow("uncertain");
+			expect(calls).toEqual(["project_1"]);
+			return;
+		}
 		const first = await collect(makeController());
 		expect(calls).toEqual(["project_1"]);
 		expect(first.manifests.conversations.map((c) => c.id)).toEqual(["conv_project_1"]);
@@ -2183,6 +2283,78 @@ describe("ChatGPT account mirror metadata collector", () => {
 			nextProjectIndex: 0,
 			scannedProjects: 1,
 			yielded: false,
+		});
+	});
+
+	test("library budget yield preserves an existing unfinished attachment cursor", async () => {
+		const governor = createProviderTrafficGovernor({
+			attribution: {
+				provider: "chatgpt",
+				runtimeProfileId: "default",
+				managedBrowserProfile: "/fixture/managed",
+				workloadId: "fixture",
+				operationId: "fixture",
+				tabLeaseId: "fixture",
+			},
+			interactionGovernor: { beforeInteraction: async () => undefined },
+			mutationAudit: async () => undefined,
+			admitBackendRequest: async () => {
+				throw new ProviderBackendRequestBudgetExceededError();
+			},
+		});
+		const result = await readBoundedChatgptDetailInventory(
+			{
+				listAccountFiles: async () => {
+					await governor.admitBackendRequest?.("library", async () => undefined);
+					throw new Error("Unreachable after denied request");
+				},
+				listProjectFiles: async () => {
+					throw new Error("No project read after library denial");
+				},
+				listConversationFiles: async () => {
+					throw new Error("No file read after library denial");
+				},
+				getConversationContext: async () => {
+					throw new Error("No context read after library denial");
+				},
+			},
+			[{ id: "project", name: "Project", provider: "chatgpt" }],
+			[{ id: "conversation", title: "Conversation", provider: "chatgpt" }],
+			10,
+			{
+				maxDetailReads: 4,
+				listOptions: { providerTrafficGovernor: governor },
+				cursor: {
+					nextProjectIndex: 0,
+					nextConversationIndex: 0,
+					detailReadLimit: 4,
+					scannedProjects: 0,
+					scannedConversations: 0,
+					conversationDetail: {
+						conversationId: "conversation",
+						nextMessageIndex: 24,
+						messageLimit: 24,
+						totalMessages: 48,
+					},
+				},
+			},
+		);
+		expect(result).toMatchObject({
+			files: [],
+			artifacts: [],
+			visitBundles: [],
+			truncated: true,
+			cursor: {
+				nextProjectIndex: 0,
+				nextConversationIndex: 0,
+				yielded: true,
+				conversationDetail: {
+					conversationId: "conversation",
+					nextMessageIndex: 24,
+					messageLimit: 24,
+					totalMessages: 48,
+				},
+			},
 		});
 	});
 
@@ -2431,10 +2603,26 @@ describe("ChatGPT account mirror metadata collector", () => {
 		}
 	});
 
-	test("bounds hung ChatGPT conversation detail reads and advances the cursor", async () => {
+	test.each([
+		"no-factory",
+		"disabled-factory",
+		"explicit-no-hook",
+	])("bounds hung ChatGPT conversation detail reads and advances the cursor; mode=%s", async (mode) => {
 		vi.useFakeTimers();
 		const dateNowSpy = vi.spyOn(Date, "now").mockReturnValue(1_000);
 		try {
+			const factory = {
+				backendRequestAdmissionEnabled: mode === "explicit-no-hook",
+				acquire: vi.fn(async () => {
+					throw new Error("Capability inspection must not acquire a lease");
+				}),
+			};
+			const listOptions: BrowserProviderListOptions = {
+				...(mode !== "no-factory" ? { providerTrafficAuthorityFactory: factory } : {}),
+				...(mode === "explicit-no-hook"
+					? { providerTrafficGovernor: { attribution: {} as never, begin: vi.fn() } }
+					: {}),
+			};
 			const diagnostics: AccountMirrorCollectorDiagnosticEvent[] = [];
 			const client = {
 				listAccountFiles: vi.fn(async () => []),
@@ -2461,6 +2649,7 @@ describe("ChatGPT account mirror metadata collector", () => {
 						scannedConversations: 1,
 					},
 					providerCallTimeoutMs: 1,
+					listOptions,
 					onDiagnosticEvent: (event) => {
 						diagnostics.push(event);
 					},
@@ -2477,10 +2666,11 @@ describe("ChatGPT account mirror metadata collector", () => {
 			});
 			expect(inventory.truncated).toBe(false);
 			expect(client.listConversationFiles).not.toHaveBeenCalled();
-			expect(client.getConversationContext).toHaveBeenCalledWith(
-				"conv_2",
-				accountMirrorContextOptions(0, 1),
-			);
+			expect(client.getConversationContext).toHaveBeenCalledWith("conv_2", {
+				...accountMirrorContextOptions(0, 1),
+				listOptions: { ...accountMirrorContextOptions(0, 1).listOptions, ...listOptions },
+			});
+			expect(factory.acquire).not.toHaveBeenCalled();
 			const contextCall = client.getConversationContext.mock.calls[0] as unknown as [
 				string,
 				{ listOptions?: BrowserProviderListOptions },
@@ -2493,6 +2683,50 @@ describe("ChatGPT account mirror metadata collector", () => {
 			).toBeGreaterThan(0);
 		} finally {
 			dateNowSpy.mockRestore();
+			vi.useRealTimers();
+		}
+	});
+
+	test("does not start a context read when option resolution finishes after cancellation", async () => {
+		vi.useFakeTimers();
+		let releaseResolution!: () => void;
+		const resolutionAllowed = new Promise<void>((resolve) => {
+			releaseResolution = resolve;
+		});
+		const acquire = vi.fn(async () => {
+			throw new Error("Cancelled resolution must not acquire a lease");
+		});
+		const client = {
+			listAccountFiles: vi.fn(async () => []),
+			listProjectFiles: vi.fn(async () => []),
+			listConversationFiles: vi.fn(async () => []),
+			getConversationContext: vi.fn(async () => {
+				throw new Error("Cancelled resolution must not start a provider read");
+			}),
+			buildListOptions: async (options: BrowserProviderListOptions) => {
+				await resolutionAllowed;
+				return {
+					...options,
+					providerTrafficAuthorityFactory: { backendRequestAdmissionEnabled: true, acquire },
+				};
+			},
+		};
+		try {
+			const collecting = readBoundedChatgptDetailInventory(
+				client,
+				[],
+				[{ id: "conv_1", title: "Conversation 1", provider: "chatgpt" }],
+				4,
+				{ maxDetailReads: 1, providerCallTimeoutMs: 1 },
+			);
+			await vi.advanceTimersByTimeAsync(1);
+			await collecting;
+			releaseResolution();
+			await vi.advanceTimersByTimeAsync(0);
+			expect(client.getConversationContext).not.toHaveBeenCalled();
+			expect(acquire).not.toHaveBeenCalled();
+		} finally {
+			releaseResolution();
 			vi.useRealTimers();
 		}
 	});

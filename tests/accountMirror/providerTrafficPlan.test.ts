@@ -22,6 +22,24 @@ const baseline = JSON.parse(
 ) as AccountMirrorProviderTrafficObservation;
 
 describe("account-mirror provider traffic plan", () => {
+	it("preserves backend request admission independently of browser phase budgets", async () => {
+		const effect = vi.fn(async () => undefined);
+		const admitBackendRequest = vi.fn(async (_key: string, send: () => Promise<void>) => send());
+		const governor = withAccountMirrorProviderTrafficPlan(
+			{
+				attribution: {} as never,
+				begin: vi.fn(async () => ({ id: "action", settle: vi.fn() })),
+				admitBackendRequest,
+			},
+			{ object: "account_mirror_provider_traffic_plan", version: 1, budgets: [] },
+		);
+		expect(governor.admitBackendRequest).toBeTypeOf("function");
+		if (!governor.admitBackendRequest) throw new Error("Missing backend admission");
+		await governor.admitBackendRequest("sha256:fixture", effect);
+		expect(admitBackendRequest).toHaveBeenCalledTimes(1);
+		expect(effect).toHaveBeenCalledTimes(1);
+		expect(governor.snapshotAdmissionState?.().budgets).toEqual([]);
+	});
 	it("preserves the Issue 151 baseline while failing unexplained controllable effects", () => {
 		const report = reconcileAccountMirrorProviderTraffic({
 			plan: {

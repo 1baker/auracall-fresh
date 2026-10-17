@@ -4,11 +4,93 @@ import os from 'node:os';
 import path from 'node:path';
 import { expect, test, vi } from 'vitest';
 import { DesktopControlGate } from '../../src/browser/service/desktopControlGate.js';
-import { setCdpCommandAdmissionResolver } from '../../packages/browser-service/src/guardedCdp.js';
+import { setCdpCommandAdmissionResolver, holdCdpCommandAdmission } from '../../packages/browser-service/src/guardedCdp.js';
 import CDP from '../../packages/browser-service/src/guardedCdp.js';
 
 const transport = vi.hoisted(() => ({ send: vi.fn(async () => ({ delivered: true })) }));
-vi.mock('chrome-remote-interface', () => ({ default: vi.fn(async () => ({ send: transport.send })) }));
+vi.mock('chrome-remote-interface', () => ({ default: vi.fn(async () => ({ send: transport.send, close: async () => undefined })) }));
+
+test('an automation scope retains custody while nested real CDP commands revalidate its generation', async () => {
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'auracall-control-scope-'));
+  const gate = new DesktopControlGate('fixture', directory);
+  const nestedGate = new DesktopControlGate('fixture', directory);
+  let resume: (() => void) | undefined;
+  const resumed = new Promise<void>(resolve => { resume = resolve; });
+  let detached: Promise<void> | undefined;
+  const staleEffect = vi.fn(async () => undefined);
+  setCdpCommandAdmissionResolver(async () => ({ run: (_command, effect) => nestedGate.withAutomation('generation-1', effect) }));
+  try {
+    const client = await CDP({ host: '127.0.0.1', port: 45123 });
+    await gate.withAutomation('generation-1', async () => {
+      await expect(client.send('Fetch.enable', { patterns: [] })).resolves.toEqual({ delivered: true });
+      await expect(gate.takeControl('generation-1')).rejects.toThrow('busy');
+      const effect = vi.fn(async () => undefined);
+      await expect(nestedGate.withAutomation('generation-2', effect)).rejects.toThrow('ownership changed');
+      expect(effect).not.toHaveBeenCalled();
+      await client.send('Fetch.disable');
+      detached = resumed.then(() => nestedGate.withAutomation('generation-1', staleEffect));
+    });
+    resume?.();
+    await expect(detached).rejects.toThrow('ownership changed');
+    expect(staleEffect).not.toHaveBeenCalled();
+    const human = await gate.takeControl('generation-1');
+    await gate.releaseControl(human.token, 'generation-1');
+  } finally {
+    setCdpCommandAdmissionResolver(undefined);
+    await fs.rm(directory, { recursive: true, force: true });
+  }
+}, 10000);
+
+test('an explicit automation hold protects externally emitted callbacks until cleanup', async () => {
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'auracall-control-hold-'));
+  const gate = new DesktopControlGate('fixture', directory);
+  try {
+    setCdpCommandAdmissionResolver(async () => ({
+      run: (_command, effect) => gate.withAutomation('generation-1', effect),
+      hold: async () => {
+        const held = await gate.holdAutomation('generation-1');
+        return { run: (_command, effect) => held.run(effect), close: () => held.close() };
+      },
+    }));
+    const client = await CDP({ host: '127.0.0.1', port: 45123 });
+    const hold = await holdCdpCommandAdmission(client);
+    await expect(gate.takeControl('generation-1')).rejects.toThrow('busy');
+    await expect(client.send('Fetch.enable')).resolves.toEqual({ delivered: true });
+    await expect(holdCdpCommandAdmission(client)).rejects.toThrow('already held');
+    await expect(hold.run('request', () => gate.withAutomation('generation-1', async () => 'request'))).resolves.toBe('request');
+    await client.send('Fetch.disable');
+    await client.close();
+    const human = await gate.takeControl('generation-1');
+    const effect = vi.fn(async () => undefined);
+    await expect(hold.run('request', effect)).rejects.toThrow('closed');
+    expect(effect).not.toHaveBeenCalled();
+    await hold.close();
+    await gate.assertControl(human.token, 'generation-1');
+    await gate.releaseControl(human.token, 'generation-1');
+  } finally { setCdpCommandAdmissionResolver(undefined); await fs.rm(directory, { recursive: true, force: true }); }
+});
+
+test('client close during continuous ownership acquisition releases the unpublished hold', async () => {
+  let resume!: () => void;
+  let entered!: () => void;
+  const started = new Promise<void>(resolve => { entered = resolve; });
+  const ready = new Promise<void>(resolve => { resume = resolve; });
+  const close = vi.fn(async () => undefined);
+  setCdpCommandAdmissionResolver(async () => ({
+    run: (_command, effect) => effect(),
+    hold: async () => { entered(); await ready; return { run: (_command, effect) => effect(), close }; },
+  }));
+  try {
+    const client = await CDP({ host: '127.0.0.1', port: 45123 });
+    const acquiring = holdCdpCommandAdmission(client);
+    await started;
+    await client.close();
+    resume();
+    await expect(acquiring).rejects.toThrow('closed during');
+    expect(close).toHaveBeenCalledTimes(1);
+    await expect(holdCdpCommandAdmission(client)).rejects.toThrow('client is closed');
+  } finally { resume(); setCdpCommandAdmissionResolver(undefined); }
+});
 
 test('real CDP send admission excludes takeover during an in-flight command and excludes writes until explicit fresh release', async () => {
   const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'auracall-desktop-control-'));
