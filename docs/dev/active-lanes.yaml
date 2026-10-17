@@ -1,6 +1,23 @@
 schema_version: 1
 work_item_tracking: optional
 lanes:
+  - id: issue331
+    objective: Repair five provider-free baseline test failures
+    work_items: [ecochran76/auracall#331]
+    plan: docs/dev/plans/0434-2026-10-17-baseline-test-failures.md
+    plan_ref: refs/heads/fix/baseline-test-failures
+    branch: fix/baseline-test-failures
+    target: main
+    plan_state: OPEN
+    custody_state: ACTIVE_WORKTREE
+    checkpoint: 822369207c4f7a0c4dd78ec5f37ac2d7221f318e
+    remote_ref: refs/remotes/origin/fix/baseline-test-failures
+    integration: merge
+    dependencies: []
+    overlaps: []
+    validation_status: diagnosis
+    validation_ref: docs/dev/plans/0434-2026-10-17-baseline-test-failures.md
+    updated_at: 2026-10-17
   - id: issue316
     objective: Refresh ChatGPT app tools in place without replacement
     work_items: [ecochran76/auracall#316]

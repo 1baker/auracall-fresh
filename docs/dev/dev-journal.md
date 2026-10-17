@@ -1,3 +1,7 @@
+# 2026-10-17 — issue331 baseline failure diagnosis
+
+Ask Matt routes the remaining five provider-free failures to diagnosing-bugs. Fresh main822369207; isolated branch fix/baseline-test-failures. Three fast failures reproduce; HTTP and rolling-budget timing need deterministic qualification. No live/provider effects. Plan0434 tracks acceptance.
+
 ## 2026-10-17 | Issue316 canonical installed acceptance complete
 
 PR328 plus settlement repair PR329 are merged. Canonicalab89dcb6377b was installed
