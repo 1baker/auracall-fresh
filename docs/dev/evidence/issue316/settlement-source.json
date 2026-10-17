@@ -1,0 +1,31 @@
+{
+  "contract": "auracall.issue316.settlement-source.v1",
+  "source_commit": "65843f1941ae1bac5b93b4602d39554cdf9361d4",
+  "base_commit": "7912118c4663d7425a1501427f2491ca9e32fbfa",
+  "status": "completed",
+  "exit_code": 0,
+  "catalog": {
+    "toolCount": 21,
+    "sha256": "7559b8dcae5af5eaad1937737bec6aac74c3196535d838bec16021b24aee5acb"
+  },
+  "source_sha256": {
+    "src/browser/providers/chatgptDeveloperApps.ts": "0c5d4a80aa38451f39a8c309703c948009e7156a3d559a511254cd28cce6a53b",
+    "src/cli/chatgptDeveloperAppsCommand.ts": "c57018b4095f5933aa394e0f66ab34fe0001463a128632c31ad5ff148d98a09f",
+    "bin/auracall.ts": "243d2fa732cebd46b090a623e70cd3220174f9bef391a67951930d7373b2f40b"
+  },
+  "compiled_sha256": {
+    "dist/src/browser/providers/chatgptDeveloperApps.js": "4ed016eded45e7faffe22ddf1a9d344ba0fe8dad747bc867705f7051bb0fa44f",
+    "dist/src/cli/chatgptDeveloperAppsCommand.js": "15aa1888f2f8ba810732c032dcc1a9dcc9c9b0809b538ff569b43f6f0b516e01",
+    "dist/bin/auracall.js": "9807aea87a8d63b5ec257658a902108d411068336a9d10c7c30158f23b8f834c"
+  },
+  "affected_tests": 108,
+  "test_files": 4,
+  "checks": {
+    "typecheck": 0,
+    "compile": 0,
+    "lint": 0
+  },
+  "review_mode": "closed-world against settlement regression and retained invariants",
+  "prior_installed_attempt": "unconfirmed retained; native cause remains unqualified",
+  "limits": "compiled source proof; new canonical installed acceptance pending"
+}

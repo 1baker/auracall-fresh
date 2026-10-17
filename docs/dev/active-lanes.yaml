@@ -9,11 +9,11 @@ lanes:
     branch: fix/issue316-refresh-settlement
     target: main
     plan_state: OPEN
-    custody_state: ACTIVE_WORKTREE
-    checkpoint: f23d870c839aa7b9b7e0afd4f2fe729443f869ed
+    custody_state: INTEGRATION_READY
+    checkpoint: 65843f1941ae1bac5b93b4602d39554cdf9361d4
     remote_ref: refs/remotes/origin/fix/issue316-refresh-settlement
-    validation_status: settlement-repair-source-checks-active
-    validation_ref: docs/dev/notes/2026-10-17-issue316-source-acceptance.md
+    validation_status: settlement-source-native-accepted-installed-pending
+    validation_ref: docs/dev/notes/2026-10-17-issue316-settlement-repair.md
     integration: merge
     dependencies: []
     overlaps: []
