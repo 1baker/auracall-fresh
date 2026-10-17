@@ -1,0 +1,69 @@
+{
+  "contract": "auracall.issue316.source-acceptance.v1",
+  "base": "987bc086752751eaecf65206214cce98766bbd4a",
+  "branch": "feat/issue316-refresh-tools",
+  "native": {
+    "surface": "compiled CLI refresh-tools",
+    "runtime_profile": "wsl-chrome-3",
+    "status": "completed",
+    "exit_code": 0,
+    "catalog": {
+      "toolCount": 21,
+      "sha256": "7559b8dcae5af5eaad1937737bec6aac74c3196535d838bec16021b24aee5acb"
+    },
+    "request_identity": "app-qualified connection link_id",
+    "preserved": [
+      "exact App ID",
+      "MCP endpoint",
+      "connected accounts",
+      "permission setting"
+    ],
+    "prompt_submitted": false,
+    "app_replaced": false,
+    "oauth_reconnected": false,
+    "permissions_changed": false
+  },
+  "checks": {
+    "affected_tests": {
+      "sha256": "e6e97d83076893392c25f259b2ed3562f02a78accf373780b10aeea11385ecaf",
+      "result": "passed"
+    },
+    "typecheck": {
+      "sha256": "092f71825be331dfcd15921500fd3dceb863bf0280a0dab64e27dd5dd8a95d5a",
+      "result": "passed"
+    },
+    "build": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": "passed"
+    },
+    "lint": {
+      "sha256": "d9bea238c8b3dc35b254b6fe757c72db1cbb29cba946c45155aca8108cf25d67",
+      "result": "passed"
+    }
+  },
+  "affected_tests": 105,
+  "test_files": 4,
+  "prior_attempts": [
+    {
+      "status": "unconfirmed",
+      "exit_code": 1,
+      "reason": "request attribution did not yet qualify connection link identity"
+    },
+    {
+      "status": "unconfirmed",
+      "exit_code": 1,
+      "reason": "wire request uses link_id; app-ID/endpoint matching insufficient"
+    }
+  ],
+  "limits": "Source acceptance; canonical integration and installed acceptance pending.",
+  "source_sha256": {
+    "bin/auracall.ts": "243d2fa732cebd46b090a623e70cd3220174f9bef391a67951930d7373b2f40b",
+    "src/browser/providers/chatgptDeveloperApps.ts": "1cb8482b6ed346e570028bab2f54631d313f140f40dad2f3630b1eef124bdf0b",
+    "src/cli/chatgptDeveloperAppsCommand.ts": "c57018b4095f5933aa394e0f66ab34fe0001463a128632c31ad5ff148d98a09f"
+  },
+  "compiled_sha256": {
+    "dist/bin/auracall.js": "9807aea87a8d63b5ec257658a902108d411068336a9d10c7c30158f23b8f834c",
+    "dist/src/browser/providers/chatgptDeveloperApps.js": "90f2684ad326ed37fac54a6621c2b68c271ce0f4fbd0c3642359268bc117003f",
+    "dist/src/cli/chatgptDeveloperAppsCommand.js": "15aa1888f2f8ba810732c032dcc1a9dcc9c9b0809b538ff569b43f6f0b516e01"
+  }
+}

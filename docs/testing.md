@@ -1,3 +1,10 @@
+- In-place developer-app tool catalog refresh (provider-free):
+  `pnpm vitest run tests/browser/chatgptDeveloperAppRefreshTools.test.ts tests/cli/chatgptDeveloperAppsCommand.test.ts`.
+  Protects exact account/app/endpoint qualification, trusted single activation,
+  attributable tool catalog metadata, identity/connection preservation, human
+  approval and uncertain failure outcomes. Existing replacement tests retain
+  delete/recreate coverage. Native acceptance is recorded separately in Plan0433.
+
 - Matched artifact download failures (provider-free):
   `pnpm vitest run tests/browser/chatgptMaterializationReplay.test.ts tests/runtime.historyMaterializationService.test.ts`.
   Click-correlated HTTP404/410 becomes nonretryable provider_unavailable through

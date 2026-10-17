@@ -1,0 +1,18 @@
+exit_code: 0
+Aura-Call v0.1.1 — Prompt + files required — API models and semantic ChatGPT browser selectors for tough questions with code/file context.
+
+Usage: auracall apps refresh-tools [options] <app>
+
+Refresh one exact app tool catalog in place, preserving its identity and
+connection.
+
+Options:
+  --server-url <url>          Exact existing MCP server URL; never a replacement
+                              endpoint.
+  --expected-account <email>  Exact ChatGPT account expected in the managed
+                              browser.
+  --yes                       Confirm in-place tool refresh; does not consent to
+                              new permissions. (default: false)
+  --json                      Emit machine-readable JSON output. (default:
+                              false)
+  -h, --help                  display help for command

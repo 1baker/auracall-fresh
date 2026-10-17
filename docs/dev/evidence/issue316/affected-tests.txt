@@ -1,0 +1,26 @@
+
+ RUN  v4.0.16 /home/ecochran76/workspace.local/auracall-issue316
+
+ ✓ tests/browser/chatgptDeveloperAppRefreshTools.test.ts (12 tests) 69ms
+ ✓ tests/browser/chatgptDeveloperApps.test.ts (27 tests) 612ms
+     ✓ clears an ecosystem mention that first unwraps into literal composer text  503ms
+ ✓ tests/cli/chatgptDeveloperAppsCommand.test.ts (39 tests) 104ms
+ ✓ tests/browser/chatgptDeveloperAppLifecycle.test.ts (27 tests) 8633ms
+     ✓ refreshes a late terminal conversation before returning committed-Send failure: {"terminalFailure":true}  750ms
+     ✓ refreshes a late terminal conversation before returning committed-Send failure: {"manualApproval":true}  720ms
+     ✓ carries managed browser provenance through affinity without a legacy PID file: {"browserProcessId":1234,"wrongIdentity":false,"originalConfig":false,"completed":true}  730ms
+     ✓ carries managed browser provenance through affinity without a legacy PID file: {"browserProcessId":1234,"wrongIdentity":false,"originalConfig":true,"completed":true}  709ms
+     ✓ preserves attributable WSL Windows loopback provenance through the canonical host alias  715ms
+     ✓ returns answer and refreshed terminal identity after exactly one Send  709ms
+     ✓ preserves terminal failure evidence without retry: {"terminalFailure":true,"effectState":"effect_observed"}  706ms
+     ✓ preserves terminal failure evidence without retry: {"uncertainSend":true,"effectState":"unknown"}  705ms
+     ✓ preserves terminal failure evidence without retry: {"manualApproval":true,"effectState":"effect_observed"}  708ms
+     ✓ honors the selected response deadline through the shared lifecycle  708ms
+     ✓ uses the canonical browser default when no response deadline is configured  707ms
+     ✓ retains a shorter selected response deadline and never retries after Send  707ms
+
+ Test Files  4 passed (4)
+      Tests  105 passed (105)
+   Start at  15:37:26
+   Duration  13.86s (transform 9.36s, setup 1.18s, import 14.36s, tests 9.42s, environment 1ms)
+
