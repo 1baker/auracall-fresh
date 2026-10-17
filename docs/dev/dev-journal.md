@@ -1,3 +1,15 @@
+## 2026-10-17 | Follow discovery source repaired; installed proof active
+
+Public completion and collector red/green qualify due-index discovery during
+retained detail, honest index observation times and parent read failures.197
+focused/751broader affected checks, typecheck, lint and production build pass.
+Merged current main to preserve issue316 and baseline repairs; both documentation
+histories retained. Staged584JavaScript files match. Two precollection guard stops
+were traced to a dead desktop automation owner plus stable empty transition;
+exact reversible quarantine restored the public probe631ms,guardnull. New bounded
+follow check running; no scheduler resume, prompts or global activation. See
+[repair record](notes/2026-10-17-plan0411-follow-repair.md).
+
 ## 2026-10-17 | Actual new-chat live-follow check failed
 
 Located the new IM Receipts chat from private history/response evidence. Normal

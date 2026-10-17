@@ -1,3 +1,16 @@
+## 2026-10-17 | Due follow discovery and unresolved-read reporting
+
+ChatGPT detail-only work retains the prior actual index epoch. A due index read
+uses existing configured cadence ahead of retained-detail backlog, while fresh,
+scoped and incomplete-message work keeps its continuation. A parent retains its
+refresh/cursor and fails on an unresolved read before artifact handoff; a later
+success clears only that same read. Public seams reproduce both original defects.
+A separate installed precollection stop exposed a stable empty desktop transition
+directory beside a dead automation owner; exact reversible recovery restored a
+631ms public warning probe without changing deadline or browser process. Native
+capture/repeat acceptance remains pending. See
+[repair evidence](dev/notes/2026-10-17-plan0411-follow-repair.md).
+
 ## 2026-10-17 | Follow acceptance must bind the newly created chat
 
 A coarse completed parent hid a nested historical-context read failure, and the

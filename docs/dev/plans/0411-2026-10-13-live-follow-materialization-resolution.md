@@ -1025,3 +1025,11 @@ No new prompt, cookie reseed, numeric backend ceiling or broad browser cleanup.
 One red/green slice per failure, followed by affected validation and serial review.
 Acceptance remains actual new-chat discovery/capture then a bounded quiet repeat;
 source tests do not close live acceptance. Existing failed receipts remain immutable.
+
+Sourceb8f1d229f merged current maind03d89e38 atb41fd3765.197focused/751broader
+affected checks, typecheck, lint and production build pass.584packaged JavaScript
+files match staged installation. Two0provider-request precollection warning-check
+timeouts retained. Exact reversible stale desktop transition recovery restores
+the public probe631ms/guardnull; new bounded installed follow proof is running.
+No global scheduler resume, prompts or launcher/API activation. Repair/evidence:
+../notes/2026-10-17-plan0411-follow-repair.md. Full acceptance remains OPEN.
