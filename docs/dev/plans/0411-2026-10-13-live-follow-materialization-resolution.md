@@ -1033,3 +1033,11 @@ timeouts retained. Exact reversible stale desktop transition recovery restores
 the public probe631ms/guardnull; new bounded installed follow proof is running.
 No global scheduler resume, prompts or launcher/API activation. Repair/evidence:
 ../notes/2026-10-17-plan0411-follow-repair.md. Full acceptance remains OPEN.
+
+Final installed run133412ms/125backend requests received conversation-list429 at
+22:02:41.695UTC; exact parent immediately paused/passCount0, no capture/child or
+quiet repeat. Shared warning ledger active1/indefinite. Exact probe tab retired,
+other current targets and native browser preserved. Scheduler/17subscriptions
+paused,0queued/running. PR333 is draft with validated source/staged parity; no
+main merge or global activation, and no further provider retry/warning clearance
+in this stopped packet. Plan remains OPEN. See follow-repair note for raw locators.

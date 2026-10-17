@@ -1,3 +1,15 @@
+## 2026-10-17 | Follow repair staged; native acceptance stopped on429
+
+PR333 contains source fixes for due discovery and truthful failed-read reporting;
+751affected checks, typecheck/lint/build pass and584installed JavaScript hashes
+match. Actual unscoped installed run133.4s/125backend requests stopped immediately
+on two conversation-list429responses. No completed capture, child or quiet repeat.
+Shared warning ledger active1/indefinite; scheduler/17subscriptions paused,
+0queued/running. Exact probe tab closed and other current tabs retained. No global
+activation, merge or warning clearance. The preceding stale desktop transition
+recovery and failed precollection attempts remain separately receipted. See
+[repair checkpoint](notes/2026-10-17-plan0411-follow-repair.md).
+
 ## 2026-10-17 | Follow discovery source repaired; installed proof active
 
 Public completion and collector red/green qualify due-index discovery during
