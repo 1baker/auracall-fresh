@@ -1,6 +1,20 @@
 schema_version: 1
 work_item_tracking: optional
 lanes:
+  - id: issue316
+    objective: Refresh ChatGPT app tools in place without replacement
+    work_items: [ecochran76/auracall#316]
+    plan: docs/dev/plans/0433-2026-10-17-app-tool-refresh.md
+    plan_ref: refs/heads/feat/issue316-refresh-tools
+    branch: feat/issue316-refresh-tools
+    target: main
+    plan_state: OPEN
+    custody_state: ACTIVE_WORKTREE
+    integration: merge
+    dependencies: []
+    overlaps: []
+    updated_at: 2026-10-17
+
   - id: P93
     objective: Close issue165 materialization and measured automatic scrape acceptance
     work_items: [ecochran76/auracall#165]

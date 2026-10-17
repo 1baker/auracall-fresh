@@ -1,3 +1,13 @@
+## 2026-10-17 | Distinguish tool catalog refresh from app replacement (#316)
+
+Current exact-app Manage links resolve to /settings/plugins-settings/<plugin-id>.
+A trusted Refresh tools activation yields a refresh_actions response with tool
+schemas. The separate refresh-tools command verifies that catalog and preserves
+app ID, MCP endpoint, connected accounts and permission state. Existing refresh
+still replaces the app. Inventory can omit endpoint, so verify the explicit
+expected endpoint on the exact settings surface before activation. Uncertain
+outcomes never authorize consent, retries or test prompts.
+
 ## 2026-10-16 | Issue165 scoped archive reads retain verification hashes
 
 A real archive-service/public-job regression proved the mocked checksum case was

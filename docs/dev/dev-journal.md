@@ -1,3 +1,19 @@
+## 2026-10-17 | Issue316 source review and connection qualification
+
+Plan0433 checkpoint2 records the in-place command, public-seam red/green,
+current Manage route and native21-tool response. Two initial compiled runs
+truthfully returned unconfirmed; current wire contract uses an app-qualified
+connection link_id. No prompt, app replacement, OAuth reconnect or consent change.
+Source checks pass; PR/CI/integration and installed acceptance remain OPEN.
+
+## 2026-10-17 | Issue316 in-place tool refresh active
+
+Plan0433 on feat/issue316-refresh-tools starts from fresh origin/main
+987bc0867. Ask Matt route: grounded spec, public-seam red/green, review and PR.
+Dispatcher red: Unsupported ChatGPT developer-app action; green:39 tests.
+Native settings investigation is bounded and preserves app/browser ownership.
+Root checkout dirty edits remain untouched. Implementation and acceptance OPEN.
+
 ## 2026-10-16 | Issue165 scoped archive reads retain verification hashes
 
 A real archive-service/public-job regression proved the mocked checksum case was
