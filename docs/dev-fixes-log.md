@@ -1,3 +1,14 @@
+## 2026-10-17 | Qualify app refresh settings readiness before comparison
+
+An installed refresh returned unconfirmed after an attributable request; its
+old generic message does not establish native cause. Three separate synthetic
+adapter cases proved disabled controls or loading connected-account data could
+be compared prematurely. The settings reader now waits for semantic readiness
+under an eight-second bound before/after the sole activation. Stable identity,
+endpoint, connection or permission differences still stop completion, and named
+phase/invariant diagnostics improve future reconciliation. Retain the original
+installed failure; a later pass is new evidence, not erasure.
+
 ## 2026-10-17 | Distinguish tool catalog refresh from app replacement (#316)
 
 Current exact-app Manage links resolve to /settings/plugins-settings/<plugin-id>.

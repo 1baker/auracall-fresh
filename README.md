@@ -205,6 +205,8 @@ auracall --profile wsl-chrome-3 apps --target chatgpt refresh-tools Corel33t \
 # The URL must match the existing app settings. One trusted Refresh tools
 # activation is verified by its attributable catalog response and unchanged
 # app identity, endpoint, connected accounts and permission setting.
+# It waits for ready controls and loaded connected-account state before and
+# after activation, within bounded read deadlines.
 # JSON returns catalog.toolCount, toolNames and SHA-256 under outcome.
 # Human approval returns awaiting-human; uncertain activation/catalog/identity
 # returns unconfirmed. Both are nonzero and never auto-consent or retry.

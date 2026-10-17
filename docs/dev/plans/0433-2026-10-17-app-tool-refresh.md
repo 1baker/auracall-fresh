@@ -7,6 +7,12 @@ Target: main
 Owner: ecochran76
 Base: 987bc086752751eaecf65206214cce98766bbd4a
 
+## Current State
+
+Source PR328 is merged and installed from canonical7912118c4. Installed acceptance
+returned unconfirmed; successor Plan0433.2 owns bounded settlement repair and final
+installed proof. The full user objective remains OPEN.
+
 ## Goal and authority
 
 Resolve #316 through Ask Matt: grounded specification, behavioral red/green

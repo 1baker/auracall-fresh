@@ -411,7 +411,7 @@ export class ChatgptDeveloperAppBrowserAdapter {
 				`location.href === ${JSON.stringify(settingsUrl)} && document.body.innerText.includes('Refresh tools')`,
 				{ timeoutMs: 10_000, description: "exact app tool refresh settings" },
 			);
-			const before = await readChatgptDeveloperAppRefreshSettings(client);
+			const before = await readChatgptDeveloperAppRefreshSettings(client, "before");
 			if (before.humanApproval)
 				return {
 					status: "awaiting-human",
@@ -438,7 +438,7 @@ export class ChatgptDeveloperAppBrowserAdapter {
 				};
 			const catalog = await observation.result;
 			this.throwIfAborted();
-			const after = await readChatgptDeveloperAppRefreshSettings(client);
+			const after = await readChatgptDeveloperAppRefreshSettings(client, "after");
 			if (after.humanApproval)
 				return {
 					status: "awaiting-human",
@@ -454,11 +454,10 @@ export class ChatgptDeveloperAppBrowserAdapter {
 					refreshConnectionSnapshot(before) !== refreshConnectionSnapshot(after)
 				)
 					throw new Error("App connection or permission state changed.");
-			} catch {
+			} catch (error) {
 				return {
 					status: "unconfirmed",
-					message:
-						"Refresh response observed, but app identity, endpoint or connection preservation could not be verified. Inspect before retrying.",
+					message: `Refresh ${catalog ? "catalog response" : "activation"} observed, but preservation could not be verified: ${error instanceof Error ? error.message : "unknown verification failure"} Inspect before retrying.`,
 					app,
 					retrySafe: false,
 				};
@@ -1469,21 +1468,29 @@ interface ChatgptDeveloperAppRefreshSettings {
 
 async function readChatgptDeveloperAppRefreshSettings(
 	client: ChromeClient,
+	stage: "before" | "after",
 ): Promise<ChatgptDeveloperAppRefreshSettings> {
-	const result = await client.Runtime.evaluate({
-		expression: `(() => {
-			// Read the exact app refresh settings surface.
+	const result = await waitForPredicate(
+		client.Runtime,
+		`(() => {
 			const visible = el => { const rect = el.getBoundingClientRect(); const style = getComputedStyle(el); return rect.width > 0 && rect.height > 0 && style.visibility !== 'hidden' && style.display !== 'none'; };
 			const buttons = [...document.querySelectorAll('button')].filter(visible);
-			return {url: location.href, text: document.body.innerText,
+			const state = {url: location.href, text: document.body.innerText,
 				refreshButtonCount: buttons.filter(el => el.innerText.trim().toLowerCase() === 'refresh tools' && !el.disabled && el.getAttribute('aria-disabled') !== 'true').length,
 				humanApproval: [...document.querySelectorAll('[role="dialog"], [aria-modal="true"]')].filter(visible).some(el => /approv|consent|permission|authoriz|connect account/i.test(el.innerText))};
+			const lines = state.text.split('\\n').map(line => line.trim()).filter(Boolean);
+			const start = lines.indexOf('Connected accounts');
+			const end = lines.indexOf('About', start + 1);
+			const accountsReady = start >= 0 && end > start + 1 && lines.slice(start + 1, end).some(line => !/^(connect another account|loading[.\\s…]*|no connected accounts)$/i.test(line));
+			return state.humanApproval || (state.refreshButtonCount === 1 && accountsReady) ? state : null;
 		})()`,
-		returnByValue: true,
-	});
-	if (result.exceptionDetails || !result.result?.value)
-		throw new Error("App refresh settings could not be read.");
-	return result.result.value as ChatgptDeveloperAppRefreshSettings;
+		{ timeoutMs: 8_000, pollMs: 50, description: `settled app refresh settings ${stage} refresh` },
+	);
+	if (!result.ok || !result.value)
+		throw new Error(
+			`App refresh settings did not settle ${stage} refresh before the read deadline.`,
+		);
+	return result.value as ChatgptDeveloperAppRefreshSettings;
 }
 
 function refreshSettingsField(

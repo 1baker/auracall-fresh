@@ -1,3 +1,14 @@
+## 2026-10-17 | Issue316 installed uncertainty and bounded settlement repair
+
+Canonical PR328 installed into a fresh isolated prefix with matching compiled
+hashes. The installed refresh returned unconfirmed/exit1; preservation was not
+proven. Do not infer the native cause from the old generic error. A separate
+read-only reconciliation produced no output and only that diagnostic process
+was cancelled; the browser/service remained intact. Plan0433.2 retains this
+failure and repairs independently reproduced UI readiness gaps. Three red
+synthetic adapter cases now pass with one activation;108 affected checks pass.
+Installed acceptance and issue closure remain OPEN.
+
 ## 2026-10-17 | Issue316 source review and connection qualification
 
 Plan0433 checkpoint2 records the in-place command, public-seam red/green,
