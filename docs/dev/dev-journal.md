@@ -54962,3 +54962,15 @@ and issue165OPEN; no merge/release. Ledger and private renewed-measurement-20261
 snapshots preserve all attempts. Serial Standards/Spec evidence review: no accepted
 findings in this documentation packet; full time criterion remains unmet.
 Memory disposition forbidden: no explicit user memory-update request.
+
+
+## 2026-10-17 | Performance tolerance accepted; client login complaints
+
+User accepted original66178ms result as good enough:3086.4ms over strict ceiling,
+66requests vs72, equivalent outputs; fresh multi case passes both limits. Numeric
+failures remain unchanged in ledger; no claim strict30percent passed. Issue165
+remains open pending functional acceptance. User reports clients complaining about
+login state. Read-only installed API check confirms PID83768 running; historical
+preflight records are not current provider-authentication evidence. Investigating
+installed local/browser status; client names and exact error requested. No prompts
+or scheduler controls. Memory disposition forbidden: no explicit update request.

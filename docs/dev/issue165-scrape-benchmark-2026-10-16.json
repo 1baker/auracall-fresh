@@ -1029,6 +1029,19 @@
     "coldMultiAutomatic": "passed with equivalent four texts and two files, full time1.094082 and requests1.029412",
     "originalExistingStateAutomatic": "failed time1.363595; requests0.916667 and equivalent outputs verified",
     "fullGoalAccepted": false,
-    "next": "Reduce shared archive/history startup/planning read costs, then repeat original full measured automatic run; no baseline relaxation."
+    "next": "Performance tolerance accepted by user; investigate reported client login state and audit remaining functional acceptance before closing issue165."
+  },
+  "performanceToleranceException": {
+    "acceptedByUser": true,
+    "decisionDate": "2026-10-17",
+    "scope": "Accept original existing-state automatic timing as good enough for performance; retain frozen numeric result and failed strict threshold. Does not close remaining functional/login acceptance.",
+    "originalTimeMs": 66178,
+    "originalStrictCeilingMs": 63091.6,
+    "overCeilingMs": 3086.4,
+    "strictTimePassed": false,
+    "originalRequests": 66,
+    "agenticRequests": 72,
+    "outputsEquivalent": true,
+    "freshMultiCasePassedBothLimits": true
   }
 }
