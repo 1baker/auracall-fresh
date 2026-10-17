@@ -18,6 +18,61 @@ Second pass withheld pending a genuine changed fixture; all17subscriptions and
 scheduler remain paused,0queued/running/warnings. Twelve focused tests pass. See
 [acceptance record](notes/2026-10-17-plan0411-frontier-acceptance.md).
 
+# 2026-10-17 — issue331 comprehensive acceptance
+
+Plan0434 closed:3952passed/65skipped/zero failures on clean4b7e7bb49;417files passed/21skipped,303.60s. Full lint239warnings/17infos matches baseline; build passes with unchanged runtime source since5d28e280d. Original five failures and two observed adjacent timing flakes repaired. Standards/Spec self-review accepted; PR332 is canonical integration. No browser/provider effects or runtime deployment. Memory disposition forbidden: no explicit write request. Earlier failures preserved in diagnosis evidence.
+
+# 2026-10-17 — issue331 bounded remediation accepted locally
+
+First comprehensive run retains3950pass/2fail/65skip. Both remaining failures are timing assumptions in touched tests:download polling20ms and quiet-time22ms-vs25ms. Explicit clocks repair them;84affected checks pass. Full lint239warnings/17infos matches baseline; build passes. Final comprehensive run is pending. PR332 remains draft. No live/provider/installed effects.
+
+# 2026-10-17 — issue331 focused green
+
+96 affected browser/control/helper checks and the focused HTTP status case pass. Earlier selected baseline retained248pass/3fail; controlled probes reproduce idle-vs-running and25ms-vs30ms. Budget sensitivity mutation fails at131ms vs156ms and was byte-restored. One temporary affected run exposed undefined mock acknowledgement responses; optional result handling fixed the compatibility case and all96 pass. Comprehensive validation and review remain.
+
+# 2026-10-17 — issue331 baseline failure diagnosis
+
+Ask Matt routes the remaining five provider-free failures to diagnosing-bugs. Fresh main822369207; isolated branch fix/baseline-test-failures. Three fast failures reproduce; HTTP and rolling-budget timing need deterministic qualification. No live/provider effects. Plan0434 tracks acceptance.
+
+## 2026-10-17 | Issue316 canonical installed acceptance complete
+
+PR328 plus settlement repair PR329 are merged. Canonicalab89dcb6377b was installed
+into a fresh isolated prefix; both launchers and584 packaged JavaScript files
+match the canonical build. Normal installed refresh-tools returned completed/exit0
+with21 tools and preserved app/endpoint/connection/permission state.108 affected
+checks pass. Original installed uncertainty and broader baseline/flake failures
+remain retained, with no full-suite/hosted-CI green claim. Plans0433/0433.2 are
+CLOSED; installed acceptance note and curated JSON carry final evidence. No
+prompt, reconnect, consent, app replacement or API/scheduler restart occurred.
+Memory disposition:forbidden under the explicit-request-only developer boundary.
+
+## 2026-10-17 | Issue316 installed uncertainty and bounded settlement repair
+
+Canonical PR328 installed into a fresh isolated prefix with matching compiled
+hashes. The installed refresh returned unconfirmed/exit1; preservation was not
+proven. Do not infer the native cause from the old generic error. A separate
+read-only reconciliation produced no output and only that diagnostic process
+was cancelled; the browser/service remained intact. Plan0433.2 retains this
+failure and repairs independently reproduced UI readiness gaps. Three red
+synthetic adapter cases now pass with one activation;108 affected checks pass.
+Installed acceptance and issue closure remain OPEN.
+
+## 2026-10-17 | Issue316 source review and connection qualification
+
+Plan0433 checkpoint2 records the in-place command, public-seam red/green,
+current Manage route and native21-tool response. Two initial compiled runs
+truthfully returned unconfirmed; current wire contract uses an app-qualified
+connection link_id. No prompt, app replacement, OAuth reconnect or consent change.
+Source checks pass; PR/CI/integration and installed acceptance remain OPEN.
+
+## 2026-10-17 | Issue316 in-place tool refresh active
+
+Plan0433 on feat/issue316-refresh-tools starts from fresh origin/main
+987bc0867. Ask Matt route: grounded spec, public-seam red/green, review and PR.
+Dispatcher red: Unsupported ChatGPT developer-app action; green:39 tests.
+Native settings investigation is bounded and preserves app/browser ownership.
+Root checkout dirty edits remain untouched. Implementation and acceptance OPEN.
+
 ## 2026-10-16 | Issue165 scoped archive reads retain verification hashes
 
 A real archive-service/public-job regression proved the mocked checksum case was

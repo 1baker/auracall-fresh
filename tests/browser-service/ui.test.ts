@@ -259,17 +259,24 @@ describe('browser-service ui wait helpers', () => {
       { href: 'https://chatgpt.com/files/artifact.zip', downloadName: 'artifact.zip' },
     ]);
 
-    const value = await waitForDownloadCapture(runtime as never, {
-      stateKey: '__customCapture',
-      timeoutMs: 20,
-      pollMs: 1,
-    });
+    vi.useFakeTimers();
+    try {
+      const pending = waitForDownloadCapture(runtime as never, {
+        stateKey: '__customCapture',
+        timeoutMs: 20,
+        pollMs: 1,
+      });
 
-    expect(value).toEqual({
-      href: 'https://chatgpt.com/files/artifact.zip',
-      downloadName: 'artifact.zip',
-    });
-    expect(runtime.evaluate).toHaveBeenCalledTimes(2);
+      await vi.advanceTimersByTimeAsync(1);
+      const value = await pending;
+      expect(value).toEqual({
+        href: 'https://chatgpt.com/files/artifact.zip',
+        downloadName: 'artifact.zip',
+      });
+      expect(runtime.evaluate).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   test('waitForDownloadCapture can return immediately when target is not required', async () => {
@@ -1290,6 +1297,20 @@ describe('browser-service ui wait helpers', () => {
     expect(PAGE.navigate).toHaveBeenCalledWith({ url: 'https://grok.com/files' });
     expect(runtime.evaluate).toHaveBeenCalledTimes(4);
     expect(runtime.evaluate.mock.calls[0]?.[0]?.expression).toBe('location.href');
+  });
+
+  test('navigateAndSettle rejects a protocol navigation error without fallback', async () => {
+    const runtime = createRuntime(['about:blank']);
+    const page = { navigate: vi.fn(async () => ({ errorText: 'net::ERR_NAME_NOT_RESOLVED' })) };
+    await expect(navigateAndSettle(
+      // biome-ignore lint/style/useNamingConvention: CDP protocol domains use canonical capitalized names.
+      { Page: page as never, Runtime: runtime as never }, {
+      url: 'https://provider.example.test/',
+      waitForDocumentReady: false,
+      fallbackToLocationAssign: true,
+    })).rejects.toThrow('net::ERR_NAME_NOT_RESOLVED');
+    expect(page.navigate).toHaveBeenCalledTimes(1);
+    expect(runtime.evaluate).toHaveBeenCalledTimes(1);
   });
 
   test('navigateAndSettle bounds an unsettled Page.navigate acknowledgement', async () => {

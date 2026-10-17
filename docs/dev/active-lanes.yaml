@@ -1,6 +1,43 @@
 schema_version: 1
 work_item_tracking: optional
 lanes:
+  - id: issue331
+    objective: Repair five provider-free baseline test failures
+    work_items: [ecochran76/auracall#331]
+    plan: docs/dev/plans/0434-2026-10-17-baseline-test-failures.md
+    plan_ref: refs/remotes/origin/main
+    branch: fix/baseline-test-failures
+    target: main
+    plan_state: CLOSED
+    custody_state: INTEGRATED
+    checkpoint: 4b7e7bb497c144f2e8947f5ec3bbf2ad1a9da846
+    remote_ref: refs/remotes/origin/fix/baseline-test-failures
+    integration: merge
+    dependencies: []
+    overlaps: []
+    validation_status: comprehensive-accepted
+    validation_ref: docs/dev/evidence/issue331/acceptance.json
+    integration_receipt: https://github.com/ecochran76/auracall/pull/332
+    updated_at: 2026-10-17
+  - id: issue316
+    objective: Refresh ChatGPT app tools in place without replacement
+    work_items: [ecochran76/auracall#316]
+    plan: docs/dev/plans/0433-2-2026-10-17-app-tool-refresh-settlement.md
+    plan_ref: refs/heads/main
+    branch: fix/issue316-refresh-settlement
+    target: main
+    plan_state: CLOSED
+    custody_state: INTEGRATED
+    checkpoint: c75c5ae4647a7a154888628d47afbc7758f612d1
+    remote_ref: refs/remotes/origin/fix/issue316-refresh-settlement
+    validation_status: canonical-installed-accepted
+    validation_ref: docs/dev/notes/2026-10-17-issue316-installed-acceptance.md
+    integration_receipt: ab89dcb6377b9883e96f3e51bc12636610c5eb0f
+    integration: merge
+    dependencies: []
+    overlaps: []
+    updated_at: 2026-10-17
+
   - id: P93
     objective: Close issue165 materialization and measured automatic scrape acceptance
     work_items: [ecochran76/auracall#165]

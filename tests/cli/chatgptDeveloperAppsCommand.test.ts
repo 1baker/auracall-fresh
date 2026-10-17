@@ -37,6 +37,9 @@ function createAdapter(
 		create: async () => {
 			throw new Error("unexpected create");
 		},
+		refreshTools: async () => {
+			throw new Error("unexpected refresh tools");
+		},
 		delete: async () => {
 			throw new Error("unexpected delete");
 		},
@@ -54,6 +57,58 @@ function createAdapter(
 }
 
 describe("executeChatgptDeveloperAppOperation", () => {
+	it.each([
+		"confirmation",
+		"account",
+		"endpoint",
+		"ambiguous",
+	])("refuses refresh-tools before mutation on %s mismatch", async (mode) => {
+		const state = await createAdapter().readState();
+		state.apps[0].endpoint = "https://fixture.example/mcp";
+		if (mode === "ambiguous")
+			state.apps.push({ ...state.apps[0], pluginId: "other", appIds: ["other"] });
+		const refreshTools = vi.fn();
+		await expect(
+			executeChatgptDeveloperAppOperation(
+				{
+					action: "refresh-tools",
+					app: mode === "ambiguous" ? "Corel33t" : "asdk_app_corel33t",
+					serverUrl:
+						mode === "endpoint" ? "https://wrong.example/mcp" : "https://fixture.example/mcp",
+					expectedAccount: mode === "account" ? "wrong@example.invalid" : "eric.cochran@soylei.com",
+					confirmed: mode !== "confirmation",
+				},
+				createAdapter({ readState: async () => state, refreshTools }),
+			),
+		).rejects.toThrow();
+		expect(refreshTools).not.toHaveBeenCalled();
+	});
+
+	it("refreshes tools in place without deleting or recreating the selected app", async () => {
+		const original = await createAdapter().readState();
+		original.apps[0].endpoint = "https://fixture.example/mcp";
+		const refreshTools = vi.fn(async (app) => ({
+			status: "completed" as const,
+			message: "Catalog verified",
+			app,
+		}));
+		const readState = vi.fn(async () => original);
+		const adapter = createAdapter({ readState, refreshTools });
+		const result = await executeChatgptDeveloperAppOperation(
+			{
+				action: "refresh-tools",
+				app: "asdk_app_corel33t",
+				serverUrl: "https://fixture.example/mcp",
+				expectedAccount: "eric.cochran@soylei.com",
+				confirmed: true,
+			},
+			adapter,
+		);
+		expect(result.status).toBe("completed");
+		expect(refreshTools).toHaveBeenCalledWith(original.apps[0], "https://fixture.example/mcp");
+		expect(readState).toHaveBeenCalledWith({ includeDeveloperMode: false });
+	});
+
 	it("forwards explicit model strategy only to the submission adapter", async () => {
 		const strategies: unknown[] = [];
 		const result = await runChatgptDeveloperAppOperationForCli({ browser: {} } as never, {
@@ -295,16 +350,28 @@ describe("executeChatgptDeveloperAppOperation", () => {
 		if (status === "completed") expect(formatted).toContain("Answer: App answer");
 		expect(submitTest).toHaveBeenCalledTimes(1);
 	});
-	it("bounds a stalled list operation and closes its adapter", async () => {
+	it.each([
+		"list",
+		"refresh-tools",
+	] as const)("bounds a stalled %s operation and closes its adapter", async (action) => {
 		const close = vi.fn(async () => undefined);
 		const readState = vi.fn(() => new Promise<never>(() => undefined));
 
 		await expect(
 			runChatgptDeveloperAppOperationForCli(
 				{} as never,
-				{ action: "list" },
+				action === "list"
+					? { action }
+					: {
+							action,
+							app: "fixture",
+							serverUrl: "https://fixture.example/mcp",
+							expectedAccount: "fixture@example.invalid",
+							confirmed: true,
+						},
 				{
 					listTimeoutMs: 10,
+					refreshToolsTimeoutMs: 10,
 					closeTimeoutMs: 10,
 					createBrowser: async () => ({}) as never,
 					createAdapter: () => ({
@@ -313,7 +380,7 @@ describe("executeChatgptDeveloperAppOperation", () => {
 					}),
 				},
 			),
-		).rejects.toThrow("ChatGPT developer-app list timed out after 10ms");
+		).rejects.toThrow(`ChatGPT developer-app ${action} timed out after 10ms`);
 		expect(readState).toHaveBeenCalledOnce();
 		expect(close).toHaveBeenCalledOnce();
 	});

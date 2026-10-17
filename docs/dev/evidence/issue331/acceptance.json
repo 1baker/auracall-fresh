@@ -1,0 +1,36 @@
+{
+  "exit_code": 0,
+  "source_commit": "4b7e7bb497c144f2e8947f5ec3bbf2ad1a9da846",
+  "command": "AURACALL_LIVE_TEST=0 pnpm vitest run --maxWorkers=2",
+  "seconds": 304.6,
+  "source_changed_during_run": false,
+  "passed": 3952,
+  "failed": 0,
+  "skipped": 65,
+  "files_passed": 417,
+  "files_skipped": 21,
+  "vitest_seconds": 303.6,
+  "tier": "comprehensive",
+  "workers": 2,
+  "live_provider_tests": "disabled",
+  "prior_failed_run_retained": "diagnosis.json",
+  "lint": {
+    "exit_code": 0,
+    "warnings": 239,
+    "infos": 17
+  },
+  "build": {
+    "exit_code": 0,
+    "source_commit": "5d28e280d81b776aa21b665876c22c3fc76f6084",
+    "runtime_source_unchanged_in_final_source": true
+  },
+  "review": {
+    "mode": "primary Standards and Spec self-review plus bounded remediation",
+    "standards": "PASS",
+    "spec": "PASS",
+    "accepted_blockers_remaining": 0
+  },
+  "pull_request": "https://github.com/ecochran76/auracall/pull/332",
+  "memory_disposition": "forbidden",
+  "installed_runtime_changes": 0
+}

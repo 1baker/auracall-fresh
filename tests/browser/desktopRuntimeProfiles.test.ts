@@ -25,6 +25,12 @@ vi.mock("../../src/browser/cdp.js", () => ({
 				targetInfos: [{ type: "page", targetId: "provider-page", url: browserPage.url }],
 			}),
 		},
+		// biome-ignore lint/style/useNamingConvention: CDP protocol domains use canonical capitalized names.
+		Runtime: {
+			evaluate: async ({ expression }: { expression: string }) => ({
+				result: { value: expression === "location.href" ? browserPage.url : true },
+			}),
+		},
 		Page: {
 			navigate: async ({ url }: { url: string }) => {
 				browserPage.navigate(url);

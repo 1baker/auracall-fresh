@@ -11,6 +11,7 @@ import { launchChrome } from "../chromeLifecycle.js";
 import { CHATGPT_URL, GEMINI_URL, GROK_URL } from "../constants.js";
 import { findChromeProcessUsingUserDataDir } from "../processCheck.js";
 import type { ResolvedBrowserConfig } from "../types.js";
+import { navigateAndSettle } from "./ui.js";
 import { resolveBrowserLaunchPlan } from "./browserLaunchPlan.js";
 import { listDesktopViews } from "./desktopClient.js";
 import {
@@ -180,8 +181,13 @@ async function openBlankProviderPage(browser: NativeDesktopBrowser, url: string)
 	if (!targetId) return;
 	const page = await CDP({ ...endpoint, target: targetId });
 	try {
-		const result = await page.Page.navigate({ url });
-		if (result.errorText) throw new Error(`Provider page could not open: ${result.errorText}`);
+		const result = await navigateAndSettle(page, {
+			url,
+			waitForDocumentReady: false,
+			timeoutMs: 10_000,
+			mutationSource: "desktop-runtime-profile:wake",
+		});
+		if (!result.ok) throw new Error(`Provider page could not open: ${result.reason}`);
 	} finally {
 		await page.close();
 	}

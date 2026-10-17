@@ -17,6 +17,31 @@ starting cursor/frontier state before interpreting a normal pass. Raw request
 coverage flags and cleanup qualification remain separate. See
 [measured acceptance checkpoint](dev/notes/2026-10-17-plan0411-frontier-acceptance.md).
 
+# 2026-10-17 — issue331 provider-free baseline repairs
+
+Desktop Wake now uses the browser-service navigation control point and retains bounded acknowledgement and protocol-error rejection. Provider redirects remain allowed; existing conversations remain untouched. Work test location follows actual mock navigation, mention architecture checks inspect the beforeSend boundary, and drain status uses explicit gates rather than timing guesses. The shared-budget test uses four real service instances with a controlled clock; bypassing budget wait demonstrably executes25ms too early. No provider runs or installation in this slice. Plan0434 and issue331 record acceptance.
+
+## 2026-10-17 | Qualify app refresh settings readiness before comparison
+
+An installed refresh returned unconfirmed after an attributable request; its
+old generic message does not establish native cause. Three separate synthetic
+adapter cases proved disabled controls or loading connected-account data could
+be compared prematurely. The settings reader now waits for semantic readiness
+under an eight-second bound before/after the sole activation. Stable identity,
+endpoint, connection or permission differences still stop completion, and named
+phase/invariant diagnostics improve future reconciliation. Retain the original
+installed failure; a later pass is new evidence, not erasure.
+
+## 2026-10-17 | Distinguish tool catalog refresh from app replacement (#316)
+
+Current exact-app Manage links resolve to /settings/plugins-settings/<plugin-id>.
+A trusted Refresh tools activation yields a refresh_actions response with tool
+schemas. The separate refresh-tools command verifies that catalog and preserves
+app ID, MCP endpoint, connected accounts and permission state. Existing refresh
+still replaces the app. Inventory can omit endpoint, so verify the explicit
+expected endpoint on the exact settings surface before activation. Uncertain
+outcomes never authorize consent, retries or test prompts.
+
 ## 2026-10-16 | Issue165 scoped archive reads retain verification hashes
 
 A real archive-service/public-job regression proved the mocked checksum case was

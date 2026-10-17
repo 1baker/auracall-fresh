@@ -1,0 +1,21 @@
+exit_code: 0
+Aura-Call v0.1.1 — Prompt + files required — API models and semantic ChatGPT browser selectors for tough questions with code/file context.
+
+Usage: auracall apps refresh [options] <app>
+
+Delete and recreate one exact ChatGPT developer app from an MCP endpoint.
+
+Options:
+  --server-url <url>                Replacement MCP server URL.
+  --expected-account <email>        Exact ChatGPT account expected in the
+                                    managed browser.
+  --description <text>              Replacement developer app description.
+  --auth <oauth|none|mixed>         Replacement authentication mechanism.
+                                    (default: "oauth")
+  --connection <server-url|tunnel>  Replacement connection mode. (default:
+                                    "server-url")
+  --yes                             Confirm exact deletion and recreation.
+                                    (default: false)
+  --json                            Emit machine-readable JSON output. (default:
+                                    false)
+  -h, --help                        display help for command

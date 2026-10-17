@@ -1,0 +1,3 @@
+exit_code: 1
+error: required option '--server-url <url>' not specified
+(use --help for usage)

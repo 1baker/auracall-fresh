@@ -5531,13 +5531,19 @@ async function runChatgptDeveloperAppsCliAction(
   let receiptEmitted = false;
   try {
     const result = await runChatgptDeveloperAppOperationForCli(userConfig, input, { browserOperationOwned: true });
-    if (result.action !== 'list' && result.status === 'failed') process.exitCode = 1;
+    if (result.action !== 'list' && (result.status === 'failed' || (result.action === 'refresh-tools' && result.status !== 'completed'))) process.exitCode = 1;
     if (commandOptions.json) {
       console.log(JSON.stringify(result, null, 2));
       receiptEmitted = true;
       return;
     }
     console.log(formatChatgptDeveloperAppOperationResult(result));
+    receiptEmitted = true;
+  } catch (error) {
+    if (input.action !== 'refresh-tools' || !commandOptions.json) throw error;
+    process.exitCode = 1;
+    console.log(JSON.stringify({ action: input.action, status: 'unconfirmed', retrySafe: false,
+      message: error instanceof Error ? error.message : String(error) }, null, 2));
     receiptEmitted = true;
   } finally {
     await acquired.release();
@@ -5751,6 +5757,22 @@ appsCommand
       description: typeof options.description === 'string' ? options.description : null,
       auth: String(options.auth ?? 'oauth') as ChatgptDeveloperAppAuth,
       connection: String(options.connection ?? 'server-url') as 'server-url' | 'tunnel',
+      expectedAccount: String(options.expectedAccount ?? ''),
+      confirmed: Boolean(options.yes),
+    }));
+  });
+
+appsCommand
+  .command('refresh-tools <app>')
+  .description('Refresh one exact app tool catalog in place, preserving its identity and connection.')
+  .requiredOption('--server-url <url>', 'Exact existing MCP server URL; never a replacement endpoint.')
+  .requiredOption('--expected-account <email>', 'Exact ChatGPT account expected in the managed browser.')
+  .option('--yes', 'Confirm in-place tool refresh; does not consent to new permissions.', false)
+  .option('--json', 'Emit machine-readable JSON output.', false)
+  .action(async function (this: Command, app: string) {
+    await runChatgptDeveloperAppsCliAction(this, (options) => ({
+      action: 'refresh-tools', app,
+      serverUrl: String(options.serverUrl ?? ''),
       expectedAccount: String(options.expectedAccount ?? ''),
       confirmed: Boolean(options.yes),
     }));

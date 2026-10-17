@@ -271,13 +271,12 @@ describe("ChatGPT provider prompt adapter", () => {
 	test("prepares Work with the requested model without inserting or sending a prompt", async () => {
 		const targetUrl =
 			"https://chatgpt.com/g/g-p-6a8bc9d6f0408191bba2b2cbf816e63a-frakktal-t3cp-clean-room-proposal-replay/project";
-		let locationReads = 0;
+		let currentUrl = "https://chatgpt.com/";
 		const Runtime = {
 			evaluate: vi.fn(async ({ expression }: { expression: string }) => {
 				if (expression === "location.href") {
-					locationReads += 1;
 					return {
-						result: { value: locationReads <= 2 ? "https://chatgpt.com/" : targetUrl },
+						result: { value: currentUrl },
 					};
 				}
 				return {
@@ -287,7 +286,12 @@ describe("ChatGPT provider prompt adapter", () => {
 		};
 		const client = {
 			Runtime,
-			Page: { navigate: vi.fn(async () => ({ frameId: "frame-1" })) },
+			Page: {
+				navigate: vi.fn(async ({ url }: { url: string }) => {
+					currentUrl = url;
+					return { frameId: "frame-1" };
+				}),
+			},
 			Input: {},
 			DOM: {},
 			close: vi.fn(async () => undefined),

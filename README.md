@@ -198,6 +198,21 @@ auracall --profile wsl-chrome-3 apps --target chatgpt test Corel33t \
 # The post-submit observer begins immediately, accumulates every target URL it
 # sees, and preserves a bounded visible alert/Create-dialog explanation before
 # navigating away for inventory proof.
+# Refresh server tool definitions in place, preserving the existing app and OAuth.
+auracall --profile wsl-chrome-3 apps --target chatgpt refresh-tools Corel33t \
+  --server-url https://litscout.example.test/mcp \
+  --expected-account eric.cochran@soylei.com --yes --json
+# The URL must match the existing app settings. One trusted Refresh tools
+# activation is verified by its attributable catalog response and unchanged
+# app identity, endpoint, connected accounts and permission setting.
+# It waits for ready controls and loaded connected-account state before and
+# after activation, within bounded read deadlines.
+# JSON returns catalog.toolCount, toolNames and SHA-256 under outcome.
+# Human approval returns awaiting-human; uncertain activation/catalog/identity
+# returns unconfirmed. Both are nonzero and never auto-consent or retry.
+# The operation has a 90-second ceiling, including inventory qualification.
+# --yes authorizes refresh only, never new permissions or prompt submission.
+# Replacement remains a separate, destructive operation:
 auracall --profile wsl-chrome-3 apps --target chatgpt refresh Corel33t \
   --server-url https://litscout.example.test/mcp \
   --expected-account eric.cochran@soylei.com --yes

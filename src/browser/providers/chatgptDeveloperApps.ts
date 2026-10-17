@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import {
 	buildChatgptAppComposerLookup,
 	CHATGPT_APP_MENTION_SELECTOR,
@@ -73,7 +74,8 @@ export type ChatgptDeveloperAppBrowserTarget = Pick<
 	Partial<Omit<ChatgptDeveloperAppBrowserEntry, "pluginId" | "appIds" | "name">>;
 
 export interface ChatgptDeveloperAppBrowserMutationOutcome extends DeveloperAppSubmissionEvidence {
-	status: "completed" | "awaiting-human" | "failed";
+	status: "completed" | "awaiting-human" | "unconfirmed" | "failed";
+	catalog?: { toolCount: number; toolNames: string[]; sha256: string };
 	message: string;
 	currentUrl?: string | null;
 	app?: ChatgptDeveloperAppBrowserTarget | null;
@@ -158,7 +160,9 @@ export class ChatgptDeveloperAppBrowserAdapter {
 		private readonly submissionOptions: DeveloperAppSubmissionOptions = {},
 	) {}
 
-	async readState(): Promise<ChatgptDeveloperAppBrowserState> {
+	async readState(
+		options: { includeDeveloperMode?: boolean } = {},
+	): Promise<ChatgptDeveloperAppBrowserState> {
 		this.throwIfAborted();
 		debugDeveloperApps("reading ChatGPT identity");
 		const identity = await this.browser.getUserIdentity({ abortSignal: this.abortSignal });
@@ -170,8 +174,13 @@ export class ChatgptDeveloperAppBrowserAdapter {
 			debugDeveloperApps("reading installed and linked app signals");
 			const featureSignature = await captureChatgptDeveloperAppFeatureSignature(client);
 			this.throwIfAborted();
-			debugDeveloperApps("reading Developer mode");
-			const developerMode = await readChatgptDeveloperMode(client);
+			debugDeveloperApps(
+				options.includeDeveloperMode === false
+					? "Developer mode observation not required"
+					: "reading Developer mode",
+			);
+			const developerMode =
+				options.includeDeveloperMode === false ? null : await readChatgptDeveloperMode(client);
 			this.throwIfAborted();
 			debugDeveloperApps("developer-app inventory complete");
 			return deriveChatgptDeveloperAppState({
@@ -379,6 +388,99 @@ export class ChatgptDeveloperAppBrowserAdapter {
 			...result,
 			app,
 		};
+	}
+
+	async refreshTools(
+		app: ChatgptDeveloperAppBrowserTarget,
+		serverUrl: string,
+	): Promise<ChatgptDeveloperAppBrowserMutationOutcome> {
+		const client = await this.ensureClient();
+		const settingsUrl = `https://chatgpt.com/settings/plugins-settings/${encodeURIComponent(app.pluginId)}`;
+		const observation = observeChatgptToolRefresh(client, app, this.abortSignal);
+		try {
+			await observation.start();
+			const navigation = await navigateAndSettle(client, {
+				url: settingsUrl,
+				forceNavigation: true,
+				timeoutMs: 10_000,
+				mutationSource: "chatgpt-developer-apps:refresh-tools-settings",
+			});
+			if (!navigation.ok) throw new Error("Exact app refresh settings navigation did not settle.");
+			await waitForPredicate(
+				client.Runtime,
+				`location.href === ${JSON.stringify(settingsUrl)} && document.body.innerText.includes('Refresh tools')`,
+				{ timeoutMs: 10_000, description: "exact app tool refresh settings" },
+			);
+			const before = await readChatgptDeveloperAppRefreshSettings(client, "before");
+			if (before.humanApproval)
+				return {
+					status: "awaiting-human",
+					message: "Tool refresh requires human approval; no consent was given.",
+					app,
+					currentUrl: before.url,
+				};
+			assertChatgptDeveloperAppRefreshSettings(before, app, serverUrl);
+			refreshConnectionSnapshot(before);
+			this.throwIfAborted();
+			await observation.arm();
+			this.throwIfAborted();
+			const activated = await pressButtonWithTrustedPointer(client, {
+				match: { exact: ["refresh tools"] },
+				requireVisible: true,
+				timeoutMs: 8_000,
+			});
+			if (!activated.ok)
+				return {
+					status: "unconfirmed",
+					message: "Refresh tools activation was not confirmed; inspect before retrying.",
+					app,
+					retrySafe: false,
+				};
+			const catalog = await observation.result;
+			this.throwIfAborted();
+			const after = await readChatgptDeveloperAppRefreshSettings(client, "after");
+			if (after.humanApproval)
+				return {
+					status: "awaiting-human",
+					message: "Tool refresh requires human approval; no consent was given.",
+					app,
+					currentUrl: after.url,
+					retrySafe: false,
+				};
+			try {
+				assertChatgptDeveloperAppRefreshSettings(after, app, serverUrl);
+				if (
+					refreshSettingsField(before, "App ID") !== refreshSettingsField(after, "App ID") ||
+					refreshConnectionSnapshot(before) !== refreshConnectionSnapshot(after)
+				)
+					throw new Error("App connection or permission state changed.");
+			} catch (error) {
+				return {
+					status: "unconfirmed",
+					message: `Refresh ${catalog ? "catalog response" : "activation"} observed, but preservation could not be verified: ${error instanceof Error ? error.message : "unknown verification failure"} Inspect before retrying.`,
+					app,
+					retrySafe: false,
+				};
+			}
+			if (!catalog)
+				return {
+					status: "unconfirmed",
+					message:
+						"No attributable successful refreshed tool catalog was observed. Inspect before retrying.",
+					app,
+					retrySafe: false,
+				};
+			return {
+				status: "completed",
+				message: `${app.name} tool catalog refreshed in place; identity, endpoint and connection preserved.`,
+				app,
+				catalog,
+				currentUrl: after.url,
+				retrySafe: false,
+			};
+		} finally {
+			observation.close();
+		}
 	}
 
 	async delete(
@@ -1355,4 +1457,252 @@ function debugDeveloperApps(message: string): void {
 	if (process.env.AURACALL_DEBUG_DEVELOPER_APPS === "1") {
 		process.stderr.write(`[developer-apps] ${message}\n`);
 	}
+}
+
+interface ChatgptDeveloperAppRefreshSettings {
+	url: string;
+	text: string;
+	refreshButtonCount: number;
+	humanApproval: boolean;
+}
+
+async function readChatgptDeveloperAppRefreshSettings(
+	client: ChromeClient,
+	stage: "before" | "after",
+): Promise<ChatgptDeveloperAppRefreshSettings> {
+	const result = await waitForPredicate(
+		client.Runtime,
+		`(() => {
+			const visible = el => { const rect = el.getBoundingClientRect(); const style = getComputedStyle(el); return rect.width > 0 && rect.height > 0 && style.visibility !== 'hidden' && style.display !== 'none'; };
+			const buttons = [...document.querySelectorAll('button')].filter(visible);
+			const state = {url: location.href, text: document.body.innerText,
+				refreshButtonCount: buttons.filter(el => el.innerText.trim().toLowerCase() === 'refresh tools' && !el.disabled && el.getAttribute('aria-disabled') !== 'true').length,
+				humanApproval: [...document.querySelectorAll('[role="dialog"], [aria-modal="true"]')].filter(visible).some(el => /approv|consent|permission|authoriz|connect account/i.test(el.innerText))};
+			const lines = state.text.split('\\n').map(line => line.trim()).filter(Boolean);
+			const start = lines.indexOf('Connected accounts');
+			const end = lines.indexOf('About', start + 1);
+			const accountsReady = start >= 0 && end > start + 1 && lines.slice(start + 1, end).some(line => !/^(connect another account|loading[.\\s…]*|no connected accounts)$/i.test(line));
+			return state.humanApproval || (state.refreshButtonCount === 1 && accountsReady) ? state : null;
+		})()`,
+		{ timeoutMs: 8_000, pollMs: 50, description: `settled app refresh settings ${stage} refresh` },
+	);
+	if (!result.ok || !result.value)
+		throw new Error(
+			`App refresh settings did not settle ${stage} refresh before the read deadline.`,
+		);
+	return result.value as ChatgptDeveloperAppRefreshSettings;
+}
+
+function refreshSettingsField(
+	settings: ChatgptDeveloperAppRefreshSettings,
+	label: string,
+): string | null {
+	const lines = settings.text
+		.split("\n")
+		.map((line) => line.trim())
+		.filter(Boolean);
+	const indexes = lines.flatMap((line, index) => (line === label ? [index] : []));
+	return indexes.length === 1 ? (lines[indexes[0] + 1] ?? null) : null;
+}
+
+function assertChatgptDeveloperAppRefreshSettings(
+	settings: ChatgptDeveloperAppRefreshSettings,
+	app: ChatgptDeveloperAppBrowserTarget,
+	serverUrl: string,
+): void {
+	if (
+		settings.url !==
+			`https://chatgpt.com/settings/plugins-settings/${encodeURIComponent(app.pluginId)}` ||
+		!app.appIds.includes(refreshSettingsField(settings, "App ID") ?? "")
+	)
+		throw new Error("Tool refresh settings do not match the exact app identity.");
+	const endpoint = refreshSettingsField(settings, "URL");
+	if (!endpoint || new URL(endpoint).href !== new URL(serverUrl).href)
+		throw new Error("Tool refresh settings endpoint does not match the expected MCP endpoint.");
+	if (settings.refreshButtonCount !== 1)
+		throw new Error("Expected one exact enabled Refresh tools control.");
+}
+
+function refreshConnectionSnapshot(settings: ChatgptDeveloperAppRefreshSettings): string {
+	const lines = settings.text
+		.split("\n")
+		.map((line) => line.trim())
+		.filter(Boolean);
+	const start = lines.indexOf("Connected accounts");
+	const end = lines.indexOf("About", start + 1);
+	if (
+		lines.filter((line) => line === "Connected accounts").length !== 1 ||
+		start < 0 ||
+		end <= start + 1
+	)
+		throw new Error("Connected account state is unavailable.");
+	const permission = lines.indexOf("Permission");
+	return JSON.stringify({
+		connection: lines.slice(start, end),
+		permission: permission >= 0 ? lines.slice(permission, start) : null,
+	});
+}
+
+function observeChatgptToolRefresh(
+	client: ChromeClient,
+	app: ChatgptDeveloperAppBrowserTarget,
+	signal?: AbortSignal,
+) {
+	type Catalog = NonNullable<ChatgptDeveloperAppBrowserMutationOutcome["catalog"]>;
+	let active = true;
+	let armed = false;
+	let timer: ReturnType<typeof setTimeout> | undefined;
+	const requests = new Map<string, { status: number | null; identity: Promise<boolean> }>();
+	const linkResponses = new Set<string>();
+	const linkIds = new Set<string>();
+	let resolveLinks: () => void = () => undefined;
+	const linksReady = new Promise<void>((resolve) => {
+		resolveLinks = resolve;
+	});
+	let finish: (catalog: Catalog | null) => void = () => undefined;
+	const result = new Promise<Catalog | null>((resolve) => {
+		finish = resolve;
+	});
+	const settle = (catalog: Catalog | null) => {
+		if (!active) return;
+		active = false;
+		if (timer) clearTimeout(timer);
+		finish(catalog);
+	};
+	const onAbort = () => settle(null);
+	signal?.addEventListener("abort", onAbort, { once: true });
+	client.Network.requestWillBeSent((params) => {
+		if (!active || !armed || params.request.method !== "POST") return;
+		const url = new URL(params.request.url);
+		if (
+			url.origin !== "https://chatgpt.com" ||
+			url.pathname !== "/backend-api/aip/connectors/mcp/refresh_actions"
+		)
+			return;
+		const identity = (async () => {
+			try {
+				const postData =
+					params.request.postData ??
+					(await client.Network.getRequestPostData({ requestId: params.requestId })).postData;
+				const body: unknown = JSON.parse(postData);
+				const matched =
+					isRecord(body) && typeof body.link_id === "string" && linkIds.has(body.link_id);
+				debugDeveloperApps(
+					`refresh request keys=${isRecord(body) ? Object.keys(body).join(",") : "none"}; attributable=${matched}`,
+				);
+				return matched;
+			} catch {
+				debugDeveloperApps("refresh request identity unavailable");
+				return false;
+			}
+		})();
+		requests.set(params.requestId, { status: null, identity });
+	});
+	client.Network.responseReceived((params) => {
+		if (
+			active &&
+			params.response.url?.split("?")[0] ===
+				"https://chatgpt.com/backend-api/aip/connectors/links/list_accessible" &&
+			params.response.status >= 200 &&
+			params.response.status < 300
+		)
+			linkResponses.add(params.requestId);
+		const request = requests.get(params.requestId);
+		if (active && request) request.status = params.response.status;
+	});
+	client.Network.loadingFinished(async (params) => {
+		if (active && linkResponses.has(params.requestId)) {
+			try {
+				const response = await client.Network.getResponseBody({ requestId: params.requestId });
+				const body: unknown = JSON.parse(
+					response.base64Encoded
+						? Buffer.from(response.body, "base64").toString("utf8")
+						: response.body,
+				);
+				if (isRecord(body) && Array.isArray(body.links)) {
+					linkIds.clear();
+					for (const link of normalizeChatgptLinkedAppProbes(body.links)) {
+						if (
+							link.link_id &&
+							app.appIds.some((id) => appIdentityMatches(id, link.connector_id ?? null))
+						)
+							linkIds.add(link.link_id);
+					}
+					resolveLinks();
+				}
+			} catch {
+				/* Missing link metadata must stop refresh before activation. */
+			}
+			return;
+		}
+		if (!active || !requests.has(params.requestId)) return;
+		const request = requests.get(params.requestId);
+		if (!request || !(await request.identity) || !active) return;
+		const status = request.status;
+		if (!status || status < 200 || status >= 300) {
+			settle(null);
+			return;
+		}
+		try {
+			const response = await client.Network.getResponseBody({ requestId: params.requestId });
+			if (!active) return;
+			const body: unknown = JSON.parse(
+				response.base64Encoded
+					? Buffer.from(response.body, "base64").toString("utf8")
+					: response.body,
+			);
+			if (
+				!isRecord(body) ||
+				!Array.isArray(body.actions) ||
+				!body.actions.every(
+					(action) =>
+						isRecord(action) && typeof action.name === "string" && action.name.trim().length > 0,
+				)
+			) {
+				settle(null);
+				return;
+			}
+			const toolNames = body.actions.map((action) => (action as { name: string }).name).sort();
+			if (new Set(toolNames).size !== toolNames.length) {
+				settle(null);
+				return;
+			}
+			settle({
+				toolCount: toolNames.length,
+				toolNames,
+				sha256: createHash("sha256").update(JSON.stringify(body.actions)).digest("hex"),
+			});
+		} catch {
+			settle(null);
+		}
+	});
+	return {
+		result,
+		start: async () => {
+			await client.Network.enable();
+		},
+		arm: async () => {
+			let linkTimeout: ReturnType<typeof setTimeout> | undefined;
+			try {
+				await Promise.race([
+					linksReady,
+					new Promise<void>((resolve) => {
+						linkTimeout = setTimeout(resolve, 5_000);
+					}),
+				]);
+			} finally {
+				if (linkTimeout) clearTimeout(linkTimeout);
+			}
+			if (!linkIds.size)
+				throw new Error(
+					"Exact app connection identity unavailable; Refresh tools was not activated.",
+				);
+			armed = true;
+			timer = setTimeout(() => settle(null), 20_000);
+		},
+		close: () => {
+			settle(null);
+			signal?.removeEventListener("abort", onAbort);
+		},
+	};
 }

@@ -220,7 +220,7 @@ describe("deriveChatgptDeveloperAppState", () => {
 				completionMode: "assistant_response",
 				skipBrowserExecutionOperation: true,
 				config: expect.objectContaining({
-					timeoutMs: 120_000,
+					timeoutMs: 7_200_000,
 					modelStrategy: "current",
 					composerTool: null,
 					conversationId: null,

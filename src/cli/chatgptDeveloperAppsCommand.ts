@@ -43,8 +43,12 @@ export interface ChatgptDeveloperAppState {
 }
 
 export interface ChatgptDeveloperAppAdapter {
-	readState(): Promise<ChatgptDeveloperAppState>;
+	readState(options?: { includeDeveloperMode?: boolean }): Promise<ChatgptDeveloperAppState>;
 	create(input: ChatgptDeveloperAppCreateInput): Promise<ChatgptDeveloperAppMutationOutcome>;
+	refreshTools(
+		app: ChatgptDeveloperApp,
+		serverUrl: string,
+	): Promise<ChatgptDeveloperAppMutationOutcome>;
 	delete(app: ChatgptDeveloperApp): Promise<ChatgptDeveloperAppMutationOutcome>;
 	selectForTest(app: ChatgptDeveloperApp): Promise<ChatgptDeveloperAppMutationOutcome>;
 	submitTest(app: ChatgptDeveloperApp, prompt: string): Promise<ChatgptDeveloperAppMutationOutcome>;
@@ -58,6 +62,7 @@ type ChatgptDeveloperAppCliAdapter = ChatgptDeveloperAppAdapter & {
 export interface ChatgptDeveloperAppCliDependencies {
 	browserOperationOwned?: boolean;
 	listTimeoutMs?: number;
+	refreshToolsTimeoutMs?: number;
 	closeTimeoutMs?: number;
 	createBrowser?: (
 		userConfig: ResolvedUserConfig,
@@ -66,7 +71,11 @@ export interface ChatgptDeveloperAppCliDependencies {
 	createAdapter?: (
 		browser: ChatgptDeveloperAppBrowserClient,
 		createBrowser: ChatgptDeveloperAppBrowserClientFactory,
-		options: { abortSignal?: AbortSignal; browserOperationOwned?: boolean; modelStrategy?: BrowserModelStrategy },
+		options: {
+			abortSignal?: AbortSignal;
+			browserOperationOwned?: boolean;
+			modelStrategy?: BrowserModelStrategy;
+		},
 	) => ChatgptDeveloperAppCliAdapter;
 }
 
@@ -81,7 +90,8 @@ export interface ChatgptDeveloperAppCreateInput {
 }
 
 export interface ChatgptDeveloperAppMutationOutcome extends DeveloperAppSubmissionEvidence {
-	status: "completed" | "awaiting-human" | "recreate-pending" | "failed";
+	status: "completed" | "awaiting-human" | "recreate-pending" | "unconfirmed" | "failed";
+	catalog?: { toolCount: number; toolNames: string[]; sha256: string };
 	message: string;
 	currentUrl?: string | null;
 	app?: ChatgptDeveloperApp | null;
@@ -99,6 +109,13 @@ export type ChatgptDeveloperAppOperationInput =
 			confirmed: boolean;
 			expectedAccount: string;
 	  } & ChatgptDeveloperAppCreateInput)
+	| {
+			action: "refresh-tools";
+			app: string;
+			serverUrl: string;
+			confirmed: boolean;
+			expectedAccount: string;
+	  }
 	| {
 			action: "refresh";
 			app: string;
@@ -142,7 +159,13 @@ export async function executeChatgptDeveloperAppOperation(
 	input: ChatgptDeveloperAppOperationInput,
 	adapter: ChatgptDeveloperAppAdapter,
 ): Promise<ChatgptDeveloperAppOperationResult> {
-	return executeChatgptDeveloperAppOperationWithState(input, adapter, await adapter.readState());
+	return executeChatgptDeveloperAppOperationWithState(
+		input,
+		adapter,
+		await adapter.readState(
+			input.action === "refresh-tools" ? { includeDeveloperMode: false } : undefined,
+		),
+	);
 }
 
 async function executeChatgptDeveloperAppOperationWithState(
@@ -193,6 +216,27 @@ async function executeChatgptDeveloperAppOperationWithState(
 			outcome,
 		};
 	}
+	if (input.action === "refresh-tools") {
+		const app = resolveExactApp(state.apps, input.app);
+		const expectedEndpoint = new URL(input.serverUrl);
+		if (
+			expectedEndpoint.username ||
+			expectedEndpoint.password ||
+			(expectedEndpoint.protocol !== "https:" &&
+				!(
+					expectedEndpoint.protocol === "http:" &&
+					["localhost", "127.0.0.1", "[::1]"].includes(expectedEndpoint.hostname)
+				))
+		) {
+			throw new Error("Refresh tools requires an HTTPS or loopback MCP endpoint.");
+		}
+		if (app.endpoint && new URL(app.endpoint).href !== expectedEndpoint.href) {
+			throw new Error("Refresh tools requires the exact expected MCP endpoint.");
+		}
+		const outcome = await adapter.refreshTools(app, expectedEndpoint.href);
+		return { action: input.action, status: outcome.status, state, outcome };
+	}
+
 	if (input.action === "refresh") {
 		if (!state.developerMode) {
 			throw new Error("ChatGPT Developer mode must be enabled before replacing an app.");
@@ -304,7 +348,8 @@ export async function runChatgptDeveloperAppOperationForCli(
 ): Promise<ChatgptDeveloperAppOperationResult> {
 	const createBrowser = dependencies.createBrowser ?? BrowserAutomationClient.fromConfig;
 	const createAdapter = dependencies.createAdapter ?? createChatgptDeveloperAppBrowserAdapter;
-	const abortController = input.action === "list" ? new AbortController() : null;
+	const abortController =
+		input.action === "list" || input.action === "refresh-tools" ? new AbortController() : null;
 	const active: { adapter: ChatgptDeveloperAppCliAdapter | null } = { adapter: null };
 	const operation = async () => {
 		const browser = await createBrowser(userConfig, { target: "chatgpt" });
@@ -376,15 +421,17 @@ export async function runChatgptDeveloperAppOperationForCli(
 		}
 	};
 	try {
-		if (input.action !== "list") return await operation();
+		if (input.action !== "list" && input.action !== "refresh-tools") return await operation();
 		const timeoutMs = normalizePositiveTimeout(
-			dependencies.listTimeoutMs,
-			DEFAULT_CHATGPT_DEVELOPER_APP_LIST_TIMEOUT_MS,
+			input.action === "refresh-tools"
+				? dependencies.refreshToolsTimeoutMs
+				: dependencies.listTimeoutMs,
+			input.action === "refresh-tools" ? 90_000 : DEFAULT_CHATGPT_DEVELOPER_APP_LIST_TIMEOUT_MS,
 		);
 		return await withChatgptDeveloperAppDeadline(
 			operation(),
 			timeoutMs,
-			`ChatGPT developer-app list timed out after ${timeoutMs}ms.`,
+			`ChatGPT developer-app ${input.action} timed out after ${timeoutMs}ms.`,
 			(error) => abortController?.abort(error),
 		);
 	} finally {
@@ -464,6 +511,12 @@ export function formatChatgptDeveloperAppOperationResult(
 			...header,
 			`Action: ${result.action}`,
 			`Status: ${result.status}`,
+			...(result.outcome.catalog
+				? [
+						`Tool count: ${result.outcome.catalog.toolCount}`,
+						`Catalog SHA-256: ${result.outcome.catalog.sha256}`,
+					]
+				: []),
 			result.outcome.message,
 			...(result.outcome.currentUrl ? [`Current URL: ${result.outcome.currentUrl}`] : []),
 			...(result.outcome.conversationId ? [`Conversation: ${result.outcome.conversationId}`] : []),
