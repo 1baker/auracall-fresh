@@ -55000,3 +55000,13 @@ scheduler/all17subscriptions remain paused,0queued/running/warnings. Details:
 docs/dev/notes/2026-10-17-installed-follow-acceptance.md. Gate C canonical integration
 and required fresh installed transfer evidence remain open; PR323 remains draft,
 issue165OPEN. Memory disposition forbidden.
+
+
+## 2026-10-17 | Issue165 integration validation
+
+743affected tests/26files pass after replacing an ordinal CDP fixture stall with
+the actual payload request. Production build and full lint/typecheck pass; existing
+239warnings/17infos remain.33planning-audit findings are inherited and their source
+authorities match currentmain. See2026-10-17-issue165-integration.md. PR323 merge,
+canonical side-by-side install and fresh installed transfer are next. Memory
+disposition forbidden.
