@@ -1,5 +1,17 @@
 # ChatGPT Materialization Surface Repair | 0386-2026-10-01
 
+## 2026-10-17 | Canonical materialization acceptance — CLOSED
+
+PR323 merged23969f469;595compiled-file parity and canonical API activation verified.
+Fresh automatic pass captures2newfiles, matching text/file/manifest/archive evidence,
+in58636ms/69requests. Original pair passes43332ms/67with6texts, verified A and typed
+unavailable B. Both strict1.3limits pass. The raw post-work disconnect flag is
+preserved with independent terminal-cleanup qualification. User-deferred inherited
+planning debt remains reported; no fully green planning-audit claim. Scheduler/all
+17subscriptions remain paused. Wider Plan0411 remains separate. See
+[canonical acceptance](../notes/2026-10-17-issue165-canonical-acceptance.md).
+
+
 ## 2026-10-17 | Installed existing-state follow acceptance
 
 Bounded installed automatic pass verifies6texts, existing A bytes/hash and explicit
@@ -10,7 +22,7 @@ evidence remain open. See
 [installed acceptance](../notes/2026-10-17-installed-follow-acceptance.md).
 
 
-State: OPEN
+State: CLOSED
 Lane: P85
 Source base: `origin/main` at `6a07668e481ef6cb46f816a8e8a2dcca63f25337`
 Branch: `docs/issue165-changed-frontier-spec`

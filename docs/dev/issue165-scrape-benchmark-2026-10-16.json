@@ -764,6 +764,81 @@
       "canonicalMergeProven": false,
       "scopedAcceptancePassed": true,
       "accepted": true
+    },
+    {
+      "id": "canonical_first_fresh_capture_custody_flag_20261017",
+      "receipt": "measured-automatic-scoped-2026-10-17T14-23-00-175Z.json",
+      "elapsedMs": 48727,
+      "backendRequestsLowerBound": 69,
+      "newArtifacts": 2,
+      "outputsEquivalent": true,
+      "coverageComplete": false,
+      "accepted": false,
+      "reason": "Raw conservative custody-transition capture flag; repeat chosen for explicit disconnect/cleanup evidence, not faster timing."
+    },
+    {
+      "id": "canonical_fresh_installed_accepted_20261017",
+      "canonicalMerge": "23969f4692f3b504748cfe9d07a383240eb5c5a2",
+      "runtimeParityReceipt": "canonical-install-parity-20261017.json",
+      "compiledFilesMatched": 595,
+      "automaticReceipt": "measured-automatic-scoped-2026-10-17T14-25-20-969Z.json",
+      "initialArchiveItems": 0,
+      "initialHistoryJobs": 0,
+      "force": false,
+      "childStatus": "succeeded",
+      "newArtifacts": 2,
+      "files": [
+        {
+          "bytes": 6172,
+          "sha256": "465fe0e181aaea03f524abb3a076e05bd2843bc85be62a171399454e6e210ebc",
+          "mimeType": "text/markdown",
+          "manifestArchiveAndFileAgree": true
+        },
+        {
+          "bytes": 21186,
+          "sha256": "42530045a480aed4c7a2391fc09779754434422980ad0f74cb24a7f30b3b76f6",
+          "mimeType": "application/json",
+          "manifestArchiveAndFileAgree": true
+        }
+      ],
+      "fourTrimmedTextsEqual": true,
+      "fullElapsedMs": 58636,
+      "backendRequests": 69,
+      "agenticElapsedMs": 49510,
+      "agenticRequests": 68,
+      "elapsedRatio": 1.1843263987073318,
+      "requestRatio": 1.0147058823529411,
+      "rawCoverageComplete": false,
+      "qualifiedCoverageComplete": true,
+      "coverageQualification": "Continuous early Network stream through all provider materialization calls; sole disconnect after both wrapper calls completed and during terminal browser cleanup; exact browser process and controller absent; raw flag retained.",
+      "noProviderWarning": true,
+      "parentPassCount": 1,
+      "parentPaused": true,
+      "exactLeasesRetired": true,
+      "exactBrowserAbsent": true,
+      "controllerAbsent": true,
+      "mainApiCanonicalPid": 94853,
+      "schedulerAnd17SubscriptionsPaused": true,
+      "accepted": true
+    },
+    {
+      "id": "canonical_existing_installed_accepted_20261017",
+      "canonicalMerge": "23969f4692f3b504748cfe9d07a383240eb5c5a2",
+      "automaticReceipt": "measured-automatic-scoped-2026-10-17T14-30-36-811Z.json",
+      "fullElapsedMs": 43332,
+      "backendRequests": 67,
+      "agenticElapsedMs": 48532,
+      "agenticRequests": 72,
+      "elapsedRatio": 0.8928541992911894,
+      "requestRatio": 0.9305555555555556,
+      "sixTextsEqual": true,
+      "cachedArtifactHashVerified": true,
+      "priorUnavailableArtifactExplicit": true,
+      "rawCoverageComplete": false,
+      "qualifiedCoverageComplete": true,
+      "coverageQualification": "Only stream disconnect follows all completed provider reads; exact browser process absent after normal cleanup. No stream interruption during provider work.",
+      "parentOnePassPaused": true,
+      "accepted": true
     }
   ],
   "comparison": {
@@ -1063,10 +1138,13 @@
     "schedulerControls": 0
   },
   "currentAcceptance": {
-    "coldMultiAutomatic": "source-compiled private-store case passed with equivalent four texts/two files; time1.094082 requests1.029412",
-    "originalExistingStateAutomatic": "installed repaired runtime passed strict ceilings with equivalent six texts, verified A and explicit typed unavailable B",
-    "fullGoalAccepted": false,
-    "next": "Canonical integration/install Gate C and any required fresh installed transfer evidence remain distinct; no scheduler resume authorized."
+    "canonicalIntegration": "PR323 merged at23969f469;595compiled files match; installed API runs canonical runtime",
+    "originalExistingStateAutomatic": "canonical installed43332ms/67requests; six texts, verified A and explicit unavailable B; strict ratios pass",
+    "freshCanonicalAutomatic": "58636ms/69requests; two new files, four texts and manifest/archive/file parity; strict ratios pass",
+    "rawCaptureQualification": "Raw false flag retained; sole disconnect follows completed provider work and terminal owned-browser cleanup; see private acceptance receipt",
+    "issue165AcceptancePassed": true,
+    "widerFollowScope": "Changed-frontier and broad scheduler continuation remain separate; all17subscriptions and scheduler paused",
+    "closureScope": "Issue165 materialization/qualification and measured1.3cost goal accepted; wider changed-frontier and scheduler continuation remain separate."
   },
   "performanceToleranceException": {
     "acceptedByUser": true,

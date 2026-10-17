@@ -961,3 +961,17 @@ scheduler/all17subscriptions remain paused,0queued/running/warnings. Details:
 docs/dev/notes/2026-10-17-installed-follow-acceptance.md. Gate C canonical integration
 and required fresh installed transfer evidence remain open; PR323 remains draft,
 issue165OPEN. Memory disposition forbidden.
+
+
+## 2026-10-17 | Issue165 canonical acceptance
+
+PR323 integrated23969f469; complete canonical runtime595compiled files match and
+main API now selects it.743affected tests, production build/lint/typecheck pass.
+Original case43332ms/67; fresh two-file case58636ms/69; both strict1.3limits pass
+with equivalent texts and verified files, manifest/archive parity and typed
+unavailability. Fresh child materializes2; original child duplicate1/skips1. Raw
+cleanup-disconnect flags remain with explicit post-provider-work qualification.
+Canonical acceptance note closes scoped Plan0386; issue165closure follows the
+acceptance PR. Wider P92/Plan0411 changed-frontier and scheduler continuation stay
+open; scheduler/all17subscriptions paused,0queued/running/warnings. Memory
+disposition forbidden.

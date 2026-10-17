@@ -1,6 +1,25 @@
 schema_version: 1
 work_item_tracking: optional
 lanes:
+  - id: P93
+    objective: Close issue165 materialization and measured automatic scrape acceptance
+    work_items: [ecochran76/auracall#165]
+    plan: docs/dev/plans/0386-2026-10-01-chatgpt-materialization-surface-repair.md
+    plan_ref: refs/heads/main
+    branch: fix/issue165-owned-backend-request-admission
+    target: main
+    plan_state: CLOSED
+    custody_state: INTEGRATED
+    checkpoint: 79e60cf534641e3c05d0a00b790b24f0fc0a93c3
+    remote_ref: refs/remotes/origin/fix/issue165-owned-backend-request-admission
+    integration_receipt: 23969f4692f3b504748cfe9d07a383240eb5c5a2
+    integration: merge
+    dependencies: []
+    overlaps: [P92]
+    validation_status: canonical-installed-fresh-transfer-and-cost-accepted
+    validation_ref: docs/dev/notes/2026-10-17-issue165-canonical-acceptance.md
+    disposition: Scoped materialization accepted; broader P92 frontier and scheduler work remains open
+    updated_at: 2026-10-17
   - id: P92
     objective: Retain partial project discovery at the physical navigation budget
     work_items: [ecochran76/auracall#165]
