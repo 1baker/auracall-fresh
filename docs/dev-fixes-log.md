@@ -1,3 +1,14 @@
+## 2026-10-17 — Shared backend admission requires production caller wiring
+
+A shared browser-operation governor is not a backend-request meter. Live-follow
+omitted the available backend admission hook; configured utilities/factories also
+needed a service configuration path. All three now accept the explicit ChatGPT
+maxBackendRequestsPerMinute setting and reuse account-wide durable permits.
+Regression: two follow tasks with independent ledger instances dispatch only one
+request under a one-request fixture budget; existing transport tests now enable
+admission through service config. No default production ceiling or live success
+is inferred. See docs/dev/notes/2026-10-17-plan0411-shared-backend-admission.md.
+
 ## 2026-10-17 | Due follow discovery and unresolved-read reporting
 
 ChatGPT detail-only work retains the prior actual index epoch. A due index read

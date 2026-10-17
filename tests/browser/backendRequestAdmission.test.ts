@@ -215,13 +215,17 @@ test.each([
 			const factory = createConfiguredProviderTrafficAuthorityFactory({
 				userConfig: {
 					auracallProfile: `runtime-${index}`,
-					services: { chatgpt: { identity: { email: "operator@example.test" } } },
+					services: {
+						chatgpt: {
+							identity: { email: "operator@example.test" },
+							maxBackendRequestsPerMinute: mixedFailure ? 2 : 1,
+						},
+					},
 				} as never,
 				provider: "chatgpt",
 				managedBrowserProfile: `/fixture/${index}`,
 				mutationAudit: async () => undefined,
 				baseOptions: {},
-				backendRequestLimit: mixedFailure ? 2 : 1,
 			});
 			await annotateClientMutationContext(
 				client,
@@ -1415,7 +1419,12 @@ test.each([
 	}));
 	const config = {
 		auracallProfile: "public",
-		services: { chatgpt: { identity: { email: "operator@example.test" } } },
+		services: {
+			chatgpt: {
+				identity: { email: "operator@example.test" },
+				maxBackendRequestsPerMinute: mode === "retained-clean" ? 3 : completeRequests ? 2 : 1,
+			},
+		},
 		browser: {
 			tabConcurrencyMode: "tab-affinity",
 			chatgptUrl: "https://chatgpt.com/",
@@ -1437,7 +1446,6 @@ test.each([
 		runUtilityOperation: (input) =>
 			runConfiguredChatgptUtilityOperation({
 				...input,
-				backendRequestLimit: mode === "retained-clean" ? 3 : completeRequests ? 2 : 1,
 				deps: {
 					listTargets: async () =>
 						opened

@@ -13,7 +13,10 @@ import type {
 } from "../../packages/browser-service/src/service/tabLeaseRegistry.js";
 import { resolveConfiguredServiceAccountId } from "../config/serviceAccountIdentity.js";
 import type { ResolvedUserConfig } from "../config.js";
-import { resolveChatgptInteractionsPerMinute } from "../runtime/tenantExecutionLimits.js";
+import {
+	resolveChatgptBackendRequestsPerMinute,
+	resolveChatgptInteractionsPerMinute,
+} from "../runtime/tenantExecutionLimits.js";
 import { probeChatgptRateLimitWarning } from "./chatgptProviderTraffic.js";
 import { recordChatgptRateLimitDetection } from "./chatgptRateLimitGuard.js";
 import {
@@ -36,7 +39,15 @@ export function createConfiguredProviderTrafficAuthorityFactory(input: {
 	now?: () => Date;
 	backendRequestLimit?: number;
 }): ProviderTrafficAuthorityFactory {
-	validateBackendRequestLimit(input.backendRequestLimit);
+	const backendRequestLimit =
+		input.backendRequestLimit ??
+		(input.provider === "chatgpt"
+			? resolveChatgptBackendRequestsPerMinute(
+					input.userConfig as Record<string, unknown>,
+					input.userConfig.auracallProfile?.trim() || "default",
+				)
+			: undefined);
+	validateBackendRequestLimit(backendRequestLimit);
 	const now = input.now ?? (() => new Date());
 	const runtime = createBrowserTabConcurrencyRuntime(input.userConfig);
 	if (!runtime.registry || !runtime.ledger) {
@@ -63,7 +74,7 @@ export function createConfiguredProviderTrafficAuthorityFactory(input: {
 
 	return {
 		backendRequestAdmissionEnabled:
-			input.provider === "chatgpt" && input.backendRequestLimit !== undefined,
+			input.provider === "chatgpt" && backendRequestLimit !== undefined,
 		async acquire({ targetId }) {
 			const operationId = `provider-traffic-${randomUUID()}`;
 			const workloadId = `provider-client:${operationId}`;
@@ -94,7 +105,7 @@ export function createConfiguredProviderTrafficAuthorityFactory(input: {
 				}
 			};
 			const backendRequests =
-				input.provider === "chatgpt" && input.backendRequestLimit !== undefined
+				input.provider === "chatgpt" && backendRequestLimit !== undefined
 					? createOwnedBackendRequestAuthority({
 							ledger,
 							scope: {
@@ -106,7 +117,7 @@ export function createConfiguredProviderTrafficAuthorityFactory(input: {
 							workloadId,
 							operationId,
 							tabLeaseId: reserved.value.lease.leaseId,
-							backendRequestLimit: input.backendRequestLimit,
+							backendRequestLimit,
 							assertOwnedLease,
 							now,
 						})
@@ -149,7 +160,7 @@ export function createConfiguredProviderTrafficAuthorityFactory(input: {
 				settleInteraction: (settlement) => interactionGovernor.finish(settlement),
 				assertLease: assertOwnedLease,
 				admitBackendRequest:
-					input.provider === "chatgpt" && input.backendRequestLimit !== undefined
+					input.provider === "chatgpt" && backendRequestLimit !== undefined
 						? backendRequests?.admit
 						: undefined,
 				probeWarning: input.provider === "chatgpt" ? probeChatgptRateLimitWarning : undefined,

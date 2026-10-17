@@ -25,6 +25,7 @@ import { withAccountMirrorProviderTrafficPlan } from "../accountMirror/providerT
 import { resolveConfiguredServiceAccountId } from "../config/serviceAccountIdentity.js";
 import type { ResolvedUserConfig } from "../config.js";
 import {
+	resolveChatgptBackendRequestsPerMinute,
 	resolveChatgptInteractionsPerMinute,
 	resolveChatgptTenantLimits,
 } from "../runtime/tenantExecutionLimits.js";
@@ -70,9 +71,15 @@ export async function runConfiguredChatgptUtilityOperation<TResult>(input: {
 	now?: () => Date;
 	deps?: ConfiguredChatgptUtilityAffinityDeps;
 }): Promise<TResult | null> {
-	validateBackendRequestLimit(input.backendRequestLimit);
+	const backendRequestLimit =
+		input.backendRequestLimit ??
+		resolveChatgptBackendRequestsPerMinute(
+			input.userConfig as Record<string, unknown>,
+			input.userConfig.auracallProfile?.trim() || "default",
+		);
+	validateBackendRequestLimit(backendRequestLimit);
 	if (input.userConfig.browser?.tabConcurrencyMode !== "tab-affinity") return null;
-	if (input.backendRequestLimit !== undefined && input.options?.providerSession)
+	if (backendRequestLimit !== undefined && input.options?.providerSession)
 		throw new Error("Request-aware ChatGPT utility cannot inherit a provider session.");
 	const now = input.now ?? (() => new Date());
 	const runtimeProfileId = input.userConfig.auracallProfile?.trim() || "default";
@@ -261,7 +268,7 @@ export async function runConfiguredChatgptUtilityOperation<TResult>(input: {
 					? false
 					: (input.options?.preserveActiveTab ?? input.options?.allowNavigation !== true),
 		});
-		if (input.backendRequestLimit !== undefined && options.providerSession)
+		if (backendRequestLimit !== undefined && options.providerSession)
 			throw new Error("Request-aware ChatGPT utility cannot inherit a provider session.");
 		const baseGovernor =
 			options.interactionGovernor ??
@@ -302,14 +309,14 @@ export async function runConfiguredChatgptUtilityOperation<TResult>(input: {
 			}
 		};
 		backendRequests =
-			input.backendRequestLimit !== undefined
+			backendRequestLimit !== undefined
 				? createOwnedBackendRequestAuthority({
 						ledger: runtime.ledger,
 						scope: { provider: "chatgpt", tenantKey, runtimeProfileId, managedBrowserProfile },
 						workloadId: `utility:${input.utilityId}`,
 						operationId: input.utilityId,
 						tabLeaseId: tab.lease.leaseId,
-						backendRequestLimit: input.backendRequestLimit,
+						backendRequestLimit,
 						assertOwnedLease,
 						now,
 					})

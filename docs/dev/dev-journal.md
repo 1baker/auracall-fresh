@@ -1,3 +1,12 @@
+## 2026-10-17 — Plan0411 shared backend admission wiring
+
+Confirmed the live-follow caller omitted backend admission despite shared ledger
+support. Added explicit service-level maxBackendRequestsPerMinute configuration
+consumed by configured live-follow, utilities and provider-client authorities.
+Concurrent follow tasks now share permits before dispatch. Affected236tests and
+final23boundary tests pass; production ceiling, installed activation and live acceptance remain
+separate. See notes/2026-10-17-plan0411-shared-backend-admission.md.
+
 ## 2026-10-17 | Follow repair staged; native acceptance stopped on429
 
 PR333 contains source fixes for due discovery and truthful failed-read reporting;

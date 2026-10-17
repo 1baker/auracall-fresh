@@ -195,6 +195,22 @@ export function resolveChatgptInteractionsPerMinute(
   );
 }
 
+/** Explicit opt-in: browser-operation limits are not backend-request ceilings. */
+export function resolveChatgptBackendRequestsPerMinute(
+  config: Record<string, unknown>,
+  runtimeProfileId: string | null,
+): number | undefined {
+  const globalChatgpt = readRecord(readRecord(config.services)?.chatgpt);
+  const runtimeProfile = runtimeProfileId ? readRecord(getCurrentRuntimeProfiles(config)[runtimeProfileId]) : null;
+  const runtimeChatgpt = readRecord(readRecord(runtimeProfile?.services)?.chatgpt);
+  const runtimeValue = runtimeChatgpt?.maxBackendRequestsPerMinute;
+  const value = runtimeValue === undefined ? globalChatgpt?.maxBackendRequestsPerMinute : runtimeValue;
+  if (value === undefined) return undefined;
+  if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 1)
+    throw new Error('ChatGPT maxBackendRequestsPerMinute must be a positive safe integer.');
+  return value;
+}
+
 export async function summarizeTenantExecutionLimits(deps: {
   control: ExecutionRuntimeControlContract;
   config?: Record<string, unknown> | null;

@@ -1041,3 +1041,17 @@ other current targets and native browser preserved. Scheduler/17subscriptions
 paused,0queued/running. PR333 is draft with validated source/staged parity; no
 main merge or global activation, and no further provider retry/warning clearance
 in this stopped packet. Plan remains OPEN. See follow-repair note for raw locators.
+
+
+## 2026-10-17 — Shared backend request admission source repair
+
+The configured live-follow authority omitted backend request admission; configured
+utility/provider-client factories had no service config enablement path. Added
+explicit services.chatgpt.maxBackendRequestsPerMinute and runtime binding override,
+reusing shared account ledger and owned interception. No default ceiling or live
+activation. Independent-ledger follow regression and existing actual transport
+fixtures prove shared admission and pre-navigation interception; unknown dispatch
+cannot report successful completion. See
+../notes/2026-10-17-plan0411-shared-backend-admission.md for red/green and validation.
+Plan remains OPEN: measured production ceiling, staged activation, changed capture
+and unchanged repeat remain unaccepted; previous429warning is retained.
