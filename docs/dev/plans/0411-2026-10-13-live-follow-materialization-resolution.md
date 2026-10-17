@@ -948,3 +948,16 @@ and issue165OPEN; no merge/release. Ledger and private renewed-measurement-20261
 snapshots preserve all attempts. Serial Standards/Spec evidence review: no accepted
 findings in this documentation packet; full time criterion remains unmet.
 Memory disposition forbidden: no explicit user memory-update request.
+
+
+## 2026-10-17 | Installed bounded follow check passes
+
+Actual installed first pass omitted typed unavailable B and had incomplete startup
+capture. Installed five rollback-backed tested deltas;245tests/5files pass. Repeat
+46995ms/68requests vs agentic48532ms/72 passes strict1.3limits, all6texts equal,
+A file/hash verified, explicit typed unavailable B retained. Child duplicate1/skip1
+settles, parent one pass then paused. No new transfer. Reloaded idle main API;
+scheduler/all17subscriptions remain paused,0queued/running/warnings. Details:
+docs/dev/notes/2026-10-17-installed-follow-acceptance.md. Gate C canonical integration
+and required fresh installed transfer evidence remain open; PR323 remains draft,
+issue165OPEN. Memory disposition forbidden.

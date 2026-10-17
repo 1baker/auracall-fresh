@@ -727,6 +727,43 @@
       "timeCeilingMs": 63091.6,
       "timeOverCeilingMs": 3086.4000000000015,
       "accepted": false
+    },
+    {
+      "id": "installed_before_final_repair_20261017",
+      "receipt": "measured-automatic-scoped-2026-10-17T14-08-59-912Z.json",
+      "elapsedMs": 31832,
+      "backendRequestsLowerBound": 71,
+      "coverageComplete": false,
+      "outputsEquivalent": false,
+      "accepted": false,
+      "reason": "Installed history omitted prior unavailable B; provider target created before capture."
+    },
+    {
+      "id": "installed_final_scoped_follow_20261017",
+      "receipt": "measured-automatic-scoped-2026-10-17T14-10-33-153Z.json",
+      "outputReceipt": "installed-final-follow-outputs-20261017.json",
+      "runtime": "installed runtime with recorded narrow compiled deltas",
+      "fullDurationMs": 46995,
+      "backendRequests": 68,
+      "agenticDurationMs": 48532,
+      "agenticRequests": 72,
+      "elapsedTimeRatio": 0.9683301739058765,
+      "backendRequestRatio": 0.9444444444444444,
+      "sixTrimmedTextsEqual": true,
+      "artifactAFileHashVerified": true,
+      "artifactBPriorTypedNonretryableUnavailableVerified": true,
+      "coverageComplete": true,
+      "parentPassCount": 1,
+      "parentPausedAfterBoundedPass": true,
+      "childTerminal": "skipped",
+      "childDuplicateAliases": 1,
+      "childSkipped": 1,
+      "noProviderHardStop": true,
+      "newArtifactTransfers": 0,
+      "freshInstalledArtifactTransferProven": false,
+      "canonicalMergeProven": false,
+      "scopedAcceptancePassed": true,
+      "accepted": true
     }
   ],
   "comparison": {
@@ -1026,10 +1063,10 @@
     "schedulerControls": 0
   },
   "currentAcceptance": {
-    "coldMultiAutomatic": "passed with equivalent four texts and two files, full time1.094082 and requests1.029412",
-    "originalExistingStateAutomatic": "failed time1.363595; requests0.916667 and equivalent outputs verified",
+    "coldMultiAutomatic": "source-compiled private-store case passed with equivalent four texts/two files; time1.094082 requests1.029412",
+    "originalExistingStateAutomatic": "installed repaired runtime passed strict ceilings with equivalent six texts, verified A and explicit typed unavailable B",
     "fullGoalAccepted": false,
-    "next": "Performance tolerance accepted by user; investigate reported client login state and audit remaining functional acceptance before closing issue165."
+    "next": "Canonical integration/install Gate C and any required fresh installed transfer evidence remain distinct; no scheduler resume authorized."
   },
   "performanceToleranceException": {
     "acceptedByUser": true,

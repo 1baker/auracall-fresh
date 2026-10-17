@@ -54987,3 +54987,16 @@ scheduler controls. Details and qualified receipts:
 docs/dev/notes/2026-10-17-provider-login-ownership-repair.md. Client retries are
 not yet observed; stale static records were not treated as live ownership proof.
 Memory disposition forbidden.
+
+
+## 2026-10-17 | Installed bounded follow check passes
+
+Actual installed first pass omitted typed unavailable B and had incomplete startup
+capture. Installed five rollback-backed tested deltas;245tests/5files pass. Repeat
+46995ms/68requests vs agentic48532ms/72 passes strict1.3limits, all6texts equal,
+A file/hash verified, explicit typed unavailable B retained. Child duplicate1/skip1
+settles, parent one pass then paused. No new transfer. Reloaded idle main API;
+scheduler/all17subscriptions remain paused,0queued/running/warnings. Details:
+docs/dev/notes/2026-10-17-installed-follow-acceptance.md. Gate C canonical integration
+and required fresh installed transfer evidence remain open; PR323 remains draft,
+issue165OPEN. Memory disposition forbidden.
