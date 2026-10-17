@@ -1,3 +1,12 @@
+## 2026-10-17 | Distinguish backlog continuation from quiet follow acceptance
+
+An installed unscoped steady-follow pass advanced a persisted detail cursor2→3
+and returned verified reuse without new transfer. This does not establish
+account-index change detection or an unchanged complete quiet repeat. Snapshot
+starting cursor/frontier state before interpreting a normal pass. Raw request
+coverage flags and cleanup qualification remain separate. See
+[measured acceptance checkpoint](dev/notes/2026-10-17-plan0411-frontier-acceptance.md).
+
 ## 2026-10-16 | Issue165 scoped archive reads retain verification hashes
 
 A real archive-service/public-job regression proved the mocked checksum case was

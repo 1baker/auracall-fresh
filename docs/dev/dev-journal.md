@@ -1,3 +1,13 @@
+## 2026-10-17 | Plan0411 bounded frontier acceptance
+
+Issue165 remains closed. Checkpointed the separately authorized changed/unchanged
+check on the canonical installation with existing metadata, maxItems1 and global
+scheduler paused. The pass settled150292ms/129observed requests,0new downloads; cursor2→3.
+This is backlog continuation, with changed/quiet acceptance still unproven.
+Second pass withheld pending a genuine changed fixture; all17subscriptions and
+scheduler remain paused,0queued/running/warnings. Twelve focused tests pass. See
+[acceptance record](notes/2026-10-17-plan0411-frontier-acceptance.md).
+
 ## 2026-10-16 | Issue165 scoped archive reads retain verification hashes
 
 A real archive-service/public-job regression proved the mocked checksum case was

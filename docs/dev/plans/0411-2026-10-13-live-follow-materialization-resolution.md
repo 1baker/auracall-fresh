@@ -975,3 +975,24 @@ Canonical acceptance note closes scoped Plan0386; issue165closure follows the
 acceptance PR. Wider P92/Plan0411 changed-frontier and scheduler continuation stay
 open; scheduler/all17subscriptions paused,0queued/running/warnings. Memory
 disposition forbidden.
+
+
+## 2026-10-17 | Bounded frontier acceptance resumed
+
+User authorized the proposed changed/unchanged check after issue165 closure.
+Canonical installed runtime remains selected; scheduler/all17subscriptions paused,
+0queued/running/warnings at initial readback. At most two single-pass automatic
+completions, maxItems1/forcefalse, each ten-minute observation bound. Current
+account cache retained. Starting detail cursor remains unfinished; backlog
+continuation must not be graded as quiet-complete acceptance. Twelve focused
+frontier tests pass. Execution/evidence: ../notes/2026-10-17-plan0411-frontier-acceptance.md.
+No scheduler resume, prompts, installation or source change.
+
+Bounded result: one normal pass150292ms/129observed backend requests,0new downloads;
+existing detail cursor2→3. Automatic child verified1duplicate/skipped1/failed0.
+No independently changed index or quiet-complete fixture, so second pass withheld
+rather than grading backlog continuation as quiet acceptance. Original issue165
+artifact hash unchanged. Exact controller/browser absent and0owned active leases;
+main scheduler/all17subscriptions paused,0queued/running/warnings. Raw Network
+cleanup-disconnect flag preserved; details/private locators in the acceptance note.
+Recently changed conversation URL requested; no prompt or scheduler resume needed.
