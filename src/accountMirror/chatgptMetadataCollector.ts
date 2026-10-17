@@ -652,17 +652,24 @@ export function createChatgptAccountMirrorMetadataCollector(
 			const conversations = honorRequestedDetailPhase
 				? requestedDetailConversations
 				: mergeConversationsById([...rootConversations.items, ...projectConversations]);
-			const providerIndexEpoch = createAccountMirrorProviderIndexEpoch({
-				provider: input.provider,
-				runtimeProfileId: input.runtimeProfileId,
-				browserProfileId: getRuntimeProfileBrowserProfileId(
-					getCurrentRuntimeProfiles(userConfig)[input.runtimeProfileId],
-				),
-				boundIdentityKey: detectedIdentityKey,
-				observedAt: new Date().toISOString(),
-				projectCount: projects.items.length,
-				conversations,
-			});
+			// Retained detail work is not a fresh provider-index observation.
+			const priorIndexEpoch = input.previousEvidence?.providerIndexEpoch;
+			const providerIndexEpoch =
+				honorRequestedDetailPhase &&
+				priorIndexEpoch?.provider === input.provider &&
+				priorIndexEpoch.runtimeProfileId === input.runtimeProfileId
+					? priorIndexEpoch
+					: createAccountMirrorProviderIndexEpoch({
+							provider: input.provider,
+							runtimeProfileId: input.runtimeProfileId,
+							browserProfileId: getRuntimeProfileBrowserProfileId(
+								getCurrentRuntimeProfiles(userConfig)[input.runtimeProfileId],
+							),
+							boundIdentityKey: detectedIdentityKey,
+							observedAt: new Date().toISOString(),
+							projectCount: projects.items.length,
+							conversations,
+						});
 			const attachmentCursor = input.conversationIds?.length
 				? null
 				: selectAttachmentInventoryCursorForRequestedPhase(

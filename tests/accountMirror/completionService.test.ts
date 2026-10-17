@@ -562,6 +562,160 @@ describe("live-follow cycle decision", () => {
 });
 
 describe("account mirror completion service", () => {
+	test.each([
+		"due",
+		"fresh",
+		"chunk",
+		"scoped",
+		"full_sweep",
+	])("preserves discovery cadence and detail boundaries (index=%s)", async (mode) => {
+		const requestRefresh = vi.fn(async () => createRefreshResult());
+		const registry = createAccountMirrorStatusRegistry({
+			config,
+			now: () => new Date("2026-04-30T12:00:00.000Z"),
+			initialState: {
+				"chatgpt:default": {
+					detectedIdentityKey: "ecochran76@gmail.com",
+					metadataEvidence: {
+						identitySource: "browser_session",
+						projectSampleIds: [],
+						conversationSampleIds: ["old-chat"],
+						truncated: { projects: false, conversations: false, artifacts: true },
+						...(mode === "chunk"
+							? {
+									attachmentInventory: {
+										nextProjectIndex: 0,
+										nextConversationIndex: 3,
+										detailReadLimit: 1,
+										scannedProjects: 0,
+										scannedConversations: 1,
+										yielded: true,
+										conversationDetail: {
+											conversationId: "old-chat",
+											nextMessageIndex: 24,
+											messageLimit: 24,
+											totalMessages: 48,
+										},
+									},
+								}
+							: {}),
+						providerIndexEpoch: {
+							object: "account_mirror_provider_index_epoch",
+							version: 1,
+							epochId: "old-index",
+							provider: "chatgpt",
+							runtimeProfileId: "default",
+							browserProfileId: "default",
+							identityScopeHash: "sha256:fixture",
+							indexFingerprint: "sha256:old",
+							observedAt:
+								mode === "fresh" ? "2026-04-30T11:59:59.000Z" : "2026-04-29T12:00:00.000Z",
+							coverage: { conversations: 1, projects: 0 },
+						},
+					},
+					backfillLedger: {
+						...completeBackfillLedger,
+						state: "in_progress",
+						nextEligiblePhase: "detail-inventory",
+						cursors: {
+							...completeBackfillLedger.cursors,
+							newestFirstDetail: {
+								...completeBackfillLedger.cursors.newestFirstDetail,
+								status: "pending",
+								nextIndex: 3,
+								yielded: true,
+							},
+						},
+					},
+				},
+			},
+		});
+		const service = createAccountMirrorCompletionService({
+			registry,
+			refreshService: { requestRefresh },
+			now: () => new Date("2026-04-30T12:00:00.000Z"),
+			generateId: () => "due-index",
+		});
+		service.start({
+			provider: "chatgpt",
+			runtimeProfileId: "default",
+			maxPasses: 1,
+			sweepMode: mode === "full_sweep" ? "full_sweep" : "steady_follow",
+			conversationIds: mode === "scoped" ? ["old-chat"] : undefined,
+			materializationPolicy: "metadata_only",
+		});
+		await waitFor(() => service.read("due-index")?.status === "completed");
+		expect(requestRefresh).toHaveBeenCalledWith(
+			expect.objectContaining({
+				requestedPhase: mode === "due" ? "root-conversations" : "detail-inventory",
+			}),
+		);
+	});
+
+	test.each([
+		"unresolved",
+		"recovered",
+		"different-conversation",
+	])("reports nested detail failures without erasing unrelated failures (read=%s)", async (mode) => {
+		const result = createRefreshResult();
+		result.metadataEvidence = {
+			identitySource: "browser_session",
+			projectSampleIds: [],
+			conversationSampleIds: ["old-chat"],
+			truncated: { projects: false, conversations: false, artifacts: false },
+			collectorDiagnostics: [
+				{
+					stage: "conversation-context",
+					event: "failed",
+					conversationId: "old-chat",
+					observedAt: "2026-04-30T12:00:01.000Z",
+					detail: "messages not found",
+				},
+			],
+		};
+		if (mode !== "unresolved")
+			result.metadataEvidence.collectorDiagnostics?.push({
+				stage: "conversation-context",
+				event: "completed",
+				conversationId: mode === "recovered" ? "old-chat" : "other-chat",
+				observedAt: "2026-04-30T12:00:02.000Z",
+			});
+		const createJob = vi.fn();
+		const service = createAccountMirrorCompletionService({
+			registry: createAccountMirrorStatusRegistry({ config }),
+			refreshService: { requestRefresh: async () => result },
+			historyMaterializationService: { createJob, readJob: vi.fn() },
+			generateId: () => "nested-read-failure",
+		});
+		service.start({
+			provider: "chatgpt",
+			runtimeProfileId: "default",
+			maxPasses: 1,
+			materializationPolicy: "full_missing_assets",
+		});
+		await waitFor(() =>
+			["completed", "failed", "blocked"].includes(
+				service.read("nested-read-failure")?.status ?? "",
+			),
+		);
+		if (mode === "recovered") {
+			expect(service.read("nested-read-failure")).toMatchObject({
+				status: "completed",
+				error: null,
+			});
+			return;
+		}
+		expect(service.read("nested-read-failure")).toMatchObject({
+			status: "failed",
+			error: {
+				code: "account_mirror_collector_read_failed",
+				message: expect.stringContaining("messages not found"),
+			},
+			lastRefresh: { requestId: result.requestId },
+		});
+		expect(createJob).not.toHaveBeenCalled();
+	});
+
 	test("serializes same-provider completion refreshes in FIFO order", async () => {
 		let releaseFirstRefresh: () => void = () => undefined;
 		const firstRefreshGate = new Promise<void>((resolve) => {

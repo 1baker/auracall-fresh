@@ -27,6 +27,7 @@ import {
 	type AccountMirrorRefreshService,
 } from "./refreshService.js";
 import type {
+	AccountMirrorCollectorDiagnosticEvent,
 	AccountMirrorCollectorPhase,
 	AccountMirrorCollectorPhaseProgressEvidence,
 	AccountMirrorStatusEntry,
@@ -655,11 +656,12 @@ export function createAccountMirrorCompletionService(input: {
 						continue;
 					}
 					if (
-						await shouldQueueMaterializationFromCompleteLedger(
+						!isConversationIndexRefreshDue(refreshOperation, phaseStatusEntry, now().getTime()) &&
+						(await shouldQueueMaterializationFromCompleteLedger(
 							refreshOperation,
 							phaseStatusEntry,
 							input.readMaterializationBacklog,
-						)
+						))
 					) {
 						if (!(await acquireProviderWorkLease(id))) return;
 						const nextPassCount = pass + 1;
@@ -715,7 +717,7 @@ export function createAccountMirrorCompletionService(input: {
 					}
 					const requestedPhase = refreshOperation.conversationIds?.length
 						? "detail-inventory"
-						: resolveRequestedCollectorPhase(refreshOperation, phaseStatusEntry);
+						: resolveRequestedCollectorPhase(refreshOperation, phaseStatusEntry, now().getTime());
 					const sweepMode = resolveAccountMirrorCollectorSweepMode(
 						refreshOperation.sweepMode ?? "steady_follow",
 						requestedPhase,
@@ -801,6 +803,16 @@ export function createAccountMirrorCompletionService(input: {
 					now: now().toISOString(),
 				});
 				const refreshed = update(id, refreshedPatch);
+				const readFailure = unresolvedCollectorReadFailure(refresh);
+				if (readFailure) {
+					throw Object.assign(
+						new Error(
+							`Collector ${readFailure.stage} ${readFailure.event}: ${readFailure.detail ?? "provider read did not complete"}`,
+						),
+						{ code: "account_mirror_collector_read_failed" },
+					);
+				}
+
 				if (refreshed?.liveFollowCycle) {
 					appendLifecycleEvent(id, {
 						type: "live_follow_phase_decision",
@@ -2105,10 +2117,60 @@ function normalizeMaterializationRefreshSnapshot(
 	return value ?? sweepMode === "full_sweep";
 }
 
+function unresolvedCollectorReadFailure(
+	refresh: AccountMirrorRefreshResult,
+): AccountMirrorCollectorDiagnosticEvent | null {
+	const failures = new Map<string, AccountMirrorCollectorDiagnosticEvent>();
+	for (const event of refresh.metadataEvidence?.collectorDiagnostics ?? []) {
+		const key = JSON.stringify([
+			event.stage,
+			event.conversationId ?? null,
+			event.projectId ?? null,
+		]);
+		if (event.event === "completed") failures.delete(key);
+		else if (["failed", "timed_out", "aborted"].includes(event.event)) failures.set(key, event);
+	}
+	return failures.values().next().value ?? null;
+}
+
+function isConversationIndexRefreshDue(
+	operation: AccountMirrorCompletionOperation,
+	entry: AccountMirrorStatusEntry | null | undefined,
+	nowMs: number,
+): boolean {
+	if (
+		operation.provider !== "chatgpt" ||
+		operation.conversationIds?.length ||
+		(operation.sweepMode ?? "steady_follow") !== "steady_follow" ||
+		entry?.metadataEvidence?.attachmentInventory?.conversationDetail
+	)
+		return false;
+	// Resume unfinished discovery itself before scheduling another index observation.
+	if (
+		entry?.backfillLedger &&
+		!["detail-inventory", "complete"].includes(entry.backfillLedger.nextEligiblePhase)
+	)
+		return false;
+	const index = entry?.metadataEvidence?.providerIndexEpoch;
+	if (
+		!index ||
+		index.provider !== operation.provider ||
+		index.runtimeProfileId !== operation.runtimeProfileId
+	)
+		return false;
+	const observedAt = Date.parse(index.observedAt);
+	return (
+		Number.isFinite(observedAt) &&
+		nowMs - observedAt >= Math.max(1_000, entry?.limits.minIntervalMs ?? 60_000)
+	);
+}
+
 function resolveRequestedCollectorPhase(
 	operation: AccountMirrorCompletionOperation,
 	statusEntry?: AccountMirrorStatusEntry | null,
+	nowMs = Date.now(),
 ): AccountMirrorCollectorPhase | null {
+	if (isConversationIndexRefreshDue(operation, statusEntry, nowMs)) return "root-conversations";
 	const statusRequestedPhase = resolveStatusRequestedCollectorPhase(operation, statusEntry);
 	if (statusRequestedPhase) return statusRequestedPhase;
 	if (operation.mode !== "live_follow") return null;

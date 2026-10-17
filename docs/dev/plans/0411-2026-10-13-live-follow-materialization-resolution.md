@@ -1012,3 +1012,16 @@ This is failed acceptance, not a completed follow repair. The bounded/live_follo
 persisted phase decision shares the same installed path; replay and live details
 are in ../notes/2026-10-17-plan0411-newchat-follow.md. Next reproduce discovery
 fairness with pending detail and parent error visibility before source repair.
+
+
+## 2026-10-17 | Source repair packet
+
+State: OPEN source slice. Primary serial; base3767060b7, branch
+fix/plan0411-follow-discovery. User authorized diagnosis/TDD/review/live recheck.
+First reproduce failed detail → completed parent at the public completion seam,
+then reproduce due index discovery with pending retained detail. Keep configured
+cadence and guards, old cursor/cache, unrelated browser tabs and scheduler pauses.
+No new prompt, cookie reseed, numeric backend ceiling or broad browser cleanup.
+One red/green slice per failure, followed by affected validation and serial review.
+Acceptance remains actual new-chat discovery/capture then a bounded quiet repeat;
+source tests do not close live acceptance. Existing failed receipts remain immutable.
