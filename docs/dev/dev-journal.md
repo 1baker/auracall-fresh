@@ -1,3 +1,15 @@
+## 2026-10-17 | Issue316 canonical installed acceptance complete
+
+PR328 plus settlement repair PR329 are merged. Canonicalab89dcb6377b was installed
+into a fresh isolated prefix; both launchers and584 packaged JavaScript files
+match the canonical build. Normal installed refresh-tools returned completed/exit0
+with21 tools and preserved app/endpoint/connection/permission state.108 affected
+checks pass. Original installed uncertainty and broader baseline/flake failures
+remain retained, with no full-suite/hosted-CI green claim. Plans0433/0433.2 are
+CLOSED; installed acceptance note and curated JSON carry final evidence. No
+prompt, reconnect, consent, app replacement or API/scheduler restart occurred.
+Memory disposition:forbidden under the explicit-request-only developer boundary.
+
 ## 2026-10-17 | Issue316 installed uncertainty and bounded settlement repair
 
 Canonical PR328 installed into a fresh isolated prefix with matching compiled

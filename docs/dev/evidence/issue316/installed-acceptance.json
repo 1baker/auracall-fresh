@@ -1,0 +1,43 @@
+{
+  "contract": "auracall.issue316.installed-acceptance.v1",
+  "source_commit": "ab89dcb6377b9883e96f3e51bc12636610c5eb0f",
+  "source_pull_requests": [
+    328,
+    329
+  ],
+  "runtime_prefix_name": "user-runtime-issue316-ab89dcb6377b",
+  "status": "completed",
+  "exit_code": 0,
+  "account_matches_explicit_expectation": true,
+  "catalog": {
+    "toolCount": 21,
+    "sha256": "7559b8dcae5af5eaad1937737bec6aac74c3196535d838bec16021b24aee5acb"
+  },
+  "compiled_sha256": {
+    "dist/src/browser/providers/chatgptDeveloperApps.js": "4ed016eded45e7faffe22ddf1a9d344ba0fe8dad747bc867705f7051bb0fa44f",
+    "dist/src/cli/chatgptDeveloperAppsCommand.js": "15aa1888f2f8ba810732c032dcc1a9dcc9c9b0809b538ff569b43f6f0b516e01",
+    "dist/bin/auracall.js": "9807aea87a8d63b5ec257658a902108d411068336a9d10c7c30158f23b8f834c"
+  },
+  "packaged_js_files_verified": 584,
+  "packaged_js_manifest_sha256": "aabc1fe4ec19d1fac883396b05731a251366cf8a226bdbeb74a7fb88773e2f18",
+  "launcher_sha256": {
+    "auracall": "fdac85950dfe177f9a17e5c1a80b1dae93d2912f7f8d648cabe05cc52c53081d",
+    "auracall-mcp": "9de5568402158e0217f48acd8e5105d75e1da477f0bb226024556fe89450bb59"
+  },
+  "preserved": [
+    "exact App ID",
+    "MCP endpoint",
+    "connected accounts",
+    "permission setting"
+  ],
+  "operation": "one trusted refresh activation; bounded readiness reads; no automatic mutation retry",
+  "prompt_submitted": false,
+  "oauth_reconnected": false,
+  "app_replaced": false,
+  "permissions_changed": false,
+  "affected_tests": 108,
+  "test_files": 4,
+  "prior_installed_attempt": "unconfirmed exit1 retained in installed-first-attempt.json; not relabeled success",
+  "broader_validation": "parent full sweep3943 passed/5 failed/65 skipped;4 base reproductions plus1 unchanged timing flake; not green",
+  "memory_disposition": "forbidden: no explicit memory write requested"
+}
