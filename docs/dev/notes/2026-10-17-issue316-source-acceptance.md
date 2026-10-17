@@ -26,3 +26,28 @@ its assertion now matches existing two-hour behavior without changing submission
 This proves source/compiled operation only. PR, canonical merge, and installed
 runtime acceptance remain pending. Memory disposition: forbidden by the
 explicit-request-only developer boundary; no durable memory write requested.
+
+## Full presubmit and published review
+
+Published source checkpoint:f23d870c839aa7b9b7e0afd4f2fe729443f869ed, PR328.
+Full lint passed with239 warnings/17 infos, exactly matching untouched base.
+Full build and compiled /desktops runtime contract passed.
+The full provider-free run exited1:3943 passed,5 failed,65 skipped across438
+files (412 passed,5 failed,21 skipped). It is not a green full-suite result.
+
+Four failures reproduced on untouched base987bc0867: HTTP background-drain
+state, desktop direct-navigation guard, Work prompt preparation expectation,
+and shared lifecycle source-pattern expectation. Their test files are unchanged.
+The fifth is the unchanged rolling write-budget clock assertion (27ms versus
+30ms); it passed on base and passed in isolation on the feature commit. Preserve
+the original failure as a timing flake, not a clean full-suite pass.
+
+Disposition:nonblocking_backlog for issue316, owner ecochran76. These checks
+cover unchanged background-drain, desktop and prompt/rate-limit surfaces; the
+new refresh-tools path and its105 affected checks pass. The published diff was
+self-checked separately for Standards and Spec against the frozen agent brief;
+no private diagnostic scripts or provider payloads were published. There are no
+reported hosted workflow runs or PR checks, despite enabled Actions, and main
+has no required branch checks. Local scoped validation is the acceptance basis;
+no hosted CI success is claimed. See ../evidence/issue316/presubmit.json. Raw
+full-run and baseline logs remain in user-scoped private issue316 diagnostics.

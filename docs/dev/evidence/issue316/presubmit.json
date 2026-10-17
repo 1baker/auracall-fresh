@@ -1,0 +1,69 @@
+{
+  "contract": "auracall.issue316.presubmit.v1",
+  "source_commit": "f23d870c839aa7b9b7e0afd4f2fe729443f869ed",
+  "base_commit": "987bc086752751eaecf65206214cce98766bbd4a",
+  "full_lint": {
+    "exit_code": 0,
+    "warnings": 239,
+    "infos": 17,
+    "base_warnings": 239,
+    "base_infos": 17
+  },
+  "full_build": {
+    "exit_code": 0
+  },
+  "runtime_contract": {
+    "status": "PASS",
+    "requiredRoutes": [
+      "/desktops"
+    ]
+  },
+  "affected_tests": {
+    "passed": 105,
+    "files": 4
+  },
+  "full_suite": {
+    "passed": 3943,
+    "failed": 5,
+    "skipped": 65,
+    "files_passed": 412,
+    "files_failed": 5,
+    "files_skipped": 21,
+    "exit_code": 1,
+    "status": "FAILED; not represented as green"
+  },
+  "failure_adjudication": {
+    "disposition": "nonblocking_backlog for issue316",
+    "owner": "ecochran76",
+    "unchanged_test_files": [
+      "tests/http.responsesServer.test.ts",
+      "tests/browser/browserMutationControlPlane.test.ts",
+      "tests/browser/chatgptPromptAdapter.test.ts",
+      "tests/browser/llmServicePromptStructure.test.ts",
+      "tests/browser/llmServiceRateLimit.test.ts"
+    ],
+    "base_reproduced_failures": 4,
+    "baseline_selected_suite": {
+      "passed": 247,
+      "failed": 4
+    },
+    "timing_failure": {
+      "test": "rolling write budget across separate service instances",
+      "observed_ms": 27,
+      "asserted_minimum_ms": 30,
+      "base_selected_result": "passed",
+      "feature_isolated_result": "passed",
+      "classification": "timing flake; original failure retained"
+    }
+  },
+  "hosted_ci": {
+    "runs_reported": 0,
+    "pr_checks_reported": 0,
+    "required_branch_checks": "none; main unprotected"
+  },
+  "scope_review": {
+    "standards": "PASS for changed surface",
+    "spec": "PASS for source behavior; installed acceptance pending",
+    "private_diagnostics_published": false
+  }
+}

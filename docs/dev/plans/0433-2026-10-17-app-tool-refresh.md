@@ -98,3 +98,22 @@ and installed acceptance remain unmet.
 Budget readback at20:32:38Z:212214 goal-accounted tokens and1047 elapsed seconds;
 user stop thresholds remain two million tokens or six hours. Checkpoint before
 thresholds; next checkpoint by20:46:45Z or a material transition.
+
+## Checkpoint 3 — published self-check and integration readiness
+
+Progress:outcome_progress. PR328 publishes f23d870c8. Source-native operation,
+105 affected tests, typecheck, full build, runtime contract and full lint pass.
+Full provider-free sweep:3943 passed,5 failed,65 skipped. Four failures reproduce
+on untouched base; the fifth is an unchanged clock flake passing on base and in
+feature isolation. All five are nonblocking_backlog for this frozen issue316
+scope, owner ecochran76; preserve the failed run. No full-suite or hosted-CI green
+claim is made. No hosted runs/checks are reported; canonical main has no required
+status contexts. The configured affected-test/primary-adjudication policies
+support scoped integration with this explicit baseline disposition.
+
+Published Standards and Spec self-check passed for the changed surface. Exact
+remote branch readback matches the source checkpoint; no private payloads or
+scripts are included. Remaining gates: canonical PR merge, fresh canonical SHA
+and merged-PR provenance, fresh isolated install prefix, wrapper and compiled
+hash readback, one bounded installed refresh-tools acceptance, and final closure
+record. No API service restart, scheduler action or provider prompt is included.

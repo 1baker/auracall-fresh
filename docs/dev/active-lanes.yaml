@@ -9,7 +9,11 @@ lanes:
     branch: feat/issue316-refresh-tools
     target: main
     plan_state: OPEN
-    custody_state: ACTIVE_WORKTREE
+    custody_state: INTEGRATION_READY
+    checkpoint: f23d870c839aa7b9b7e0afd4f2fe729443f869ed
+    remote_ref: refs/remotes/origin/feat/issue316-refresh-tools
+    validation_status: source-native-accepted-installed-pending
+    validation_ref: docs/dev/notes/2026-10-17-issue316-source-acceptance.md
     integration: merge
     dependencies: []
     overlaps: []
