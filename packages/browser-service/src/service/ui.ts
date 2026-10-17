@@ -1288,7 +1288,10 @@ export async function navigateAndSettle(
     await action.settle({ ...details, probeContext: details.probeContext ?? client.Runtime });
   };
   try {
-    const navigationCommand = client.Page.navigate({ url: options.url });
+    const navigationCommand = client.Page.navigate({ url: options.url }).then((result) => {
+      if (result?.errorText) throw new Error(`Navigation failed: ${result.errorText}`);
+      return result;
+    });
     const navigationOutcome = await waitForNavigationCommandOrCompletion(
       navigationCommand,
       options.timeoutMs ?? 10_000,

@@ -414,6 +414,9 @@ Shared DevTools attachment is owned by
     stronger response evidence first may also pass `completionSignal`; that
     evidence can close the mutation audit while a CDP navigation acknowledgement
     remains pending, but a rejected navigation command still fails.
+  - A resolved CDP response with `errorText` also fails before readiness checks
+    or fallback; a protocol acknowledgement alone cannot turn a navigation
+    error into success. Desktop Wake uses this shared bounded control point.
   - Returns structured phase data (`route`, `document-ready`, `ready`) so
     callers can throw provider-specific errors without reimplementing the
     settling loop.

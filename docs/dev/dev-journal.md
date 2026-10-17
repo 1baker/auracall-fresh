@@ -1,3 +1,19 @@
+# 2026-10-17 — issue331 comprehensive acceptance
+
+Plan0434 closed:3952passed/65skipped/zero failures on clean4b7e7bb49;417files passed/21skipped,303.60s. Full lint239warnings/17infos matches baseline; build passes with unchanged runtime source since5d28e280d. Original five failures and two observed adjacent timing flakes repaired. Standards/Spec self-review accepted; PR332 is canonical integration. No browser/provider effects or runtime deployment. Memory disposition forbidden: no explicit write request. Earlier failures preserved in diagnosis evidence.
+
+# 2026-10-17 — issue331 bounded remediation accepted locally
+
+First comprehensive run retains3950pass/2fail/65skip. Both remaining failures are timing assumptions in touched tests:download polling20ms and quiet-time22ms-vs25ms. Explicit clocks repair them;84affected checks pass. Full lint239warnings/17infos matches baseline; build passes. Final comprehensive run is pending. PR332 remains draft. No live/provider/installed effects.
+
+# 2026-10-17 — issue331 focused green
+
+96 affected browser/control/helper checks and the focused HTTP status case pass. Earlier selected baseline retained248pass/3fail; controlled probes reproduce idle-vs-running and25ms-vs30ms. Budget sensitivity mutation fails at131ms vs156ms and was byte-restored. One temporary affected run exposed undefined mock acknowledgement responses; optional result handling fixed the compatibility case and all96 pass. Comprehensive validation and review remain.
+
+# 2026-10-17 — issue331 baseline failure diagnosis
+
+Ask Matt routes the remaining five provider-free failures to diagnosing-bugs. Fresh main822369207; isolated branch fix/baseline-test-failures. Three fast failures reproduce; HTTP and rolling-budget timing need deterministic qualification. No live/provider effects. Plan0434 tracks acceptance.
+
 ## 2026-10-17 | Issue316 canonical installed acceptance complete
 
 PR328 plus settlement repair PR329 are merged. Canonicalab89dcb6377b was installed

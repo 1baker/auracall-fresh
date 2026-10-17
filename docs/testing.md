@@ -1,3 +1,11 @@
+- Baseline drain/navigation/prompt/budget regression (provider-free):
+  `pnpm vitest run tests/http.responsesServer.test.ts tests/browser-service/ui.test.ts tests/browser/browserMutationControlPlane.test.ts tests/browser/desktopRuntimeProfiles.test.ts tests/browser/chatgptPromptAdapter.test.ts tests/browser/llmServicePromptStructure.test.ts tests/browser/llmServiceRateLimit.test.ts --maxWorkers=2`.
+  Drain status uses an explicit in-flight gate, and shared write budgets use a
+  controlled clock with four independent service instances. Wake navigation is
+  admitted at the common browser-service control point; protocol errors reject
+  without fallback and existing conversations remain untouched. Plan0434 records
+  the original failures, timing probes and budget sensitivity check.
+
 - In-place developer-app tool catalog refresh (provider-free):
   `pnpm vitest run tests/browser/chatgptDeveloperAppRefreshTools.test.ts tests/cli/chatgptDeveloperAppsCommand.test.ts`.
   Protects exact account/app/endpoint qualification, trusted single activation,

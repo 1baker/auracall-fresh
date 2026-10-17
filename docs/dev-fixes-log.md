@@ -1,3 +1,7 @@
+# 2026-10-17 — issue331 provider-free baseline repairs
+
+Desktop Wake now uses the browser-service navigation control point and retains bounded acknowledgement and protocol-error rejection. Provider redirects remain allowed; existing conversations remain untouched. Work test location follows actual mock navigation, mention architecture checks inspect the beforeSend boundary, and drain status uses explicit gates rather than timing guesses. The shared-budget test uses four real service instances with a controlled clock; bypassing budget wait demonstrably executes25ms too early. No provider runs or installation in this slice. Plan0434 and issue331 record acceptance.
+
 ## 2026-10-17 | Qualify app refresh settings readiness before comparison
 
 An installed refresh returned unconfirmed after an attributable request; its
