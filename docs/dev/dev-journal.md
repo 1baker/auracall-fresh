@@ -1,3 +1,7 @@
+# 2026-10-17 — issue331 focused green
+
+96 affected browser/control/helper checks and the focused HTTP status case pass. Earlier selected baseline retained248pass/3fail; controlled probes reproduce idle-vs-running and25ms-vs30ms. Budget sensitivity mutation fails at131ms vs156ms and was byte-restored. One temporary affected run exposed undefined mock acknowledgement responses; optional result handling fixed the compatibility case and all96 pass. Comprehensive validation and review remain.
+
 # 2026-10-17 — issue331 baseline failure diagnosis
 
 Ask Matt routes the remaining five provider-free failures to diagnosing-bugs. Fresh main822369207; isolated branch fix/baseline-test-failures. Three fast failures reproduce; HTTP and rolling-budget timing need deterministic qualification. No live/provider effects. Plan0434 tracks acceptance.

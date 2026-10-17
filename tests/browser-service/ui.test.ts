@@ -1292,6 +1292,18 @@ describe('browser-service ui wait helpers', () => {
     expect(runtime.evaluate.mock.calls[0]?.[0]?.expression).toBe('location.href');
   });
 
+  test('navigateAndSettle rejects a protocol navigation error without fallback', async () => {
+    const runtime = createRuntime(['about:blank']);
+    const Page = { navigate: vi.fn(async () => ({ errorText: 'net::ERR_NAME_NOT_RESOLVED' })) };
+    await expect(navigateAndSettle({ Page: Page as never, Runtime: runtime as never }, {
+      url: 'https://provider.example.test/',
+      waitForDocumentReady: false,
+      fallbackToLocationAssign: true,
+    })).rejects.toThrow('net::ERR_NAME_NOT_RESOLVED');
+    expect(Page.navigate).toHaveBeenCalledTimes(1);
+    expect(runtime.evaluate).toHaveBeenCalledTimes(1);
+  });
+
   test('navigateAndSettle bounds an unsettled Page.navigate acknowledgement', async () => {
     vi.useFakeTimers();
     try {

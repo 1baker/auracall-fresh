@@ -26,3 +26,15 @@ Fresh main worktree and issue331 established. Three fast failures reproduce (3 f
 4. HTTP and budget timing assertions depend on elapsed real time; explicit drain gates and budget-clock evidence should isolate readiness from scheduler timing. First establish red-capable cases.
 
 At most one broad review and one bounded remediation; reopen scope explicitly if actual runtime semantics require broader design.
+
+## Diagnosis checkpoint
+
+Fresh selected baseline:248 passed,3 failed; HTTP and budget passed this time. Fast red loop reproduces three failures in1.75s. Stable Work location fixture and beforeSend-scoped mention guard pass. Wake migration passes8 checks including conversation preservation.
+
+HTTP delayed-consumer probe reproduces idle-vs-running. Replace sleep sampling with a drain gate and explicit start/completion observations. Clock-controlled budget probe reproduces25ms-vs30ms; old three-call case never exceeded the prior-weight threshold. Four service instances now prove the action executes at window expiry156ms rather than131ms.
+
+Wake migration must preserve protocol-error rejection and allow provider canonicalization/login redirects. Shared navigateAndSettle previously ignored resolved errorText. A new UI-helper test goes red on that response; reject it before readiness/fallback. Wake uses acknowledgement-only bounded navigation, preserving its existing login behavior. This is necessary to retain existing Wake failure semantics, not a new browser feature. Existing common control-point tests protect admission and mutation accounting.
+
+## Focused acceptance
+
+96 affected tests pass across six files; the HTTP drain case passes separately. Budget sensitivity: bypassing the actual production budget wait makes the new assertion fail131ms vs156ms; source bytes restored. One affected intermediate run failed on undefined mock acknowledgements; optional result handling repairs that compatibility case. Typecheck and changed-file lint pass (existing warnings remain). Next: comprehensive provider-free validation and fixed-base Standards/Spec self-review against822369207 and issue331.

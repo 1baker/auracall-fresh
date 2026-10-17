@@ -9872,6 +9872,10 @@ describe("http responses adapter", () => {
 		setAuracallHomeDirOverrideForTest(homeDir);
 
 		let drainCalls = 0;
+		let releaseDrain!: () => void;
+		const drainGate = new Promise<void>((resolve) => {
+			releaseDrain = resolve;
+		});
 		const server = await createResponsesHttpServer(
 			{ host: "127.0.0.1", port: 0, backgroundDrainIntervalMs: 25 },
 			{
@@ -10081,7 +10085,7 @@ describe("http responses adapter", () => {
 					},
 					async drainRunsUntilIdle() {
 						drainCalls += 1;
-						await delay(75);
+						await drainGate;
 						return {
 							ownerId: "host:test-status-drain",
 							expiredLeaseRunIds: [],
@@ -10102,7 +10106,7 @@ describe("http responses adapter", () => {
 		);
 
 		try {
-			await delay(35);
+			await waitForPredicate(() => drainCalls > 0);
 			const runningResponse = await fetch(`http://127.0.0.1:${server.port}/status`);
 			expect(runningResponse.status).toBe(200);
 			const runningPayload = (await runningResponse.json()) as JsonObject;
@@ -10117,7 +10121,14 @@ describe("http responses adapter", () => {
 				},
 			});
 
-			await delay(90);
+			releaseDrain();
+			await vi.waitFor(async () => {
+				const response = await fetch(`http://127.0.0.1:${server.port}/status`);
+				const payload = (await response.json()) as JsonObject;
+				expect(
+					requireJsonObject(payload.backgroundDrain, "backgroundDrain").lastCompletedAt,
+				).toEqual(expect.any(String));
+			});
 			const idleResponse = await fetch(`http://127.0.0.1:${server.port}/status`);
 			expect(idleResponse.status).toBe(200);
 			const idlePayload = (await idleResponse.json()) as JsonObject;
@@ -10136,6 +10147,7 @@ describe("http responses adapter", () => {
 			);
 			expect(drainCalls).toBeGreaterThan(0);
 		} finally {
+			releaseDrain();
 			await server.close();
 		}
 	});

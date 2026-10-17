@@ -561,7 +561,19 @@ describe("llmService ChatGPT rate-limit guard", () => {
 		const first = new RateLimitTestLlmService(userConfig, provider);
 		const second = new RateLimitTestLlmService(userConfig, provider);
 		const third = new RateLimitTestLlmService(userConfig, provider);
+		const fourth = new RateLimitTestLlmService(userConfig, provider);
 
+		const epoch = 1_700_000_000_000;
+		let now = epoch;
+		const clock = vi.spyOn(Date, "now").mockImplementation(() => now);
+		const timer = vi.spyOn(globalThis, "setTimeout").mockImplementation(((
+			callback: TimerHandler,
+			ms?: number,
+		) => {
+			now += typeof ms === "number" ? ms : 0;
+			if (typeof callback === "function") callback();
+			return 0 as unknown as ReturnType<typeof setTimeout>;
+		}) as typeof setTimeout);
 		try {
 			await expect(
 				first.runGuarded("renameConversation", async () => undefined),
@@ -569,12 +581,21 @@ describe("llmService ChatGPT rate-limit guard", () => {
 			await expect(
 				second.runGuarded("updateProjectInstructions", async () => undefined),
 			).resolves.toBeUndefined();
-			const startedAt = Date.now();
+			await third.runGuarded("deleteConversation", async () => undefined);
+			// The first record expired; the second and third still exceed weight2.
+			// Only 25ms remain until the second record leaves its 120ms window.
+			now = epoch + 131;
+			const executedAt = vi.fn(() => Date.now());
 			await expect(
-				third.runGuarded("deleteConversation", async () => undefined),
+				fourth.runGuarded("renameConversation", async () => {
+					executedAt();
+				}),
 			).resolves.toBeUndefined();
-			expect(Date.now() - startedAt).toBeGreaterThanOrEqual(30);
+			expect(executedAt).toHaveBeenCalledTimes(1);
+			expect(executedAt.mock.results[0]?.value).toBe(epoch + 156);
 		} finally {
+			timer.mockRestore();
+			clock.mockRestore();
 			await rm(homeDir, { recursive: true, force: true });
 		}
 	});

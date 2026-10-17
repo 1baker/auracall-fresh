@@ -14,7 +14,19 @@ describe("provider prompt architecture", () => {
 		);
 		for (const lifecycle of [local, remote]) {
 			expect(lifecycle).toContain("await ensureChatgptEcosystemMention(");
-			expect(lifecycle).toMatch(/beforeSend: async \(\) => \{\s*if \(options.ecosystemMention\)/);
+			const beforeSendStart = lifecycle.indexOf("beforeSend: async () => {");
+			const dispatchStart = lifecycle.indexOf("onPromptDispatched:", beforeSendStart);
+			expect(beforeSendStart).toBeGreaterThan(-1);
+			expect(dispatchStart).toBeGreaterThan(beforeSendStart);
+			const beforeSend = lifecycle.slice(beforeSendStart, dispatchStart);
+			expect(beforeSend).toContain("selectedComposerMention ?? options.ecosystemMention");
+			expect(beforeSend).toContain("if (ecosystemMention)");
+			expect(beforeSend).toMatch(
+				/await assertChatgptEcosystemMentionSelected\(\s*client as ChromeClient,\s*ecosystemMention,/,
+			);
+			expect(beforeSend.indexOf("await assertChatgptEcosystemMentionSelected(")).toBeLessThan(
+				beforeSend.indexOf('options.onProviderEffectState?.("unknown")'),
+			);
 			expect(lifecycle).toContain("await assertChatgptEcosystemMentionSelected(");
 			expect(lifecycle).toContain('options.onProviderEffectState?.("unknown")');
 			expect(lifecycle).toContain('options.onProviderEffectState?.("effect_observed")');
