@@ -669,6 +669,64 @@
       "coverageComplete": false,
       "accepted": false,
       "reason": "Native runtime rejected a running browser without a matching verified desktop receipt before target creation/provider access. No timing conclusion for scrape latency."
+    },
+    {
+      "id": "automatic_cold_multi_incomplete_observer_20261017",
+      "receipt": "measured-automatic-scoped-2026-10-17T02-33-00-394Z.json",
+      "elapsedMs": 63468,
+      "backendRequestsLowerBound": 68,
+      "coverageComplete": false,
+      "accepted": false,
+      "reason": "Observer detached during parent-child custody handoff; files and four trimmed texts match."
+    },
+    {
+      "id": "automatic_cold_multi_complete_20261017",
+      "automaticReceipt": "measured-automatic-scoped-2026-10-17T02-34-40-144Z.json",
+      "agenticReceipt": "agentic-benchmark-2026-10-16T21-14-25-052Z/receipt.json",
+      "scope": "fresh private stores; automatic parent plus real materialization child; force=false",
+      "messages": 4,
+      "allContextTextReadbacksEqual": true,
+      "filesEqualAndLinked": true,
+      "fullElapsedMs": 54168,
+      "agenticElapsedMs": 49510,
+      "elapsedRatio": 1.0940820036356291,
+      "backendRequests": 70,
+      "agenticRequests": 68,
+      "backendRatio": 1.0294117647058822,
+      "coverageComplete": true,
+      "noHardStop": true,
+      "childSucceeded": true,
+      "passed": true,
+      "accepted": true
+    },
+    {
+      "id": "automatic_original_profile_pre_target_custody_gap_20261017",
+      "receipt": "measured-automatic-scoped-2026-10-17T02-35-48-259Z.json",
+      "elapsedMs": 58457,
+      "backendRequestsLowerBound": 66,
+      "coverageComplete": false,
+      "accepted": false,
+      "outputsEquivalent": true,
+      "reason": "Conservative raw coverage false: custody gap before captured target creation. Retained separately; clean repeat governs acceptance."
+    },
+    {
+      "id": "automatic_original_complete_20261017",
+      "receipt": "measured-automatic-scoped-2026-10-17T02-37-15-742Z.json",
+      "outputsReceipt": "original-complete-outputs-20261017.json",
+      "messages": 6,
+      "exactTrimmedTextsEqual": true,
+      "artifactFileVerified": true,
+      "typedPriorUnavailableEvidenceVerified": true,
+      "outputsEquivalent": true,
+      "fullDurationMs": 66178,
+      "operationalElapsedMs": 59750,
+      "backendRequests": 66,
+      "coverageComplete": true,
+      "elapsedTimeRatio": 1.363595153713014,
+      "backendRequestRatio": 0.9166666666666666,
+      "timeCeilingMs": 63091.6,
+      "timeOverCeilingMs": 3086.4000000000015,
+      "accepted": false
     }
   ],
   "comparison": {
@@ -953,5 +1011,24 @@
     "frozenOriginalAutomaticRequests": 66,
     "originalAutomaticTimeCeilingMs": 63091.6,
     "fullGoalAccepted": false
+  },
+  "nativeBrowserRecovery": {
+    "receipt": "native-relaunch-20261017.json",
+    "userAuthorized": true,
+    "oldProcessesAbsent": [
+      12187,
+      27467,
+      53103
+    ],
+    "newPid": 59717,
+    "verifiedCurrentNativeReceipt": true,
+    "promptsSent": 0,
+    "schedulerControls": 0
+  },
+  "currentAcceptance": {
+    "coldMultiAutomatic": "passed with equivalent four texts and two files, full time1.094082 and requests1.029412",
+    "originalExistingStateAutomatic": "failed time1.363595; requests0.916667 and equivalent outputs verified",
+    "fullGoalAccepted": false,
+    "next": "Reduce shared archive/history startup/planning read costs, then repeat original full measured automatic run; no baseline relaxation."
   }
 }

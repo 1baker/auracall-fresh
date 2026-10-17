@@ -25463,3 +25463,14 @@ server still supplies cleanup, provider-guard and foreground-work callbacks.
 A real HTTP regression verifies private creation/startup recovery does not mutate
 the default-store running job. Prepared cold measurements remain unrun while
 native browser ownership cannot be verified; no timing acceptance inferred.
+
+
+### 2026-10-17 | Preserve Network capture across automatic custody transfer
+
+The parent crawler and materialization child can share a target while the lease
+is briefly absent. Retain that exact-target early Network observer through terminal
+settlement, while requiring current custody for DOM reads. Closing it at lease
+absence introduced unmeasured requests. Repeat proves both attachments early and
+complete capture. Cold automatic multi-file scrape passes both1.3limits; original
+existing-state clean repeat still exceeds time by3.0864s. Do not discard setup
+costs or select a faster incomplete sample to claim overall acceptance.
