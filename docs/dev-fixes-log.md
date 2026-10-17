@@ -1,3 +1,13 @@
+## 2026-10-17 | Follow acceptance must bind the newly created chat
+
+A coarse completed parent hid a nested historical-context read failure, and the
+actual new chat was absent before/after an unscoped pass. Pending backfill selected
+detail inventory and bypassed root discovery. New providerIndexEpoch timestamps
+on retained-detail reads alone do not prove fresh index observation. This is a
+live diagnostic finding, not an implemented fix; keep changed/quiet acceptance
+failed until the actual candidate is discovered and captured. See
+[measured failure](dev/notes/2026-10-17-plan0411-newchat-follow.md).
+
 ## 2026-10-17 | Distinguish backlog continuation from quiet follow acceptance
 
 An installed unscoped steady-follow pass advanced a persisted detail cursor2→3

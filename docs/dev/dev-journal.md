@@ -1,3 +1,13 @@
+## 2026-10-17 | Actual new-chat live-follow check failed
+
+Located the new IM Receipts chat from private history/response evidence. Normal
+unscoped follow pass148.9s/136backend requests did not discover it: pending detail
+backlog omitted root discovery. Historical context read failed while parent said
+completed. Quiet repeat not run; no capture acceptance. Exact probe tab closed,
+other current tabs preserved; scheduler/17subscriptions paused,0queued/running/
+warnings. Source remains unchanged. See
+[new-chat check](notes/2026-10-17-plan0411-newchat-follow.md).
+
 ## 2026-10-17 | Plan0411 bounded frontier acceptance
 
 Issue165 remains closed. Checkpointed the separately authorized changed/unchanged

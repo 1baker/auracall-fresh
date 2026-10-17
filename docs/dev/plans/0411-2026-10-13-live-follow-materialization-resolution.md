@@ -996,3 +996,19 @@ artifact hash unchanged. Exact controller/browser absent and0owned active leases
 main scheduler/all17subscriptions paused,0queued/running/warnings. Raw Network
 cleanup-disconnect flag preserved; details/private locators in the acceptance note.
 Recently changed conversation URL requested; no prompt or scheduler resume needed.
+
+
+## 2026-10-17 | New-chat follow discovery FAIL
+
+User supplied a real new IM Receipts chat; primary located its saved proof/history
+without another prompt. One normal unscoped completion with current cache and
+metadata_only (no artifacts in fixture, shared browser preserved) took148897ms/
+136backend requests with complete exact-page Network coverage. New candidate is
+absent before/after. Persisted detail backlog selected an older chat; its context
+read failed messages-not-found, yet coarse parent completed/errornull. No new
+capture, child or quiet-repeat acceptance. Exact probe tab closed; other current
+tabs preserved, main scheduler/17subscriptions paused,0queued/running/warnings.
+This is failed acceptance, not a completed follow repair. The bounded/live_follow
+persisted phase decision shares the same installed path; replay and live details
+are in ../notes/2026-10-17-plan0411-newchat-follow.md. Next reproduce discovery
+fairness with pending detail and parent error visibility before source repair.
