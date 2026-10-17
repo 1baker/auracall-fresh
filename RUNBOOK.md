@@ -1,3 +1,14 @@
+## 2026-10-17 | Issue165 canonical acceptance
+
+PR323 integrated23969f469 and canonical runtime installed with595compiled-file
+parity. Original automatic43332ms/67requests; fresh two-artifact58636ms/69requests.
+Both strict1.3cost limits pass; texts, actual file hashes, manifest/archive links
+and typed unavailable outcome agree. Capture raw terminal-cleanup flags retained
+with independent qualification. Main API/launchers use the canonical installation;
+old runtime retained. Scheduler and17subscriptions remain paused. See
+[acceptance](docs/dev/notes/2026-10-17-issue165-canonical-acceptance.md). Broader
+changed-frontier/scheduler continuation remains open. Memory disposition forbidden.
+
 ## Turn 202610110404 | 2026-10-11
 
 PR270 integrated6e7009727 and installed in isolated user-runtime-plan0404 prefix;

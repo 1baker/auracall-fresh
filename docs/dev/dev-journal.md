@@ -55010,3 +55010,17 @@ the actual payload request. Production build and full lint/typecheck pass; exist
 authorities match currentmain. See2026-10-17-issue165-integration.md. PR323 merge,
 canonical side-by-side install and fresh installed transfer are next. Memory
 disposition forbidden.
+
+
+## 2026-10-17 | Issue165 canonical acceptance
+
+PR323 integrated23969f469; complete canonical runtime595compiled files match and
+main API now selects it.743affected tests, production build/lint/typecheck pass.
+Original case43332ms/67; fresh two-file case58636ms/69; both strict1.3limits pass
+with equivalent texts and verified files, manifest/archive parity and typed
+unavailability. Fresh child materializes2; original child duplicate1/skips1. Raw
+cleanup-disconnect flags remain with explicit post-provider-work qualification.
+Canonical acceptance note closes scoped Plan0386; issue165closure follows the
+acceptance PR. Wider P92/Plan0411 changed-frontier and scheduler continuation stay
+open; scheduler/all17subscriptions paused,0queued/running/warnings. Memory
+disposition forbidden.

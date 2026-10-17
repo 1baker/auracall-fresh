@@ -25486,3 +25486,13 @@ otherwise required provider traffic admission is absent. Preserve explicit targe
 Public-seam red/green tests plus installed proof verdict match verify these repairs.
 Missing local proof is not evidence of provider sign-out; PID/port records require
 current process/desktop evidence.
+
+
+### 2026-10-17 | Qualify provider capture through browser lifetime
+
+A passive observer can receive normal browser-shutdown disconnect before its next
+terminal job poll. Preserve raw events; distinguish a mid-provider stream loss
+from post-provider cleanup using completed wrapper calls, task terminal evidence,
+and fresh exact-process absence. Do not rerun successful provider work solely
+because terminal observation lagged. Canonical acceptance retains raw flags and
+independent qualification, with595file parity and2newverified artifacts.
