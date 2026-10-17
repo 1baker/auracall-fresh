@@ -1,13 +1,13 @@
 # Plan 0433.2 — bounded app refresh settings settlement
 
-State: OPEN
+State: CLOSED
 Lane: issue316
 Branch: fix/issue316-refresh-settlement
 Target: main
 Base:7912118c4663d7425a1501427f2491ca9e32fbfa
 Parent:0433-2026-10-17-app-tool-refresh.md
 
-## Current State
+## Starting State
 
 PR328 source is canonical and installed in an isolated prefix. The first installed
 acceptance returned unconfirmed/exit1 after an attributable refresh response,
@@ -55,3 +55,13 @@ its timeout does not qualify native cause. Closed-world review passed; see
 `docs/dev/notes/2026-10-17-issue316-settlement-repair.md`.
 Remaining: canonical integration and fresh installed proof. Original goal budget
 and hard stop still apply; no reset or new broad review cycle.
+
+## Current State — CLOSED
+
+Progress:outcome_progress. PR329 merged as canonicalab89dcb6377b9883e96f3e51bc12636610c5eb0f.
+A fresh isolated install matches584 packaged JavaScript files and the accepted
+source hashes. The normal installed command returned completed/exit0 with21
+tools and verified preservation.108 affected checks pass. Earlier failures and
+broader baseline/flake disposition remain retained. The full issue316 objective
+is achieved; final receipt integration/issue closure is recorded by the closeout
+PR linked from issue316. See `docs/dev/notes/2026-10-17-issue316-installed-acceptance.md`.

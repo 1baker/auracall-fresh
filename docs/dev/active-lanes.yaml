@@ -5,15 +5,16 @@ lanes:
     objective: Refresh ChatGPT app tools in place without replacement
     work_items: [ecochran76/auracall#316]
     plan: docs/dev/plans/0433-2-2026-10-17-app-tool-refresh-settlement.md
-    plan_ref: refs/heads/fix/issue316-refresh-settlement
+    plan_ref: refs/heads/main
     branch: fix/issue316-refresh-settlement
     target: main
-    plan_state: OPEN
-    custody_state: INTEGRATION_READY
-    checkpoint: 65843f1941ae1bac5b93b4602d39554cdf9361d4
+    plan_state: CLOSED
+    custody_state: INTEGRATED
+    checkpoint: c75c5ae4647a7a154888628d47afbc7758f612d1
     remote_ref: refs/remotes/origin/fix/issue316-refresh-settlement
-    validation_status: settlement-source-native-accepted-installed-pending
-    validation_ref: docs/dev/notes/2026-10-17-issue316-settlement-repair.md
+    validation_status: canonical-installed-accepted
+    validation_ref: docs/dev/notes/2026-10-17-issue316-installed-acceptance.md
+    integration_receipt: ab89dcb6377b9883e96f3e51bc12636610c5eb0f
     integration: merge
     dependencies: []
     overlaps: []

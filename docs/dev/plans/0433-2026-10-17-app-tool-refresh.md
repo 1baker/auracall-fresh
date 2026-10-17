@@ -1,17 +1,20 @@
 # Plan 0433 — In-place ChatGPT app tool refresh (#316)
 
-State: OPEN
+State: CLOSED
 Lane: issue316
 Branch: feat/issue316-refresh-tools
 Target: main
 Owner: ecochran76
 Base: 987bc086752751eaecf65206214cce98766bbd4a
 
-## Current State
+## Current State — CLOSED
 
-Source PR328 is merged and installed from canonical7912118c4. Installed acceptance
-returned unconfirmed; successor Plan0433.2 owns bounded settlement repair and final
-installed proof. The full user objective remains OPEN.
+Source PR328 and settlement repair PR329 are merged. Exact canonicalab89dcb6377b
+was installed into a fresh prefix,584 packaged JavaScript files verified, and the
+normal installed refresh completed/exit0 with21 tools and preserved identity,
+endpoint, connection and permissions.108 affected checks pass. Historical failed
+attempts and unrelated full-suite failures remain retained. Plan0433.2 and the
+installed acceptance note contain the final evidence.
 
 ## Goal and authority
 
