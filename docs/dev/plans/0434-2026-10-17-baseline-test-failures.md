@@ -1,6 +1,6 @@
 # Plan 0434 — repair provider-free baseline failures
 
-State: OPEN
+State: CLOSED
 Lane: issue331
 Branch: fix/baseline-test-failures
 Target: main
@@ -14,7 +14,7 @@ Diagnose the five failures retained by issue316. Preserve browser navigation con
 
 Run focused red/green loops, affected suites, typecheck/lint and one comprehensive provider-free run. Retain first failures and flaky passes. Standards and Spec self-review precede PR integration. Critical path is serialized; no delegation or parallel implementation.
 
-## Current State
+## Starting State
 
 Fresh main worktree and issue331 established. Three fast failures reproduce (3 failed,9 passed,1.75s). HTTP drain case passes alone; shared budget passes in selected run. Five-file baseline still running. No source fixes yet. Next: minimize, rank falsifiable hypotheses, then repair one case at a time.
 
@@ -44,3 +44,7 @@ Wake migration must preserve protocol-error rejection and allow provider canonic
 The first comprehensive run passes the original five cases but finds two adjacent timing flakes in already affected suites:20ms real-time download polling, and a25ms minimum for ChatGPT post-write quiet time. Neither changed production path is implicated. Replace polling's real clock with Vitest timers and quiet-time elapsed guessing with a shared controlled-clock fixture.84 affected checks pass after these repairs. No additional broad discovery pass; this is the one bounded remediation of observed failures. Full lint initially caught the timer-stub TypeScript cast, corrected with explicit unknown bridging; later full lint passes243warnings/17infos. Narrow CDP naming suppressions and variable naming remove the four newly introduced naming warnings; final lint remains pending.
 
 First comprehensive terminal result:3950pass/2fail/65skip,438files,345.49s. Final lint passes239warnings/17infos, matching baseline. Remediation84checks pass. Final full run starts from a new committed checkpoint; no source/test edits during it. Diagnosis receipt:docs/dev/evidence/issue331/diagnosis.json.
+
+## Current State — CLOSED
+
+Final comprehensive run on clean4b7e7bb497c144f2e8947f5ec3bbf2ad1a9da846 passes3952tests,65skipped,417files passed/21skipped in303.60s. No source changes during run. Full lint passes239warnings/17infos, matching baseline; build passes and runtime sources are unchanged since its build checkpoint. Standards and Spec self-review pass with zero remaining accepted blockers after the one bounded remediation. Earlier failures remain in diagnosis evidence. Canonical integration is through PR332; no installation or provider/browser interaction. Acceptance:docs/dev/evidence/issue331/acceptance.json. Memory disposition:forbidden; no durable memory write requested.

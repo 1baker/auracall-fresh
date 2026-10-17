@@ -47,3 +47,9 @@ Full lint after the timer type fix passed243warnings/17infos. The four new namin
 The first comprehensive run finishes3950passed/2failed/65skipped across438files in345.49s. Quiet case observed22ms against25ms; polling returned no capture after the real deadline expired. Both tests were repaired only after their first-run cases finished; report line excerpts may reflect later working-file positions, while the assertion text and result remain retained. Final comprehensive run will start from a clean committed source after remediation.
 
 Final lint passes with the original239warnings/17infos. Closed-world remediation review:two accepted timing findings repaired; no accepted Standards or Spec blockers remain in the source diff. Final comprehensive acceptance is still required.
+
+## Final acceptance
+
+Clean source4b7e7bb497c144f2e8947f5ec3bbf2ad1a9da846:3952passed,65skipped,zero failures;417files passed/21skipped,303.60s. No source changes during run. Full lint239warnings/17infos matches baseline. Build passed on5d28e280d; src/packages runtime trees are byte-identical in4b7e7bb49. Final receipt:docs/dev/evidence/issue331/acceptance.json. No live/browser/provider or installed-runtime effects. Integration via PR332 closes issue331. Earlier failures and sensitive-check receipts retained; local source worktree remains isolated from original dirty checkout.
+
+Memory disposition:forbidden. Developer instruction permits durable memory updates only on explicit request; this repair did not request one. A machine-readable non-write receipt is retained in private issue331 diagnostics.
