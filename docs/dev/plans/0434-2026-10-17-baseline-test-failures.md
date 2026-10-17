@@ -38,3 +38,9 @@ Wake migration must preserve protocol-error rejection and allow provider canonic
 ## Focused acceptance
 
 96 affected tests pass across six files; the HTTP drain case passes separately. Budget sensitivity: bypassing the actual production budget wait makes the new assertion fail131ms vs156ms; source bytes restored. One affected intermediate run failed on undefined mock acknowledgements; optional result handling repairs that compatibility case. Typecheck and changed-file lint pass (existing warnings remain). Next: comprehensive provider-free validation and fixed-base Standards/Spec self-review against822369207 and issue331.
+
+## Bounded remediation pass
+
+The first comprehensive run passes the original five cases but finds two adjacent timing flakes in already affected suites:20ms real-time download polling, and a25ms minimum for ChatGPT post-write quiet time. Neither changed production path is implicated. Replace polling's real clock with Vitest timers and quiet-time elapsed guessing with a shared controlled-clock fixture.84 affected checks pass after these repairs. No additional broad discovery pass; this is the one bounded remediation of observed failures. Full lint initially caught the timer-stub TypeScript cast, corrected with explicit unknown bridging; later full lint passes243warnings/17infos. Narrow CDP naming suppressions and variable naming remove the four newly introduced naming warnings; final lint remains pending.
+
+First comprehensive terminal result:3950pass/2fail/65skip,438files,345.49s. Final lint passes239warnings/17infos, matching baseline. Remediation84checks pass. Final full run starts from a new committed checkpoint; no source/test edits during it. Diagnosis receipt:docs/dev/evidence/issue331/diagnosis.json.

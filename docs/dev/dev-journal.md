@@ -1,3 +1,7 @@
+# 2026-10-17 — issue331 bounded remediation accepted locally
+
+First comprehensive run retains3950pass/2fail/65skip. Both remaining failures are timing assumptions in touched tests:download polling20ms and quiet-time22ms-vs25ms. Explicit clocks repair them;84affected checks pass. Full lint239warnings/17infos matches baseline; build passes. Final comprehensive run is pending. PR332 remains draft. No live/provider/installed effects.
+
 # 2026-10-17 — issue331 focused green
 
 96 affected browser/control/helper checks and the focused HTTP status case pass. Earlier selected baseline retained248pass/3fail; controlled probes reproduce idle-vs-running and25ms-vs30ms. Budget sensitivity mutation fails at131ms vs156ms and was byte-restored. One temporary affected run exposed undefined mock acknowledgement responses; optional result handling fixed the compatibility case and all96 pass. Comprehensive validation and review remain.

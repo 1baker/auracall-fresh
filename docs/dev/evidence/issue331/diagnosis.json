@@ -1,0 +1,55 @@
+{
+  "base_commit": "822369207c4f7a0c4dd78ec5f37ac2d7221f318e",
+  "first_repair_commit": "5d28e280d81b776aa21b665876c22c3fc76f6084",
+  "baseline_selected": {
+    "passed": 248,
+    "failed": 3,
+    "seconds": 65.77
+  },
+  "first_comprehensive": {
+    "passed": 3950,
+    "failed": 2,
+    "skipped": 65,
+    "files_passed": 415,
+    "files_failed": 2,
+    "files_skipped": 21,
+    "seconds": 345.49,
+    "exit_code": 1,
+    "command": "AURACALL_LIVE_TEST=0 pnpm vitest run --maxWorkers=2",
+    "failure_names": [
+      "waitForDownloadCapture polls until a capture appears",
+      "spaces ChatGPT mutating operations across separate service instances"
+    ],
+    "quiet_observed_ms": 22,
+    "quiet_asserted_min_ms": 25
+  },
+  "controlled_red_probes": {
+    "drain": "idle observed after drain completes; old running assumption fails",
+    "budget": "valid25ms wait violates old30ms minimum",
+    "protocol_error": "old helper resolves success instead of rejecting errorText"
+  },
+  "budget_sensitivity": {
+    "mutation": "bypass budget wait",
+    "mutated_sha256": "359fd2ee0179df11416a67bd5339fbf416b80b5a84add0891dec56e852df21fa",
+    "original_sha256": "07a913293c9dd741263570c4fe00ae5611a7683f0b01e550cdc49e91479c2b5a",
+    "exit_code": 1
+  },
+  "affected_browser_checks": {
+    "passed": 96,
+    "files": 6
+  },
+  "remediation_checks": {
+    "passed": 84,
+    "files": 3
+  },
+  "lint": {
+    "exit_code": 0,
+    "warnings": 239,
+    "infos": 17,
+    "baseline_warnings": 239,
+    "baseline_infos": 17
+  },
+  "build_exit_code": 0,
+  "live_provider_effects": 0,
+  "installed_runtime_changes": 0
+}
