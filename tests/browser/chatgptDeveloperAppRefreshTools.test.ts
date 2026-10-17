@@ -6,6 +6,9 @@ describe("developer app tool refresh", () => {
 	afterEach(() => vi.useRealTimers());
 	it.each([
 		"success",
+		"settling-before",
+		"settling-after",
+		"account-loading-before",
 		"body-fallback",
 		"foreign-refresh-link",
 		"http-error",
@@ -21,13 +24,17 @@ describe("developer app tool refresh", () => {
 		let response: (value: unknown) => void = () => {};
 		let finished: (value: unknown) => Promise<void> = async () => {};
 		const clicks: string[] = [];
+		let settingsReads = 0;
+		let postReads = 0;
 		if (scenario === "foreign-refresh-link") vi.useFakeTimers();
 		const evaluate = vi.fn(async ({ expression }: { expression: string }) => {
 			if (expression.includes("refreshButtonCount:")) {
-				const text = `Connected accounts\n${scenario === "connection-change" && clicks.length ? "Other account" : "Fixture account"}\nAbout\nURL\nhttps://fixture.example/mcp\nApp ID\n${["identity-change", "app-member-change"].includes(scenario) && clicks.length ? "other" : "fixture"}\nRefresh tools`;
+				const firstRead = settingsReads++ === 0;
+				const postLoading = scenario === "settling-after" && clicks.length > 0 && postReads++ === 0;
+				const text = `Connected accounts\n${scenario === "connection-change" && clicks.length ? "Other account" : scenario === "account-loading-before" && firstRead ? "Connect another account" : "Fixture account"}\nAbout\nURL\nhttps://fixture.example/mcp\nApp ID\n${["identity-change", "app-member-change"].includes(scenario) && clicks.length ? "other" : "fixture"}\nRefresh tools`;
 				const control = {
 					innerText: "Refresh tools",
-					disabled: false,
+					disabled: (scenario === "settling-before" && firstRead) || postLoading,
 					getAttribute: () => null,
 					getBoundingClientRect: () => ({ width: 100, height: 30 }),
 				};
@@ -168,13 +175,27 @@ describe("developer app tool refresh", () => {
 		}
 		const result = await resultPromise;
 		expect(result.status).toBe(
-			["success", "body-fallback"].includes(scenario)
+			[
+				"success",
+				"body-fallback",
+				"settling-before",
+				"settling-after",
+				"account-loading-before",
+			].includes(scenario)
 				? "completed"
 				: ["approval", "approval-before"].includes(scenario)
 					? "awaiting-human"
 					: "unconfirmed",
 		);
-		if (["success", "body-fallback"].includes(scenario))
+		if (
+			[
+				"success",
+				"body-fallback",
+				"settling-before",
+				"settling-after",
+				"account-loading-before",
+			].includes(scenario)
+		)
 			expect(result.catalog).toMatchObject({ toolCount: 1, toolNames: ["new_tool"] });
 		else expect(result.catalog).toBeUndefined();
 		expect(clicks).toEqual(scenario === "approval-before" ? [] : ["mouseReleased"]);

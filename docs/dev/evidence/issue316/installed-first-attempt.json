@@ -1,0 +1,15 @@
+{
+  "contract": "auracall.issue316.installed-attempt.v1",
+  "source_commit": "7912118c4663d7425a1501427f2491ca9e32fbfa",
+  "merged_pr": 328,
+  "prefix_name": "user-runtime-issue316-7912118c4663",
+  "compiled_hashes_match_accepted": true,
+  "status": "unconfirmed",
+  "exit_code": 1,
+  "refresh_request_app_qualified": true,
+  "catalog_success": "not retained in failed outcome; not inferred",
+  "preservation": "unproven",
+  "native_cause": "unqualified; generic error did not name the invariant",
+  "diagnostic": "Read-only reconciliation stalled; only its process was cancelled. No mutation retry or browser/service termination.",
+  "next": "Plan0433.2 bounded UI settlement repair and new canonical installed proof"
+}
