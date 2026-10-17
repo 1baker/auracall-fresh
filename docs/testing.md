@@ -3617,3 +3617,14 @@ guard and foreground-work callbacks. An explicitly injected service takes priori
 `tests/http.historyMaterializationStoreIsolation.test.ts` exercises real HTTP and
 private/default file stores without provider work; queued work is captured in the
 test. Cold benchmark stores must start empty and retain the production scheduler.
+
+
+### Native login and direct provider qualification
+
+Manual login and browser-tools honor the selected native desktop launcher. Native
+ownership failures propagate without generic-launch fallback. Tests live in
+`tests/browser/manualLoginNative.test.ts`. Direct ChatGPT provider-session proof
+uses read-only utility affinity unless the caller supplied an exact target;
+`tests/browser/chatgptService.test.ts` covers both paths. A local-only doctor
+missing-proof result does not establish sign-out. Verify the live provider proof
+separately from native process/desktop ownership.

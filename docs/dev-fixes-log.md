@@ -25474,3 +25474,15 @@ absence introduced unmeasured requests. Repeat proves both attachments early and
 complete capture. Cold automatic multi-file scrape passes both1.3limits; original
 existing-state clean repeat still exceeds time by3.0864s. Do not discard setup
 costs or select a faster incomplete sample to claim overall acceptance.
+
+
+### 2026-10-17 | Login and qualification must share browser ownership setup
+
+Manual login lost native desktop selection and launched an untracked browser;
+carry the resolved launch policy into its selected launcher, including browser-tools.
+A native failure must never trigger generic fallback. Direct ChatGPT session proof
+also needs the read-only utility-affinity boundary when no exact target exists;
+otherwise required provider traffic admission is absent. Preserve explicit targets.
+Public-seam red/green tests plus installed proof verdict match verify these repairs.
+Missing local proof is not evidence of provider sign-out; PID/port records require
+current process/desktop evidence.

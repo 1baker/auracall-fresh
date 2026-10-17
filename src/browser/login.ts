@@ -19,6 +19,7 @@ import {
   type BrowserLoginOptions as BrowserLoginCoreOptions,
 } from '../../packages/browser-service/src/login.js';
 import { createFileBackedBrowserOperationDispatcher } from '../../packages/browser-service/src/service/operationDispatcher.js';
+import type { ResolvedBrowserConfig } from './types.js';
 import type { DebugPortStrategy } from '../../packages/browser-service/src/types.js';
 
 export type LoginTarget = 'chatgpt' | 'gemini' | 'grok';
@@ -68,6 +69,7 @@ const GEMINI_SIGNED_OUT_CLICK_EXPRESSION = `(() => {
 
 export interface BrowserLoginOptions {
   target: LoginTarget;
+  browserConfig?: Pick<ResolvedBrowserConfig, "remoteViewDesktop">;
   chromePath: string;
   chromeProfile: string;
   manualLoginProfileDir: string;
@@ -106,6 +108,7 @@ export function resolveBrowserLoginOptionsFromUserConfig(
 
   return {
     target,
+    browserConfig: resolved,
     chromePath: resolved.chromePath,
     chromeProfile: plan.managedBrowserProfile.configuredProfileName,
     manualLoginProfileDir: plan.managedBrowserProfile.directory,
@@ -222,6 +225,7 @@ export async function runBrowserLogin(options: BrowserLoginOptions): Promise<voi
       collapseDisposableWindows,
     }) => {
       return launchManualLoginSession({
+        browserConfig: options.browserConfig,
         chromePath,
         profileName,
         userDataDir,

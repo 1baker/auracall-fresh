@@ -12,6 +12,7 @@ export async function launchManualLoginSession(options: {
   compatibleHosts?: string[];
   logger: BrowserLogger;
   baseConfig: ResolvedBrowserConfig;
+  launch?: typeof launchChrome;
   hideWindow?: boolean;
   debugPort?: number;
   debugPortStrategy?: DebugPortStrategy | null;
@@ -54,7 +55,7 @@ export async function launchManualLoginSession(options: {
     collapseDisposableWindows: options.collapseDisposableWindows ?? options.baseConfig.collapseDisposableWindows,
   };
   options.onStage?.('browserChromeLaunch');
-  const chrome = await launchChrome(config, options.userDataDir, options.logger, {
+  const chrome = await (options.launch ?? launchChrome)(config, options.userDataDir, options.logger, {
     registryPath: options.registryPath,
     abortSignal: options.abortSignal,
     onStage: options.onStage,

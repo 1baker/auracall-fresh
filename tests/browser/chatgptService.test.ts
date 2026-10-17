@@ -71,6 +71,45 @@ afterEach(async () => {
 });
 
 describe("ChatGPT llm service", () => {
+	it("qualifies a provider session through utility custody when no exact target was supplied", async () => {
+		const proof = { verdict: "match" };
+		const base = vi
+			.spyOn(LlmService.prototype, "getProviderSessionProof")
+			.mockResolvedValue(proof as never);
+		const runUtilityOperation = vi.fn(
+			async (input: { run: (options: { tabTargetId: string }) => Promise<unknown> }) =>
+				input.run({ tabTargetId: "owned-qualification-target" }),
+		);
+		const { ChatgptService } = await import(
+			"../../src/browser/llmService/providers/chatgptService.js"
+		);
+		const service = ChatgptService.create(
+			{ browser: { target: "chatgpt", tabConcurrencyMode: "tab-affinity" } } as ResolvedUserConfig,
+			{ runUtilityOperation: runUtilityOperation as never },
+		);
+		expect(await service.getProviderSessionProof()).toBe(proof);
+		expect(runUtilityOperation).toHaveBeenCalledOnce();
+		expect(base).toHaveBeenCalledWith({ tabTargetId: "owned-qualification-target" });
+	});
+
+	it("keeps an already selected provider-proof target without acquiring a second utility task", async () => {
+		const proof = { verdict: "match" };
+		const base = vi
+			.spyOn(LlmService.prototype, "getProviderSessionProof")
+			.mockResolvedValue(proof as never);
+		const runUtilityOperation = vi.fn();
+		const { ChatgptService } = await import(
+			"../../src/browser/llmService/providers/chatgptService.js"
+		);
+		const service = ChatgptService.create(
+			{ browser: { target: "chatgpt", tabConcurrencyMode: "tab-affinity" } } as ResolvedUserConfig,
+			{ runUtilityOperation: runUtilityOperation as never },
+		);
+		const options = { tabTargetId: "caller-owned-target" };
+		expect(await service.getProviderSessionProof(options)).toBe(proof);
+		expect(base).toHaveBeenCalledWith(options);
+		expect(runUtilityOperation).not.toHaveBeenCalled();
+	});
 	it("reuses an explicit utility affinity identity across service instances", async () => {
 		const runUtilityOperation = vi.fn(async () => []);
 		const { ChatgptService } = await import(

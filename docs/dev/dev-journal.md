@@ -54974,3 +54974,16 @@ login state. Read-only installed API check confirms PID83768 running; historical
 preflight records are not current provider-authentication evidence. Investigating
 installed local/browser status; client names and exact error requested. No prompts
 or scheduler controls. Memory disposition forbidden: no explicit update request.
+
+
+## 2026-10-17 | Restore shared ChatGPT qualification
+
+Fixed manual-login native desktop configuration loss and direct session-proof
+utility-affinity omission. Both public-seam regressions red/green;48tests/9files,
+typecheck/build/lint pass. Five rollback-backed compiled deltas installed; exact
+idle mismatched browser restarted under earlier user authority, data retained.
+Installed BrowserAutomationClient proof verdict match in11542ms; no prompts or
+scheduler controls. Details and qualified receipts:
+docs/dev/notes/2026-10-17-provider-login-ownership-repair.md. Client retries are
+not yet observed; stale static records were not treated as live ownership proof.
+Memory disposition forbidden.
