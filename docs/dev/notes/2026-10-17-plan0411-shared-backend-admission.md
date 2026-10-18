@@ -295,3 +295,25 @@ source evidence only. Installed acceptance FAILED; Plan0411/P92 stays open and
 PR333 remains draft. Next target is native owned-transport cleanup and desktop
 contention; no more inventory-only acceptance or unqualified provider retry.
 Memory disposition forbidden: no explicit user memory-write request.
+
+## Diagnose and separate cleanup deadline phases (2026-10-18)
+
+A fresh installedde15e41c9 read-only trace reproduces owned cleanup failure.
+The exact current adapter close deadline is3000ms (earlier notes described10s,
+which is the utility settlement bound). Native admission/draining lasted5–7s;
+Fetch wire replies2–10ms and physical socket close4ms. The outer3s bound was
+covering all phases rather than only disconnect. Trace is private at
+/tmp/plan0411-phase-cleanup-trace.jsonl; no prompt or connector effects.
+
+Owned client wrappers now time the physical disconnect themselves after draining;
+only those tagged exact client objects bypass the adapter outer timer. Other
+clients retain the old bound. Cancellation and Fetch.disable wire commands keep
+3s bounds after mandatory admission. Proven pre-dispatch cancellation tolerates
+Chrome Invalid InterceptionId (resource already gone); dispatch failures and
+other protocol errors remain uncertainty.
+
+Regression blocks real admission to Fetch.disable beyond3s and proves cleanup
+does not falsely settle or time out before admission completes. Red observed on
+old scope;69affected tests pass before final per-wire wrapper addition. Existing
+physical disconnect stalls still fail with the precise socket-timeout reason.
+Installed validation and native desktop contention repair remain pending.

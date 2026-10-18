@@ -1,3 +1,11 @@
+## 2026-10-18 — Cleanup deadline phases isolated
+
+Fresh wire/admission trace:5–7s admission/drain,2–10ms Fetch responses,4ms socket
+close; adapter outer bound is3s. Source now distinguishes owned drain from socket
+timeout and preserves per-wire bounds and dispatched uncertainty. New regressions
+prove slow admission and disappeared pre-dispatch resources;69affected tests pass
+before final per-wire wrapper check. Native queueing and installed proof pending.
+
 ## 2026-10-18 — Actual three-workload retry failed
 
 Installedde15e41c9 actual apps test commands both fail owned-client cleanup;

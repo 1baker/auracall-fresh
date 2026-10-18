@@ -1,3 +1,4 @@
+import { withCdpCommandTimeout } from "../../../packages/browser-service/src/guardedCdp.js";
 import type { BrowserMutationAuditSink } from "../../../packages/browser-service/src/service/mutationDispatcher.js";
 import type {
 	ProviderTrafficAuthority,
@@ -11,6 +12,13 @@ import { OwnedBackendRequestCleanupError } from "../ownedBackendRequestAuthority
 import type { ChromeClient } from "../types.js";
 import { attachOwnedChatgptBackendRequestAdmission } from "./chatgptBackendRequestAdmission.js";
 import type { BrowserProviderListOptions } from "./types.js";
+
+export const OWNED_PROVIDER_SOCKET_CLOSE_TIMEOUT_MS = 3_000;
+const ownedClientCloseDeadlines = new WeakSet<object>();
+/** Only wrappers that bound their own physical disconnect may drain outside it. */
+export function ownsProviderClientCloseDeadline(client: object): boolean {
+	return ownedClientCloseDeadlines.has(client);
+}
 
 type MutationContextCarrier = {
 	__auracallMutationAudit?: BrowserMutationAuditSink;
@@ -144,7 +152,16 @@ export async function annotateClientMutationContext(
 				closeError = error;
 			}
 			try {
-				await close();
+				if (governor?.admitBackendRequest) {
+					await withCdpCommandTimeout(
+						undefined,
+						{
+							timeoutMs: OWNED_PROVIDER_SOCKET_CLOSE_TIMEOUT_MS,
+							timeoutMessage: "Owned provider CDP socket cleanup timed out.",
+						},
+						close,
+					);
+				} else await close();
 			} catch (error) {
 				closeError = closeError
 					? new AggregateError(
@@ -194,6 +211,7 @@ export async function annotateClientMutationContext(
 	if (governor?.admitBackendRequest) {
 		try {
 			backendObserver = await attachOwnedChatgptBackendRequestAdmission(client, governor);
+			ownedClientCloseDeadlines.add(client);
 		} catch (error) {
 			try {
 				await client.close();

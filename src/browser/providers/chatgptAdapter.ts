@@ -110,6 +110,8 @@ import {
 	resolveMutationAudit,
 	resolveMutationSource,
 	resolveProviderTrafficGovernor,
+	OWNED_PROVIDER_SOCKET_CLOSE_TIMEOUT_MS,
+	ownsProviderClientCloseDeadline,
 } from "./mutationAudit.js";
 import { providerNavigationAllowed } from "./navigationPolicy.js";
 import { assertProviderSessionAuthorization } from "./providerSessionAuthority.js";
@@ -350,7 +352,7 @@ const CHATGPT_LIBRARY_INVENTORY_OPERATION_TIMEOUT_MS = 30_000;
 const CHATGPT_LIBRARY_CONNECT_STAGE_TIMEOUT_MS = 15_000;
 const CHATGPT_LIBRARY_STAGE_TIMEOUT_MS = 10_000;
 const CHATGPT_LIBRARY_DIALOG_STAGE_TIMEOUT_MS = 5_000;
-const CHATGPT_CDP_CLOSE_TIMEOUT_MS = 3_000;
+const CHATGPT_CDP_CLOSE_TIMEOUT_MS = OWNED_PROVIDER_SOCKET_CLOSE_TIMEOUT_MS;
 const CHATGPT_PROJECT_URL_TEMPLATE = requireBundledServiceRouteTemplate("chatgpt", "project");
 const CHATGPT_PROJECT_SOURCES_URL_TEMPLATE = requireBundledServiceRouteTemplate(
 	"chatgpt",
@@ -4811,12 +4813,10 @@ async function closeChatgptTabConnection(
 		| undefined;
 	if (options?.useProviderSession && retainedSession?.connection === connection) return "settled";
 	let closeFailure: unknown;
-	const closeStatus = await waitForChatgptCleanup(
-		connection.client.close().catch((error: unknown) => {
-			closeFailure = error;
-		}),
-		CHATGPT_CDP_CLOSE_TIMEOUT_MS,
-	);
+	const closing = connection.client.close().catch((error: unknown) => { closeFailure = error; });
+	const closeStatus = ownsProviderClientCloseDeadline(connection.client)
+		? await closing.then(() => "settled" as const)
+		: await waitForChatgptCleanup(closing, CHATGPT_CDP_CLOSE_TIMEOUT_MS);
 	if (resolveProviderTrafficGovernor(connection.client)?.admitBackendRequest) {
 		if (closeStatus === "timed-out")
 			throw new OwnedBackendRequestCleanupError(
@@ -4883,15 +4883,15 @@ async function closeAbortedChatgptTabConnection(
 		options.providerSession = undefined;
 		let closeFailure: unknown;
 		let closeFailed = false;
-		const status = await waitForChatgptCleanup(
-			Promise.resolve()
+		const closing = Promise.resolve()
 				.then(() => providerSession.close())
 				.catch((error: unknown) => {
 					closeFailed = true;
 					closeFailure = error;
-				}),
-			CHATGPT_CDP_CLOSE_TIMEOUT_MS,
-		);
+				});
+		const status = retainedConnection?.client && ownsProviderClientCloseDeadline(retainedConnection.client)
+			? await closing.then(() => "settled" as const)
+			: await waitForChatgptCleanup(closing, CHATGPT_CDP_CLOSE_TIMEOUT_MS);
 		if (options.providerTrafficGovernor?.admitBackendRequest) {
 			if (status === "timed-out")
 				throw new OwnedBackendRequestCleanupError(

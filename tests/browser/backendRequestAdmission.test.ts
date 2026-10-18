@@ -1500,7 +1500,7 @@ test.each([
 						? "Fixture continuation outcome is unknown"
 						: mode === "transport-failure" || mode === "transport-timeout" || unknownRetained
 							? mode === "transport-timeout" || mode === "retained-timeout"
-								? "Owned backend request client cleanup timed out."
+								? "Owned provider CDP socket cleanup timed out."
 								: "fixture transport close outcome unknown"
 							: "Backend request admission denied: minute-backend-request-limit.",
 				);
@@ -1540,7 +1540,7 @@ test.each([
 						: [];
 			expect(messages(utilityError)).toContain(
 				mode === "abort-retained-timeout"
-					? "Owned backend request retained-session cleanup timed out."
+					? "Owned provider CDP socket cleanup timed out."
 					: "fixture transport close outcome unknown",
 			);
 		}
@@ -1657,7 +1657,10 @@ test("owned native-style backend burst drains before transport close", async () 
 	}
 });
 
-test("closing cancels backend capacity waits before dispatch", async () => {
+test.each([
+	false,
+	true,
+])("closing cancels backend capacity waits before dispatch; requestGone=%s", async (requestGone) => {
 	const home = await mkdtemp(path.join(os.tmpdir(), "auracall-request-burst-"));
 	setAuracallHomeDirOverrideForTest(home);
 	fixture.clients.length = 0;
@@ -1704,10 +1707,16 @@ test("closing cancels backend capacity waits before dispatch", async () => {
 			requestId: id,
 			request: { url: "https://chatgpt.com/backend-api/conversations" },
 		});
+		if (requestGone) {
+			const fail = client.Fetch.failRequest.bind(client.Fetch);
+			vi.spyOn(client.Fetch, "failRequest").mockImplementation(async (input) => {
+				await fail(input);
+				throw new Error("Invalid InterceptionId.");
+			});
+		}
 		await state.handler(event("first"));
 		const waiting = state.handler(event("waiting"));
-		const ledger = createBrowserTabConcurrencyRuntime({ auracallProfile: "burst" } as never)
-			.ledger;
+		const ledger = createBrowserTabConcurrencyRuntime({ auracallProfile: "burst" } as never).ledger;
 		if (!ledger) throw new Error("Missing ledger");
 		await vi.waitFor(
 			async () => {
@@ -1730,6 +1739,94 @@ test("closing cancels backend capacity waits before dispatch", async () => {
 		await gate.releaseControl(human.token, "human");
 	} finally {
 		cancellation.abort();
+		await client?.close().catch(() => undefined);
+		setCdpCommandAdmissionResolver(undefined);
+		setAuracallHomeDirOverrideForTest(null);
+		await rm(home, { recursive: true, force: true });
+	}
+});
+
+test("owned cleanup admission does not consume the socket close deadline", async () => {
+	const home = await mkdtemp(path.join(os.tmpdir(), "auracall-request-burst-"));
+	setAuracallHomeDirOverrideForTest(home);
+	fixture.clients.length = 0;
+	const gate = new DesktopControlGate("same-desktop");
+	setCdpCommandAdmissionResolver(async () => ({
+		run: (_command, effect) => gate.withAutomation("generation", effect),
+		hold: async () => {
+			const held = await gate.holdAutomation("generation");
+			return {
+				run: (command, effect) =>
+					held.run(async () => {
+						if (command === "Fetch.disable") {
+							disableStarted = true;
+							await disableReady;
+						}
+						return gate.withAutomation("generation", effect);
+					}),
+				close: () => held.close(),
+			};
+		},
+	}));
+	let releaseDisable!: () => void;
+	let disableStarted = false;
+	const disableReady = new Promise<void>((resolve) => {
+		releaseDisable = resolve;
+	});
+	let client: Awaited<ReturnType<typeof CDP>> | undefined;
+	try {
+		client = await CDP({ host: "127.0.0.1", port: 45180 });
+		const factory = createConfiguredProviderTrafficAuthorityFactory({
+			userConfig: {
+				auracallProfile: "burst",
+				services: {
+					chatgpt: {
+						identity: { email: "operator@example.test" },
+						maxBackendRequestsPerMinute: 60,
+					},
+				},
+			} as never,
+			provider: "chatgpt",
+			managedBrowserProfile: "/fixture/burst",
+			mutationAudit: async () => undefined,
+			baseOptions: {},
+		});
+		await annotateClientMutationContext(
+			client,
+			{ providerTrafficAuthorityFactory: factory, providerTrafficRequired: true },
+			"provider:chatgpt",
+			"burst-target",
+		);
+		const { closeChatgptTabConnectionForTest } = await import(
+			"../../src/browser/providers/chatgptAdapter.js"
+		);
+		vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+		let outcome: unknown;
+		const closing = closeChatgptTabConnectionForTest({
+			client,
+			host: "127.0.0.1",
+			port: 45180,
+			shouldClose: false,
+		}).then(
+			(value) => {
+				outcome = value;
+			},
+			(error) => {
+				outcome = error;
+			},
+		);
+		await vi.waitFor(() => expect(disableStarted).toBe(true));
+		await vi.advanceTimersByTimeAsync(3001);
+		expect(outcome).toBeUndefined();
+		releaseDisable();
+		await closing;
+		expect(outcome).toBe("settled");
+		client = undefined;
+		const human = await gate.takeControl("human");
+		await gate.releaseControl(human.token, "human");
+	} finally {
+		releaseDisable();
+		vi.useRealTimers();
 		await client?.close().catch(() => undefined);
 		setCdpCommandAdmissionResolver(undefined);
 		setAuracallHomeDirOverrideForTest(null);
