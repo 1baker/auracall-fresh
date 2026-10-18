@@ -446,3 +446,25 @@ and installed live-follow/three-workload acceptance remains OPEN.
 
 Memory disposition: forbidden (no explicit request); non-write receipt
 /tmp/plan0411-staging-memory.json.
+
+## 2026-10-18 — PR333 reconciled and runtime activated
+
+User explicitly authorized repo reconciliation and activation. PR333 merged as
+`eed0f23e1b59efda1da92b3c069280005d96f5a6`; runtime production inputs match
+verified source7070532aa (only journal/notes differ). All584installed JS files
+match compiled output. CLI/MCP launchers now use the retained7070532aa package;
+shared account backend admission is configured30requests/minute with600000ms
+capacity wait. auracall-api.service restarted onto that exact package; API healthy.
+
+Original17paused subscriptions remain paused;2historical subscriptions recovered
+paused,19paused total,0queued/running. Original indefiniteHTTP429 and tab16's
+frozen outcome-unknown reservation are verified intact. No prompt resubmission
+or provider canary. No managed browser process was present in the activation snapshots; no browser
+was signalled or launched. Existing MCP processes, if any, are listed in the verification receipt.
+
+Original main checkout fast-forwarded while preserving its tracked local notes.
+Seven colliding untracked historical drafts were moved to private backups; current
+integrated canonical documents now occupy their paths. Other untracked artifacts
+remain untouched. Backup manifest and activation/config/wrapper/API receipts:
+`~/.auracall/diagnostics/plan0411/activation-eed0f23e1/`.
+Activation is complete; live-follow/three-workload acceptance remains OPEN.
