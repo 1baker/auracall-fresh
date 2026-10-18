@@ -126,3 +126,30 @@ test("cancellation after reservation drains the permit without dispatch", async 
 	expect(effect).not.toHaveBeenCalled();
 	expect(await ledger.list()).toMatchObject([{ state: "settled", effectState: "none" }]);
 });
+
+test("request transitions remain ordered if wall clock moves backwards", async () => {
+	const ledger = createInMemoryProviderInteractionLedger();
+	let timestamp = Date.parse("2026-10-18T00:00:10Z");
+	const authority = createOwnedBackendRequestAuthority({
+		ledger,
+		scope: {
+			provider: "chatgpt",
+			tenantKey: "account",
+			runtimeProfileId: "a",
+			managedBrowserProfile: "/managed",
+		},
+		workloadId: "clock",
+		operationId: "clock",
+		tabLeaseId: "clock",
+		backendRequestLimit: 1,
+		assertOwnedLease: async () => undefined,
+		now: () => { timestamp -= 100; return new Date(timestamp); },
+	});
+	await authority.admit(`sha256:${"f".repeat(64)}`, async () => undefined);
+	const [record] = await ledger.list();
+	expect(record.state).toBe("settled");
+	expect(Date.parse(record.startedAt ?? "")).toBeGreaterThanOrEqual(Date.parse(record.reservedAt));
+	expect(Date.parse(record.settledAt ?? "")).toBeGreaterThanOrEqual(
+		Date.parse(record.startedAt ?? ""),
+	);
+});

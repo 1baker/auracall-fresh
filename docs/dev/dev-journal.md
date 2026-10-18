@@ -1,3 +1,11 @@
+## 2026-10-18 — Installed cancellation follow-up
+
+73affected tests pass after valid reserved/start/settle cancellation handling.
+Installed5b4fa7a9e still reports observer cleanup failure. Retained records show
+backward timestamps; a seven-case authority suite reproduces and fixes transition
+ordering using nondecreasing authority time. Fetch teardown errors remain a live
+uncertainty; no actual qualification success or globally active budget is claimed.
+
 ## 2026-10-18 — Cancel queued backend requests during transport disposal
 
 A capacity wait can outlast the ten-second cleanup bound. Transport disposal now

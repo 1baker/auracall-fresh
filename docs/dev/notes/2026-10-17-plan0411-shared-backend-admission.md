@@ -253,3 +253,9 @@ cancellation: ledger.settle requires started. A new exact regression fails with
 the start before checking cancellation and settles none without dispatch; ordinary
 start/lease failures retain the prior behavior. Existing failed native receipt is
 retained at /tmp/plan0411-cancelled-cleanup-trace.jsonl.
+
+Installed5b4fa7a9e also retained settlement-time ordering failures: actual
+reserved/start/settled timestamps move backward. An injected backward clock
+reproduces settlement rejection. Authority-local nondecreasing timestamps retain
+conservative account counting and ordered transitions; seven authority cases pass.
+Fetch-domain teardown failures remain unqualified live evidence.

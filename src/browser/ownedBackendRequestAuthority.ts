@@ -56,7 +56,14 @@ export function createOwnedBackendRequestAuthority(input: {
 	const { ledger, workloadId, operationId, tabLeaseId, backendRequestLimit, assertOwnedLease } =
 		input;
 	const { provider, tenantKey, runtimeProfileId, managedBrowserProfile } = input.scope;
-	const now = input.now ?? (() => new Date());
+	const readNow = input.now ?? (() => new Date());
+	let lastTimestamp = Number.NEGATIVE_INFINITY;
+	// Preserve transition order across wall-clock corrections; future-dated permits
+	// remain counted conservatively by the shared account ledger.
+	const now = () => {
+		lastTimestamp = Math.max(lastTimestamp, readNow().getTime());
+		return new Date(lastTimestamp);
+	};
 	let backendBudgetDenied = false;
 	return {
 		admit: async (requestKey: string, effect: () => Promise<void>, requestSignal?: AbortSignal) => {
