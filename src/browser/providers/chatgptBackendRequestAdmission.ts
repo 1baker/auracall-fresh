@@ -1,7 +1,10 @@
 import { createHash, randomUUID } from "node:crypto";
 import type Protocol from "devtools-protocol";
 import { holdCdpCommandAdmission } from "../../../packages/browser-service/src/guardedCdp.js";
-import type { ProviderTrafficGovernor } from "../../../packages/browser-service/src/service/providerTrafficGovernor.js";
+import {
+	ProviderBackendRequestCancelledBeforeDispatchError,
+	type ProviderTrafficGovernor,
+} from "../../../packages/browser-service/src/service/providerTrafficGovernor.js";
 import type { ChromeClient } from "../types.js";
 
 export async function attachOwnedChatgptBackendRequestAdmission(
@@ -16,6 +19,7 @@ export async function attachOwnedChatgptBackendRequestAdmission(
 	const requests = new Map<string, Promise<void>>();
 	const pending = new Set<Promise<void>>();
 	let closing = false;
+	const cancellation = new AbortController();
 	const failures: unknown[] = [];
 	const handler = (event: Protocol.Fetch.RequestPausedEvent): Promise<void> => {
 		const existing = requests.get(event.requestId);
@@ -48,11 +52,16 @@ export async function attachOwnedChatgptBackendRequestAdmission(
 					)
 					.digest("hex")}`;
 				try {
-					await admit(key, async () => {
-						await client.Fetch.continueRequest({ requestId: event.requestId });
-					});
+					await admit(
+						key,
+						async () => {
+							await client.Fetch.continueRequest({ requestId: event.requestId });
+						},
+						cancellation.signal,
+					);
 				} catch (error) {
-					failures.push(error);
+					if (!(error instanceof ProviderBackendRequestCancelledBeforeDispatchError))
+						failures.push(error);
 					await client.Fetch.failRequest({
 						requestId: event.requestId,
 						errorReason: "BlockedByClient",
@@ -70,6 +79,7 @@ export async function attachOwnedChatgptBackendRequestAdmission(
 	const subscription: unknown = client.Fetch.requestPaused(handler);
 	const dispose = async () => {
 		closing = true;
+		cancellation.abort();
 		while (pending.size) await Promise.all(pending);
 		await client.Fetch.disable();
 		while (pending.size) await Promise.all(pending);

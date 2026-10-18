@@ -1656,3 +1656,83 @@ test("owned native-style backend burst drains before transport close", async () 
 		await rm(home, { recursive: true, force: true });
 	}
 });
+
+test("closing cancels backend capacity waits before dispatch", async () => {
+	const home = await mkdtemp(path.join(os.tmpdir(), "auracall-request-burst-"));
+	setAuracallHomeDirOverrideForTest(home);
+	fixture.clients.length = 0;
+	const gate = new DesktopControlGate("same-desktop");
+	setCdpCommandAdmissionResolver(async () => ({
+		run: (_command, effect) => gate.withAutomation("generation", effect),
+		hold: async () => {
+			const held = await gate.holdAutomation("generation");
+			return {
+				run: (_command, effect) => held.run(() => gate.withAutomation("generation", effect)),
+				close: () => held.close(),
+			};
+		},
+	}));
+	const cancellation = new AbortController();
+	let client: Awaited<ReturnType<typeof CDP>> | undefined;
+	try {
+		client = await CDP({ host: "127.0.0.1", port: 45180 });
+		const factory = createConfiguredProviderTrafficAuthorityFactory({
+			userConfig: {
+				auracallProfile: "burst",
+				services: {
+					chatgpt: {
+						identity: { email: "operator@example.test" },
+						maxBackendRequestsPerMinute: 1,
+						backendRequestBudgetWaitMs: 600000,
+					},
+				},
+			} as never,
+			provider: "chatgpt",
+			managedBrowserProfile: "/fixture/burst",
+			mutationAudit: async () => undefined,
+			baseOptions: { abortSignal: cancellation.signal },
+		});
+		await annotateClientMutationContext(
+			client,
+			{ providerTrafficAuthorityFactory: factory, providerTrafficRequired: true },
+			"provider:chatgpt",
+			"burst-target",
+		);
+		const state = fixture.clients[0];
+		if (!state.handler) throw new Error("Missing interceptor");
+		const event = (id: string) => ({
+			requestId: id,
+			request: { url: "https://chatgpt.com/backend-api/conversations" },
+		});
+		await state.handler(event("first"));
+		const waiting = state.handler(event("waiting"));
+		const ledger = createBrowserTabConcurrencyRuntime({ auracallProfile: "burst" } as never)
+			.ledger;
+		if (!ledger) throw new Error("Missing ledger");
+		await vi.waitFor(
+			async () => {
+				const events = await ledger.listEvents();
+				expect(events.some((event) => event.reason === "minute-backend-request-limit")).toBe(true);
+			},
+			{ timeout: 2000 },
+		);
+		await Promise.race([
+			client.close(),
+			new Promise((_, reject) =>
+				setTimeout(() => reject(new Error("cleanup still waiting for capacity")), 1500),
+			),
+		]);
+		await waiting;
+		client = undefined;
+		expect(state.requests).toEqual(["first"]);
+		expect(state.failures).toEqual(["waiting"]);
+		const human = await gate.takeControl("human");
+		await gate.releaseControl(human.token, "human");
+	} finally {
+		cancellation.abort();
+		await client?.close().catch(() => undefined);
+		setCdpCommandAdmissionResolver(undefined);
+		setAuracallHomeDirOverrideForTest(null);
+		await rm(home, { recursive: true, force: true });
+	}
+});

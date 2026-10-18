@@ -1,3 +1,11 @@
+## 2026-10-18 — Cancel queued backend requests during transport disposal
+
+A capacity wait can outlast the ten-second cleanup bound. Transport disposal now
+cancels only pre-dispatch waits, fails paused requests and drains callbacks before
+disabling interception. Dispatched uncertainty and cleanup errors remain errors.
+Regression fails before the fix and passes after; affected67tests pass. Installed
+cleanup and actual concurrent qualification remain pending.
+
 ## 2026-10-18 — Coalesce unfinished native-generation verification
 
 Ledger batching improved the history replay but the next installed cleanup check

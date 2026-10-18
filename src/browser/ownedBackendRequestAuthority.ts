@@ -2,7 +2,10 @@ import type {
 	ProviderInteractionLedger,
 	ProviderInteractionScope,
 } from "../../packages/browser-service/src/service/interactionLedger.js";
-import { ProviderBackendRequestBudgetExceededError } from "../../packages/browser-service/src/service/providerTrafficGovernor.js";
+import {
+	ProviderBackendRequestBudgetExceededError,
+	ProviderBackendRequestCancelledBeforeDispatchError,
+} from "../../packages/browser-service/src/service/providerTrafficGovernor.js";
 import type { TabLeaseEffectState } from "../../packages/browser-service/src/service/tabLeaseRegistry.js";
 
 export class OwnedBackendRequestCleanupError extends AggregateError {
@@ -56,11 +59,18 @@ export function createOwnedBackendRequestAuthority(input: {
 	const now = input.now ?? (() => new Date());
 	let backendBudgetDenied = false;
 	return {
-		admit: async (requestKey: string, effect: () => Promise<void>) => {
+		admit: async (requestKey: string, effect: () => Promise<void>, requestSignal?: AbortSignal) => {
+			const signals = [input.abortSignal, requestSignal].filter((signal): signal is AbortSignal =>
+				Boolean(signal),
+			);
+			const signal = signals.length ? AbortSignal.any(signals) : undefined;
+			const checkCancellation = () => {
+				if (signal?.aborted) throw new ProviderBackendRequestCancelledBeforeDispatchError();
+			};
 			const deadlineMs = now().getTime() + budgetWaitTimeoutMs;
 			let admission: Awaited<ReturnType<ProviderInteractionLedger["reserve"]>>;
 			for (;;) {
-				input.abortSignal?.throwIfAborted();
+				checkCancellation();
 				await assertOwnedLease();
 				admission = await ledger.reserve({
 					scope: {
@@ -105,7 +115,7 @@ export function createOwnedBackendRequestAuthority(input: {
 					.filter((at) => at >= now().getTime() - 60000);
 				const retryAt = timestamps.length ? Math.min(...timestamps) + 60001 : now().getTime() + 1;
 				while (now().getTime() < Math.min(retryAt, deadlineMs)) {
-					input.abortSignal?.throwIfAborted();
+					checkCancellation();
 					await assertOwnedLease();
 					const warnings = await ledger.listActiveProviderWarnings({ now: now().toISOString() });
 					if (
@@ -118,8 +128,11 @@ export function createOwnedBackendRequestAuthority(input: {
 						throw new Error("Backend request admission denied: provider-warning.");
 					await waitForBackendBudget(
 						Math.min(1000, retryAt - now().getTime(), deadlineMs - now().getTime()),
-						input.abortSignal,
-					);
+						signal,
+					).catch((error) => {
+						checkCancellation();
+						throw error;
+					});
 				}
 			}
 			if (!admission.allowed) {
@@ -130,16 +143,18 @@ export function createOwnedBackendRequestAuthority(input: {
 				throw new Error(`Backend request admission denied: ${admission.reason}.`);
 			}
 			if (admission.duplicate) return;
-			let started = false;
+			let dispatched = false;
 			try {
+				checkCancellation();
 				await assertOwnedLease();
 				const transition = await ledger.start({
 					reservationId: admission.reservation.reservationId,
 					startedAt: now().toISOString(),
 				});
 				if (!transition.ok) throw new Error(`Backend request start denied: ${transition.reason}.`);
-				started = true;
 				await assertOwnedLease();
+				checkCancellation();
+				dispatched = true;
 				await effect();
 				const settled = await ledger.settle({
 					reservationId: admission.reservation.reservationId,
@@ -149,22 +164,23 @@ export function createOwnedBackendRequestAuthority(input: {
 				});
 				if (!settled.ok) throw new Error(`Backend request settlement failed: ${settled.reason}.`);
 			} catch (error) {
-				if (started)
-					try {
-						const settled = await ledger.settle({
-							reservationId: admission.reservation.reservationId,
-							settledAt: now().toISOString(),
-							effectState: "outcome-unknown",
-							outcome: "failed",
-						});
-						if (!settled.ok)
-							throw new Error(`Backend request settlement failed: ${settled.reason}.`);
-					} catch (settlementError) {
-						throw new AggregateError(
-							[error, settlementError],
-							"Backend dispatch and settlement failed.",
-						);
-					}
+				try {
+					const settled = await ledger.settle({
+						reservationId: admission.reservation.reservationId,
+						settledAt: now().toISOString(),
+						effectState:
+							!dispatched && error instanceof ProviderBackendRequestCancelledBeforeDispatchError
+								? "none"
+								: "outcome-unknown",
+						outcome: "failed",
+					});
+					if (!settled.ok) throw new Error(`Backend request settlement failed: ${settled.reason}.`);
+				} catch (settlementError) {
+					throw new AggregateError(
+						[error, settlementError],
+						"Backend dispatch and settlement failed.",
+					);
+				}
 				throw error;
 			}
 		},

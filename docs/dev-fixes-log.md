@@ -1,3 +1,10 @@
+## 2026-10-18 — Drain capacity waits before disconnect
+
+Budget waiting is transport-owned: cancel pending admissions on disposal, while
+keeping dispatched failures uncertain. Do not extend cleanup timeouts or remove
+the shared ceiling to hide a queued-request lifecycle conflict. Proven pre-send
+cancellation does not poison a governor reused by the next transport.
+
 ## 2026-10-18 — Share unfinished native verification without stale PID caching
 
 Concurrent commands can repeat identical expensive window ownership queries.
