@@ -1595,3 +1595,64 @@ test.each([
 		await rm(home, { recursive: true, force: true });
 	}
 });
+
+test("owned native-style backend burst drains before transport close", async () => {
+	const home = await mkdtemp(path.join(os.tmpdir(), "auracall-request-burst-"));
+	setAuracallHomeDirOverrideForTest(home);
+	fixture.clients.length = 0;
+	const gate = new DesktopControlGate("same-desktop");
+	setCdpCommandAdmissionResolver(async () => ({
+		run: (_command, effect) => gate.withAutomation("generation", effect),
+		hold: async () => {
+			const held = await gate.holdAutomation("generation");
+			return {
+				run: (_command, effect) => held.run(() => gate.withAutomation("generation", effect)),
+				close: () => held.close(),
+			};
+		},
+	}));
+	let client: Awaited<ReturnType<typeof CDP>> | undefined;
+	try {
+		client = await CDP({ host: "127.0.0.1", port: 45180 });
+		const factory = createConfiguredProviderTrafficAuthorityFactory({
+			userConfig: {
+				auracallProfile: "burst",
+				services: {
+					chatgpt: {
+						identity: { email: "operator@example.test" },
+						maxBackendRequestsPerMinute: 60,
+					},
+				},
+			} as never,
+			provider: "chatgpt",
+			managedBrowserProfile: "/fixture/burst",
+			mutationAudit: async () => undefined,
+			baseOptions: {},
+		});
+		await annotateClientMutationContext(
+			client,
+			{ providerTrafficAuthorityFactory: factory, providerTrafficRequired: true },
+			"provider:chatgpt",
+			"burst-target",
+		);
+		const state = fixture.clients[0];
+		if (!state.handler) throw new Error("Missing interceptor");
+		const requests = Array.from({ length: 13 }, (_, id) =>
+			state.handler?.({
+				requestId: `burst-${id}`,
+				request: { url: "https://chatgpt.com/backend-api/conversations" },
+			}),
+		);
+		await Promise.all(requests);
+		await client.close();
+		client = undefined;
+		expect(state.requests).toHaveLength(13);
+		const human = await gate.takeControl("human");
+		await gate.releaseControl(human.token, "human");
+	} finally {
+		await client?.close().catch(() => undefined);
+		setCdpCommandAdmissionResolver(undefined);
+		setAuracallHomeDirOverrideForTest(null);
+		await rm(home, { recursive: true, force: true });
+	}
+});

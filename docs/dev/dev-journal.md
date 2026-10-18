@@ -1,3 +1,12 @@
+## 2026-10-18 — Actual qualification retry; ledger burst repair
+
+User rejected inventory-only scope. Peers prepare actual connector/delivery
+workflows. Installed tracing found11–17s backend admissions with a15MB ledger;
+per-transition full rewrites amplified the burst. Batched durable writes retain
+atomic account guards:13-request history replay8.084s→0.633s, same13settlements.
+Affected84tests and19final ledger durability tests pass. Build/install and actual
+three-workload acceptance pending; no provider success inferred.
+
 ## 2026-10-18 — Shared-guard live trial failed; deployment rolled back
 
 Installed d3abdada9 matched584JS files and resolved30/min plus bounded waiting.

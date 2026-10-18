@@ -178,3 +178,34 @@ Remaining blocker: reproduce actual native desktop-command/transport hold and
 owned-request cleanup composition with provider-free fixtures before another
 installed provider attempt. Do not weaken ownership, cleanup or rate guards.
 Plan0411/P92 stays OPEN; issue165 stays closed. Memory disposition remains forbidden.
+
+
+## Renewed actual-test retry: ledger write amplification
+
+Operator corrected inventory-only scope and renewed the actual qualification
+retry. Both peer preparations now name their real connector/delivery acceptance;
+app inventory is only an intermediate step. One bounded actual test retry is
+being coordinated; no test-success claim is made during preparation.
+
+Installed scoped tracing retained the cleanup failure and measured individual
+admissions taking11–17seconds. The real ledger snapshot was15,307,276bytes with
+3,778records and11,375events. Each reserve/start/settle rewrote and fsynced the
+entire snapshot independently, multiplying local disk work during a background
+request burst. A simple13-request synthetic browser burst on an empty ledger
+already passed; it was an exploratory elimination, not a red claim.
+
+Public ledger regression goes red at13durable replacements against the one-burst
+write budget. File-backed callers now coalesce queued mutations under the same
+cross-process lock, load once and publish results only after one durable commit.
+A failed operation/commit aborts that batch without returning uncommitted results.
+Normal denied admissions remain recorded and account ceilings/warnings unchanged.
+Cross-process lock authority, fsync/atomic replacement and full history remain;
+no history pruning, warning clearing or cleanup deadline increase.
+
+Private isolated copies of the real15MB history replayed13reserve/start/settle
+sequences: original8,084ms versus batched633ms,13allowed and13settled in each.
+No live ledger or provider state was changed by this replay. Private source-copy
+receipts stay in /tmp/plan0411-ledger-history-replay-result.json and its recorded
+0700directory. Existing affected84tests pass; final ledger durability19tests pass.
+Blocked-commit and failed-commit cases prove no permits escape before persistence.
+Source/native acceptance remains separate; build/staged retry is next.

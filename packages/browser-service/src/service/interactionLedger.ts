@@ -988,6 +988,13 @@ class FileBackedProviderInteractionLedger implements ProviderInteractionLedger {
   private readonly lockTimeoutMs: number;
   private readonly lockPollMs: number;
 
+  private pendingWrites: Array<{
+    operation: (ledger: InMemoryProviderInteractionLedger) => Promise<unknown>;
+    resolve: (value: unknown) => void;
+    reject: (error: unknown) => void;
+  }> = [];
+  private flushingWrites = false;
+
   constructor(options: FileBackedProviderInteractionLedgerOptions) {
     this.ledgerRoot = path.resolve(options.ledgerRoot);
     this.statePath = path.join(this.ledgerRoot, 'provider-interactions.v1.json');
@@ -1054,13 +1061,38 @@ class FileBackedProviderInteractionLedger implements ProviderInteractionLedger {
     return this.withLock(async () => operation(await this.loadLedger()));
   }
 
-  private async write<T>(operation: (ledger: InMemoryProviderInteractionLedger) => Promise<T>): Promise<T> {
-    return this.withLock(async () => {
-      const ledger = await this.loadLedger();
-      const result = await operation(ledger);
-      await this.persist(ledger.snapshot());
-      return result;
+  private write<T>(operation: (ledger: InMemoryProviderInteractionLedger) => Promise<T>): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+      this.pendingWrites.push({ operation, resolve: value => resolve(value as T), reject });
+      if (!this.flushingWrites) {
+        this.flushingWrites = true;
+        queueMicrotask(() => { void this.flushWrites(); });
+      }
     });
+  }
+
+  /** Publish no permits/transitions until the entire batch is durably committed.
+   * The existing cross-process lock still owns account admission and ordering. */
+  private async flushWrites(): Promise<void> {
+    while (this.pendingWrites.length) {
+      let batch: typeof this.pendingWrites = [];
+      try {
+        const results = await this.withLock(async () => {
+          batch = this.pendingWrites.splice(0);
+          const ledger = await this.loadLedger();
+          const values: unknown[] = [];
+          for (const request of batch) values.push(await request.operation(ledger));
+          await this.persist(ledger.snapshot());
+          return values;
+        });
+        batch.forEach((request, index) => request.resolve(results[index]));
+      } catch (error) {
+        // A failed operation or commit aborts the batch; callers received no uncommitted results.
+        if (!batch.length) batch = this.pendingWrites.splice(0);
+        for (const request of batch) request.reject(error);
+      }
+    }
+    this.flushingWrites = false;
   }
 
   private async loadLedger(): Promise<InMemoryProviderInteractionLedger> {

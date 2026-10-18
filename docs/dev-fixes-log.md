@@ -1,3 +1,11 @@
+## 2026-10-18 — Batch durable interaction-ledger mutations during request bursts
+
+A15MB retained ledger was rewritten/fsynced for every reserve/start/settle. Burst
+admissions outlasted owned-client cleanup. Coalesce pending mutations per ledger
+instance while retaining the shared process lock and commit-before-results rule.
+History replay13requests:8.084s→0.633s, same permits/settlements. Failed commits
+return no permits. Do not prune history or weaken native ownership/cleanup guards.
+
 ## 2026-10-18 — Wait for backend capacity before dispatch
 
 An aggregate hard ceiling alone stops workflows when bootstrap exhausts capacity.
