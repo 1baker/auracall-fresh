@@ -1,3 +1,32 @@
+## 2026-10-18 — Session-proof cancellation survives domain setup
+
+Targeted provider-free tracing now reproduces Desktop control busy even when the
+public session-proof call has an abort signal: Page.enable/Runtime.enable carry
+it, subsequent Runtime.evaluate calls do not. Introduce automation contention at
+the identity read after setup; the public proof rejects in2.53s. Scope caller
+cancellation through the proof's provider observation so later CDP admission
+receives it. Explicit wire scopes keep their deadlines and combine cancellation
+with the caller signal. Proof-only retained-session cleanup remains outside that
+scope. Focused wait/cancel/human-control cases pass; guarded cancellation also
+checks the native-style held-admission path and released custody.
+
+Evidence: /tmp/plan0411-post-setup-minimal-red.log,
+/tmp/plan0411-post-setup-red-trace.json, /tmp/plan0411-post-setup-green.log;
+original first-probe loop rerun green at
+/tmp/plan0411-proof-original-loop-green.log. Temporary file tracing removed;
+only in-memory metadata assertions remain. This reproduces the symptom when no
+continuous backend-request hold is active, not yet the exact installed ca2 trial.
+That trial's configured guard/owner interaction still requires live evidence.
+No provider calls or warning clearances; installed three-workload acceptance OPEN.
+
+Focused validation:93tests across7files pass (not the full suite); final4public
+proof cases pass after replacing private fixture assertions with custody behavior.
+Typecheck, targeted lint, full build and diff check pass. The original broader
+first-probe loop also passes. No debug logging remains in production source.
+Read-only warning refresh at02:41:49UTC retains the original indefinite429.
+Memory disposition forbidden (no user request); receipt
+/tmp/plan0411-proof-signal-memory.json. Source is not installed.
+
 ## 2026-10-18 — Live-follow admission diagnosis: nearby red is not the live defect
 
 Applied diagnosing-bugs against source f46833bf2. Provider-free public session-proof

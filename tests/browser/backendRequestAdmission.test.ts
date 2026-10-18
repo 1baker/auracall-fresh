@@ -35,6 +35,7 @@ const fixture = vi.hoisted(() => ({
 				warnPayload?: boolean;
 				failRead?: boolean;
 				abortRead?: () => void;
+				beforeIdentity?: () => void;
 				failContinuation?: boolean;
 		  },
 	clients: [] as Array<{
@@ -101,9 +102,10 @@ vi.mock("chrome-remote-interface", () => ({
 					const expression = parameters.expression ?? "";
 					let value: unknown = [];
 					if (expression === "location.href") value = fixture.page.url;
-					else if (expression.includes("/api/auth/session"))
+					else if (expression.includes("/api/auth/session")) {
+						fixture.page.beforeIdentity?.();
 						value = { user: { id: "fixture-user", email: "operator@example.test" } };
-					else if (
+					} else if (
 						expression.includes("const rawConversationId") ||
 						expression.includes("document.readyState")
 					)
@@ -1939,3 +1941,124 @@ test.each([
 		await rm(home, { recursive: true, force: true });
 	}
 });
+
+test.each([
+	"wait",
+	"cancel",
+	"human",
+	"guarded-cancel",
+] as const)("session proof carries caller cancellation after setup; mode=%s", async (mode) => {
+	const home = await mkdtemp(path.join(os.tmpdir(), "auracall-follow-proof-"));
+	setAuracallHomeDirOverrideForTest(home);
+	fixture.clients = [];
+	fixture.page = {
+		url: "https://chatgpt.com/",
+		navigations: [],
+		bootstrapRequests: 0,
+		payloadReads: 0,
+		closeAttempts: 0,
+	};
+	const gate = new DesktopControlGate("follow-proof");
+	let releaseTimer: ReturnType<typeof setTimeout> | undefined;
+	let human: { token: string } | undefined;
+	let evaluations = 0;
+	let contender: Awaited<ReturnType<typeof gate.holdAutomation>> | undefined;
+	const trace: Array<{ command: string; cancellable: boolean }> = [];
+	const holds: Array<Awaited<ReturnType<typeof gate.holdAutomation>>> = [];
+	setCdpCommandAdmissionResolver(async () => ({
+		run: async (command, effect, options) => {
+			if (command === "Runtime.evaluate" && ++evaluations === 3 && mode !== "guarded-cancel") {
+				if (mode === "human") human = await gate.takeControl("generation");
+				else {
+					contender = await gate.holdAutomation("generation");
+					if (mode === "cancel") controller.abort(new Error("fixture proof cancelled"));
+					else releaseTimer = setTimeout(() => void contender?.close(), 4000);
+				}
+			}
+			trace.push({
+				command,
+				cancellable: Boolean(options?.abortSignal),
+			});
+			return gate.withAutomation("generation", effect, options);
+		},
+		hold: async (options) => {
+			const hold = await gate.holdAutomation("generation", options);
+			holds.push(hold);
+			return {
+				run: (_command, effect, context) =>
+					hold.run(() => gate.withAutomation("generation", effect, context)),
+				close: () => hold.close(),
+			};
+		},
+	}));
+	const config = {
+		auracallProfile: "fixture",
+		browser: { cache: {} },
+		services: {
+			chatgpt: {
+				identity: { email: "operator@example.test" },
+				...(mode === "guarded-cancel" ? { maxBackendRequestsPerMinute: 30 } : {}),
+			},
+		},
+	} as never;
+	const { createLlmService } = await import("../../src/browser/llmService/providers/index.js");
+	const service = createLlmService("chatgpt", config, {
+		browserService: {
+			getConfig: () => config,
+			resolveServiceTarget: async () => ({
+				host: "127.0.0.1",
+				port: 45170,
+				managedBrowserProfile: "/fixture/follow",
+				browserProfile: "fixture",
+				browserProcessId: process.pid,
+				tab: { targetId: "follow-target", url: fixture.page?.url },
+			}),
+		} as never,
+	});
+	const controller = new AbortController();
+	if (mode === "guarded-cancel")
+		fixture.page.beforeIdentity = () => controller.abort(new Error("fixture proof cancelled"));
+	const cancellationTimer = setTimeout(
+		() => controller.abort(new Error("fixture bounded admission")),
+		8000,
+	);
+	try {
+		const result = service.getProviderSessionProof({
+			host: "127.0.0.1",
+			port: 45170,
+			tabTargetId: "follow-target",
+			configuredUrl: "https://chatgpt.com/",
+			useProviderSession: true,
+			abortSignal: controller.signal,
+		});
+		if (mode === "wait") {
+			await expect(result).resolves.toMatchObject({ verdict: "match" });
+			const fresh = await gate.takeControl("generation");
+			await gate.releaseControl(fresh.token, "generation");
+		} else {
+			await expect(result).rejects.toThrow(
+				mode !== "human" ? "fixture proof cancelled" : "paused while a human controls",
+			);
+			if (mode === "guarded-cancel") {
+				const fresh = await gate.takeControl("generation");
+				await gate.releaseControl(fresh.token, "generation");
+			} else if (mode === "cancel") {
+				await expect(gate.takeControl("generation")).rejects.toThrow("busy");
+				await expect(contender?.run(async () => "retained")).resolves.toBe("retained");
+			} else if (human) await gate.assertControl(human.token, "generation");
+		}
+		if (mode !== "guarded-cancel") expect(evaluations).toBeGreaterThanOrEqual(3);
+		expect(trace.every((entry) => entry.cancellable)).toBe(true);
+	} finally {
+		clearTimeout(cancellationTimer);
+		clearTimeout(releaseTimer);
+		controller.abort();
+		await contender?.close();
+		if (human) await gate.releaseControl(human.token, "generation");
+		await Promise.all(holds.map((hold) => hold.close()));
+		fixture.page = undefined;
+		setCdpCommandAdmissionResolver(undefined);
+		setAuracallHomeDirOverrideForTest(null);
+		await rm(home, { recursive: true, force: true });
+	}
+}, 20000);

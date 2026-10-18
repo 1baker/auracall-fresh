@@ -1,3 +1,13 @@
+## 2026-10-18 — Admission cancellation must outlive domain setup
+
+A caller signal on provider options does not automatically reach raw CDP commands.
+Session-proof setup scoped its domain-enable commands, but later identity probes
+lost admission cancellation and used the short desktop retry bound. Retain caller
+cancellation through the observation, combine it with explicit wire-scope signals,
+and keep the caller's proof-session cleanup outside that observation scope.
+Test contention after setup as well as before it; an initial-queue test alone
+missed this failure. Source reproduction is separate from installed acceptance.
+
 ## 2026-10-18 — Count every provider path before interpreting a shared meter
 
 A healthy-looking ledger cannot prove an HTTP ceiling when inventory sockets or

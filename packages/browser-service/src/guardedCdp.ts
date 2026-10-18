@@ -26,6 +26,15 @@ interface CdpCommandTimeout {
   abortSignal?: AbortSignal;
 }
 const commandTimeouts = new AsyncLocalStorage<CdpCommandTimeout>();
+const commandAbortSignals = new AsyncLocalStorage<AbortSignal>();
+
+/** Keep caller cancellation on admission for commands outside a wire-timeout scope. */
+export function withCdpCommandAbortSignal<T>(signal: AbortSignal | undefined, effect: () => Promise<T>): Promise<T> {
+  if (!signal) return effect();
+  signal.throwIfAborted();
+  const parent = commandAbortSignals.getStore();
+  return commandAbortSignals.run(parent && parent !== signal ? AbortSignal.any([parent, signal]) : signal, effect);
+}
 
 async function runTimedCdpEffect<T>(options: CdpCommandTimeout, effect: () => Promise<T>): Promise<T> {
   options.abortSignal?.throwIfAborted();
@@ -110,9 +119,13 @@ function admittedCall(
 ): unknown {
   const callback = typeof args.at(-1) === 'function' ? args.pop() as (error: unknown, result?: unknown) => void : undefined;
   const timeout = commandTimeouts.getStore();
-  const result = admission.run(command, async () => timeout
-    ? runTimedCdpEffect(timeout, async () => invoke(...args))
-    : invoke(...args), { abortSignal: timeout?.abortSignal });
+  const callerSignal = commandAbortSignals.getStore();
+  const abortSignal = timeout?.abortSignal && callerSignal && timeout.abortSignal !== callerSignal
+    ? AbortSignal.any([timeout.abortSignal, callerSignal]) : timeout?.abortSignal ?? callerSignal;
+  const result = admission.run(command, async () => {
+    abortSignal?.throwIfAborted();
+    return timeout ? runTimedCdpEffect({ ...timeout, abortSignal }, async () => invoke(...args)) : invoke(...args);
+  }, { abortSignal });
   if (!callback) return result;
   void result.then((value) => callback(null, value), (error: unknown) => callback(error));
   return undefined;

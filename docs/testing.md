@@ -3665,3 +3665,10 @@ Provider-free coverage:
 The October18 ca2 trial returned an actual HTTP429; its active warning and unknown
 submission remain preserved. Passing source tests does not establish installed
 three-workload acceptance or authorize another submission.
+
+Provider-session cancellation after setup (provider-free):
+`pnpm vitest run tests/browser/backendRequestAdmission.test.ts -t 'session proof carries caller cancellation'`.
+This exercises the public proof call with real guarded CDP and desktop gate,
+contention introduced at identity reading, cancellation, human ownership, and
+cancellation with native-style continuous backend admission. Passing this does
+not establish live-follow completion or resolve the retained provider429.
