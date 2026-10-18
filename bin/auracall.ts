@@ -5516,7 +5516,7 @@ async function runChatgptDeveloperAppsCliAction(
     lockRoot: path.join(getAuracallHomeDir(), 'browser-operations'),
   });
   const input = buildInput(commandOptions);
-  const acquired = await dispatcher.acquire({
+  const acquired = await dispatcher.acquireQueued({
     managedProfileDir: resolveManagedProfileDirForUserConfig(userConfig, 'chatgpt'),
     serviceTarget: 'chatgpt',
     kind: 'browser-tools',
@@ -5524,7 +5524,7 @@ async function runChatgptDeveloperAppsCliAction(
       ? 'exclusive-probe'
       : 'exclusive-mutating',
     ownerCommand: `apps:${input.action}`,
-  });
+  }, { timeoutMs: 10 * 60 * 1000 });
   if (!acquired.acquired) {
     throw new Error(formatBrowserOperationBusyResult(acquired));
   }

@@ -1,3 +1,23 @@
+## 2026-10-18 — Actual retry returned HTTP 429; admission gaps repaired in source
+
+The ca2e264b2 trial failed. Live-follow failed desktop admission with zero backend
+requests; tab36 failed the outer operation mutex; tab16 was interrupted after an
+unguarded inventory/submission path was discovered. Its prompt outcome remains
+unknown and must not be resubmitted. A real shared HTTP429 warning was observed at
+01:21:19.752UTC. Trial wrappers/config were restored at01:23:24.718UTC. The meter's
+30 canceled ledger starts do not measure all HTTP traffic and prove no compliance.
+Evidence: /tmp/plan0411-cleanup-queue-20261018 and shared-admission note.
+
+Source repairs attach admission to developer-app inventory sockets and normal
+native/legacy prompt governors, propagate unknown cleanup failures, queue the
+existing CLI operation mutex, and create guarded prompt targets blank before
+interception/navigation. Backend reconciliation excludes only the enclosing prompt
+reservation, preserving unfinished-action fencing. Installed acceptance remains
+failed; no provider retry or warning clearance is authorized by these source checks.
+Final affected coverage:170tests across8files pass; typecheck, full build, targeted
+Biome check and diff check pass. Source is not installed. Memory disposition:
+forbidden (no explicit request); receipt /tmp/plan0411-ca2-closeout-memory.json.
+
 ## 2026-10-18 — Native caller-bounded admission queue
 
 Cleanup-only installed62be28fb6 read completes without cleanup timeout, though

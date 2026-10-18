@@ -42,6 +42,7 @@ export function createOwnedBackendRequestAuthority(input: {
 	operationId: string;
 	tabLeaseId: string;
 	backendRequestLimit: number;
+	parentReservationId?: string;
 	budgetWaitTimeoutMs?: number;
 	abortSignal?: AbortSignal;
 	assertOwnedLease: () => Promise<void>;
@@ -199,7 +200,10 @@ export function createOwnedBackendRequestAuthority(input: {
 		): Promise<TEffect | "settled" | "outcome-unknown"> {
 			if (hasUnknownOwnedRequestCleanup(failure)) return "outcome-unknown";
 			const records = (await ledger.list({ provider, tenantKey })).filter(
-				(record) => record.tabLeaseId === tabLeaseId && record.operationId === operationId,
+				(record) =>
+					record.reservationId !== input.parentReservationId &&
+					record.tabLeaseId === tabLeaseId &&
+					record.operationId === operationId,
 			);
 			if (
 				records.some(

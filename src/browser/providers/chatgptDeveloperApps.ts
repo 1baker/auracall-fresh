@@ -1,10 +1,10 @@
 import { createHash } from "node:crypto";
+import type { DevToolsConnectionOptions } from "../../../packages/browser-service/src/types.js";
+import type { ResolvedUserConfig } from "../../config.js";
 import {
 	buildChatgptAppComposerLookup,
 	CHATGPT_APP_MENTION_SELECTOR,
 } from "../actions/chatgptComposer.js";
-import type { DevToolsConnectionOptions } from "../../../packages/browser-service/src/types.js";
-import type { ResolvedUserConfig } from "../../config.js";
 import {
 	ensureChatgptEcosystemMention,
 	readChatgptEcosystemMention,
@@ -14,15 +14,16 @@ import {
 	type DeveloperAppSubmissionOptions,
 	submitChatgptDeveloperApp,
 } from "../chatgptDeveloperAppSubmission.js";
+import { hasUnknownOwnedRequestCleanup } from "../ownedBackendRequestAuthority.js";
 import {
 	navigateAndSettle,
 	openAndSelectMenuItem,
+	PredicateEvaluationTimeoutError,
 	pressButton,
 	pressButtonWithTrustedPointer,
 	reloadAndSettle,
 	setInputValue,
 	waitForPredicate,
-	PredicateEvaluationTimeoutError,
 } from "../service/ui.js";
 import type { ChromeClient } from "../types.js";
 import {
@@ -578,7 +579,9 @@ export class ChatgptDeveloperAppBrowserAdapter {
 		const client = this.cdpClient;
 		this.cdpClient = null;
 		debugDeveloperApps("closing developer-app browser client");
-		await client?.close().catch(() => undefined);
+		await client?.close().catch((error: unknown) => {
+			if (hasUnknownOwnedRequestCleanup(error)) throw error;
+		});
 		debugDeveloperApps("developer-app browser client closed");
 	}
 

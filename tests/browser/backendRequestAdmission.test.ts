@@ -1833,3 +1833,109 @@ test("owned cleanup admission does not consume the socket close deadline", async
 		await rm(home, { recursive: true, force: true });
 	}
 });
+
+test.each([
+	false,
+	true,
+	"read-and-close",
+] as const)("developer-app inventory connection uses shared backend admission; closeFailure=%s", async (closeFailure) => {
+	const home = await mkdtemp(path.join(os.tmpdir(), "auracall-app-inventory-"));
+	setAuracallHomeDirOverrideForTest(home);
+	fixture.clients.length = 0;
+	const gate = new DesktopControlGate("app-inventory");
+	let held: Awaited<ReturnType<DesktopControlGate["holdAutomation"]>> | undefined;
+	setCdpCommandAdmissionResolver(async () => ({
+		run: (_command, effect) => gate.withAutomation("generation", effect),
+		hold: async () => {
+			held = await gate.holdAutomation("generation");
+			const current = held;
+			return { run: (_command, effect) => current.run(effect), close: () => current.close() };
+		},
+	}));
+	const client = await CDP({ host: "127.0.0.1", port: 45180 });
+	try {
+		const config = {
+			auracallProfile: "apps",
+			browser: { tabConcurrencyMode: "tab-affinity" },
+			services: {
+				chatgpt: { identity: { email: "operator@example.test" }, maxBackendRequestsPerMinute: 30 },
+			},
+		} as never;
+		const factory = createConfiguredProviderTrafficAuthorityFactory({
+			userConfig: config,
+			provider: "chatgpt",
+			managedBrowserProfile: "/fixture/apps",
+			mutationAudit: async () => undefined,
+			baseOptions: {},
+		});
+		const browser = {
+			userConfig: config,
+			getUserIdentity: async () => null,
+			connectDevTools: async () => ({ client, port: 45180 }),
+			runUtilityBrowserOperation: async (input: { run: (options: unknown) => Promise<unknown> }) =>
+				input.run({
+					host: "127.0.0.1",
+					port: 45180,
+					tabTargetId: "app-target",
+					providerTrafficAuthorityFactory: factory,
+					providerTrafficRequired: true,
+				}),
+		};
+		fixture.clients[0].failClose = Boolean(closeFailure);
+		const { runChatgptDeveloperAppOperationForCli } = await import(
+			"../../src/cli/chatgptDeveloperAppsCommand.js"
+		);
+		const result = runChatgptDeveloperAppOperationForCli(
+			config,
+			{ action: "list" },
+			{
+				createBrowser: async () => browser as never,
+				createAdapter: (exact) =>
+					({
+						readState: async () => {
+							await exact.connectDevTools();
+							const state = fixture.clients[0];
+							expect(state.handler).toBeTypeOf("function");
+							await state.handler?.({
+								requestId: "inventory",
+								request: { url: "https://chatgpt.com/backend-api/accounts/self/apps" },
+							});
+							if (closeFailure === "read-and-close")
+								throw new Error("fixture inventory read failed");
+							return {
+								account: { email: "operator@example.test", plan: null },
+								developerMode: true,
+								inventoryComplete: true,
+								apps: [],
+								observedAt: new Date().toISOString(),
+							};
+						},
+						close: () => client.close(),
+					}) as never,
+			},
+		);
+		if (closeFailure === "read-and-close") {
+			const error = await result.catch((error) => error);
+			const messages = (value: unknown): string[] =>
+				value instanceof AggregateError
+					? [value.message, ...value.errors.flatMap(messages)]
+					: value instanceof Error
+						? [value.message]
+						: [];
+			expect(messages(error)).toContain("fixture inventory read failed");
+			expect(messages(error)).toContain("fixture retained transport close unknown");
+		} else if (closeFailure) await expect(result).rejects.toMatchObject({ name: "AggregateError" });
+		else await expect(result).resolves.toMatchObject({ action: "list", status: "observed" });
+		expect(fixture.clients[0].requests).toEqual(["inventory"]);
+		const ledger = createBrowserTabConcurrencyRuntime(config).ledger;
+		expect(
+			(await ledger?.list())?.filter((r) => r.interactionClass === "backend-request"),
+		).toHaveLength(1);
+	} finally {
+		if (closeFailure) await held?.close();
+		await client.close().catch(() => undefined);
+		setCdpCommandAdmissionResolver(undefined);
+		setAuracallHomeDirOverrideForTest(null);
+		await rm(home, { recursive: true, force: true });
+	}
+});

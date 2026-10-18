@@ -1,3 +1,14 @@
+## 2026-10-18 — Count every provider path before interpreting a shared meter
+
+A healthy-looking ledger cannot prove an HTTP ceiling when inventory sockets or
+normal prompt execution bypass request admission. Attach interception before the
+first provider navigation, reuse the shared request authority at every owned
+socket, and surface unresolved cleanup. Preserve a real HTTP429 warning and an
+unknown prompt outcome even when the meter contains only pre-dispatch cancels.
+Use the existing operation queue for concurrent CLI mutations. Exclude only the
+known enclosing prompt reservation from backend reconciliation; unfinished sibling
+actions must still fence settlement.
+
 ## 2026-10-18 — Drain capacity waits before disconnect
 
 Budget waiting is transport-owned: cancel pending admissions on disposal, while

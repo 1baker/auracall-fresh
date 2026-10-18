@@ -346,3 +346,25 @@ and matching configured account; no credential captured. Prior de15e41c9 peer
 failures reconcile to initial await readState at compiled CLI line180, before any
 submitTest branch; their earlier unknown prompt classification was conservative,
 and source plus exact stacks establish no submitted prompt from those attempts.
+
+## 2026-10-18 — Actual retry returned HTTP 429; admission gaps repaired in source
+
+The ca2e264b2 trial failed. Live-follow failed desktop admission with zero backend
+requests; tab36 failed the outer operation mutex; tab16 was interrupted after an
+unguarded inventory/submission path was discovered. Its prompt outcome remains
+unknown and must not be resubmitted. A real shared HTTP429 warning was observed at
+01:21:19.752UTC. Trial wrappers/config were restored at01:23:24.718UTC. The meter's
+30 canceled ledger starts do not measure all HTTP traffic and prove no compliance.
+Evidence: /tmp/plan0411-cleanup-queue-20261018 and shared-admission note.
+
+Source repairs attach admission to developer-app inventory sockets and normal
+native/legacy prompt governors, propagate unknown cleanup failures, queue the
+existing CLI operation mutex, and create guarded prompt targets blank before
+interception/navigation. Backend reconciliation excludes only the enclosing prompt
+reservation, preserving unfinished-action fencing. Installed acceptance remains
+failed; no provider retry or warning clearance is authorized by these source checks.
+
+Final source validation:170tests/8files pass; typecheck, full build, targeted
+Biome check and diff check pass. New source remains uninstalled. Native terminal
+notices accepted for tabs16/36; acknowledgment/execution not yet observed.
+Memory disposition forbidden; /tmp/plan0411-ca2-closeout-memory.json.

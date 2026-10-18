@@ -35,6 +35,7 @@ export function createChatgptTabProvisioner(input: {
 	workload: Extract<TabLeaseWorkload, { kind: "conversation" | "new-conversation" }>;
 	operationId: string;
 	targetUrl: string;
+	targetCreationUrl?: string;
 	idleTtlMs: number;
 	absoluteTtlMs: number;
 	profileControlTtlMs?: number;
@@ -160,7 +161,7 @@ export function createChatgptTabProvisioner(input: {
 			const target = await input.openTarget({
 				host: endpoint.host,
 				port: endpoint.port,
-				url: input.targetUrl,
+				url: input.targetCreationUrl ?? input.targetUrl,
 			});
 			const targetId = requireNonEmpty(target.targetId, "targetId");
 			const targetUrl = requireNonEmpty(target.url, "targetUrl");
@@ -197,7 +198,7 @@ export function createChatgptTabProvisioner(input: {
 			lease = created.value.lease;
 			claim = created.value.claim;
 
-			if (input.workload.kind === "conversation") {
+			if (input.workload.kind === "conversation" && targetUrl !== "about:blank") {
 				const navigated = await input.registry.recordTargetAction({
 					claim,
 					action: "navigation",

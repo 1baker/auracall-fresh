@@ -3,14 +3,14 @@ import os from "node:os";
 import path from "node:path";
 import type { LaunchedChrome } from "chrome-launcher";
 import { classifyBrowserToolsBlockingState } from "../../packages/browser-service/src/browserTools.js";
-import { isWindowsLoopbackRemoteHost } from "../../packages/browser-service/src/windowsLoopbackRelay.js";
+import { createInMemoryBrowserMutationLog } from "../../packages/browser-service/src/service/mutationDispatcher.js";
 import {
 	type BrowserOperationAcquiredResult,
 	createFileBackedBrowserOperationDispatcher,
 	formatBrowserOperationBusyResult,
 } from "../../packages/browser-service/src/service/operationDispatcher.js";
-import { createInMemoryBrowserMutationLog } from "../../packages/browser-service/src/service/mutationDispatcher.js";
 import type { ProviderTrafficGovernor } from "../../packages/browser-service/src/service/providerTrafficGovernor.js";
+import { isWindowsLoopbackRemoteHost } from "../../packages/browser-service/src/windowsLoopbackRelay.js";
 import { getAuracallHomeDir } from "../auracallHome.js";
 import type { ResolvedUserConfig } from "../config.js";
 import { BrowserAutomationError } from "../oracle/errors.js";
@@ -20,23 +20,23 @@ import {
 	ensureChatgptComposerMode,
 	resolveChatgptModelSelectionPlan,
 } from "./actions/chatgptComposerMode.js";
+import type { ChatgptComposerCapabilityReceipt } from "./actions/chatgptComposerTool.js";
 import {
 	type ChatgptDeepResearchStage,
 	isChatgptDeepResearchTool,
 	startChatgptDeepResearchPlan,
 } from "./actions/chatgptDeepResearch.js";
-import { ensureChatgptWorkModelSelection } from "./actions/chatgptWorkModelSelection.js";
-import { createChatgptToolApprovalHandler } from "./actions/chatgptToolApproval.js";
 import {
-	ensureChatgptEcosystemMention,
 	assertChatgptEcosystemMentionSelected,
 	type ChatgptEcosystemMentionRequest,
+	ensureChatgptEcosystemMention,
 } from "./actions/chatgptEcosystemMention.js";
-import type { ChatgptComposerCapabilityReceipt } from "./actions/chatgptComposerTool.js";
 import {
 	attachChatgptLibraryFiles,
 	verifyChatgptLibraryFileAttachments,
 } from "./actions/chatgptLibraryFiles.js";
+import { createChatgptToolApprovalHandler } from "./actions/chatgptToolApproval.js";
+import { ensureChatgptWorkModelSelection } from "./actions/chatgptWorkModelSelection.js";
 import {
 	ensureGrokLoggedIn,
 	ensureGrokPromptReady,
@@ -94,6 +94,7 @@ import {
 	wasChromeLaunchedByAuracall,
 } from "./chromeLifecycle.js";
 import { resolveBrowserConfig } from "./config.js";
+import { createConfiguredProviderTrafficAuthorityFactory } from "./configuredProviderTrafficAuthority.js";
 import {
 	CHATGPT_URL,
 	CONVERSATION_TURN_SELECTOR,
@@ -101,24 +102,22 @@ import {
 	INPUT_SELECTORS,
 } from "./constants.js";
 import { syncCookies } from "./cookies.js";
-import { createConfiguredProviderTrafficAuthorityFactory } from "./configuredProviderTrafficAuthority.js";
 import {
 	captureBrowserPostmortemSnapshot,
 	logBrowserPostmortemSnapshot,
 	logStructuredDebugEvent,
 	persistBrowserPostmortemRecord,
 } from "./domDebug.js";
-import { recordBrowserOperationQueueObservation } from "./operationQueueObservations.js";
-import {
-	annotateClientMutationContext,
-	resolveProviderTrafficGovernor,
-} from "./providers/mutationAudit.js";
+import { runLegacyChatgptWithConfiguredAffinity } from "./legacyChatgptAffinityRuntime.js";
+import type { LibraryFileAttachmentReceipt } from "./libraryFiles.js";
 import {
 	BrowserObservationLeaseExpiredError,
 	type BrowserResponseProgressEvidence,
 	decideChatgptObservationRecovery,
 	isActiveGenerationObservationExpiry,
 } from "./observationLease.js";
+import { recordBrowserOperationQueueObservation } from "./operationQueueObservations.js";
+import { hasUnknownOwnedRequestCleanup } from "./ownedBackendRequestAuthority.js";
 import {
 	type AssistantResponseBoundary,
 	captureAssistantMarkdown,
@@ -127,15 +126,15 @@ import {
 	ensureChatgptComposerTool,
 	ensureLoggedIn,
 	ensureModelSelection,
-	shouldApplyChatgptThinkingTime,
 	ensureNotBlocked,
 	ensurePromptReady,
 	fingerprintAssistantResponseText,
 	installJavaScriptDialogAutoDismissal,
 	navigateToChatGPT,
 	navigateToPromptReadyWithFallback,
-	readAssistantSnapshot,
 	readAssistantResponseProgress,
+	readAssistantSnapshot,
+	shouldApplyChatgptThinkingTime,
 	submitPrompt,
 	uploadAttachmentFile,
 	waitForAssistantResponse,
@@ -168,6 +167,10 @@ import {
 } from "./providers/chatgptEvidence.js";
 import { resolveGrokConversationUrl, resolveGrokProjectUrl } from "./providers/grokAdapter.js";
 import {
+	annotateClientMutationContext,
+	resolveProviderTrafficGovernor,
+} from "./providers/mutationAudit.js";
+import {
 	assertProviderSessionAuthorization,
 	summarizeProviderSessionAuthorization,
 } from "./providers/providerSessionAuthority.js";
@@ -185,8 +188,6 @@ import {
 	resolveSimpleProviderGuardProfileName,
 	writeSimpleProviderGuardState,
 } from "./simpleProviderGuard.js";
-import { runLegacyChatgptWithConfiguredAffinity } from "./legacyChatgptAffinityRuntime.js";
-import type { LibraryFileAttachmentReceipt } from "./libraryFiles.js";
 import type {
 	BrowserAttachment,
 	BrowserLogger,
@@ -300,6 +301,7 @@ async function attachBrowserRunProviderTraffic(input: {
 			{
 				providerTrafficGovernor: input.options.providerTrafficGovernor,
 				providerTrafficRequired: true,
+				abortSignal: input.options.abortSignal,
 				mutationAudit,
 			},
 			`provider:${input.provider}:browser-run`,
@@ -325,6 +327,7 @@ async function attachBrowserRunProviderTraffic(input: {
 		{
 			providerTrafficAuthorityFactory: factory,
 			providerTrafficRequired: true,
+			abortSignal: input.options.abortSignal,
 			mutationAudit,
 		},
 		`provider:${input.provider}:browser-run`,
@@ -659,9 +662,7 @@ async function assertChatgptAccountSessionPreflight(
 		const summary = [
 			result.observation?.email ? `email=${result.observation.email}` : null,
 			result.observation?.accountLevel ? `level=${result.observation.accountLevel}` : null,
-			result.observation?.accountPlanType
-				? `plan=${result.observation.accountPlanType}`
-				: null,
+			result.observation?.accountPlanType ? `plan=${result.observation.accountPlanType}` : null,
 			result.expectation.configuredServiceAccountId
 				? `binding=${result.expectation.configuredServiceAccountId}`
 				: null,
@@ -679,7 +680,11 @@ async function resolveChatgptProviderSessionProcessId(input: {
 	readChromePid?: typeof readChromePid;
 	isChromeAlive?: typeof isChromeAlive;
 }): Promise<number | null> {
-	if (typeof input.launchedPid === "number" && Number.isFinite(input.launchedPid) && input.launchedPid > 0) {
+	if (
+		typeof input.launchedPid === "number" &&
+		Number.isFinite(input.launchedPid) &&
+		input.launchedPid > 0
+	) {
 		return Math.trunc(input.launchedPid);
 	}
 	const persistedPid = await (input.readChromePid ?? readChromePid)(input.userDataDir);
@@ -688,8 +693,7 @@ async function resolveChatgptProviderSessionProcessId(input: {
 	return alive ? persistedPid : null;
 }
 
-export const resolveChatgptProviderSessionProcessIdForTest =
-	resolveChatgptProviderSessionProcessId;
+export const resolveChatgptProviderSessionProcessIdForTest = resolveChatgptProviderSessionProcessId;
 
 async function assertChatgptProModeAllowed(
 	Runtime: ChromeClient["Runtime"],
@@ -1608,7 +1612,9 @@ function readProviderEffectState(
 		return fallback;
 	}
 	const effectState = (error as { details?: { effectState?: unknown } }).details?.effectState;
-	return effectState === "pre_effect" || effectState === "effect_observed" || effectState === "unknown"
+	return effectState === "pre_effect" ||
+		effectState === "effect_observed" ||
+		effectState === "unknown"
 		? effectState
 		: fallback;
 }
@@ -1824,7 +1830,15 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 			userConfig: options.tabAffinityUserConfig,
 			browserOptions: options,
 			resolvedConfig: config,
-			runLeased: ({ host, port, targetId, targetUrl, providerTrafficGovernor, abortSignal, providerSessionAuthorization }) =>
+			runLeased: ({
+				host,
+				port,
+				targetId,
+				targetUrl,
+				providerTrafficGovernor,
+				abortSignal,
+				providerSessionAuthorization,
+			}) =>
 				runRemoteBrowserMode(
 					promptText,
 					attachments,
@@ -2106,7 +2120,10 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 		options.abortSignal?.throwIfAborted();
 		await enforceChatgptBrowserRateLimitGuard(config, logger, userDataDir);
 		options.abortSignal?.throwIfAborted();
-		reusedChrome = (config.agentBrowserRdp?.enabled || config.remoteViewDesktop) ? null : await reuseRunningChromeProfile(userDataDir, logger);
+		reusedChrome =
+			config.agentBrowserRdp?.enabled || config.remoteViewDesktop
+				? null
+				: await reuseRunningChromeProfile(userDataDir, logger);
 		options.abortSignal?.throwIfAborted();
 		chrome =
 			reusedChrome ??
@@ -2242,11 +2259,11 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 					userDataDir,
 					logger,
 					{
-					onWindowsRetry,
-					ownedPids: ownedChromePids,
-					ownedPorts: ownedChromePorts,
-					abortSignal: options.abortSignal,
-				},
+						onWindowsRetry,
+						ownedPids: ownedChromePids,
+						ownedPorts: ownedChromePorts,
+						abortSignal: options.abortSignal,
+					},
 				);
 				rememberOwnedChrome(chrome);
 				chromeHost = (chrome as unknown as { host?: string }).host ?? "127.0.0.1";
@@ -2608,12 +2625,13 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 			await raceWithDisconnect(dismissOpenMenus(Runtime).catch(() => false));
 			await raceWithDisconnect(
 				withRetries(
-					() => ensureChatgptWorkModelSelection(
-						Runtime,
-						modelSelectionPlan.model,
-						logger,
-						modelSelectionPlan.strategy,
-					),
+					() =>
+						ensureChatgptWorkModelSelection(
+							Runtime,
+							modelSelectionPlan.model,
+							logger,
+							modelSelectionPlan.strategy,
+						),
 					{ retries: 2, delayMs: 300 },
 				),
 			);
@@ -2626,7 +2644,11 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 		// Handle thinking time selection if specified
 		const thinkingTime = config.thinkingTime;
 		const thinkingModel = modelStrategy === "current" ? observedModel : config.desiredModel;
-		if (chatgptMode === "chat" && thinkingTime && shouldApplyChatgptThinkingTime(thinkingModel, observedModel)) {
+		if (
+			chatgptMode === "chat" &&
+			thinkingTime &&
+			shouldApplyChatgptThinkingTime(thinkingModel, observedModel)
+		) {
 			const proModeGate = isChatgptProModelTarget(thinkingModel)
 				? await raceWithDisconnect(
 						assertChatgptProModeSelectable(Runtime, thinkingTime, logger, modelStrategy),
@@ -2793,10 +2815,7 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 						}
 						const ecosystemMention = selectedComposerMention ?? options.ecosystemMention;
 						if (ecosystemMention) {
-							await assertChatgptEcosystemMentionSelected(
-								client as ChromeClient,
-								ecosystemMention,
-							);
+							await assertChatgptEcosystemMentionSelected(client as ChromeClient, ecosystemMention);
 							// Send may take effect even if its CDP acknowledgement is lost.
 							providerEffectState = "unknown";
 							options.onProviderEffectState?.("unknown");
@@ -3686,6 +3705,7 @@ async function runRemoteBrowserMode(
 	logger(`Connecting to remote Chrome at ${host}:${port}`);
 
 	let client: ChromeClient | null = null;
+	let primaryFailure: { error: unknown } | undefined;
 	let remoteTargetId: string | null = null;
 	let lastUrl: string | undefined;
 	let connectedHost = host;
@@ -3835,8 +3855,7 @@ async function runRemoteBrowserMode(
 				expression: "location.href",
 				returnByValue: true,
 			}).catch(() => null);
-			const currentUrl =
-				typeof current?.result?.value === "string" ? current.result.value : null;
+			const currentUrl = typeof current?.result?.value === "string" ? current.result.value : null;
 			exactTargetAlreadyAtRequestedRoute = browserRoutesMatch(currentUrl, config.url);
 		}
 		if (!exactTargetAlreadyAtRequestedRoute) {
@@ -3851,7 +3870,8 @@ async function runRemoteBrowserMode(
 		// explicitly supplied authority context; otherwise resolve only loopback.
 		const remoteProcessId =
 			config.providerSessionAuthorization?.context.browserProcessId ??
-			(["127.0.0.1", "localhost", "::1", "[::1]"].includes(host.toLowerCase()) || isWindowsLoopbackRemoteHost(host)
+			(["127.0.0.1", "localhost", "::1", "[::1]"].includes(host.toLowerCase()) ||
+			isWindowsLoopbackRemoteHost(host)
 				? await resolveChatgptProviderSessionProcessId({
 						launchedPid: null,
 						userDataDir:
@@ -3939,12 +3959,13 @@ async function runRemoteBrowserMode(
 		} else if (modelSelectionPlan.kind === "work-model") {
 			await dismissOpenMenus(Runtime).catch(() => false);
 			await withRetries(
-				() => ensureChatgptWorkModelSelection(
-					Runtime,
-					modelSelectionPlan.model,
-					logger,
-					modelSelectionPlan.strategy,
-				),
+				() =>
+					ensureChatgptWorkModelSelection(
+						Runtime,
+						modelSelectionPlan.model,
+						logger,
+						modelSelectionPlan.strategy,
+					),
 				{ retries: 2, delayMs: 300 },
 			);
 			await ensurePromptReady(Runtime, config.inputTimeoutMs, logger);
@@ -3956,7 +3977,11 @@ async function runRemoteBrowserMode(
 		// Handle thinking time selection if specified
 		const thinkingTime = config.thinkingTime;
 		const thinkingModel = modelStrategy === "current" ? observedModel : config.desiredModel;
-		if (chatgptMode === "chat" && thinkingTime && shouldApplyChatgptThinkingTime(thinkingModel, observedModel)) {
+		if (
+			chatgptMode === "chat" &&
+			thinkingTime &&
+			shouldApplyChatgptThinkingTime(thinkingModel, observedModel)
+		) {
 			const proModeGate = isChatgptProModelTarget(thinkingModel)
 				? await assertChatgptProModeSelectable(Runtime, thinkingTime, logger, modelStrategy)
 				: null;
@@ -3992,7 +4017,8 @@ async function runRemoteBrowserMode(
 			}
 			await dismissOpenMenus(Runtime).catch(() => false);
 			const capabilitySelection = await withRetries(
-				() => ensureChatgptComposerTool(client as ChromeClient, config.composerTool as string, logger),
+				() =>
+					ensureChatgptComposerTool(client as ChromeClient, config.composerTool as string, logger),
 				{
 					retries: 2,
 					delayMs: 300,
@@ -4092,10 +4118,7 @@ async function runRemoteBrowserMode(
 						}
 						const ecosystemMention = selectedComposerMention ?? options.ecosystemMention;
 						if (ecosystemMention) {
-							await assertChatgptEcosystemMentionSelected(
-								client as ChromeClient,
-								ecosystemMention,
-							);
+							await assertChatgptEcosystemMentionSelected(client as ChromeClient, ecosystemMention);
 							// Send may take effect even if its CDP acknowledgement is lost.
 							providerEffectState = "unknown";
 							options.onProviderEffectState?.("unknown");
@@ -4601,6 +4624,7 @@ async function runRemoteBrowserMode(
 			controllerPid: process.pid,
 		};
 	} catch (error) {
+		primaryFailure = { error };
 		const normalizedError = error instanceof Error ? error : new Error(String(error));
 		const observedEffectState = readProviderEffectState(normalizedError, providerEffectState);
 		const alreadyHandledRateLimit = isHandledChatgptRateLimitAfterEffect(normalizedError);
@@ -4670,12 +4694,13 @@ async function runRemoteBrowserMode(
 			guardedError,
 		);
 	} finally {
+		let ownedCleanupFailure: unknown;
 		try {
 			if (!connectionClosedUnexpectedly && client) {
 				await client.close();
 			}
-		} catch {
-			// ignore
+		} catch (error) {
+			if (hasUnknownOwnedRequestCleanup(error)) ownedCleanupFailure = error;
 		}
 		removeDialogHandler?.();
 		if (!options.tabAffinity) {
@@ -4686,10 +4711,23 @@ async function runRemoteBrowserMode(
 				logger,
 			);
 		}
-		await disposeRemoteTransport?.().catch(() => undefined);
+		await disposeRemoteTransport?.().catch((error: unknown) => {
+			if (hasUnknownOwnedRequestCleanup(error))
+				ownedCleanupFailure = ownedCleanupFailure
+					? new AggregateError([ownedCleanupFailure, error], "Owned remote cleanup failed.")
+					: error;
+		});
 		// Don't kill remote Chrome - it's not ours to manage
 		const totalSeconds = (Date.now() - startedAt) / 1000;
 		logger(`Remote session complete • ${totalSeconds.toFixed(1)}s total`);
+		if (ownedCleanupFailure)
+			// biome-ignore lint/correctness/noUnsafeFinally: unresolved owned cleanup must reject success; preserve the original failure in the aggregate.
+			throw primaryFailure
+				? new AggregateError(
+						[primaryFailure.error, ownedCleanupFailure],
+						"Remote browser run and owned cleanup failed.",
+					)
+				: ownedCleanupFailure;
 	}
 }
 
@@ -4942,10 +4980,10 @@ export { syncCookies } from "./cookies.js";
 export {
 	captureAssistantMarkdown,
 	ensureModelSelection,
-	shouldApplyChatgptThinkingTime,
 	ensureNotBlocked,
 	ensurePromptReady,
 	navigateToChatGPT,
+	shouldApplyChatgptThinkingTime,
 	submitPrompt,
 	uploadAttachmentFile,
 	waitForAssistantResponse,
@@ -4967,7 +5005,6 @@ function isWebSocketClosureError(error: Error): boolean {
 		message.includes("target closed")
 	);
 }
-
 
 export function formatThinkingLog(
 	startedAt: number,
@@ -5419,7 +5456,10 @@ async function runGrokBrowserMode({
 	let effectiveConfig = launchConfig;
 	let reusedChrome: LaunchedChrome | null = null;
 	try {
-		reusedChrome = (effectiveConfig.agentBrowserRdp?.enabled || effectiveConfig.remoteViewDesktop) ? null : await reuseRunningChromeProfile(userDataDir, logger);
+		reusedChrome =
+			effectiveConfig.agentBrowserRdp?.enabled || effectiveConfig.remoteViewDesktop
+				? null
+				: await reuseRunningChromeProfile(userDataDir, logger);
 		chrome =
 			reusedChrome ??
 			(await launchChrome(
