@@ -11,6 +11,7 @@ import type { ExecutionRunStoredRecord } from '../src/runtime/store.js';
 import {
   createTenantExecutionLimitGate,
   resolveChatgptBackendRequestsPerMinute,
+  resolveChatgptBackendRequestBudgetWaitMs,
   resolveChatgptInteractionsPerMinute,
   resolveChatgptTenantLimits,
   summarizeTenantExecutionLimits,
@@ -514,4 +515,12 @@ describe('configured backend request ceiling', () => {
       services: { chatgpt: { maxBackendRequestsPerMinute: value } },
     }, 'a')).toThrow('positive safe integer');
   });
+});
+
+it('resolves bounded request waiting independently of the request ceiling', () => {
+ expect(resolveChatgptBackendRequestBudgetWaitMs({}, 'a')).toBe(0);
+ const config = { services: { chatgpt: { backendRequestBudgetWaitMs: 60000 } }, runtimeProfiles: { a: { services: { chatgpt: { backendRequestBudgetWaitMs: 0 } } } } };
+ expect(resolveChatgptBackendRequestBudgetWaitMs(config, 'a')).toBe(0);
+ expect(resolveChatgptBackendRequestBudgetWaitMs(config, 'b')).toBe(60000);
+ expect(() => resolveChatgptBackendRequestBudgetWaitMs({ services: { chatgpt: { backendRequestBudgetWaitMs: -1 } } }, 'a')).toThrow('nonnegative safe integer');
 });

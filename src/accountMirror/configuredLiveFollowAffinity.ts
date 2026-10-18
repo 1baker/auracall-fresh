@@ -29,6 +29,7 @@ import { resolveConfiguredServiceAccountId } from "../config/serviceAccountIdent
 import type { ResolvedUserConfig } from "../config.js";
 import {
 	resolveChatgptBackendRequestsPerMinute,
+	resolveChatgptBackendRequestBudgetWaitMs,
 	resolveChatgptTenantLimits,
 } from "../runtime/tenantExecutionLimits.js";
 import type { AccountMirrorMetadataCollectorInput } from "./chatgptMetadataCollector.js";
@@ -79,6 +80,10 @@ export async function createConfiguredLiveFollowAffinity(input: {
 		return null;
 	}
 	const backendRequestLimit = resolveChatgptBackendRequestsPerMinute(
+		input.userConfig as Record<string, unknown>,
+		input.runtimeProfileId,
+	);
+	const budgetWaitTimeoutMs = resolveChatgptBackendRequestBudgetWaitMs(
 		input.userConfig as Record<string, unknown>,
 		input.runtimeProfileId,
 	);
@@ -295,6 +300,8 @@ export async function createConfiguredLiveFollowAffinity(input: {
 					operationId: input.operationId,
 					tabLeaseId: crawler.lease.leaseId,
 					backendRequestLimit,
+					budgetWaitTimeoutMs,
+					abortSignal: input.abortSignal,
 					assertOwnedLease,
 					now: input.now,
 				});

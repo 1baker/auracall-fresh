@@ -1,3 +1,11 @@
+## 2026-10-18 — Concurrent LitScout/live-follow retry preparation
+
+Both LitScout peers prepared read-only inventory retries on wsl-chrome-3 and wait
+for runtime release. Added bounded shared backend-capacity waiting so a low
+ceiling can permit completion without provider retries. Affected138tests pass;
+typecheck/lint pass. Rebuild/install and measured concurrent acceptance pending.
+See notes/2026-10-17-plan0411-shared-backend-admission.md.
+
 ## 2026-10-17 — Plan0411 shared backend admission wiring
 
 Confirmed the live-follow caller omitted backend admission despite shared ledger

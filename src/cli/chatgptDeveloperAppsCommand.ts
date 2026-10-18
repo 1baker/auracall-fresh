@@ -9,6 +9,8 @@ import {
 import type { BrowserProviderListOptions } from "../browser/providers/types.js";
 import type { ResolvedUserConfig } from "../config.js";
 
+import { resolveChatgptBackendRequestBudgetWaitMs } from "../runtime/tenantExecutionLimits.js";
+
 const DEFAULT_CHATGPT_DEVELOPER_APP_LIST_TIMEOUT_MS = 45_000;
 const DEFAULT_CHATGPT_DEVELOPER_APP_CLOSE_TIMEOUT_MS = 5_000;
 
@@ -426,7 +428,11 @@ export async function runChatgptDeveloperAppOperationForCli(
 			input.action === "refresh-tools"
 				? dependencies.refreshToolsTimeoutMs
 				: dependencies.listTimeoutMs,
-			input.action === "refresh-tools" ? 90_000 : DEFAULT_CHATGPT_DEVELOPER_APP_LIST_TIMEOUT_MS,
+			(input.action === "refresh-tools" ? 90_000 : DEFAULT_CHATGPT_DEVELOPER_APP_LIST_TIMEOUT_MS) +
+				resolveChatgptBackendRequestBudgetWaitMs(
+					userConfig as Record<string, unknown>,
+					userConfig.auracallProfile ?? "default",
+				),
 		);
 		return await withChatgptDeveloperAppDeadline(
 			operation(),

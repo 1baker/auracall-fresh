@@ -196,18 +196,24 @@ export function resolveChatgptInteractionsPerMinute(
 }
 
 /** Explicit opt-in: browser-operation limits are not backend-request ceilings. */
-export function resolveChatgptBackendRequestsPerMinute(
-  config: Record<string, unknown>,
-  runtimeProfileId: string | null,
-): number | undefined {
+export function resolveChatgptBackendRequestsPerMinute(config: Record<string, unknown>, runtimeProfileId: string | null): number | undefined {
+  return readChatgptBackendSetting(config, runtimeProfileId, 'maxBackendRequestsPerMinute', 1);
+}
+
+/** Optional capacity waiting; zero preserves immediate bounded-yield behavior. */
+export function resolveChatgptBackendRequestBudgetWaitMs(config: Record<string, unknown>, runtimeProfileId: string | null): number {
+  return readChatgptBackendSetting(config, runtimeProfileId, 'backendRequestBudgetWaitMs', 0) ?? 0;
+}
+
+function readChatgptBackendSetting(config: Record<string, unknown>, runtimeProfileId: string | null, key: string, minimum: number): number | undefined {
   const globalChatgpt = readRecord(readRecord(config.services)?.chatgpt);
   const runtimeProfile = runtimeProfileId ? readRecord(getCurrentRuntimeProfiles(config)[runtimeProfileId]) : null;
   const runtimeChatgpt = readRecord(readRecord(runtimeProfile?.services)?.chatgpt);
-  const runtimeValue = runtimeChatgpt?.maxBackendRequestsPerMinute;
-  const value = runtimeValue === undefined ? globalChatgpt?.maxBackendRequestsPerMinute : runtimeValue;
+  const runtimeValue = runtimeChatgpt?.[key];
+  const value = runtimeValue === undefined ? globalChatgpt?.[key] : runtimeValue;
   if (value === undefined) return undefined;
-  if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 1)
-    throw new Error('ChatGPT maxBackendRequestsPerMinute must be a positive safe integer.');
+  if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < minimum)
+    throw new Error(`ChatGPT ${key} must be a ${minimum ? 'positive' : 'nonnegative'} safe integer.`);
   return value;
 }
 

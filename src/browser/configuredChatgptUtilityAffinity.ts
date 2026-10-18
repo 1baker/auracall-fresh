@@ -26,6 +26,7 @@ import { resolveConfiguredServiceAccountId } from "../config/serviceAccountIdent
 import type { ResolvedUserConfig } from "../config.js";
 import {
 	resolveChatgptBackendRequestsPerMinute,
+	resolveChatgptBackendRequestBudgetWaitMs,
 	resolveChatgptInteractionsPerMinute,
 	resolveChatgptTenantLimits,
 } from "../runtime/tenantExecutionLimits.js";
@@ -77,6 +78,10 @@ export async function runConfiguredChatgptUtilityOperation<TResult>(input: {
 			input.userConfig as Record<string, unknown>,
 			input.userConfig.auracallProfile?.trim() || "default",
 		);
+	const budgetWaitTimeoutMs = resolveChatgptBackendRequestBudgetWaitMs(
+		input.userConfig as Record<string, unknown>,
+		input.userConfig.auracallProfile?.trim() || "default",
+	);
 	validateBackendRequestLimit(backendRequestLimit);
 	if (input.userConfig.browser?.tabConcurrencyMode !== "tab-affinity") return null;
 	if (backendRequestLimit !== undefined && input.options?.providerSession)
@@ -317,6 +322,8 @@ export async function runConfiguredChatgptUtilityOperation<TResult>(input: {
 						operationId: input.utilityId,
 						tabLeaseId: tab.lease.leaseId,
 						backendRequestLimit,
+						budgetWaitTimeoutMs,
+						abortSignal: options.abortSignal,
 						assertOwnedLease,
 						now,
 					})

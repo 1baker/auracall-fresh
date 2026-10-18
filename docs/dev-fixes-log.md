@@ -1,3 +1,11 @@
+## 2026-10-18 — Wait for backend capacity before dispatch
+
+An aggregate hard ceiling alone stops workflows when bootstrap exhausts capacity.
+Optional bounded backendRequestBudgetWaitMs now waits for rolling-window permits
+without sending or replaying a provider request. Warning/cancellation/lease checks
+remain active; app inventory deadlines include the selected waiting allowance.
+Three-caller virtual-clock regression proves shared progress across windows.
+
 ## 2026-10-17 — Shared backend admission requires production caller wiring
 
 A shared browser-operation governor is not a backend-request meter. Live-follow

@@ -1098,7 +1098,13 @@ setting. Participating tasks with the same configured account identity share the
 durable ledger across runtime profiles and processes; each request consumes one
 permit before dispatch. Browser-operation limits remain separate. Known budget
 exhaustion blocks dispatch and follows the caller's existing yield/stop behavior;
-it does not automatically wait or retry. Provider warnings still stop admission.
+it does not automatically retry a dispatched request. Set the optional
+`services.chatgpt.backendRequestBudgetWaitMs` (or the same runtime binding field)
+to a nonnegative safe integer to wait for capacity before dispatch; zero/default
+yields immediately. Waiting rechecks account warnings, exact lease custody and
+caller cancellation, and remains bounded per request. App-list/refresh-tools
+outer deadlines include this configured allowance; explicit injected test
+deadlines retain their own bound. Provider warnings still stop admission.
 
 This covers owned, intercepted requests, including bootstrap traffic before first
 navigation. It does not meter manual tabs, clients bypassing these authorities,

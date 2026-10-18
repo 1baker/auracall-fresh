@@ -77,3 +77,32 @@ Issue165 remains closed; Plan0411/P92 remains open. No scheduler, launcher,
 service, live warning or other browser-task state was changed in this repair.
 
 Memory disposition: forbidden; no explicit user authorization to update memory.
+
+
+## Operator-authorized concurrent retry preparation (2026-10-18)
+
+The operator requested LitScout tabs16/36 retry concurrently with live-follow.
+Both exact threads acknowledged through native Wake delivery and wrote readiness
+receipts under /tmp/plan0411-peer-retry-20261018. Mailbox sends were rejected
+store_unavailable with no admission; native intents were admitted once, not blind
+retries of uncertain effects. Both use fresh installed CLI apps list on runtime
+wsl-chrome-3; no new prompt budget is inferred or consumed. Runtime release is
+owned by this lane.
+
+Immediate budget denial would safely stop these tests rather than complete them.
+Added explicit backendRequestBudgetWaitMs (default0), reusing atomic shared
+permits after capacity returns. Waiting sends no provider requests, checks
+warnings/lease/cancellation each second, and is bounded. It computes the next
+rolling-window release instead of repeatedly creating rejected ledger entries.
+App inventory deadlines include configured waiting; injected short deadlines
+remain unchanged. Three caller regression fails before the change and passes
+across successive minute windows afterward. Warning, cancellation and timeout
+cases retain hard stops. Affected138tests/6files pass; typecheck/lint pass.
+Full rebuilt installation and live three-workload acceptance are pending.
+
+Fresh passive readiness at00:04UTC verified native browser identity, complete DOM,
+no visible blocking surface, and an expired legacy cooldown. The retained shared
+warning dates22:02UTC; warning history/frozen records are preserved. Any qualified
+operator retry release will be recorded with exact scope and reason. Trial
+ceiling30backend requests/minute and bounded600000ms capacity waiting are proposed
+for this authorized measured run, not a claim about provider capacity.

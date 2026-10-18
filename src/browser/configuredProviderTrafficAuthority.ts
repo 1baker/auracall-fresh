@@ -15,6 +15,7 @@ import { resolveConfiguredServiceAccountId } from "../config/serviceAccountIdent
 import type { ResolvedUserConfig } from "../config.js";
 import {
 	resolveChatgptBackendRequestsPerMinute,
+	resolveChatgptBackendRequestBudgetWaitMs,
 	resolveChatgptInteractionsPerMinute,
 } from "../runtime/tenantExecutionLimits.js";
 import { probeChatgptRateLimitWarning } from "./chatgptProviderTraffic.js";
@@ -47,6 +48,10 @@ export function createConfiguredProviderTrafficAuthorityFactory(input: {
 					input.userConfig.auracallProfile?.trim() || "default",
 				)
 			: undefined);
+	const budgetWaitTimeoutMs = resolveChatgptBackendRequestBudgetWaitMs(
+		input.userConfig as Record<string, unknown>,
+		input.userConfig.auracallProfile?.trim() || "default",
+	);
 	validateBackendRequestLimit(backendRequestLimit);
 	const now = input.now ?? (() => new Date());
 	const runtime = createBrowserTabConcurrencyRuntime(input.userConfig);
@@ -118,6 +123,8 @@ export function createConfiguredProviderTrafficAuthorityFactory(input: {
 							operationId,
 							tabLeaseId: reserved.value.lease.leaseId,
 							backendRequestLimit,
+							budgetWaitTimeoutMs,
+							abortSignal: input.baseOptions.abortSignal,
 							assertOwnedLease,
 							now,
 						})
