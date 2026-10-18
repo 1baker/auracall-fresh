@@ -15,6 +15,36 @@ const scope: TabLeaseScope = {
 };
 
 describe("ChatGPT tab provisioner", () => {
+	test("creates a guarded conversation target blank without claiming provider navigation", async () => {
+		const registry = createInMemoryBrowserTabLeaseRegistry();
+		const openTarget = vi.fn(async ({ url }: { url: string }) => ({ targetId: "guarded", url }));
+		const recordTargetAction = vi.spyOn(registry, "recordTargetAction");
+		const provision = createChatgptTabProvisioner({
+			registry,
+			scope,
+			workload: { kind: "conversation", conversationId: "existing" },
+			operationId: "guarded",
+			targetUrl: "https://chatgpt.com/c/existing",
+			targetCreationUrl: "about:blank",
+			idleTtlMs: 60_000,
+			absoluteTtlMs: 3_600_000,
+			resolveExistingEndpoint: async () => ({
+				host: "127.0.0.1",
+				port: 45011,
+				managedBrowserProfile: scope.managedBrowserProfile,
+			}),
+			startBrowser: vi.fn(),
+			openTarget,
+			closeTarget: vi.fn(),
+		});
+		const result = await provision({ interactionReservationId: "reservation" });
+		expect(openTarget).toHaveBeenCalledWith(expect.objectContaining({ url: "about:blank" }));
+		expect(result.lease.targetFingerprint).toBe("about:blank");
+		expect(recordTargetAction.mock.calls.map(([action]) => action.action)).toEqual([
+			"target-created",
+		]);
+	});
+
 	test.each([
 		true,
 		false,

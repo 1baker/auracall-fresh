@@ -29,7 +29,7 @@ setCdpCommandAdmissionResolver(async ({ host, port }) => {
     const binding = native[0];
     const generation = nativeBrowserGeneration(binding);
     const gate = new DesktopControlGate(binding.assignment.desktopId);
-    const admission: CdpCommandAdmission = { run: async (command, effect) => {
+    const admission: CdpCommandAdmission = { run: async (command, effect, options) => {
       const opening = command === 'Target.New' || command === 'Target.createTarget';
       const ownedEffect = async () => {
         const current = (await nativeStore.browsers()).filter(item => item.managedProfileDir === binding.managedProfileDir);
@@ -40,11 +40,11 @@ setCdpCommandAdmissionResolver(async ({ host, port }) => {
       };
       // Opening has acquisition custody; it must not require existing-page input ownership.
       return opening
-        ? ownedEffect() : gate.withAutomation(generation, ownedEffect);
+        ? ownedEffect() : gate.withAutomation(generation, ownedEffect, options);
     } };
-    admission.hold = async () => {
-      const held = await gate.holdAutomation(generation);
-      return { run: (command, effect) => held.run(() => admission.run(command, effect)), close: () => held.close() };
+    admission.hold = async (options) => {
+      const held = await gate.holdAutomation(generation, options);
+      return { run: (command, effect, context) => held.run(() => admission.run(command, effect, context)), close: () => held.close() };
     };
     return admission;
   }
@@ -53,7 +53,7 @@ setCdpCommandAdmissionResolver(async ({ host, port }) => {
   const binding = bindings[0];
   const generation = desktopBindingGeneration(binding);
   const gate = new DesktopControlGate(binding.displayAllocationId);
-  const admission: CdpCommandAdmission = { run: async (command, effect) => {
+  const admission: CdpCommandAdmission = { run: async (command, effect, options) => {
     const ownedEffect = async () => {
       const current = (await store.list()).filter((item) => item.managedProfileDir === binding.managedProfileDir);
       if (current.length !== 1 || desktopBindingGeneration(current[0]) !== generation) {
@@ -62,11 +62,11 @@ setCdpCommandAdmissionResolver(async ({ host, port }) => {
       return effect();
     };
     return command === 'Target.New' || command === 'Target.createTarget'
-      ? ownedEffect() : gate.withAutomation(generation, ownedEffect);
+      ? ownedEffect() : gate.withAutomation(generation, ownedEffect, options);
   } };
-  admission.hold = async () => {
-    const held = await gate.holdAutomation(generation);
-    return { run: (command, effect) => held.run(() => admission.run(command, effect)), close: () => held.close() };
+  admission.hold = async (options) => {
+    const held = await gate.holdAutomation(generation, options);
+    return { run: (command, effect, context) => held.run(() => admission.run(command, effect, context)), close: () => held.close() };
   };
   return admission;
 });

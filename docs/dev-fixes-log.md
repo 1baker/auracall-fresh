@@ -1,3 +1,98 @@
+## 2026-10-18 — Admission cancellation must outlive domain setup
+
+A caller signal on provider options does not automatically reach raw CDP commands.
+Session-proof setup scoped its domain-enable commands, but later identity probes
+lost admission cancellation and used the short desktop retry bound. Retain caller
+cancellation through the observation, combine it with explicit wire-scope signals,
+and keep the caller's proof-session cleanup outside that observation scope.
+Test contention after setup as well as before it; an initial-queue test alone
+missed this failure. Source reproduction is separate from installed acceptance.
+
+## 2026-10-18 — Count every provider path before interpreting a shared meter
+
+A healthy-looking ledger cannot prove an HTTP ceiling when inventory sockets or
+normal prompt execution bypass request admission. Attach interception before the
+first provider navigation, reuse the shared request authority at every owned
+socket, and surface unresolved cleanup. Preserve a real HTTP429 warning and an
+unknown prompt outcome even when the meter contains only pre-dispatch cancels.
+Use the existing operation queue for concurrent CLI mutations. Exclude only the
+known enclosing prompt reservation from backend reconciliation; unfinished sibling
+actions must still fence settlement.
+
+## 2026-10-18 — Drain capacity waits before disconnect
+
+Budget waiting is transport-owned: cancel pending admissions on disposal, while
+keeping dispatched failures uncertain. Do not extend cleanup timeouts or remove
+the shared ceiling to hide a queued-request lifecycle conflict. Proven pre-send
+cancellation does not poison a governor reused by the next transport.
+
+## 2026-10-18 — Share unfinished native verification without stale PID caching
+
+Concurrent commands can repeat identical expensive window ownership queries.
+Share only an unfinished check keyed by the full native binding generation and
+discard it on settlement. Keep the actual process/boot/executable/window checks
+and force a fresh check after completion; later generation drift still refuses.
+13-way current measurement3.373s→0.353s. Native cleanup acceptance stays separate.
+
+## 2026-10-18 — Batch durable interaction-ledger mutations during request bursts
+
+A15MB retained ledger was rewritten/fsynced for every reserve/start/settle. Burst
+admissions outlasted owned-client cleanup. Coalesce pending mutations per ledger
+instance while retaining the shared process lock and commit-before-results rule.
+History replay13requests:8.084s→0.633s, same permits/settlements. Failed commits
+return no permits. Do not prune history or weaken native ownership/cleanup guards.
+
+## 2026-10-18 — Wait for backend capacity before dispatch
+
+An aggregate hard ceiling alone stops workflows when bootstrap exhausts capacity.
+Optional bounded backendRequestBudgetWaitMs now waits for rolling-window permits
+without sending or replaying a provider request. Warning/cancellation/lease checks
+remain active; app inventory deadlines include the selected waiting allowance.
+Three-caller virtual-clock regression proves shared progress across windows.
+
+## 2026-10-17 — Shared backend admission requires production caller wiring
+
+A shared browser-operation governor is not a backend-request meter. Live-follow
+omitted the available backend admission hook; configured utilities/factories also
+needed a service configuration path. All three now accept the explicit ChatGPT
+maxBackendRequestsPerMinute setting and reuse account-wide durable permits.
+Regression: two follow tasks with independent ledger instances dispatch only one
+request under a one-request fixture budget; existing transport tests now enable
+admission through service config. No default production ceiling or live success
+is inferred. See docs/dev/notes/2026-10-17-plan0411-shared-backend-admission.md.
+
+## 2026-10-17 | Due follow discovery and unresolved-read reporting
+
+ChatGPT detail-only work retains the prior actual index epoch. A due index read
+uses existing configured cadence ahead of retained-detail backlog, while fresh,
+scoped and incomplete-message work keeps its continuation. A parent retains its
+refresh/cursor and fails on an unresolved read before artifact handoff; a later
+success clears only that same read. Public seams reproduce both original defects.
+A separate installed precollection stop exposed a stable empty desktop transition
+directory beside a dead automation owner; exact reversible recovery restored a
+631ms public warning probe without changing deadline or browser process. Native
+capture/repeat acceptance remains pending. See
+[repair evidence](dev/notes/2026-10-17-plan0411-follow-repair.md).
+
+## 2026-10-17 | Follow acceptance must bind the newly created chat
+
+A coarse completed parent hid a nested historical-context read failure, and the
+actual new chat was absent before/after an unscoped pass. Pending backfill selected
+detail inventory and bypassed root discovery. New providerIndexEpoch timestamps
+on retained-detail reads alone do not prove fresh index observation. This is a
+live diagnostic finding, not an implemented fix; keep changed/quiet acceptance
+failed until the actual candidate is discovered and captured. See
+[measured failure](dev/notes/2026-10-17-plan0411-newchat-follow.md).
+
+## 2026-10-17 | Distinguish backlog continuation from quiet follow acceptance
+
+An installed unscoped steady-follow pass advanced a persisted detail cursor2→3
+and returned verified reuse without new transfer. This does not establish
+account-index change detection or an unchanged complete quiet repeat. Snapshot
+starting cursor/frontier state before interpreting a normal pass. Raw request
+coverage flags and cleanup qualification remain separate. See
+[measured acceptance checkpoint](dev/notes/2026-10-17-plan0411-frontier-acceptance.md).
+
 # 2026-10-17 — issue331 provider-free baseline repairs
 
 Desktop Wake now uses the browser-service navigation control point and retains bounded acknowledgement and protocol-error rejection. Provider redirects remain allowed; existing conversations remain untouched. Work test location follows actual mock navigation, mention architecture checks inspect the beforeSend boundary, and drain status uses explicit gates rather than timing guesses. The shared-budget test uses four real service instances with a controlled clock; bypassing budget wait demonstrably executes25ms too early. No provider runs or installation in this slice. Plan0434 and issue331 record acceptance.

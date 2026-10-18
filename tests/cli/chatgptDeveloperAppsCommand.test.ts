@@ -111,16 +111,38 @@ describe("executeChatgptDeveloperAppOperation", () => {
 
 	it("forwards explicit model strategy only to the submission adapter", async () => {
 		const strategies: unknown[] = [];
-		const result = await runChatgptDeveloperAppOperationForCli({ browser: {} } as never, {
-			action: "test", app: "asdk_app_corel33t", submit: true, prompt: "Use app",
-			expectedAccount: "eric.cochran@soylei.com", confirmed: true, modelStrategy: "select",
-		}, {
-			createBrowser: async () => ({ userConfig: { browser: {} }, runUtilityBrowserOperation: async ({ run }: { run: (options: Record<string, never>) => Promise<unknown> }) => run({}) }) as never,
-			createAdapter: (_browser, _factory, options) => {
-				strategies.push(options.modelStrategy);
-				return { ...createAdapter({ submitTest: async () => ({status: "completed", message: "fixture"}) }), close: async () => {} };
+		const result = await runChatgptDeveloperAppOperationForCli(
+			{ browser: {} } as never,
+			{
+				action: "test",
+				app: "asdk_app_corel33t",
+				submit: true,
+				prompt: "Use app",
+				expectedAccount: "eric.cochran@soylei.com",
+				confirmed: true,
+				modelStrategy: "select",
 			},
-		});
+			{
+				createBrowser: async () =>
+					({
+						userConfig: { browser: {} },
+						runUtilityBrowserOperation: async ({
+							run,
+						}: {
+							run: (options: Record<string, never>) => Promise<unknown>;
+						}) => run({}),
+					}) as never,
+				createAdapter: (_browser, _factory, options) => {
+					strategies.push(options.modelStrategy);
+					return {
+						...createAdapter({
+							submitTest: async () => ({ status: "completed", message: "fixture" }),
+						}),
+						close: async () => {},
+					};
+				},
+			},
+		);
 		expect(result.status).toBe("completed");
 		expect(strategies).toEqual([undefined, "select"]);
 	});
@@ -1043,4 +1065,31 @@ describe("executeChatgptDeveloperAppOperation", () => {
 			),
 		).rejects.toThrow("must use HTTPS");
 	});
+});
+
+it("allows bounded configured capacity waiting within the app-list deadline", async () => {
+	vi.useFakeTimers();
+	try {
+		const pending = runChatgptDeveloperAppOperationForCli(
+			{ services: { chatgpt: { backendRequestBudgetWaitMs: 60000 } } } as never,
+			{ action: "list" },
+			{
+				createBrowser: async () => ({}) as never,
+				createAdapter: () => ({
+					...createAdapter({
+						readState: async () => {
+							await new Promise((resolve) => setTimeout(resolve, 50000));
+							return createAdapter().readState();
+						},
+					}),
+					close: async () => undefined,
+				}),
+			},
+		);
+		const result = pending.then((value) => value);
+		await vi.advanceTimersByTimeAsync(50001);
+		await expect(result).resolves.toMatchObject({ action: "list", status: "observed" });
+	} finally {
+		vi.useRealTimers();
+	}
 });

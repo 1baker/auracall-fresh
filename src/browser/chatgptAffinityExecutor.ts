@@ -20,6 +20,10 @@ import { probeChatgptRateLimitWarning } from "./chatgptProviderTraffic.js";
 import { recordChatgptRateLimitDetection } from "./chatgptRateLimitGuard.js";
 import type { PromptInput, PromptResult } from "./llmService/types.js";
 import {
+	createOwnedBackendRequestAuthority,
+	OwnedBackendRequestCleanupError,
+} from "./ownedBackendRequestAuthority.js";
+import {
 	assertChatgptLeasedPromptResult,
 	buildChatgptLeasedPromptOptions,
 	type ChatgptLeasedPromptRunner,
@@ -50,6 +54,7 @@ type ChatgptTabAffinityExecutionInput = {
 	options?: BrowserProviderListOptions;
 	runPrompt: ChatgptLeasedPromptRunner;
 	policy: ProviderInteractionPolicy;
+	backendRequestBudgetWaitMs?: number;
 	reservationTtlMs: number;
 	idleTtlMs: number;
 	now?: () => Date;
@@ -87,6 +92,7 @@ export interface ExecuteProvisionedChatgptConversationInput {
 	runPrompt: ChatgptLeasedPromptRunner;
 	acquireTab: (input: { interactionReservationId: string }) => Promise<ProvisionedChatgptTab>;
 	policy: ProviderInteractionPolicy;
+	backendRequestBudgetWaitMs?: number;
 	reservationTtlMs: number;
 	idleTtlMs: number;
 	now?: () => Date;
@@ -203,6 +209,7 @@ export async function executeProvisionedChatgptConversation(
 			options: request.options,
 			runPrompt: request.runPrompt,
 			policy: request.policy,
+			backendRequestBudgetWaitMs: request.backendRequestBudgetWaitMs,
 			reservationTtlMs: request.reservationTtlMs,
 			idleTtlMs: request.idleTtlMs,
 			now,
@@ -237,6 +244,48 @@ async function executeAdmittedChatgptConversation(
 		options: request.options,
 		input: request.input,
 	});
+	const controller = new AbortController();
+	const originalSignal = providerOptions.abortSignal;
+	providerOptions.abortSignal = originalSignal
+		? AbortSignal.any([originalSignal, controller.signal])
+		: controller.signal;
+	const assertOwnedLease = () =>
+		withClaim(async () => {
+			if (renewalFailed) throw renewalError;
+			const lease = (await request.registry.list({ states: ["active"] })).find(
+				(candidate) => candidate.leaseId === request.lease.leaseId,
+			);
+			if (
+				!lease ||
+				lease.ownerOperationId !== request.operationId ||
+				lease.targetId !== request.lease.targetId ||
+				lease.revision !== activeClaim.revision
+			) {
+				throw new Error("Provider traffic tab lease ownership changed before prompt action.");
+			}
+		});
+	const backendLimit = request.policy.maxBackendRequestsPerMinute;
+	const backendRequests =
+		backendLimit != null
+			? createOwnedBackendRequestAuthority({
+					ledger: request.ledger,
+					scope: {
+						provider: "chatgpt",
+						tenantKey: request.lease.scope.tenantKey,
+						runtimeProfileId: request.lease.scope.runtimeProfileId,
+						managedBrowserProfile: request.lease.scope.managedBrowserProfile,
+					},
+					workloadId: workloadId(request.lease),
+					operationId: request.operationId,
+					tabLeaseId: request.lease.leaseId,
+					backendRequestLimit: backendLimit,
+					parentReservationId: reservationId,
+					budgetWaitTimeoutMs: request.backendRequestBudgetWaitMs,
+					abortSignal: providerOptions.abortSignal,
+					assertOwnedLease,
+					now,
+				})
+			: undefined;
 	providerOptions.providerTrafficGovernor = createProviderTrafficGovernor({
 		attribution: {
 			provider: "chatgpt",
@@ -253,21 +302,8 @@ async function executeAdmittedChatgptConversation(
 			request.mutationAudit ??
 			request.options?.mutationAudit ??
 			createInMemoryBrowserMutationLog().record,
-		assertLease: (attribution) =>
-			withClaim(async () => {
-				if (renewalFailed) throw renewalError;
-				const lease = (await request.registry.list({ states: ["active"] })).find(
-					(candidate) => candidate.leaseId === attribution.tabLeaseId,
-				);
-				if (
-					!lease ||
-					lease.ownerOperationId !== attribution.operationId ||
-					lease.targetId !== request.lease.targetId ||
-					lease.revision !== activeClaim.revision
-				) {
-					throw new Error("Provider traffic tab lease ownership changed before prompt action.");
-				}
-			}),
+		assertLease: assertOwnedLease,
+		admitBackendRequest: backendRequests?.admit,
 		probeWarning: probeChatgptRateLimitWarning,
 		persistWarning: async (warning) => {
 			const observedAt = now();
@@ -292,11 +328,6 @@ async function executeAdmittedChatgptConversation(
 		},
 	});
 
-	const controller = new AbortController();
-	const originalSignal = providerOptions.abortSignal;
-	providerOptions.abortSignal = originalSignal
-		? AbortSignal.any([originalSignal, controller.signal])
-		: controller.signal;
 	let stopped = false;
 	let timer: ReturnType<typeof setTimeout> | undefined;
 	let renewalError: unknown;
@@ -367,6 +398,15 @@ async function executeAdmittedChatgptConversation(
 			await stopRenewal();
 		}
 		if (renewalFailed) throw renewalError;
+		if (
+			(await backendRequests?.reconcileEffectState("settled")) === "outcome-unknown" ||
+			(providerOptions.providerTrafficGovernor.snapshotAdmissionState?.().backendRequestOutcome ??
+				"ready") !== "ready"
+		) {
+			throw new OwnedBackendRequestCleanupError(
+				new Error("Prompt backend request admission or cleanup did not settle."),
+			);
+		}
 		assertChatgptLeasedPromptResult(request.lease, result);
 		activeClaim = await settleSuccessfulLease(
 			{ ...request, claim: activeClaim },
@@ -375,14 +415,19 @@ async function executeAdmittedChatgptConversation(
 		);
 	} catch (error) {
 		await stopRenewal();
+		const failure =
+			(await backendRequests?.reconcileEffectState("settled", error)) === "outcome-unknown" &&
+			readFailureEffectState(error) === "pre_effect"
+				? new OwnedBackendRequestCleanupError(error)
+				: error;
 		await settleFailedExecution(
 			{ ...request, claim: activeClaim },
 			activeClaim,
 			reservationId,
 			now,
-			error,
+			failure,
 		);
-		throw error;
+		throw failure;
 	}
 	const settled = await request.ledger.settle({
 		reservationId,

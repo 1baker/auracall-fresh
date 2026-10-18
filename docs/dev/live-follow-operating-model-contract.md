@@ -134,6 +134,13 @@ refresh. Persisting or reconciling the backfill ledger after the failure does
 not convert the live-follow cycle to `complete` and does not clear the exact
 completion error.
 
+ChatGPT steady-follow index discovery uses the existing configured minimum
+interval while retained detail backlog is pending. Explicitly scoped conversation
+work and incomplete message chunks keep their detail continuation. A detail-only
+read keeps its prior provider-index epoch rather than claiming a new observation.
+Unresolved collector read diagnostics prevent a successful completion and child
+handoff; the refresh and cursor remain available for a later explicit retry.
+
 ## Collector-To-Materialization Pacing
 
 A successful collector refresh hands materialization the exact conversation IDs

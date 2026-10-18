@@ -159,3 +159,48 @@ test('owner publication never exposes a partial owner.json', async () => {
     await gate.releaseControl(owner.token, 'binding');
   } finally { spy.mockRestore(); await fs.rm(directory, {recursive:true,force:true}); }
 });
+
+test('a cancellable automation contender waits for the current owner beyond short busy retries', async () => {
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'auracall-control-queue-'));
+  const first = new DesktopControlGate('fixture', directory);
+  const second = new DesktopControlGate('fixture', directory);
+  const held = await first.holdAutomation('generation-1');
+  const cancellation = new AbortController();
+  const effect = vi.fn(async () => 'second');
+  let outcome: unknown;
+  const waiting = second.withAutomation('generation-1', effect, { abortSignal: cancellation.signal }).then(value => { outcome = value; }, error => { outcome = error; });
+  try {
+    // Test the actual retry-window boundary while another owner demonstrably holds custody.
+    await new Promise(resolve => setTimeout(resolve, 3000));
+    expect(outcome).toBeUndefined();
+    expect(effect).not.toHaveBeenCalled();
+    await held.close();
+    await waiting;
+    expect(outcome).toBe('second');
+    expect(effect).toHaveBeenCalledTimes(1);
+  } finally {
+    cancellation.abort(); await held.close(); await waiting;
+    await fs.rm(directory, { recursive: true, force: true });
+  }
+}, 10000);
+
+
+test('queued automation cancellation never dispatches and leaves the current owner intact', async () => {
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'auracall-control-cancel-'));
+  const first = new DesktopControlGate('fixture', directory);
+  const second = new DesktopControlGate('fixture', directory);
+  const held = await first.holdAutomation('generation-1');
+  const cancellation = new AbortController();
+  const effect = vi.fn(async () => undefined);
+  const waiting = second.withAutomation('generation-1', effect, { abortSignal: cancellation.signal });
+  const outcome = waiting.then(() => undefined, error => error);
+  try {
+    cancellation.abort(new Error('cancelled contender'));
+    expect(await outcome).toBeInstanceOf(Error);
+    expect(effect).not.toHaveBeenCalled();
+    await expect(held.run(async () => 'owner')).resolves.toBe('owner');
+  } finally {
+    cancellation.abort(); await held.close(); await outcome;
+    await fs.rm(directory, { recursive: true, force: true });
+  }
+});

@@ -1,3 +1,6 @@
+import { mkdtemp, rm } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 import { vi as activityMock } from "vitest";
 
 activityMock.mock("../../src/browser/chatgptTabActivity.js", async (importOriginal) => {
@@ -252,6 +255,124 @@ describe("configured cold-start custody", () => {
 			if (retainedLease) expect(verifyAbsent).toHaveBeenCalledWith("/managed/chatgpt");
 		} finally {
 			vi.restoreAllMocks();
+		}
+	});
+});
+
+describe("live-follow shared backend admission", () => {
+	test.each([
+		"shared-budget",
+		"uncertain",
+	])("owned follow request admission preserves %s", async (mode) => {
+		const { createFileBackedProviderInteractionLedger } = await import(
+			"../../packages/browser-service/src/service/interactionLedger.js"
+		);
+		const lifecycle = await import("../../packages/browser-service/src/chromeLifecycle.js");
+		const runtimeModule = await import("../../src/browser/tabConcurrencyRuntime.js");
+		const coordinator = await import("../../src/accountMirror/liveFollowTabCoordinator.js");
+		const { BrowserService } = await import("../../src/browser/service/browserService.js");
+		const { createConfiguredLiveFollowAffinity } = await import(
+			"../../src/accountMirror/configuredLiveFollowAffinity.js"
+		);
+		const directory = await mkdtemp(path.join(os.tmpdir(), "auracall-follow-backend-"));
+		const ledger = () => createFileBackedProviderInteractionLedger({ ledgerRoot: directory });
+		const leases = [1, 2].map((id) => ({
+			leaseId: `lease-${id}`,
+			targetId: `target-${id}`,
+			ownerOperationId: `op-${id}`,
+			revision: 1,
+			workload: { kind: "live-follow" },
+			retention: "live-follow",
+		}));
+		const registry = {
+			list: vi.fn(async () => leases),
+			recordMeaningfulUse: vi.fn(
+				async (input: { claim: { leaseId: string; revision: number } }) => ({
+					ok: true,
+					value: { claim: input.claim },
+				}),
+			),
+			idle: vi.fn(async () => ({ ok: true })),
+		};
+		vi.spyOn(lifecycle, "listChromeTargets").mockResolvedValue([]);
+		vi.spyOn(runtimeModule, "createBrowserTabConcurrencyRuntime").mockImplementation(
+			() => ({ registry, ledger: ledger() }) as never,
+		);
+		vi.spyOn(coordinator, "acquireLiveFollowCrawlerTab").mockImplementation(async (input) => {
+			const lease = leases.find((item) => item.ownerOperationId === input.operationId);
+			if (!lease) throw new Error("Missing fixture lease");
+			return {
+				endpoint: { host: "127.0.0.1", port: 37749 },
+				lease,
+				claim: { leaseId: lease.leaseId, revision: 1 },
+			} as never;
+		});
+		vi.spyOn(BrowserService, "fromConfig").mockReturnValue({
+			resolveServiceTarget: async () => ({
+				host: "127.0.0.1",
+				port: 37749,
+				managedBrowserProfile: "/managed/chatgpt",
+			}),
+			getMutationAuditSink: () => async () => undefined,
+		} as never);
+		try {
+			const tasks = await Promise.all(
+				leases.slice(0, mode === "uncertain" ? 1 : 2).map((lease) =>
+					createConfiguredLiveFollowAffinity({
+						userConfig: {
+							auracallProfile: "runtime-1",
+							browser: { tabConcurrencyMode: "tab-affinity" },
+							services: { chatgpt: { maxBackendRequestsPerMinute: 1 } },
+							profiles: {
+								"runtime-1": { services: { chatgpt: { identity: { accountId: "account-1" } } } },
+							},
+						} as never,
+						provider: "chatgpt",
+						runtimeProfileId: "runtime-1",
+						operationId: lease.ownerOperationId,
+						maxBrowserInteractionsPerMinute: 20,
+						now: () => new Date("2026-10-17T12:00:00Z"),
+					}),
+				),
+			);
+			const dispatched = vi.fn(async () => {
+				if (mode === "uncertain") throw new Error("fixture send outcome unknown");
+			});
+			const outcomes = await Promise.allSettled(
+				tasks.map(async (task, index) => {
+					const admit = task?.providerTrafficGovernor.admitBackendRequest;
+					if (!admit) throw new Error("Live-follow backend admission missing");
+					await admit(`sha256:${String(index + 1).repeat(64)}`, dispatched);
+				}),
+			);
+			if (mode === "uncertain") {
+				expect(dispatched).toHaveBeenCalledOnce();
+				expect(outcomes).toEqual([
+					expect.objectContaining({
+						status: "rejected",
+						reason: expect.objectContaining({ message: "fixture send outcome unknown" }),
+					}),
+				]);
+				vi.spyOn(lifecycle, "connectToChromeTarget").mockResolvedValue({
+					// biome-ignore lint/style/useNamingConvention: CDP protocol domain.
+					Runtime: { evaluate: async () => ({ result: { value: null } }) },
+					close: async () => undefined,
+				} as never);
+				await expect(tasks[0]?.completeSuccess()).rejects.toThrow(
+					"backend request outcome remains unknown",
+				);
+				return;
+			}
+			expect(outcomes.filter((item) => item.status === "fulfilled")).toHaveLength(1);
+			expect(dispatched).toHaveBeenCalledOnce();
+			expect(outcomes.filter((item) => item.status === "rejected")).toEqual([
+				expect.objectContaining({
+					reason: expect.objectContaining({ name: "ProviderBackendRequestBudgetExceededError" }),
+				}),
+			]);
+		} finally {
+			vi.restoreAllMocks();
+			await rm(directory, { recursive: true, force: true });
 		}
 	});
 });

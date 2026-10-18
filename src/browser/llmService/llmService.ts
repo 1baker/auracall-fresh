@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { clearTimeout as cancelTimer, setTimeout as scheduleTimer } from "node:timers";
+import { withCdpCommandAbortSignal } from "../../../packages/browser-service/src/guardedCdp.js";
 import {
 	type BrowserInteractionGovernor,
 	createBrowserInteractionGovernor,
@@ -974,12 +975,15 @@ export abstract class LlmService {
 	async getProviderSessionProof(
 		overrides: BrowserProviderListOptions = {},
 	): Promise<ProviderSessionProof> {
-		if (!this.provider.getUserIdentity) {
+		const observeIdentity = this.provider.getUserIdentity?.bind(this.provider);
+		if (!observeIdentity) {
 			throw new Error(`Provider-session observation is not supported for ${this.providerId}.`);
 		}
 		const listOptions = await this.buildListOptions(overrides, { ensurePort: true });
 		try {
-			const observation = await this.provider.getUserIdentity(listOptions);
+			const observation = await withCdpCommandAbortSignal(overrides.abortSignal, () =>
+				observeIdentity(listOptions),
+			);
 			return assertProviderSessionAuthorization(
 				listOptions.providerSessionAuthorization,
 				observation,

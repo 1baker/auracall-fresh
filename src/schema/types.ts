@@ -176,6 +176,8 @@ export const ServiceConfigSchema = z.object({
 
 // biome-ignore lint/style/useNamingConvention: schema naming is stable.
 export const ChatgptServiceConfigSchema = ServiceConfigSchema.extend({
+  maxBackendRequestsPerMinute: z.number().int().positive().max(Number.MAX_SAFE_INTEGER).optional(),
+  backendRequestBudgetWaitMs: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER).optional(),
   features: ChatgptFeatureSchema.optional(),
 });
 

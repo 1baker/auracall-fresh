@@ -5,6 +5,8 @@ import type { BrowserMutationAuditSink } from "../../packages/browser-service/sr
 import { resolveConfiguredServiceAccountId } from "../config/serviceAccountIdentity.js";
 import type { ResolvedUserConfig } from "../config.js";
 import {
+	resolveChatgptBackendRequestBudgetWaitMs,
+	resolveChatgptBackendRequestsPerMinute,
 	resolveChatgptInteractionsPerMinute,
 	resolveChatgptTenantLimits,
 } from "../runtime/tenantExecutionLimits.js";
@@ -140,6 +142,13 @@ export async function runChatgptPromptWithConfiguredAffinity(input: {
 		workload,
 		operationId,
 		targetUrl,
+		targetCreationUrl:
+			resolveChatgptBackendRequestsPerMinute(
+				input.userConfig as Record<string, unknown>,
+				runtimeProfileId,
+			) === undefined
+				? undefined
+				: "about:blank",
 		idleTtlMs: 15 * 60_000,
 		absoluteTtlMs: 8 * 60 * 60_000,
 		now: input.now,
@@ -174,7 +183,15 @@ export async function runChatgptPromptWithConfiguredAffinity(input: {
 		options: input.options,
 		runPrompt: input.runExact,
 		acquireTab: provision,
+		backendRequestBudgetWaitMs: resolveChatgptBackendRequestBudgetWaitMs(
+			input.userConfig as Record<string, unknown>,
+			runtimeProfileId,
+		),
 		policy: {
+			maxBackendRequestsPerMinute: resolveChatgptBackendRequestsPerMinute(
+				input.userConfig as Record<string, unknown>,
+				runtimeProfileId,
+			),
 			maxConcurrentChats: limits.maxConcurrentChats,
 			maxConversationStartsPerHour: limits.maxChatsPerHour,
 			maxConversationStartsPerDay: limits.maxChatsPerDay,

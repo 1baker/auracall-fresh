@@ -985,3 +985,127 @@ describe("interactionLedger (package)", () => {
 		).toMatchObject({ interactionsLastMinute: 1 });
 	});
 });
+
+test("a backend burst shares durable writes while retaining the account ceiling", async () => {
+	const fs = await import("node:fs/promises");
+	const { vi } = await import("vitest");
+	const directory = await mkdtemp(path.join(os.tmpdir(), "auracall-backend-write-burst-"));
+	const originalRename = fs.default.rename;
+	let durableWrites = 0;
+	const rename = vi.spyOn(fs.default, "rename").mockImplementation(async (from, to) => {
+		if (String(to).endsWith("provider-interactions.v1.json")) durableWrites++;
+		return originalRename(from, to);
+	});
+	try {
+		const ledger = createFileBackedProviderInteractionLedger({ ledgerRoot: directory });
+		const outcomes = await Promise.all(
+			Array.from({ length: 13 }, (_, id) =>
+				ledger.reserve({
+					scope: foregroundScope,
+					workloadId: "burst",
+					operationId: "burst",
+					tabLeaseId: "burst-lease",
+					interactionClass: "backend-request",
+					mutability: "read-only",
+					startsNewConversation: false,
+					backendRequestKey: `sha256:${id.toString(16).repeat(64)}`,
+					now: "2026-10-18T00:00:00Z",
+					reservationTtlMs: 30000,
+					policy: {
+						maxConcurrentChats: null,
+						maxConversationStartsPerHour: null,
+						maxConversationStartsPerDay: null,
+						maxBackendRequestsPerMinute: 3,
+					},
+				}),
+			),
+		);
+		expect(outcomes.filter((value) => value.allowed)).toHaveLength(3);
+		expect(outcomes.filter((value) => !value.allowed)).toHaveLength(10);
+		expect(
+			await createFileBackedProviderInteractionLedger({ ledgerRoot: directory }).list(),
+		).toHaveLength(3);
+		expect(durableWrites).toBeLessThanOrEqual(1);
+	} finally {
+		rename.mockRestore();
+		await rm(directory, { recursive: true, force: true });
+	}
+});
+
+test.each([
+	"blocked",
+	"failed",
+])("backend batch publishes only after a %s durable commit", async (mode) => {
+	const fs = await import("node:fs/promises");
+	const { vi } = await import("vitest");
+	const directory = await mkdtemp(path.join(os.tmpdir(), "auracall-backend-durability-"));
+	let entered!: () => void;
+	let release!: () => void;
+	const writing = new Promise<void>((resolve) => {
+		entered = resolve;
+	});
+	const released = new Promise<void>((resolve) => {
+		release = resolve;
+	});
+	const originalRename = fs.default.rename;
+	const rename = vi.spyOn(fs.default, "rename").mockImplementation(async (from, to) => {
+		if (String(to).endsWith("provider-interactions.v1.json")) {
+			entered();
+			if (mode === "failed") throw new Error("fixture durable commit failed");
+			await released;
+		}
+		return originalRename(from, to);
+	});
+	try {
+		const ledger = createFileBackedProviderInteractionLedger({ ledgerRoot: directory });
+		let completed = 0;
+		const calls = ["a", "b"].map((id) =>
+			ledger
+				.reserve({
+					scope: foregroundScope,
+					workloadId: "durability",
+					operationId: "durability",
+					tabLeaseId: "lease",
+					interactionClass: "backend-request",
+					mutability: "read-only",
+					startsNewConversation: false,
+					backendRequestKey: `sha256:${id.repeat(64)}`,
+					now: "2026-10-18T00:00:00Z",
+					reservationTtlMs: 30000,
+					policy: {
+						maxConcurrentChats: null,
+						maxConversationStartsPerHour: null,
+						maxConversationStartsPerDay: null,
+						maxBackendRequestsPerMinute: 1,
+					},
+				})
+				.then((value) => {
+					completed++;
+					return value;
+				}),
+		);
+		const outcomes = Promise.allSettled(calls);
+		await writing;
+		if (mode === "blocked") expect(completed).toBe(0);
+		release();
+		const settled = await outcomes;
+		if (mode === "failed") {
+			expect(settled).toEqual([
+				expect.objectContaining({ status: "rejected" }),
+				expect.objectContaining({ status: "rejected" }),
+			]);
+			expect(
+				await createFileBackedProviderInteractionLedger({ ledgerRoot: directory }).list(),
+			).toHaveLength(0);
+		} else {
+			expect(settled.every((value) => value.status === "fulfilled")).toBe(true);
+			expect(
+				await createFileBackedProviderInteractionLedger({ ledgerRoot: directory }).list(),
+			).toHaveLength(1);
+		}
+	} finally {
+		release();
+		rename.mockRestore();
+		await rm(directory, { recursive: true, force: true });
+	}
+});

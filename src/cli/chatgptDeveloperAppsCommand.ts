@@ -1,13 +1,20 @@
-import type { BrowserModelStrategy } from "../browser/types.js";
 import type { DeveloperAppSubmissionEvidence } from "../browser/chatgptDeveloperAppSubmission.js";
 import { BrowserAutomationClient } from "../browser/client.js";
+import { hasUnknownOwnedRequestCleanup } from "../browser/ownedBackendRequestAuthority.js";
 import {
 	type ChatgptDeveloperAppBrowserClient,
 	type ChatgptDeveloperAppBrowserClientFactory,
 	createChatgptDeveloperAppBrowserAdapter,
 } from "../browser/providers/chatgptDeveloperApps.js";
+import {
+	annotateClientMutationContext,
+	resolveProviderTrafficGovernor,
+} from "../browser/providers/mutationAudit.js";
 import type { BrowserProviderListOptions } from "../browser/providers/types.js";
+import type { BrowserModelStrategy } from "../browser/types.js";
 import type { ResolvedUserConfig } from "../config.js";
+
+import { resolveChatgptBackendRequestBudgetWaitMs } from "../runtime/tenantExecutionLimits.js";
 
 const DEFAULT_CHATGPT_DEVELOPER_APP_LIST_TIMEOUT_MS = 45_000;
 const DEFAULT_CHATGPT_DEVELOPER_APP_CLOSE_TIMEOUT_MS = 5_000;
@@ -349,7 +356,11 @@ export async function runChatgptDeveloperAppOperationForCli(
 	const createBrowser = dependencies.createBrowser ?? BrowserAutomationClient.fromConfig;
 	const createAdapter = dependencies.createAdapter ?? createChatgptDeveloperAppBrowserAdapter;
 	const abortController =
-		input.action === "list" || input.action === "refresh-tools" ? new AbortController() : null;
+		input.action === "list" ||
+		input.action === "refresh-tools" ||
+		(input.action === "test" && input.submit)
+			? new AbortController()
+			: null;
 	const active: { adapter: ChatgptDeveloperAppCliAdapter | null } = { adapter: null };
 	const operation = async () => {
 		const browser = await createBrowser(userConfig, { target: "chatgpt" });
@@ -370,18 +381,35 @@ export async function runChatgptDeveloperAppOperationForCli(
 				},
 			);
 			abortController?.signal.throwIfAborted();
+			let adapterFailure: { error: unknown } | undefined;
 			try {
 				if (input.action === "test" && input.submit) {
 					return {
 						action: "list" as const,
 						status: "observed" as const,
-						state: await active.adapter.readState(),
+						state: await withChatgptDeveloperAppDeadline(
+							active.adapter.readState(),
+							normalizePositiveTimeout(
+								dependencies.listTimeoutMs,
+								DEFAULT_CHATGPT_DEVELOPER_APP_LIST_TIMEOUT_MS +
+									resolveChatgptBackendRequestBudgetWaitMs(
+										userConfig as Record<string, unknown>,
+										userConfig.auracallProfile ?? "default",
+									),
+							),
+							"ChatGPT developer-app test preflight timed out.",
+							(error) => abortController?.abort(error),
+						),
 					};
 				}
 				return await executeChatgptDeveloperAppOperation(input, active.adapter);
+			} catch (error) {
+				adapterFailure = { error };
+				throw error;
 			} finally {
-				await active.adapter.close().catch(() => undefined);
+				const adapter = active.adapter;
 				active.adapter = null;
+				await closeDeveloperAppAdapter(adapter, adapterFailure);
 			}
 		};
 		if (
@@ -409,15 +437,20 @@ export async function runChatgptDeveloperAppOperationForCli(
 				modelStrategy: input.action === "test" ? input.modelStrategy : undefined,
 			},
 		);
+		let adapterFailure: { error: unknown } | undefined;
 		try {
 			return await executeChatgptDeveloperAppOperationWithState(
 				input,
 				active.adapter,
 				observed.state,
 			);
+		} catch (error) {
+			adapterFailure = { error };
+			throw error;
 		} finally {
-			await active.adapter.close().catch(() => undefined);
+			const adapter = active.adapter;
 			active.adapter = null;
+			await closeDeveloperAppAdapter(adapter, adapterFailure);
 		}
 	};
 	try {
@@ -426,7 +459,11 @@ export async function runChatgptDeveloperAppOperationForCli(
 			input.action === "refresh-tools"
 				? dependencies.refreshToolsTimeoutMs
 				: dependencies.listTimeoutMs,
-			input.action === "refresh-tools" ? 90_000 : DEFAULT_CHATGPT_DEVELOPER_APP_LIST_TIMEOUT_MS,
+			(input.action === "refresh-tools" ? 90_000 : DEFAULT_CHATGPT_DEVELOPER_APP_LIST_TIMEOUT_MS) +
+				resolveChatgptBackendRequestBudgetWaitMs(
+					userConfig as Record<string, unknown>,
+					userConfig.auracallProfile ?? "default",
+				),
 		);
 		return await withChatgptDeveloperAppDeadline(
 			operation(),
@@ -445,8 +482,27 @@ export async function runChatgptDeveloperAppOperationForCli(
 				active.adapter.close(),
 				closeTimeoutMs,
 				`ChatGPT developer-app browser client close timed out after ${closeTimeoutMs}ms.`,
-			).catch(() => undefined);
+			).catch((error: unknown) => {
+				if (hasUnknownOwnedRequestCleanup(error)) throw error;
+			});
 		}
+	}
+}
+
+async function closeDeveloperAppAdapter(
+	adapter: ChatgptDeveloperAppCliAdapter,
+	primaryFailure?: { error: unknown },
+): Promise<void> {
+	try {
+		await adapter.close();
+	} catch (error) {
+		if (!hasUnknownOwnedRequestCleanup(error)) return;
+		if (primaryFailure)
+			throw new AggregateError(
+				[primaryFailure.error, error],
+				"Developer-app operation and owned cleanup failed.",
+			);
+		throw error;
 	}
 }
 
@@ -463,7 +519,33 @@ function scopeChatgptDeveloperAppBrowser(
 		userConfig: browser.userConfig,
 		getUserIdentity: (options) =>
 			browser.getUserIdentity({ ...listOptions, ...options, ...exactConnection }),
-		connectDevTools: (options) => browser.connectDevTools({ ...options, ...exactConnection }),
+		connectDevTools: async (options) => {
+			const connected = await browser.connectDevTools({ ...options, ...exactConnection });
+			if (listOptions.providerTrafficGovernor || listOptions.providerTrafficAuthorityFactory) {
+				try {
+					await annotateClientMutationContext(
+						connected.client,
+						{ ...listOptions, abortSignal: options?.abortSignal ?? listOptions.abortSignal },
+						"provider:chatgpt:developer-apps",
+						listOptions.tabTargetId,
+					);
+					await resolveProviderTrafficGovernor(connected.client)?.checkWarning?.(
+						connected.client.Runtime,
+					);
+				} catch (error) {
+					try {
+						await connected.client.close();
+					} catch (cleanup) {
+						throw new AggregateError(
+							[error, cleanup],
+							"Developer-app connection admission and cleanup failed.",
+						);
+					}
+					throw error;
+				}
+			}
+			return connected;
+		},
 	};
 }
 

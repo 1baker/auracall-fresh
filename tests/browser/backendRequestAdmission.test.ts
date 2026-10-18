@@ -35,6 +35,7 @@ const fixture = vi.hoisted(() => ({
 				warnPayload?: boolean;
 				failRead?: boolean;
 				abortRead?: () => void;
+				beforeIdentity?: () => void;
 				failContinuation?: boolean;
 		  },
 	clients: [] as Array<{
@@ -101,9 +102,10 @@ vi.mock("chrome-remote-interface", () => ({
 					const expression = parameters.expression ?? "";
 					let value: unknown = [];
 					if (expression === "location.href") value = fixture.page.url;
-					else if (expression.includes("/api/auth/session"))
+					else if (expression.includes("/api/auth/session")) {
+						fixture.page.beforeIdentity?.();
 						value = { user: { id: "fixture-user", email: "operator@example.test" } };
-					else if (
+					} else if (
 						expression.includes("const rawConversationId") ||
 						expression.includes("document.readyState")
 					)
@@ -215,13 +217,17 @@ test.each([
 			const factory = createConfiguredProviderTrafficAuthorityFactory({
 				userConfig: {
 					auracallProfile: `runtime-${index}`,
-					services: { chatgpt: { identity: { email: "operator@example.test" } } },
+					services: {
+						chatgpt: {
+							identity: { email: "operator@example.test" },
+							maxBackendRequestsPerMinute: mixedFailure ? 2 : 1,
+						},
+					},
 				} as never,
 				provider: "chatgpt",
 				managedBrowserProfile: `/fixture/${index}`,
 				mutationAudit: async () => undefined,
 				baseOptions: {},
-				backendRequestLimit: mixedFailure ? 2 : 1,
 			});
 			await annotateClientMutationContext(
 				client,
@@ -1415,7 +1421,12 @@ test.each([
 	}));
 	const config = {
 		auracallProfile: "public",
-		services: { chatgpt: { identity: { email: "operator@example.test" } } },
+		services: {
+			chatgpt: {
+				identity: { email: "operator@example.test" },
+				maxBackendRequestsPerMinute: mode === "retained-clean" ? 3 : completeRequests ? 2 : 1,
+			},
+		},
 		browser: {
 			tabConcurrencyMode: "tab-affinity",
 			chatgptUrl: "https://chatgpt.com/",
@@ -1437,7 +1448,6 @@ test.each([
 		runUtilityOperation: (input) =>
 			runConfiguredChatgptUtilityOperation({
 				...input,
-				backendRequestLimit: mode === "retained-clean" ? 3 : completeRequests ? 2 : 1,
 				deps: {
 					listTargets: async () =>
 						opened
@@ -1492,7 +1502,7 @@ test.each([
 						? "Fixture continuation outcome is unknown"
 						: mode === "transport-failure" || mode === "transport-timeout" || unknownRetained
 							? mode === "transport-timeout" || mode === "retained-timeout"
-								? "Owned backend request client cleanup timed out."
+								? "Owned provider CDP socket cleanup timed out."
 								: "fixture transport close outcome unknown"
 							: "Backend request admission denied: minute-backend-request-limit.",
 				);
@@ -1532,7 +1542,7 @@ test.each([
 						: [];
 			expect(messages(utilityError)).toContain(
 				mode === "abort-retained-timeout"
-					? "Owned backend request retained-session cleanup timed out."
+					? "Owned provider CDP socket cleanup timed out."
 					: "fixture transport close outcome unknown",
 			);
 		}
@@ -1587,3 +1597,468 @@ test.each([
 		await rm(home, { recursive: true, force: true });
 	}
 });
+
+test("owned native-style backend burst drains before transport close", async () => {
+	const home = await mkdtemp(path.join(os.tmpdir(), "auracall-request-burst-"));
+	setAuracallHomeDirOverrideForTest(home);
+	fixture.clients.length = 0;
+	const gate = new DesktopControlGate("same-desktop");
+	setCdpCommandAdmissionResolver(async () => ({
+		run: (_command, effect) => gate.withAutomation("generation", effect),
+		hold: async () => {
+			const held = await gate.holdAutomation("generation");
+			return {
+				run: (_command, effect) => held.run(() => gate.withAutomation("generation", effect)),
+				close: () => held.close(),
+			};
+		},
+	}));
+	let client: Awaited<ReturnType<typeof CDP>> | undefined;
+	try {
+		client = await CDP({ host: "127.0.0.1", port: 45180 });
+		const factory = createConfiguredProviderTrafficAuthorityFactory({
+			userConfig: {
+				auracallProfile: "burst",
+				services: {
+					chatgpt: {
+						identity: { email: "operator@example.test" },
+						maxBackendRequestsPerMinute: 60,
+					},
+				},
+			} as never,
+			provider: "chatgpt",
+			managedBrowserProfile: "/fixture/burst",
+			mutationAudit: async () => undefined,
+			baseOptions: {},
+		});
+		await annotateClientMutationContext(
+			client,
+			{ providerTrafficAuthorityFactory: factory, providerTrafficRequired: true },
+			"provider:chatgpt",
+			"burst-target",
+		);
+		const state = fixture.clients[0];
+		if (!state.handler) throw new Error("Missing interceptor");
+		const requests = Array.from({ length: 13 }, (_, id) =>
+			state.handler?.({
+				requestId: `burst-${id}`,
+				request: { url: "https://chatgpt.com/backend-api/conversations" },
+			}),
+		);
+		await Promise.all(requests);
+		await client.close();
+		client = undefined;
+		expect(state.requests).toHaveLength(13);
+		const human = await gate.takeControl("human");
+		await gate.releaseControl(human.token, "human");
+	} finally {
+		await client?.close().catch(() => undefined);
+		setCdpCommandAdmissionResolver(undefined);
+		setAuracallHomeDirOverrideForTest(null);
+		await rm(home, { recursive: true, force: true });
+	}
+});
+
+test.each([
+	false,
+	true,
+])("closing cancels backend capacity waits before dispatch; requestGone=%s", async (requestGone) => {
+	const home = await mkdtemp(path.join(os.tmpdir(), "auracall-request-burst-"));
+	setAuracallHomeDirOverrideForTest(home);
+	fixture.clients.length = 0;
+	const gate = new DesktopControlGate("same-desktop");
+	setCdpCommandAdmissionResolver(async () => ({
+		run: (_command, effect) => gate.withAutomation("generation", effect),
+		hold: async () => {
+			const held = await gate.holdAutomation("generation");
+			return {
+				run: (_command, effect) => held.run(() => gate.withAutomation("generation", effect)),
+				close: () => held.close(),
+			};
+		},
+	}));
+	const cancellation = new AbortController();
+	let client: Awaited<ReturnType<typeof CDP>> | undefined;
+	try {
+		client = await CDP({ host: "127.0.0.1", port: 45180 });
+		const factory = createConfiguredProviderTrafficAuthorityFactory({
+			userConfig: {
+				auracallProfile: "burst",
+				services: {
+					chatgpt: {
+						identity: { email: "operator@example.test" },
+						maxBackendRequestsPerMinute: 1,
+						backendRequestBudgetWaitMs: 600000,
+					},
+				},
+			} as never,
+			provider: "chatgpt",
+			managedBrowserProfile: "/fixture/burst",
+			mutationAudit: async () => undefined,
+			baseOptions: { abortSignal: cancellation.signal },
+		});
+		await annotateClientMutationContext(
+			client,
+			{ providerTrafficAuthorityFactory: factory, providerTrafficRequired: true },
+			"provider:chatgpt",
+			"burst-target",
+		);
+		const state = fixture.clients[0];
+		if (!state.handler) throw new Error("Missing interceptor");
+		const event = (id: string) => ({
+			requestId: id,
+			request: { url: "https://chatgpt.com/backend-api/conversations" },
+		});
+		if (requestGone) {
+			const fail = client.Fetch.failRequest.bind(client.Fetch);
+			vi.spyOn(client.Fetch, "failRequest").mockImplementation(async (input) => {
+				await fail(input);
+				throw new Error("Invalid InterceptionId.");
+			});
+		}
+		await state.handler(event("first"));
+		const waiting = state.handler(event("waiting"));
+		const ledger = createBrowserTabConcurrencyRuntime({ auracallProfile: "burst" } as never).ledger;
+		if (!ledger) throw new Error("Missing ledger");
+		await vi.waitFor(
+			async () => {
+				const events = await ledger.listEvents();
+				expect(events.some((event) => event.reason === "minute-backend-request-limit")).toBe(true);
+			},
+			{ timeout: 2000 },
+		);
+		await Promise.race([
+			client.close(),
+			new Promise((_, reject) =>
+				setTimeout(() => reject(new Error("cleanup still waiting for capacity")), 1500),
+			),
+		]);
+		await waiting;
+		client = undefined;
+		expect(state.requests).toEqual(["first"]);
+		expect(state.failures).toEqual(["waiting"]);
+		const human = await gate.takeControl("human");
+		await gate.releaseControl(human.token, "human");
+	} finally {
+		cancellation.abort();
+		await client?.close().catch(() => undefined);
+		setCdpCommandAdmissionResolver(undefined);
+		setAuracallHomeDirOverrideForTest(null);
+		await rm(home, { recursive: true, force: true });
+	}
+});
+
+test("owned cleanup admission does not consume the socket close deadline", async () => {
+	const home = await mkdtemp(path.join(os.tmpdir(), "auracall-request-burst-"));
+	setAuracallHomeDirOverrideForTest(home);
+	fixture.clients.length = 0;
+	const gate = new DesktopControlGate("same-desktop");
+	setCdpCommandAdmissionResolver(async () => ({
+		run: (_command, effect) => gate.withAutomation("generation", effect),
+		hold: async () => {
+			const held = await gate.holdAutomation("generation");
+			return {
+				run: (command, effect) =>
+					held.run(async () => {
+						if (command === "Fetch.disable") {
+							disableStarted = true;
+							await disableReady;
+						}
+						return gate.withAutomation("generation", effect);
+					}),
+				close: () => held.close(),
+			};
+		},
+	}));
+	let releaseDisable!: () => void;
+	let disableStarted = false;
+	const disableReady = new Promise<void>((resolve) => {
+		releaseDisable = resolve;
+	});
+	let client: Awaited<ReturnType<typeof CDP>> | undefined;
+	try {
+		client = await CDP({ host: "127.0.0.1", port: 45180 });
+		const factory = createConfiguredProviderTrafficAuthorityFactory({
+			userConfig: {
+				auracallProfile: "burst",
+				services: {
+					chatgpt: {
+						identity: { email: "operator@example.test" },
+						maxBackendRequestsPerMinute: 60,
+					},
+				},
+			} as never,
+			provider: "chatgpt",
+			managedBrowserProfile: "/fixture/burst",
+			mutationAudit: async () => undefined,
+			baseOptions: {},
+		});
+		await annotateClientMutationContext(
+			client,
+			{ providerTrafficAuthorityFactory: factory, providerTrafficRequired: true },
+			"provider:chatgpt",
+			"burst-target",
+		);
+		const { closeChatgptTabConnectionForTest } = await import(
+			"../../src/browser/providers/chatgptAdapter.js"
+		);
+		vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+		let outcome: unknown;
+		const closing = closeChatgptTabConnectionForTest({
+			client,
+			host: "127.0.0.1",
+			port: 45180,
+			shouldClose: false,
+		}).then(
+			(value) => {
+				outcome = value;
+			},
+			(error) => {
+				outcome = error;
+			},
+		);
+		await vi.waitFor(() => expect(disableStarted).toBe(true));
+		await vi.advanceTimersByTimeAsync(3001);
+		expect(outcome).toBeUndefined();
+		releaseDisable();
+		await closing;
+		expect(outcome).toBe("settled");
+		client = undefined;
+		const human = await gate.takeControl("human");
+		await gate.releaseControl(human.token, "human");
+	} finally {
+		releaseDisable();
+		vi.useRealTimers();
+		await client?.close().catch(() => undefined);
+		setCdpCommandAdmissionResolver(undefined);
+		setAuracallHomeDirOverrideForTest(null);
+		await rm(home, { recursive: true, force: true });
+	}
+});
+
+test.each([
+	false,
+	true,
+	"read-and-close",
+] as const)("developer-app inventory connection uses shared backend admission; closeFailure=%s", async (closeFailure) => {
+	const home = await mkdtemp(path.join(os.tmpdir(), "auracall-app-inventory-"));
+	setAuracallHomeDirOverrideForTest(home);
+	fixture.clients.length = 0;
+	const gate = new DesktopControlGate("app-inventory");
+	let held: Awaited<ReturnType<DesktopControlGate["holdAutomation"]>> | undefined;
+	setCdpCommandAdmissionResolver(async () => ({
+		run: (_command, effect) => gate.withAutomation("generation", effect),
+		hold: async () => {
+			held = await gate.holdAutomation("generation");
+			const current = held;
+			return { run: (_command, effect) => current.run(effect), close: () => current.close() };
+		},
+	}));
+	const client = await CDP({ host: "127.0.0.1", port: 45180 });
+	try {
+		const config = {
+			auracallProfile: "apps",
+			browser: { tabConcurrencyMode: "tab-affinity" },
+			services: {
+				chatgpt: { identity: { email: "operator@example.test" }, maxBackendRequestsPerMinute: 30 },
+			},
+		} as never;
+		const factory = createConfiguredProviderTrafficAuthorityFactory({
+			userConfig: config,
+			provider: "chatgpt",
+			managedBrowserProfile: "/fixture/apps",
+			mutationAudit: async () => undefined,
+			baseOptions: {},
+		});
+		const browser = {
+			userConfig: config,
+			getUserIdentity: async () => null,
+			connectDevTools: async () => ({ client, port: 45180 }),
+			runUtilityBrowserOperation: async (input: { run: (options: unknown) => Promise<unknown> }) =>
+				input.run({
+					host: "127.0.0.1",
+					port: 45180,
+					tabTargetId: "app-target",
+					providerTrafficAuthorityFactory: factory,
+					providerTrafficRequired: true,
+				}),
+		};
+		fixture.clients[0].failClose = Boolean(closeFailure);
+		const { runChatgptDeveloperAppOperationForCli } = await import(
+			"../../src/cli/chatgptDeveloperAppsCommand.js"
+		);
+		const result = runChatgptDeveloperAppOperationForCli(
+			config,
+			{ action: "list" },
+			{
+				createBrowser: async () => browser as never,
+				createAdapter: (exact) =>
+					({
+						readState: async () => {
+							await exact.connectDevTools();
+							const state = fixture.clients[0];
+							expect(state.handler).toBeTypeOf("function");
+							await state.handler?.({
+								requestId: "inventory",
+								request: { url: "https://chatgpt.com/backend-api/accounts/self/apps" },
+							});
+							if (closeFailure === "read-and-close")
+								throw new Error("fixture inventory read failed");
+							return {
+								account: { email: "operator@example.test", plan: null },
+								developerMode: true,
+								inventoryComplete: true,
+								apps: [],
+								observedAt: new Date().toISOString(),
+							};
+						},
+						close: () => client.close(),
+					}) as never,
+			},
+		);
+		if (closeFailure === "read-and-close") {
+			const error = await result.catch((error) => error);
+			const messages = (value: unknown): string[] =>
+				value instanceof AggregateError
+					? [value.message, ...value.errors.flatMap(messages)]
+					: value instanceof Error
+						? [value.message]
+						: [];
+			expect(messages(error)).toContain("fixture inventory read failed");
+			expect(messages(error)).toContain("fixture retained transport close unknown");
+		} else if (closeFailure) await expect(result).rejects.toMatchObject({ name: "AggregateError" });
+		else await expect(result).resolves.toMatchObject({ action: "list", status: "observed" });
+		expect(fixture.clients[0].requests).toEqual(["inventory"]);
+		const ledger = createBrowserTabConcurrencyRuntime(config).ledger;
+		expect(
+			(await ledger?.list())?.filter((r) => r.interactionClass === "backend-request"),
+		).toHaveLength(1);
+	} finally {
+		if (closeFailure) await held?.close();
+		await client.close().catch(() => undefined);
+		setCdpCommandAdmissionResolver(undefined);
+		setAuracallHomeDirOverrideForTest(null);
+		await rm(home, { recursive: true, force: true });
+	}
+});
+
+test.each([
+	"wait",
+	"cancel",
+	"human",
+	"guarded-cancel",
+] as const)("session proof carries caller cancellation after setup; mode=%s", async (mode) => {
+	const home = await mkdtemp(path.join(os.tmpdir(), "auracall-follow-proof-"));
+	setAuracallHomeDirOverrideForTest(home);
+	fixture.clients = [];
+	fixture.page = {
+		url: "https://chatgpt.com/",
+		navigations: [],
+		bootstrapRequests: 0,
+		payloadReads: 0,
+		closeAttempts: 0,
+	};
+	const gate = new DesktopControlGate("follow-proof");
+	let releaseTimer: ReturnType<typeof setTimeout> | undefined;
+	let human: { token: string } | undefined;
+	let evaluations = 0;
+	let contender: Awaited<ReturnType<typeof gate.holdAutomation>> | undefined;
+	const trace: Array<{ command: string; cancellable: boolean }> = [];
+	const holds: Array<Awaited<ReturnType<typeof gate.holdAutomation>>> = [];
+	setCdpCommandAdmissionResolver(async () => ({
+		run: async (command, effect, options) => {
+			if (command === "Runtime.evaluate" && ++evaluations === 3 && mode !== "guarded-cancel") {
+				if (mode === "human") human = await gate.takeControl("generation");
+				else {
+					contender = await gate.holdAutomation("generation");
+					if (mode === "cancel") controller.abort(new Error("fixture proof cancelled"));
+					else releaseTimer = setTimeout(() => void contender?.close(), 4000);
+				}
+			}
+			trace.push({
+				command,
+				cancellable: Boolean(options?.abortSignal),
+			});
+			return gate.withAutomation("generation", effect, options);
+		},
+		hold: async (options) => {
+			const hold = await gate.holdAutomation("generation", options);
+			holds.push(hold);
+			return {
+				run: (_command, effect, context) =>
+					hold.run(() => gate.withAutomation("generation", effect, context)),
+				close: () => hold.close(),
+			};
+		},
+	}));
+	const config = {
+		auracallProfile: "fixture",
+		browser: { cache: {} },
+		services: {
+			chatgpt: {
+				identity: { email: "operator@example.test" },
+				...(mode === "guarded-cancel" ? { maxBackendRequestsPerMinute: 30 } : {}),
+			},
+		},
+	} as never;
+	const { createLlmService } = await import("../../src/browser/llmService/providers/index.js");
+	const service = createLlmService("chatgpt", config, {
+		browserService: {
+			getConfig: () => config,
+			resolveServiceTarget: async () => ({
+				host: "127.0.0.1",
+				port: 45170,
+				managedBrowserProfile: "/fixture/follow",
+				browserProfile: "fixture",
+				browserProcessId: process.pid,
+				tab: { targetId: "follow-target", url: fixture.page?.url },
+			}),
+		} as never,
+	});
+	const controller = new AbortController();
+	if (mode === "guarded-cancel")
+		fixture.page.beforeIdentity = () => controller.abort(new Error("fixture proof cancelled"));
+	const cancellationTimer = setTimeout(
+		() => controller.abort(new Error("fixture bounded admission")),
+		8000,
+	);
+	try {
+		const result = service.getProviderSessionProof({
+			host: "127.0.0.1",
+			port: 45170,
+			tabTargetId: "follow-target",
+			configuredUrl: "https://chatgpt.com/",
+			useProviderSession: true,
+			abortSignal: controller.signal,
+		});
+		if (mode === "wait") {
+			await expect(result).resolves.toMatchObject({ verdict: "match" });
+			const fresh = await gate.takeControl("generation");
+			await gate.releaseControl(fresh.token, "generation");
+		} else {
+			await expect(result).rejects.toThrow(
+				mode !== "human" ? "fixture proof cancelled" : "paused while a human controls",
+			);
+			if (mode === "guarded-cancel") {
+				const fresh = await gate.takeControl("generation");
+				await gate.releaseControl(fresh.token, "generation");
+			} else if (mode === "cancel") {
+				await expect(gate.takeControl("generation")).rejects.toThrow("busy");
+				await expect(contender?.run(async () => "retained")).resolves.toBe("retained");
+			} else if (human) await gate.assertControl(human.token, "generation");
+		}
+		if (mode !== "guarded-cancel") expect(evaluations).toBeGreaterThanOrEqual(3);
+		expect(trace.every((entry) => entry.cancellable)).toBe(true);
+	} finally {
+		clearTimeout(cancellationTimer);
+		clearTimeout(releaseTimer);
+		controller.abort();
+		await contender?.close();
+		if (human) await gate.releaseControl(human.token, "generation");
+		await Promise.all(holds.map((hold) => hold.close()));
+		fixture.page = undefined;
+		setCdpCommandAdmissionResolver(undefined);
+		setAuracallHomeDirOverrideForTest(null);
+		await rm(home, { recursive: true, force: true });
+	}
+}, 20000);

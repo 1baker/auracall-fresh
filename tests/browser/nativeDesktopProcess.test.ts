@@ -2,14 +2,16 @@ import { spawn } from 'node:child_process';
 import { once } from 'node:events';
 import { createServer } from 'node:http';
 import { expect, test } from 'vitest';
-import { observeNativeBrowser } from '../../src/browser/service/nativeDesktopStore.js';
+import { observeNativeBrowser, verifyNativeBrowser } from '../../src/browser/service/nativeDesktopStore.js';
 
 test('a scrubbed browser process requires exact native desktop window/PID and generation proof', async () => {
   const profile = '/tmp/auracall-native-scrub-fixture';
   const child = spawn(process.execPath, ['-e', `process.title='chrome --remote-debugging-port=45131 --user-data-dir=${profile} about:blank';setInterval(()=>{},1000)`], { stdio: 'ignore', env: {} });
   await once(child, 'spawn');
   let wrongGeneration = false;
+  let windowReads = 0;
   const server = createServer(async (req, res) => {
+    windowReads++;
     const chunks: Buffer[] = []; for await (const chunk of req) chunks.push(Buffer.from(chunk));
     const body = JSON.parse(Buffer.concat(chunks).toString());
     expect(body.application).toBe('auracall');
@@ -28,7 +30,14 @@ test('a scrubbed browser process requires exact native desktop window/PID and ge
     expect(observed?.executable).toBe(await import('node:fs/promises').then(fs => fs.realpath(process.execPath)));
     await expect(observeNativeBrowser(child.pid, profile, ':77')).rejects.toThrow('ownership');
     await expect(observeNativeBrowser(child.pid, '/tmp/auracall-native-scrub', ':77', context)).rejects.toThrow('ownership');
+    if (!observed) throw new Error('Missing initial native identity');
+    const binding = { ...context, ...observed, pid: child.pid, managedProfileDir: profile, display: ':77',
+      desktopName: 'fixture', poolName: 'main', browserId: 'fixture', cdpHost: '127.0.0.1', cdpPort: 9222 };
+    const beforeBurst = windowReads;
+    expect(await Promise.all(Array.from({ length: 13 }, () => verifyNativeBrowser(binding)))).toEqual(Array(13).fill(true));
+    expect(windowReads - beforeBurst).toBe(1);
     wrongGeneration = true;
     await expect(observeNativeBrowser(child.pid, profile, ':77', context)).rejects.toThrow('generation');
+    await expect(verifyNativeBrowser(binding)).rejects.toThrow('generation');
   } finally { const exited = once(child, 'exit'); child.kill(); await exited; await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve())); }
 });

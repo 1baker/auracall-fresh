@@ -761,6 +761,11 @@ Terminology note:
   and only current retained detail plus manifest evidence can materialize
   missing assets without a route visit. Resume checkpoints use the hashed
   conversation key; an absent checkpoint safely restarts the bounded plan.
+  ChatGPT steady follow refreshes a due conversation index at its existing
+  configured minimum interval even while older detail inventory remains pending.
+  Explicit conversation scope and unfinished message chunks retain their detail
+  continuation. A retained detail read preserves the earlier index observation
+  time; it does not postpone discovery by pretending the index was refreshed.
   For steady live follow, this plan is authoritative once a cached row has
   migrated work state. Changed rows alone enter the detail reader; retained-
   asset rows proceed directly to materialization; complete, terminal, guarded,
@@ -824,6 +829,11 @@ Terminology note:
   `retrievalFailed` means AuraCall did not obtain verified bytes and does not
   prove the provider asset is unavailable; only provider-confirmed 404/410 or
   explicit deleted/expired/not-found evidence is terminal unavailability.
+  A completion whose collector reports an unresolved failed, timed-out or
+  aborted read ends with `account_mirror_collector_read_failed`, retaining its
+  refresh evidence and cursor. It does not report success or queue artifact work
+  from that failed pass. A later completed read clears only that same read's
+  failure, not failures from another conversation.
   Transient detail-read timeout streaks checkpoint and yield the current
   live-follow pass; a later pass resumes from the next conversation. Because
   live follow is read-only, such failures do not create an

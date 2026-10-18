@@ -10,6 +10,8 @@ import { createExecutionResponsesService } from '../src/runtime/responsesService
 import type { ExecutionRunStoredRecord } from '../src/runtime/store.js';
 import {
   createTenantExecutionLimitGate,
+  resolveChatgptBackendRequestsPerMinute,
+  resolveChatgptBackendRequestBudgetWaitMs,
   resolveChatgptInteractionsPerMinute,
   resolveChatgptTenantLimits,
   summarizeTenantExecutionLimits,
@@ -496,3 +498,29 @@ async function requireRun(
   if (!record) throw new Error(`Expected ${runId} to exist`);
   return record;
 }
+
+
+describe('configured backend request ceiling', () => {
+  it('is opt-in and respects runtime binding overrides', () => {
+    expect(resolveChatgptBackendRequestsPerMinute({}, 'a')).toBeUndefined();
+    const config = {
+      services: { chatgpt: { maxBackendRequestsPerMinute: 9 } },
+      runtimeProfiles: { a: { services: { chatgpt: { maxBackendRequestsPerMinute: 3 } } } },
+    };
+    expect(resolveChatgptBackendRequestsPerMinute(config, 'a')).toBe(3);
+    expect(resolveChatgptBackendRequestsPerMinute(config, 'b')).toBe(9);
+  });
+  it.each([0, -1, 1.5, '30', null, Number.POSITIVE_INFINITY])('rejects invalid explicit ceiling %s', (value) => {
+    expect(() => resolveChatgptBackendRequestsPerMinute({
+      services: { chatgpt: { maxBackendRequestsPerMinute: value } },
+    }, 'a')).toThrow('positive safe integer');
+  });
+});
+
+it('resolves bounded request waiting independently of the request ceiling', () => {
+ expect(resolveChatgptBackendRequestBudgetWaitMs({}, 'a')).toBe(0);
+ const config = { services: { chatgpt: { backendRequestBudgetWaitMs: 60000 } }, runtimeProfiles: { a: { services: { chatgpt: { backendRequestBudgetWaitMs: 0 } } } } };
+ expect(resolveChatgptBackendRequestBudgetWaitMs(config, 'a')).toBe(0);
+ expect(resolveChatgptBackendRequestBudgetWaitMs(config, 'b')).toBe(60000);
+ expect(() => resolveChatgptBackendRequestBudgetWaitMs({ services: { chatgpt: { backendRequestBudgetWaitMs: -1 } } }, 'a')).toThrow('nonnegative safe integer');
+});

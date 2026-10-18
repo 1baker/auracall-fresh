@@ -2,7 +2,10 @@ import type {
 	ProviderInteractionLedger,
 	ProviderInteractionScope,
 } from "../../packages/browser-service/src/service/interactionLedger.js";
-import { ProviderBackendRequestBudgetExceededError } from "../../packages/browser-service/src/service/providerTrafficGovernor.js";
+import {
+	ProviderBackendRequestBudgetExceededError,
+	ProviderBackendRequestCancelledBeforeDispatchError,
+} from "../../packages/browser-service/src/service/providerTrafficGovernor.js";
 import type { TabLeaseEffectState } from "../../packages/browser-service/src/service/tabLeaseRegistry.js";
 
 export class OwnedBackendRequestCleanupError extends AggregateError {
@@ -39,42 +42,107 @@ export function createOwnedBackendRequestAuthority(input: {
 	operationId: string;
 	tabLeaseId: string;
 	backendRequestLimit: number;
+	parentReservationId?: string;
+	budgetWaitTimeoutMs?: number;
+	abortSignal?: AbortSignal;
 	assertOwnedLease: () => Promise<void>;
 	now?: () => Date;
 }) {
 	if (input.backendRequestLimit === undefined)
 		throw new Error("Owned backend request authority requires an explicit limit.");
 	validateBackendRequestLimit(input.backendRequestLimit);
+	const budgetWaitTimeoutMs = input.budgetWaitTimeoutMs ?? 0;
+	if (!Number.isSafeInteger(budgetWaitTimeoutMs) || budgetWaitTimeoutMs < 0)
+		throw new Error("Backend request budget wait must be a nonnegative safe integer.");
 	const { ledger, workloadId, operationId, tabLeaseId, backendRequestLimit, assertOwnedLease } =
 		input;
 	const { provider, tenantKey, runtimeProfileId, managedBrowserProfile } = input.scope;
-	const now = input.now ?? (() => new Date());
+	const readNow = input.now ?? (() => new Date());
+	let lastTimestamp = Number.NEGATIVE_INFINITY;
+	// Preserve transition order across wall-clock corrections; future-dated permits
+	// remain counted conservatively by the shared account ledger.
+	const now = () => {
+		lastTimestamp = Math.max(lastTimestamp, readNow().getTime());
+		return new Date(lastTimestamp);
+	};
 	let backendBudgetDenied = false;
 	return {
-		admit: async (requestKey: string, effect: () => Promise<void>) => {
-			const admission = await ledger.reserve({
-				scope: {
-					provider,
-					tenantKey,
-					runtimeProfileId,
-					managedBrowserProfile,
-				},
-				workloadId,
-				operationId,
-				tabLeaseId,
-				interactionClass: "backend-request",
-				mutability: "provider-mutating",
-				startsNewConversation: false,
-				backendRequestKey: requestKey,
-				now: now().toISOString(),
-				reservationTtlMs: 30_000,
-				policy: {
-					maxConcurrentChats: null,
-					maxConversationStartsPerHour: null,
-					maxConversationStartsPerDay: null,
-					maxBackendRequestsPerMinute: backendRequestLimit,
-				},
-			});
+		admit: async (requestKey: string, effect: () => Promise<void>, requestSignal?: AbortSignal) => {
+			const signals = [input.abortSignal, requestSignal].filter((signal): signal is AbortSignal =>
+				Boolean(signal),
+			);
+			const signal = signals.length ? AbortSignal.any(signals) : undefined;
+			const checkCancellation = () => {
+				if (signal?.aborted) throw new ProviderBackendRequestCancelledBeforeDispatchError();
+			};
+			const deadlineMs = now().getTime() + budgetWaitTimeoutMs;
+			let admission: Awaited<ReturnType<ProviderInteractionLedger["reserve"]>>;
+			for (;;) {
+				checkCancellation();
+				await assertOwnedLease();
+				admission = await ledger.reserve({
+					scope: {
+						provider,
+						tenantKey,
+						runtimeProfileId,
+						managedBrowserProfile,
+					},
+					workloadId,
+					operationId,
+					tabLeaseId,
+					interactionClass: "backend-request",
+					mutability: "provider-mutating",
+					startsNewConversation: false,
+					backendRequestKey: requestKey,
+					now: now().toISOString(),
+					reservationTtlMs: 30_000,
+					policy: {
+						maxConcurrentChats: null,
+						maxConversationStartsPerHour: null,
+						maxConversationStartsPerDay: null,
+						maxBackendRequestsPerMinute: backendRequestLimit,
+					},
+				});
+				if (
+					admission.allowed ||
+					admission.reason !== "minute-backend-request-limit" ||
+					now().getTime() >= deadlineMs
+				)
+					break;
+				const records = await ledger.list({ provider, tenantKey });
+				const timestamps = records
+					.filter(
+						(record) =>
+							record.interactionClass === "backend-request" &&
+							(record.state === "reserved" ||
+								record.state === "started" ||
+								((record.state === "settled" || record.state === "frozen") &&
+									record.effectState !== "none")),
+					)
+					.map((record) => Date.parse(record.startedAt ?? record.reservedAt))
+					.filter((at) => at >= now().getTime() - 60000);
+				const retryAt = timestamps.length ? Math.min(...timestamps) + 60001 : now().getTime() + 1;
+				while (now().getTime() < Math.min(retryAt, deadlineMs)) {
+					checkCancellation();
+					await assertOwnedLease();
+					const warnings = await ledger.listActiveProviderWarnings({ now: now().toISOString() });
+					if (
+						warnings.some(
+							(warning) =>
+								warning.provider === provider.trim().toLowerCase() &&
+								warning.tenantKey === tenantKey.trim().toLowerCase(),
+						)
+					)
+						throw new Error("Backend request admission denied: provider-warning.");
+					await waitForBackendBudget(
+						Math.min(1000, retryAt - now().getTime(), deadlineMs - now().getTime()),
+						signal,
+					).catch((error) => {
+						checkCancellation();
+						throw error;
+					});
+				}
+			}
 			if (!admission.allowed) {
 				if (admission.reason === "minute-backend-request-limit") {
 					backendBudgetDenied = true;
@@ -83,6 +151,7 @@ export function createOwnedBackendRequestAuthority(input: {
 				throw new Error(`Backend request admission denied: ${admission.reason}.`);
 			}
 			if (admission.duplicate) return;
+			let dispatched = false;
 			let started = false;
 			try {
 				await assertOwnedLease();
@@ -93,6 +162,8 @@ export function createOwnedBackendRequestAuthority(input: {
 				if (!transition.ok) throw new Error(`Backend request start denied: ${transition.reason}.`);
 				started = true;
 				await assertOwnedLease();
+				checkCancellation();
+				dispatched = true;
 				await effect();
 				const settled = await ledger.settle({
 					reservationId: admission.reservation.reservationId,
@@ -102,22 +173,24 @@ export function createOwnedBackendRequestAuthority(input: {
 				});
 				if (!settled.ok) throw new Error(`Backend request settlement failed: ${settled.reason}.`);
 			} catch (error) {
-				if (started)
-					try {
-						const settled = await ledger.settle({
-							reservationId: admission.reservation.reservationId,
-							settledAt: now().toISOString(),
-							effectState: "outcome-unknown",
-							outcome: "failed",
-						});
-						if (!settled.ok)
-							throw new Error(`Backend request settlement failed: ${settled.reason}.`);
-					} catch (settlementError) {
-						throw new AggregateError(
-							[error, settlementError],
-							"Backend dispatch and settlement failed.",
-						);
-					}
+				if (!started) throw error;
+				try {
+					const settled = await ledger.settle({
+						reservationId: admission.reservation.reservationId,
+						settledAt: now().toISOString(),
+						effectState:
+							!dispatched && error instanceof ProviderBackendRequestCancelledBeforeDispatchError
+								? "none"
+								: "outcome-unknown",
+						outcome: "failed",
+					});
+					if (!settled.ok) throw new Error(`Backend request settlement failed: ${settled.reason}.`);
+				} catch (settlementError) {
+					throw new AggregateError(
+						[error, settlementError],
+						"Backend dispatch and settlement failed.",
+					);
+				}
 				throw error;
 			}
 		},
@@ -127,7 +200,10 @@ export function createOwnedBackendRequestAuthority(input: {
 		): Promise<TEffect | "settled" | "outcome-unknown"> {
 			if (hasUnknownOwnedRequestCleanup(failure)) return "outcome-unknown";
 			const records = (await ledger.list({ provider, tenantKey })).filter(
-				(record) => record.tabLeaseId === tabLeaseId && record.operationId === operationId,
+				(record) =>
+					record.reservationId !== input.parentReservationId &&
+					record.tabLeaseId === tabLeaseId &&
+					record.operationId === operationId,
 			);
 			if (
 				records.some(
@@ -144,4 +220,21 @@ export function createOwnedBackendRequestAuthority(input: {
 			return effectState;
 		},
 	};
+}
+
+function waitForBackendBudget(ms: number, signal?: AbortSignal): Promise<void> {
+	signal?.throwIfAborted();
+	return new Promise((resolve, reject) => {
+		const finish = () => {
+			signal?.removeEventListener("abort", abort);
+			resolve();
+		};
+		const timer = setTimeout(finish, Math.max(1, ms));
+		const abort = () => {
+			clearTimeout(timer);
+			signal?.removeEventListener("abort", abort);
+			reject(signal?.reason);
+		};
+		signal?.addEventListener("abort", abort, { once: true });
+	});
 }

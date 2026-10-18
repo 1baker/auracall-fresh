@@ -3645,3 +3645,30 @@ uses read-only utility affinity unless the caller supplied an exact target;
 `tests/browser/chatgptService.test.ts` covers both paths. A local-only doctor
 missing-proof result does not establish sign-out. Verify the live provider proof
 separately from native process/desktop ownership.
+
+Owned backend cleanup cancels pre-dispatch capacity waits before disconnect; dispatched failures retain uncertainty. The regression in `tests/browser/backendRequestAdmission.test.ts` waits for a real capacity denial, then proves prompt cleanup and desktop custody release.
+
+Owned backend client cleanup applies the three-second deadline to cancellation/shutdown wire replies and physical CDP disconnect after desktop admission; it drains callbacks before disconnect. A proven pre-dispatch cancellation whose paused resource has disappeared can settle; dispatched or uncertain failures still fail cleanup.
+
+Cancellable CDP commands and owned request holds may wait behind other automation under the caller cancellation/deadline. Human desktop control still pauses automation immediately. Admission wait does not consume the command wire-response deadline; callers without cancellation retain the existing short contention wait.
+
+### Shared request admission across developer-app tests and prompts
+
+With `services.chatgpt.maxBackendRequestsPerMinute` configured, developer-app inventory sockets
+and normal leased prompt execution use the account's shared request authority.
+New prompt targets open blank before interception and provider navigation.
+Concurrent developer-app CLI actions wait in the existing operation queue for up
+to ten minutes. Preflight cancellation does not silently discard unknown request
+cleanup, and an unresolved backend dispatch cannot produce a successful prompt.
+Provider-free coverage:
+`pnpm vitest run tests/browser/backendRequestAdmission.test.ts tests/browser/legacyChatgptAffinityRuntime.test.ts tests/browser/chatgptTabProvisioner.test.ts`.
+The October18 ca2 trial returned an actual HTTP429; its active warning and unknown
+submission remain preserved. Passing source tests does not establish installed
+three-workload acceptance or authorize another submission.
+
+Provider-session cancellation after setup (provider-free):
+`pnpm vitest run tests/browser/backendRequestAdmission.test.ts -t 'session proof carries caller cancellation'`.
+This exercises the public proof call with real guarded CDP and desktop gate,
+contention introduced at identity reading, cancellation, human ownership, and
+cancellation with native-style continuous backend admission. Passing this does
+not establish live-follow completion or resolve the retained provider429.

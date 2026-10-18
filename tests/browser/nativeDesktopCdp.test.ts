@@ -12,7 +12,7 @@ import { setAuracallHomeDirOverrideForTest } from '../../src/auracallHome.js';
 import { NativeDesktopStore, nativeBrowserGeneration, observeNativeBrowser } from '../../src/browser/service/nativeDesktopStore.js';
 import { DesktopControlGate } from '../../src/browser/service/desktopControlGate.js';
 import CDP from '../../src/browser/cdp.js';
-import { holdCdpCommandAdmission } from '../../packages/browser-service/src/guardedCdp.js';
+import { holdCdpCommandAdmission, withCdpCommandTimeout } from '../../packages/browser-service/src/guardedCdp.js';
 
 test('native desktop ownership excludes actual wire commands and rejects reused process receipts', async () => {
   const home = await fs.mkdtemp(path.join(os.tmpdir(), 'auracall-native-cdp-'));
@@ -37,16 +37,29 @@ test('native desktop ownership excludes actual wire commands and rejects reused 
     await expect(client.Page.reload()).rejects.toThrow('paused');
     await gate.releaseControl(human.token, nativeBrowserGeneration(binding));
     expect(await client.Page.reload()).toMatchObject({ sequence: 3 });
+    const existingOwner = await gate.holdAutomation(nativeBrowserGeneration(binding));
+    const cancellation = new AbortController();
+    let queuedResult: unknown;
+    const queuedClient = client;
+    const queued = withCdpCommandTimeout(client, { timeoutMs: 100, timeoutMessage: 'fixture wire timeout', abortSignal: cancellation.signal }, () => queuedClient.Page.reload()).then(value => { queuedResult = value; }, error => { queuedResult = error; });
+    try {
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      expect(queuedResult).toBeUndefined();
+      await existingOwner.close();
+      await queued;
+      expect(queuedResult).toMatchObject({ sequence: 4 });
+    } finally { cancellation.abort(); await existingOwner.close(); await queued; }
+
     const gateOwnerPath = path.join(home, 'desktop-control', createHash('sha256').update(binding.assignment.desktopId).digest('hex'), 'owner.json');
     await fs.mkdir(path.dirname(gateOwnerPath), { recursive: true }); await fs.writeFile(gateOwnerPath, '');
-    await expect(client.send('Target.createTarget', { url: 'about:blank' })).resolves.toMatchObject({ sequence: 4 });
+    await expect(client.send('Target.createTarget', { url: 'about:blank' })).resolves.toMatchObject({ sequence: 5 });
     await expect(client.Page.reload()).rejects.toThrow();
     expect(await fs.readFile(gateOwnerPath, 'utf8')).toBe('');
     await fs.rm(path.dirname(gateOwnerPath), { recursive: true });
     const hold = await holdCdpCommandAdmission(client);
     const heldClient = client;
     await expect(gate.takeControl(nativeBrowserGeneration(binding))).rejects.toThrow('busy');
-    expect(await client.Page.reload()).toMatchObject({ sequence: 5 });
+    expect(await client.Page.reload()).toMatchObject({ sequence: 6 });
     await new NativeDesktopStore().recordBrowser({ ...binding, processStart: 'replaced-process' });
     await expect(client.Page.reload()).rejects.toThrow('ownership changed');
     await expect(hold.run('Page.reload', () => heldClient.Page.reload())).rejects.toThrow('ownership changed');
@@ -56,7 +69,7 @@ test('native desktop ownership excludes actual wire commands and rejects reused 
     const exited = once(child, 'exit'); child.kill(); await exited;
     setAuracallHomeDirOverrideForTest(null); await fs.rm(home, { recursive: true, force: true });
   }
-});
+}, 10000);
 
 
 test('a retained scrubbed process can create its next window while existing-page commands require current window proof', async () => {

@@ -19,6 +19,7 @@ import {
 import { classifyStructuredProviderWarning } from "../browser/chatgptAffinityRuntime.js";
 import { probeChatgptRateLimitWarning } from "../browser/chatgptProviderTraffic.js";
 import { recordChatgptRateLimitDetection } from "../browser/chatgptRateLimitGuard.js";
+import { createOwnedBackendRequestAuthority } from "../browser/ownedBackendRequestAuthority.js";
 import { retireExpiredChatgptTabLeases } from "../browser/chatgptTabRetirement.js";
 import { resolveChatgptConversationUrl } from "../browser/providers/chatgptAdapter.js";
 import { BrowserService } from "../browser/service/browserService.js";
@@ -26,7 +27,11 @@ import { resolveRuntimeProfileUserConfig } from "../browser/service/profileConfi
 import { createBrowserTabConcurrencyRuntime } from "../browser/tabConcurrencyRuntime.js";
 import { resolveConfiguredServiceAccountId } from "../config/serviceAccountIdentity.js";
 import type { ResolvedUserConfig } from "../config.js";
-import { resolveChatgptTenantLimits } from "../runtime/tenantExecutionLimits.js";
+import {
+	resolveChatgptBackendRequestsPerMinute,
+	resolveChatgptBackendRequestBudgetWaitMs,
+	resolveChatgptTenantLimits,
+} from "../runtime/tenantExecutionLimits.js";
 import type { AccountMirrorMetadataCollectorInput } from "./chatgptMetadataCollector.js";
 import {
 	acquireEphemeralBrowserTab,
@@ -74,6 +79,14 @@ export async function createConfiguredLiveFollowAffinity(input: {
 	if (input.provider !== "chatgpt" || clientConfig.browser?.tabConcurrencyMode !== "tab-affinity") {
 		return null;
 	}
+	const backendRequestLimit = resolveChatgptBackendRequestsPerMinute(
+		input.userConfig as Record<string, unknown>,
+		input.runtimeProfileId,
+	);
+	const budgetWaitTimeoutMs = resolveChatgptBackendRequestBudgetWaitMs(
+		input.userConfig as Record<string, unknown>,
+		input.runtimeProfileId,
+	);
 	const runtime = createBrowserTabConcurrencyRuntime(clientConfig);
 	if (!runtime.registry || !runtime.ledger) {
 		throw new Error("Live-follow tab affinity is missing its registry or interaction ledger.");
@@ -260,6 +273,38 @@ export async function createConfiguredLiveFollowAffinity(input: {
 		| NonNullable<ProviderTrafficGovernor["snapshotAdmissionState"]>
 		| undefined;
 	let providerTrafficGovernor: ProviderTrafficGovernor;
+	const assertOwnedLease = async () => {
+		const leases = await runtime.registry?.list({ scope, states: ["active"] });
+		const lease = leases?.find((candidate) => candidate.leaseId === crawler.lease.leaseId);
+		if (
+			!lease ||
+			lease.ownerOperationId !== input.operationId ||
+			lease.targetId !== crawler.lease.targetId ||
+			lease.revision !== crawlerClaim.revision
+		) {
+			throw new Error("Provider traffic tab lease ownership changed before action.");
+		}
+	};
+	const backendRequests =
+		backendRequestLimit === undefined
+			? undefined
+			: createOwnedBackendRequestAuthority({
+					ledger: runtime.ledger,
+					scope: {
+						provider: "chatgpt",
+						tenantKey,
+						runtimeProfileId: input.runtimeProfileId,
+						managedBrowserProfile,
+					},
+					workloadId: `${workloadKind}:${input.operationId}`,
+					operationId: input.operationId,
+					tabLeaseId: crawler.lease.leaseId,
+					backendRequestLimit,
+					budgetWaitTimeoutMs,
+					abortSignal: input.abortSignal,
+					assertOwnedLease,
+					now: input.now,
+				});
 	providerTrafficGovernor = createProviderTrafficGovernor({
 		attribution: {
 			provider: "chatgpt",
@@ -307,18 +352,8 @@ export async function createConfiguredLiveFollowAffinity(input: {
 			});
 			warningRecorded = true;
 		},
-		assertLease: async (attribution) => {
-			const leases = await runtime.registry?.list({ scope, states: ["active"] });
-			const lease = leases?.find((candidate) => candidate.leaseId === attribution.tabLeaseId);
-			if (
-				!lease ||
-				lease.ownerOperationId !== attribution.operationId ||
-				lease.targetId !== crawler.lease.targetId ||
-				lease.revision !== crawlerClaim.revision
-			) {
-				throw new Error("Provider traffic tab lease ownership changed before action.");
-			}
-		},
+		assertLease: assertOwnedLease,
+		admitBackendRequest: backendRequests?.admit,
 	});
 	const recordTargetNavigation = async () => {
 		const recorded = await runtime.registry?.recordTargetAction({
@@ -340,8 +375,13 @@ export async function createConfiguredLiveFollowAffinity(input: {
 		outcome: "succeeded" | "failed",
 		effectState: "settled" | "outcome-unknown",
 		reason?: string,
+		failure?: unknown,
 	) => {
 		if (finished) return;
+		effectState =
+			(await backendRequests?.reconcileEffectState(effectState, failure)) ?? effectState;
+		if (outcome === "succeeded" && effectState === "outcome-unknown")
+			throw new Error("Live-follow backend request outcome remains unknown.");
 		await interactionGovernor.close({ outcome, effectState, reason });
 		const used = await runtime.registry?.recordMeaningfulUse({
 			claim: crawlerClaim,
@@ -445,6 +485,7 @@ export async function createConfiguredLiveFollowAffinity(input: {
 					"failed",
 					classifyLiveFollowFailureEffectState(),
 					error instanceof Error ? error.message : String(error),
+					error,
 				);
 			} catch (settlementError) {
 				finishError = settlementError;

@@ -975,3 +975,100 @@ Canonical acceptance note closes scoped Plan0386; issue165closure follows the
 acceptance PR. Wider P92/Plan0411 changed-frontier and scheduler continuation stay
 open; scheduler/all17subscriptions paused,0queued/running/warnings. Memory
 disposition forbidden.
+
+
+## 2026-10-17 | Bounded frontier acceptance resumed
+
+User authorized the proposed changed/unchanged check after issue165 closure.
+Canonical installed runtime remains selected; scheduler/all17subscriptions paused,
+0queued/running/warnings at initial readback. At most two single-pass automatic
+completions, maxItems1/forcefalse, each ten-minute observation bound. Current
+account cache retained. Starting detail cursor remains unfinished; backlog
+continuation must not be graded as quiet-complete acceptance. Twelve focused
+frontier tests pass. Execution/evidence: ../notes/2026-10-17-plan0411-frontier-acceptance.md.
+No scheduler resume, prompts, installation or source change.
+
+Bounded result: one normal pass150292ms/129observed backend requests,0new downloads;
+existing detail cursor2→3. Automatic child verified1duplicate/skipped1/failed0.
+No independently changed index or quiet-complete fixture, so second pass withheld
+rather than grading backlog continuation as quiet acceptance. Original issue165
+artifact hash unchanged. Exact controller/browser absent and0owned active leases;
+main scheduler/all17subscriptions paused,0queued/running/warnings. Raw Network
+cleanup-disconnect flag preserved; details/private locators in the acceptance note.
+Recently changed conversation URL requested; no prompt or scheduler resume needed.
+
+
+## 2026-10-17 | New-chat follow discovery FAIL
+
+User supplied a real new IM Receipts chat; primary located its saved proof/history
+without another prompt. One normal unscoped completion with current cache and
+metadata_only (no artifacts in fixture, shared browser preserved) took148897ms/
+136backend requests with complete exact-page Network coverage. New candidate is
+absent before/after. Persisted detail backlog selected an older chat; its context
+read failed messages-not-found, yet coarse parent completed/errornull. No new
+capture, child or quiet-repeat acceptance. Exact probe tab closed; other current
+tabs preserved, main scheduler/17subscriptions paused,0queued/running/warnings.
+This is failed acceptance, not a completed follow repair. The bounded/live_follow
+persisted phase decision shares the same installed path; replay and live details
+are in ../notes/2026-10-17-plan0411-newchat-follow.md. Next reproduce discovery
+fairness with pending detail and parent error visibility before source repair.
+
+
+## 2026-10-17 | Source repair packet
+
+State: OPEN source slice. Primary serial; base3767060b7, branch
+fix/plan0411-follow-discovery. User authorized diagnosis/TDD/review/live recheck.
+First reproduce failed detail → completed parent at the public completion seam,
+then reproduce due index discovery with pending retained detail. Keep configured
+cadence and guards, old cursor/cache, unrelated browser tabs and scheduler pauses.
+No new prompt, cookie reseed, numeric backend ceiling or broad browser cleanup.
+One red/green slice per failure, followed by affected validation and serial review.
+Acceptance remains actual new-chat discovery/capture then a bounded quiet repeat;
+source tests do not close live acceptance. Existing failed receipts remain immutable.
+
+Sourceb8f1d229f merged current maind03d89e38 atb41fd3765.197focused/751broader
+affected checks, typecheck, lint and production build pass.584packaged JavaScript
+files match staged installation. Two0provider-request precollection warning-check
+timeouts retained. Exact reversible stale desktop transition recovery restores
+the public probe631ms/guardnull; new bounded installed follow proof is running.
+No global scheduler resume, prompts or launcher/API activation. Repair/evidence:
+../notes/2026-10-17-plan0411-follow-repair.md. Full acceptance remains OPEN.
+
+Final installed run133412ms/125backend requests received conversation-list429 at
+22:02:41.695UTC; exact parent immediately paused/passCount0, no capture/child or
+quiet repeat. Shared warning ledger active1/indefinite. Exact probe tab retired,
+other current targets and native browser preserved. Scheduler/17subscriptions
+paused,0queued/running. PR333 is draft with validated source/staged parity; no
+main merge or global activation, and no further provider retry/warning clearance
+in this stopped packet. Plan remains OPEN. See follow-repair note for raw locators.
+
+
+## 2026-10-17 — Shared backend request admission source repair
+
+The configured live-follow authority omitted backend request admission; configured
+utility/provider-client factories had no service config enablement path. Added
+explicit services.chatgpt.maxBackendRequestsPerMinute and runtime binding override,
+reusing shared account ledger and owned interception. No default ceiling or live
+activation. Independent-ledger follow regression and existing actual transport
+fixtures prove shared admission and pre-navigation interception; unknown dispatch
+cannot report successful completion. See
+../notes/2026-10-17-plan0411-shared-backend-admission.md for red/green and validation.
+Plan remains OPEN: measured production ceiling, staged activation, changed capture
+and unchanged repeat remain unaccepted; previous429warning is retained.
+
+
+## 2026-10-18 — Operator-requested shared-task native trial
+
+Built/staged d3abdada9;584JS parity and real resolved config30/min,600000ms waiting.
+Two LitScout exact threads each ran one installed read-only apps list and returned
+owned backend request cleanup timeouts. Follow failed desktop admission with0
+backend requests. Shared owned-permit meter34admitted/31started,peak29/min,0new
+shared warnings; full HTTP and simultaneous three-way acceptance are unproven.
+Actual CLI attempts did not overlap after asynchronous release and early failures.
+The trial did not exhaust the ceiling, so native waiting is also unqualified.
+Failed activation rolled back config/wrappers to previous issue331 selection;
+unknown/frozen records and browser processes preserved. No automatic retry after
+uncertain cleanup. Source remains draft PR333; plan OPEN. Next exact boundary is
+provider-free native desktop-hold/request-cleanup composition, then a qualified
+installed retry. Full receipt summary in
+../notes/2026-10-17-plan0411-shared-backend-admission.md.

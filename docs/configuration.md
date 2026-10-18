@@ -1086,6 +1086,32 @@ unknown observations and ambiguous operations prevent unsafe cleanup. Inventory
 exposes the latest maintenance state. No chat is submitted by Wake or maintenance.
 
 
+### Shared ChatGPT backend request budget
+
+`services.chatgpt.maxBackendRequestsPerMinute` explicitly enables a rolling-minute
+budget for owned ChatGPT `/backend-api/` requests. Set a positive safe integer;
+there is no default backend ceiling. A runtime binding can override it at
+`runtimeProfiles.<name>.services.chatgpt.maxBackendRequestsPerMinute`.
+
+Configured live-follow, utility reads and provider-client authorities use this
+setting. Participating tasks with the same configured account identity share the
+durable ledger across runtime profiles and processes; each request consumes one
+permit before dispatch. Browser-operation limits remain separate. Known budget
+exhaustion blocks dispatch and follows the caller's existing yield/stop behavior;
+it does not automatically retry a dispatched request. Set the optional
+`services.chatgpt.backendRequestBudgetWaitMs` (or the same runtime binding field)
+to a nonnegative safe integer to wait for capacity before dispatch; zero/default
+yields immediately. Waiting rechecks account warnings, exact lease custody and
+caller cancellation, and remains bounded per request. App-list/refresh-tools
+outer deadlines include this configured allowance; explicit injected test
+deadlines retain their own bound. Provider warnings still stop admission.
+
+This covers owned, intercepted requests, including bootstrap traffic before first
+navigation. It does not meter manual tabs, clients bypassing these authorities,
+unobserved workers or other HTTP paths. Choose the production ceiling from measured
+traffic; configuring a ceiling does not establish provider capacity or clear a
+retained rate-limit warning.
+
 ## Browser opening and desktop input control
 
 In `tab-affinity` mode, a new ChatGPT utility target starts at `about:blank`.

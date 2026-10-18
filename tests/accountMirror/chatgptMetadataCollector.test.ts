@@ -570,7 +570,12 @@ describe("ChatGPT account mirror metadata collector", () => {
 		]);
 		getConversationContext.mockClear();
 
-		await collector.collect({
+		if (!collected.evidence.providerIndexEpoch) throw new Error("Expected observed index epoch");
+		const priorEpoch = {
+			...collected.evidence.providerIndexEpoch,
+			observedAt: "2026-09-30T12:00:00.000Z",
+		};
+		const continued = await collector.collect({
 			provider: "chatgpt",
 			runtimeProfileId: "default",
 			expectedIdentityKey: "ecochran76@gmail.com",
@@ -580,6 +585,7 @@ describe("ChatGPT account mirror metadata collector", () => {
 			previousConversationWorkStates: workStates,
 			previousConversations: conversations,
 			previousEvidence: {
+				providerIndexEpoch: priorEpoch,
 				projectSampleIds: [],
 				attachmentInventory: {
 					nextProjectIndex: 0,
@@ -603,6 +609,43 @@ describe("ChatGPT account mirror metadata collector", () => {
 			},
 		});
 		expect(getConversationContext.mock.calls.map(([id]) => id)).toEqual(["changed"]);
+		expect(continued.evidence.providerIndexEpoch).toEqual(priorEpoch);
+		// A refreshed index can insert a new row before an old numeric detail cursor.
+		// The planner has no prior row state for this legacy backlog.
+		getConversationContext.mockClear();
+		conversations.unshift({
+			id: "new-chat",
+			title: "New chat",
+			provider: "chatgpt",
+			updatedAt: "2026-10-01T12:00:00.000Z",
+		});
+		await collector.collect({
+			provider: "chatgpt",
+			runtimeProfileId: "default",
+			expectedIdentityKey: "ecochran76@gmail.com",
+			sweepMode: "steady_follow",
+			requestedPhase: "root-conversations",
+			previousConversations: conversations.slice(1),
+			previousEvidence: {
+				...collected.evidence,
+				providerIndexEpoch: priorEpoch,
+				attachmentInventory: {
+					nextProjectIndex: 0,
+					nextConversationIndex: 2,
+					detailReadLimit: 1,
+					scannedProjects: 0,
+					scannedConversations: 2,
+					yielded: true,
+				},
+			},
+			limits: {
+				maxPageReadsPerCycle: 1,
+				maxConversationRowsPerCycle: 10,
+				maxArtifactRowsPerCycle: 10,
+				maxBrowserInteractionsPerMinute: 0,
+			},
+		});
+		expect(getConversationContext.mock.calls.map(([id]) => id)).toEqual(["new-chat"]);
 	});
 
 	test("does not select metadata-only remote asset backlog for detail inventory", () => {

@@ -2,11 +2,11 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 import CDP from 'chrome-remote-interface';
 
 export interface CdpCommandAdmission {
-  run<T>(command: string, effect: () => Promise<T>): Promise<T>;
-  hold?(): Promise<CdpCommandAdmissionHold>;
+  run<T>(command: string, effect: () => Promise<T>, options?: { abortSignal?: AbortSignal }): Promise<T>;
+  hold?(options?: { abortSignal?: AbortSignal }): Promise<CdpCommandAdmissionHold>;
 }
 export interface CdpCommandAdmissionHold {
-  run<T>(command: string, effect: () => Promise<T>): Promise<T>;
+  run<T>(command: string, effect: () => Promise<T>, options?: { abortSignal?: AbortSignal }): Promise<T>;
   close(): Promise<void>;
 }
 export interface CdpEndpoint { host: string; port: number }
@@ -26,6 +26,15 @@ interface CdpCommandTimeout {
   abortSignal?: AbortSignal;
 }
 const commandTimeouts = new AsyncLocalStorage<CdpCommandTimeout>();
+const commandAbortSignals = new AsyncLocalStorage<AbortSignal>();
+
+/** Keep caller cancellation on admission for commands outside a wire-timeout scope. */
+export function withCdpCommandAbortSignal<T>(signal: AbortSignal | undefined, effect: () => Promise<T>): Promise<T> {
+  if (!signal) return effect();
+  signal.throwIfAborted();
+  const parent = commandAbortSignals.getStore();
+  return commandAbortSignals.run(parent && parent !== signal ? AbortSignal.any([parent, signal]) : signal, effect);
+}
 
 async function runTimedCdpEffect<T>(options: CdpCommandTimeout, effect: () => Promise<T>): Promise<T> {
   options.abortSignal?.throwIfAborted();
@@ -57,20 +66,20 @@ export async function withCdpCommandTimeout<T>(subject: unknown, options: CdpCom
 }
 
 /** A request interceptor must retain this hold until interception cleanup completes. */
-export async function holdCdpCommandAdmission(client: object): Promise<CdpCommandAdmissionHold> {
+export async function holdCdpCommandAdmission(client: object, options?: { abortSignal?: AbortSignal }): Promise<CdpCommandAdmissionHold> {
   const state = clientAdmissions.get(client);
   if (!state?.admission.hold) throw new Error('Continuous CDP ownership is unavailable for this client.');
   if (state.closed) throw new Error('CDP client is closed.');
   if (state.hold || state.acquiring) throw new Error('Continuous CDP ownership is already held for this client.');
   state.acquiring = true;
   try {
-    const hold = await state.admission.hold();
+    const hold = await state.admission.hold(options);
     if (state.closed) {
       await hold.close();
       throw new Error('CDP client closed during continuous ownership acquisition.');
     }
     state.hold = hold;
-    return { run: (command, effect) => hold.run(command, effect), close: async () => {
+    return { run: (command, effect, context) => hold.run(command, effect, context), close: async () => {
       await hold.close();
       if (state.hold === hold) state.hold = undefined;
     } };
@@ -110,9 +119,13 @@ function admittedCall(
 ): unknown {
   const callback = typeof args.at(-1) === 'function' ? args.pop() as (error: unknown, result?: unknown) => void : undefined;
   const timeout = commandTimeouts.getStore();
-  const result = admission.run(command, async () => timeout
-    ? runTimedCdpEffect(timeout, async () => invoke(...args))
-    : invoke(...args));
+  const callerSignal = commandAbortSignals.getStore();
+  const abortSignal = timeout?.abortSignal && callerSignal && timeout.abortSignal !== callerSignal
+    ? AbortSignal.any([timeout.abortSignal, callerSignal]) : timeout?.abortSignal ?? callerSignal;
+  const result = admission.run(command, async () => {
+    abortSignal?.throwIfAborted();
+    return timeout ? runTimedCdpEffect({ ...timeout, abortSignal }, async () => invoke(...args)) : invoke(...args);
+  }, { abortSignal });
   if (!callback) return result;
   void result.then((value) => callback(null, value), (error: unknown) => callback(error));
   return undefined;

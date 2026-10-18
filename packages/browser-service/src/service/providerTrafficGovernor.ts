@@ -10,6 +10,14 @@ import type {
 	ProviderTrafficPhase,
 } from "./mutationDispatcher.js";
 
+/** Proven cancellation before a backend request was dispatched. */
+export class ProviderBackendRequestCancelledBeforeDispatchError extends Error {
+	constructor() {
+		super("Backend request cancelled before dispatch.");
+		this.name = "ProviderBackendRequestCancelledBeforeDispatchError";
+	}
+}
+
 export interface ProviderTrafficAttribution {
 	provider: string;
 	runtimeProfileId: string;
@@ -62,7 +70,7 @@ export interface ProviderTrafficGovernor {
 	readonly attribution: ProviderTrafficAttribution;
 	begin(input: ProviderTrafficActionInput): Promise<ProviderTrafficAction>;
 	checkWarning?(context?: unknown): Promise<void>;
-	admitBackendRequest?(requestKey: string, effect: () => Promise<void>): Promise<void>;
+	admitBackendRequest?(requestKey: string, effect: () => Promise<void>, signal?: AbortSignal): Promise<void>;
 	snapshotAdmissionState?(): ProviderTrafficAdmissionState;
 }
 
@@ -194,7 +202,7 @@ export function createProviderTrafficGovernor(input: {
 		attribution: ProviderTrafficAttribution,
 	) => Promise<void>;
 	createActionId?: () => string;
-	admitBackendRequest?: (requestKey: string, effect: () => Promise<void>) => Promise<void>;
+	admitBackendRequest?: (requestKey: string, effect: () => Promise<void>, signal?: AbortSignal) => Promise<void>;
 }): ProviderTrafficGovernor {
 	const attribution = normalizeAttribution(input.attribution);
 	const createActionId = input.createActionId ?? crypto.randomUUID;
@@ -235,13 +243,13 @@ export function createProviderTrafficGovernor(input: {
 	return {
 		attribution,
 		checkWarning,
-		...(admitBackendRequest ? { admitBackendRequest: async (requestKey: string, effect: () => Promise<void>) => {
+		...(admitBackendRequest ? { admitBackendRequest: async (requestKey: string, effect: () => Promise<void>, signal?: AbortSignal) => {
 			await checkWarning();
 			assertBackendRequestState();
-			try { await admitBackendRequest(requestKey, effect); }
+			try { await admitBackendRequest(requestKey, effect, signal); }
 			catch (error) {
 				if (error instanceof ProviderBackendRequestBudgetExceededError) backendBudgetError ??= error;
-				else if (!backendRequestFailed) { backendRequestFailed = true; backendRequestFailure = error; }
+				else if (!(error instanceof ProviderBackendRequestCancelledBeforeDispatchError) && !backendRequestFailed) { backendRequestFailed = true; backendRequestFailure = error; }
 				throw error;
 			}
 		} } : {}),
