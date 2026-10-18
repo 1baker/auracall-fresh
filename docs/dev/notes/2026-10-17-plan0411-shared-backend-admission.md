@@ -162,8 +162,8 @@ Acceptance failed. At00:12:02UTC, exact unchanged-current config/wrapper checks
 qualified rollback to the original config bytes and prior issue331 launcher
 selection. d3abdada9 remains staged only. No shared budget is claimed globally
 active after rollback. No warning history was erased or reintroduced, and no
-frozen/uncertain records were settled manually. Peers received operational end
-notices that prohibit another automatic attempt. Original provider prompt/call
+frozen/uncertain records were settled manually. Operational end notices were scheduled for both peers; scheduling admission does
+not prove receipt. The notices prohibit another automatic attempt. Original provider prompt/call
 budgets remain unchanged. No provider retry after uncertain cleanup.
 
 Private receipts: ~/.auracall/diagnostics/plan0411/shared-trial-activation/
