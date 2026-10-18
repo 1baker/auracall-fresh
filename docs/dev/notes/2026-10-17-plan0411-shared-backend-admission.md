@@ -317,3 +317,32 @@ does not falsely settle or time out before admission completes. Red observed on
 old scope;69affected tests pass before final per-wire wrapper addition. Existing
 physical disconnect stalls still fail with the precise socket-timeout reason.
 Installed validation and native desktop contention repair remain pending.
+
+## Cancellable automation admission queue (2026-10-18)
+
+Native desktop gate retries another automation owner100times20ms, then returns
+busy. New red fixture holds actual ownership beyond3s: a cancellable contender
+fails before release. Forward the caller abort signal through guarded CDP command
+admission and owned continuous-hold acquisition. The gate waits for automation
+until caller cancellation; signal-less callers retain the existing short bound.
+Human control and invalid ownership still refuse; arbitrary I/O errors are not
+reclassified as contention. Exact native generation checks remain after admission.
+
+Red observed, then14boundary tests across4files pass: real native WebSocket command
+waits3s behind another owner, then runs under unchanged100ms wire deadline; queued
+cancellation dispatches nothing and preserves the first owner; current native PID/
+process/window generation and human exclusion cases remain green. Typecheck/lint
+pass; no stale PID cleanup or forced release.
+
+Installed62be28fb6 cleanup-only read now completes: both physical disconnects2–6ms
+and no owned cleanup exception. It reported an empty app inventory, so this is a
+cleanup-path result, not actual qualification acceptance. Full combined install and
+actual peer/follow trial pending.
+
+Final queue transport selection:70tests in2files pass (64.82s), plus14native
+boundary tests. Incremental production compile and typecheck pass; touched lint
+reports no warnings. One guarded auth presence request returned200, authenticated
+and matching configured account; no credential captured. Prior de15e41c9 peer
+failures reconcile to initial await readState at compiled CLI line180, before any
+submitTest branch; their earlier unknown prompt classification was conservative,
+and source plus exact stacks establish no submitted prompt from those attempts.

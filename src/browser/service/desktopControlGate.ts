@@ -5,6 +5,8 @@ import path from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { getAuracallHomeDir } from "../../auracallHome.js";
 
+class DesktopControlBusyError extends Error {}
+
 interface GateOwner {
 	id: string;
 	role: "automation" | "human";
@@ -47,7 +49,7 @@ export class DesktopControlGate {
 				await delay(20);
 			}
 		}
-		if (!acquired) throw new Error("Desktop control coordination is busy.");
+		if (!acquired) throw new DesktopControlBusyError("Desktop control coordination is busy.");
 		try {
 			return await operation();
 		} finally {
@@ -74,7 +76,7 @@ export class DesktopControlGate {
 				await fs.mkdir(this.lockPath, { mode: 0o700 });
 			} catch (error) {
 				if ((error as NodeJS.ErrnoException).code === "EEXIST")
-					throw new Error("Desktop control is busy; automation or another human owns the display.");
+					throw new DesktopControlBusyError("Desktop control is busy; automation or another human owns the display.");
 				throw error;
 			}
 			const owner: GateOwner = {
@@ -152,7 +154,7 @@ export class DesktopControlGate {
 		});
 	}
 
-	async holdAutomation(binding: string): Promise<DesktopAutomationHold> {
+	async holdAutomation(binding: string, options?: { abortSignal?: AbortSignal }): Promise<DesktopAutomationHold> {
 		let publish!: (hold: DesktopAutomationHold) => void;
 		let reject!: (error: unknown) => void;
 		const ready = new Promise<DesktopAutomationHold>((resolve, fail) => { publish = resolve; reject = fail; });
@@ -179,12 +181,13 @@ export class DesktopControlGate {
 				},
 			});
 			await released;
-		});
+		}, options);
 		void lifetime.catch(reject);
 		return ready;
 	}
 
-	async withAutomation<T>(binding: string, effect: () => Promise<T>): Promise<T> {
+	async withAutomation<T>(binding: string, effect: () => Promise<T>, options?: { abortSignal?: AbortSignal }): Promise<T> {
+		options?.abortSignal?.throwIfAborted();
 		const inherited = automationScopes.getStore()?.get(this.lockPath);
 		if (inherited) {
 			const current = await this.owner();
@@ -196,20 +199,24 @@ export class DesktopControlGate {
 			return effect();
 		}
 		let owner: GateOwner | undefined;
-		for (let attempt = 0; attempt < 100; attempt += 1) {
+		for (let attempt = 0; options?.abortSignal !== undefined || attempt < 100; attempt += 1) {
+			options?.abortSignal?.throwIfAborted();
 			try {
 				owner = await this.acquire("automation", binding);
 				break;
 			} catch (error) {
+				if (options?.abortSignal && !(error instanceof DesktopControlBusyError)) throw error;
 				const current = await this.owner();
 				if (current?.role === "human")
 					throw new Error("AuraCall automation is paused while a human controls this desktop.");
-				if (attempt === 99) throw error;
-				await delay(20);
+				if (!options?.abortSignal && attempt === 99) throw error;
+				options?.abortSignal?.throwIfAborted();
+				await delay(20, undefined, { signal: options?.abortSignal });
 			}
 		}
 		if (!owner) throw new Error("Desktop automation admission unavailable.");
 		try {
+			options?.abortSignal?.throwIfAborted();
 			const scopes = new Map(automationScopes.getStore());
 			scopes.set(this.lockPath, owner);
 			return await automationScopes.run(scopes, effect);

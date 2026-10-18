@@ -210,7 +210,7 @@ export async function annotateClientMutationContext(
 	}
 	if (governor?.admitBackendRequest) {
 		try {
-			backendObserver = await attachOwnedChatgptBackendRequestAdmission(client, governor);
+			backendObserver = await attachOwnedChatgptBackendRequestAdmission(client, governor, { abortSignal: options?.abortSignal });
 			ownedClientCloseDeadlines.add(client);
 		} catch (error) {
 			try {

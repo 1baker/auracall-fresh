@@ -13,11 +13,12 @@ import type { ChromeClient } from "../types.js";
 export async function attachOwnedChatgptBackendRequestAdmission(
 	client: ChromeClient,
 	governor: ProviderTrafficGovernor,
+	options?: { abortSignal?: AbortSignal },
 ): Promise<{ dispose(): Promise<void> }> {
 	const admit = governor.admitBackendRequest?.bind(governor);
 	if (!admit || !governor.attribution.targetId)
 		throw new Error("Owned backend request admission is unavailable.");
-	const hold = await holdCdpCommandAdmission(client);
+	const hold = await holdCdpCommandAdmission(client, options);
 	const namespace = randomUUID();
 	const requests = new Map<string, Promise<void>>();
 	const pending = new Set<Promise<void>>();

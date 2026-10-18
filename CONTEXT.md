@@ -34,7 +34,7 @@ _Avoid_: Browser prompt, request
 
 **Browser operation**:
 One authorized browser action or read. A single operation may cause several
-provider backend requests; its budget is distinct from their budget. Command-response deadlines start after required desktop admission; total workflow elapsed time still includes coordination and remains subject to caller cancellation.
+provider backend requests; its budget is distinct from their budget. Command-response deadlines start after required desktop admission; total workflow elapsed time still includes coordination and remains subject to caller cancellation. Cancellable desktop admission may wait behind other automation; human control still pauses automation immediately.
 
 **Provider backend request permit**:
 An account-wide admission reservation for one uniquely identified backend request

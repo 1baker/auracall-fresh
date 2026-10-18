@@ -3649,3 +3649,5 @@ separately from native process/desktop ownership.
 Owned backend cleanup cancels pre-dispatch capacity waits before disconnect; dispatched failures retain uncertainty. The regression in `tests/browser/backendRequestAdmission.test.ts` waits for a real capacity denial, then proves prompt cleanup and desktop custody release.
 
 Owned backend client cleanup applies the three-second deadline to cancellation/shutdown wire replies and physical CDP disconnect after desktop admission; it drains callbacks before disconnect. A proven pre-dispatch cancellation whose paused resource has disappeared can settle; dispatched or uncertain failures still fail cleanup.
+
+Cancellable CDP commands and owned request holds may wait behind other automation under the caller cancellation/deadline. Human desktop control still pauses automation immediately. Admission wait does not consume the command wire-response deadline; callers without cancellation retain the existing short contention wait.

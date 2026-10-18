@@ -1,3 +1,12 @@
+## 2026-10-18 — Native caller-bounded admission queue
+
+Cleanup-only installed62be28fb6 read completes without cleanup timeout, though
+empty inventory is not qualification. A real gate contender previously failed
+after100short retries. Caller abort now governs automation queueing; human control,
+current generation checks and signal-less fallback remain.14boundary tests pass
+including3s queued native wire command under100ms wire deadline. Combined installed
+trial still pending.
+
 ## 2026-10-18 — Cleanup deadline phases isolated
 
 Fresh wire/admission trace:5–7s admission/drain,2–10ms Fetch responses,4ms socket
