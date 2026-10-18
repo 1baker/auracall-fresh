@@ -259,3 +259,39 @@ reserved/start/settled timestamps move backward. An injected backward clock
 reproduces settlement rejection. Authority-local nondecreasing timestamps retain
 conservative account counting and ordered transitions; seven authority cases pass.
 Fetch-domain teardown failures remain unqualified live evidence.
+
+## Actual qualification release failed (2026-10-18)
+
+Activated installedde15e41c9 at00:50:33UTC, both global CLI/MCP wrappers and
+resolved ceiling30/rollingminute, capacity wait600000ms;584compiledJS match.
+No warning release, main API restart or scheduler resume. Exact activation and
+rollback receipts are under ~/.auracall/diagnostics/plan0411/actual-trial-de15e41c9.
+
+Both peers received actual apps test --submit requests. Tab36 launched00:52:00
+and failed00:52:26 with OwnedBackendRequestCleanupError cleanup timeout. Tab16
+first failed local required-account parsing with zero provider effect; corrected
+--expected-account run00:52:46–00:53:10 failed the same cleanup timeout during
+getProviderSessionProof/readState. No connector invocation or delivered artifact
+bytes qualified. Prompt effects remain conservatively unknown pending exact
+invocation reconciliation; no provider prompt was automatically resubmitted.
+
+Live-follow parent acctmirror_completion_cf1f1739-393c-43b2-86f6-d14576bbadf5
+ran during tab36, failed desktop-control admission with0backend requests,0passes.
+No successful three-way overlap; corrected tab16 ran later. Native browser PID
+20905/CDP45015 was freshly verified before activation, not trusted from static
+records. No browser process was killed or custody record reset.
+
+Aggregate observed39ledger start transitions:28settled effect-none cancellations
+were proven not dispatched,11settled dispatches. Peak charged dispatches11/min
+under ceiling30;0active shared warnings. Raw first meter wrongly counted canceled
+starts as dispatches (peak39); preserved original receipt and corrected accounting
+exclude effect-none cancellations. These are owned permit observations, not full
+HTTP/no429 proof. Logs/results remain private under /tmp/plan0411-endtoend-20261018.
+
+Trial rolled back00:53:41UTC with exact wrapper/config hash checks; baseline
+issue331-d03d89e38816 restored, staged runtime retained, API PID94853 unchanged.
+Source73affected tests plus final8focused tests, typecheck/build/compile/lint are
+source evidence only. Installed acceptance FAILED; Plan0411/P92 stays open and
+PR333 remains draft. Next target is native owned-transport cleanup and desktop
+contention; no more inventory-only acceptance or unqualified provider retry.
+Memory disposition forbidden: no explicit user memory-write request.

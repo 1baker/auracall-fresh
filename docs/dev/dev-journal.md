@@ -1,3 +1,13 @@
+## 2026-10-18 — Actual three-workload retry failed
+
+Installedde15e41c9 actual apps test commands both fail owned-client cleanup;
+follow fails desktop busy,0passes. Initial tab16 parser failure was corrected
+without a provider retry; its actual run finished later, so no three-way overlap.
+39ledger starts comprise28pre-dispatch cancellations and11settled dispatches;
+peak11charged/minute,0active warnings, no fullHTTP/no429claim. Trial wrappers
+and config restored00:53:41UTC. Source tests pass; installed acceptance remains
+failed. Exact retained evidence and next blocker are in the shared-admission note.
+
 ## 2026-10-18 — Installed cancellation follow-up
 
 73affected tests pass after valid reserved/start/settle cancellation handling.
