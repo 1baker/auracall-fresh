@@ -973,3 +973,20 @@ describe('Config Resolver', () => {
     expect(result.browser.chromePath).toBe('/usr/bin/google-chrome-stable');
   });
 });
+
+it('retains configured shared backend ceilings and waiting through the real resolver', async () => {
+ const spy = vi.spyOn(configModule, 'loadUserConfig').mockResolvedValue({
+  config: {
+   services: { chatgpt: { maxBackendRequestsPerMinute: 30, backendRequestBudgetWaitMs: 600000 } },
+   profiles: { fixture: { browser: { tabConcurrencyMode: 'tab-affinity' }, services: { chatgpt: { maxBackendRequestsPerMinute: 12, backendRequestBudgetWaitMs: 120000 } } } },
+  } as never,
+  path: '/tmp/config.json', loaded: true,
+ });
+ try {
+  const result = await resolveConfig({ profile: 'fixture', browserTarget: 'chatgpt' });
+  expect(result.services?.chatgpt).toMatchObject({ maxBackendRequestsPerMinute: 30, backendRequestBudgetWaitMs: 600000 });
+  const { resolveChatgptBackendRequestsPerMinute, resolveChatgptBackendRequestBudgetWaitMs } = await import('../../src/runtime/tenantExecutionLimits.js');
+  expect(resolveChatgptBackendRequestsPerMinute(result, 'fixture')).toBe(12);
+  expect(resolveChatgptBackendRequestBudgetWaitMs(result, 'fixture')).toBe(120000);
+ } finally { spy.mockRestore(); }
+});

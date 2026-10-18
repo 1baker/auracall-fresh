@@ -106,3 +106,17 @@ warning dates22:02UTC; warning history/frozen records are preserved. Any qualifi
 operator retry release will be recorded with exact scope and reason. Trial
 ceiling30backend requests/minute and bounded600000ms capacity waiting are proposed
 for this authorized measured run, not a claim about provider capacity.
+
+
+## Installed-boundary correction before release
+
+Staged520125ff2 matched584JavaScript files and built successfully, but actual
+resolveConfig stripped both new service fields: caller tests injected typed
+objects and missed the schema boundary. Activation stopped before warning release
+or launcher promotion; the proposed config fields had been written but were
+ineffective in that old schema. Original config backup remains private and intact.
+Added both fields to ChatgptServiceConfigSchema. A real-resolver regression fails
+with an empty service object before the fix and passes with global values and
+runtime binding precedence afterward. Affected schema/config selection42tests
+passes. Replacement full build/install and exact resolved config verification are
+required before releasing either LitScout peer.
