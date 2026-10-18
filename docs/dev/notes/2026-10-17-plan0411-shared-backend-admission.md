@@ -417,3 +417,32 @@ first-probe loop also passes. No debug logging remains in production source.
 Read-only warning refresh at02:41:49UTC retains the original indefinite429.
 Memory disposition forbidden (no user request); receipt
 /tmp/plan0411-proof-signal-memory.json. Source is not installed.
+
+## 2026-10-18 — Packaged cancellation fix verified without provider effects
+
+Staged source7070532aa at ~/.auracall/user-runtime-plan0411-7070532aa.
+All584compiled JavaScript files match the source build; no extra installed JS.
+Package SHA25663c5242f1565188bf03ab2af99449547e8a470c85f312a5a560906d45141d74e.
+Public installed session-proof API against one local synthetic CDP server:
+oldca2e264b2 rejects Desktop control busy; new7070532aa waits4.16s, returns match,
+and permits a fresh human takeover/release after cleanup. No provider requests.
+The first fixture setup failed local handoff-URL validation before proof work;
+it was corrected to the existing durable-view fixture shape before comparison.
+
+Private durable receipts and runnable fixture:
+~/.auracall/diagnostics/plan0411/staged-7070532aa/{stage-receipt.json,parity.json,
+installed-proof-receipt.json,old-proof-receipt.json,installed-proof-fixture.mjs}.
+Run the fixture with Node; its default target is the staged new package. Set
+AURACALL_PROOF_FIXTURE_RUNTIME, AURACALL_PROOF_FIXTURE_SOURCE and
+AURACALL_PROOF_FIXTURE_RECEIPT to compare the retained older package separately.
+It creates isolated state and a loopback synthetic transport, not a ChatGPT run.
+
+The recorded01:21:19.752UTC HTTP429 warning is still active and indefinite.
+Tab16's report now includes4matching-sequence successful connector calls in its
+attempt window, but concurrent activity prevents definitive conversation
+attribution; its prompt outcome remains unknown. No resubmit. Global CLI/MCP
+wrappers/config remain original; stage not activated, browser processes untouched,
+and installed live-follow/three-workload acceptance remains OPEN.
+
+Memory disposition: forbidden (no explicit request); non-write receipt
+/tmp/plan0411-staging-memory.json.
