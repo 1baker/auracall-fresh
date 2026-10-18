@@ -1,3 +1,23 @@
+## 2026-10-18 — Live-follow admission diagnosis: nearby red is not the live defect
+
+Applied diagnosing-bugs against source f46833bf2. Provider-free public session-proof
+harness with the real desktop gate and guarded CDP: uncontended proof succeeds;
+3s contention succeeds; no-signal persistent contention fails repeatedly in
+3.26–4.17s with Desktop control busy at enableChatgptTargetDomains. With a caller
+abort signal,6s contention succeeds in6.14s. The live collector already passes
+its timeout signal, so the no-signal failure is not a proven reproduction of the
+live defect. No production fix or passing live claim follows from this result.
+
+Canonical proof command (temporary fixture):
+`pnpm vitest run tests/browser/backendRequestAdmission.test.ts -t 'live-follow session proof'`.
+Logs: /tmp/plan0411-proof-repro-{contended,no-signal,long-owner,minimal,real-signal}.log.
+Prototype retained only in /tmp/plan0411-proof-admission-debug; production tests
+restored exactly. No provider requests, browser restarts, warning clearances or
+resubmissions. Existing live receipt lacks the failing command/call stack and gate
+owner identity. Diagnosis stops before a speculative fix; exact live call-boundary
+evidence remains needed after the active429 is resolved. Plan0411/P92 stays OPEN.
+Memory disposition forbidden: no explicit memory-write request.
+
 ## 2026-10-18 — Actual retry returned HTTP 429; admission gaps repaired in source
 
 The ca2e264b2 trial failed. Live-follow failed desktop admission with zero backend
