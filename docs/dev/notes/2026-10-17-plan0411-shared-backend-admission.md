@@ -227,3 +227,29 @@ Native process/CDP/human-control selection4tests/3files passes. The same current
 13-way observation after coalescing takes353ms and verifies all13callers. Existing
 ownership refusal, human exclusion and fresh post-settlement checks remain intact.
 Both fixes require installed requalification; no native success claim yet.
+
+## Transport-owned capacity cancellation (2026-10-18)
+
+Installed d9f9be89c still failed cleanup after ledger/native optimizations.
+Transport disposal waited for admissions sleeping on capacity (up to60seconds)
+under a10second cleanup bound.3339706e8 passes an operation cancellation signal
+through the governor to admission, cancels pre-dispatch waits on disposal, drains
+paused Fetch callbacks before disabling interception and leaves dispatched failure
+uncertain. No ceiling or timeout was raised. Governor reuse is not poisoned by
+proven pre-dispatch cancellation.
+
+Exact regression: observe a real capacity denial under ceiling1, close transport
+and prove waiting request fails without dispatch and desktop custody releases.
+Before patch: cleanup still waiting for capacity. After:245ms focused case;
+67affected transport tests pass. Five authority cases pass including cancellation
+after dispatch retaining outcome-unknown. Typecheck, full build and final compile
+pass. Installed3339706e8:584compiled JavaScript files match, zero mismatches.
+Private installed cleanup observation and actual concurrent qualification remain
+pending; prior native failure is retained.
+
+The installed3339706e8 check drained waits but found reserved-before-start
+cancellation: ledger.settle requires started. A new exact regression fails with
+"Backend dispatch and settlement failed" before repair. Final admission records
+the start before checking cancellation and settles none without dispatch; ordinary
+start/lease failures retain the prior behavior. Existing failed native receipt is
+retained at /tmp/plan0411-cancelled-cleanup-trace.jsonl.

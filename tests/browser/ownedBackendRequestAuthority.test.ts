@@ -95,3 +95,34 @@ test("transport cancellation preserves an already dispatched failure as uncertai
 	).rejects.toThrow("dispatch failed after cancellation");
 	expect(await ledger.list()).toMatchObject([{ effectState: "outcome-unknown" }]);
 });
+
+test("cancellation after reservation drains the permit without dispatch", async () => {
+	const ledger = createInMemoryProviderInteractionLedger();
+	const cancellation = new AbortController();
+	const reserve = ledger.reserve.bind(ledger);
+	vi.spyOn(ledger, "reserve").mockImplementation(async (input) => {
+		const result = await reserve(input);
+		cancellation.abort();
+		return result;
+	});
+	const authority = createOwnedBackendRequestAuthority({
+		ledger,
+		scope: {
+			provider: "chatgpt",
+			tenantKey: "account",
+			runtimeProfileId: "a",
+			managedBrowserProfile: "/managed",
+		},
+		workloadId: "cancel",
+		operationId: "cancel",
+		tabLeaseId: "cancel",
+		backendRequestLimit: 1,
+		assertOwnedLease: async () => undefined,
+	});
+	const effect = vi.fn(async () => undefined);
+	await expect(
+		authority.admit(`sha256:${"e".repeat(64)}`, effect, cancellation.signal),
+	).rejects.toThrow("Backend request cancelled before dispatch");
+	expect(effect).not.toHaveBeenCalled();
+	expect(await ledger.list()).toMatchObject([{ state: "settled", effectState: "none" }]);
+});

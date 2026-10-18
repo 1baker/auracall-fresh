@@ -144,14 +144,15 @@ export function createOwnedBackendRequestAuthority(input: {
 			}
 			if (admission.duplicate) return;
 			let dispatched = false;
+			let started = false;
 			try {
-				checkCancellation();
 				await assertOwnedLease();
 				const transition = await ledger.start({
 					reservationId: admission.reservation.reservationId,
 					startedAt: now().toISOString(),
 				});
 				if (!transition.ok) throw new Error(`Backend request start denied: ${transition.reason}.`);
+				started = true;
 				await assertOwnedLease();
 				checkCancellation();
 				dispatched = true;
@@ -164,6 +165,7 @@ export function createOwnedBackendRequestAuthority(input: {
 				});
 				if (!settled.ok) throw new Error(`Backend request settlement failed: ${settled.reason}.`);
 			} catch (error) {
+				if (!started) throw error;
 				try {
 					const settled = await ledger.settle({
 						reservationId: admission.reservation.reservationId,
