@@ -65,3 +65,33 @@ test.each([
 		for (const item of outcomes)
 			expect(item).toMatchObject({ reason: { name: "ProviderBackendRequestBudgetExceededError" } });
 });
+
+test("transport cancellation preserves an already dispatched failure as uncertain", async () => {
+	const ledger = createInMemoryProviderInteractionLedger();
+	const cancellation = new AbortController();
+	const authority = createOwnedBackendRequestAuthority({
+		ledger,
+		scope: {
+			provider: "chatgpt",
+			tenantKey: "account",
+			runtimeProfileId: "a",
+			managedBrowserProfile: "/managed",
+		},
+		workloadId: "dispatch",
+		operationId: "dispatch",
+		tabLeaseId: "dispatch",
+		backendRequestLimit: 1,
+		assertOwnedLease: async () => undefined,
+	});
+	await expect(
+		authority.admit(
+			`sha256:${"d".repeat(64)}`,
+			async () => {
+				cancellation.abort();
+				throw new Error("dispatch failed after cancellation");
+			},
+			cancellation.signal,
+		),
+	).rejects.toThrow("dispatch failed after cancellation");
+	expect(await ledger.list()).toMatchObject([{ effectState: "outcome-unknown" }]);
+});
