@@ -209,3 +209,21 @@ receipts stay in /tmp/plan0411-ledger-history-replay-result.json and its recorde
 0700directory. Existing affected84tests pass; final ledger durability19tests pass.
 Blocked-commit and failed-commit cases prove no permits escape before persistence.
 Source/native acceptance remains separate; build/staged retry is next.
+
+
+## Native verification burst follow-up
+
+Installed ab2dc0750 tracing still reported the owned cleanup timeout; batching
+alone did not establish native acceptance. A separate13-way current native
+verification measurement took3,373ms. These simultaneous exact-generation checks
+repeated the same serialized Remote View window query. Coalesce only the live
+unfinished verifyNativeBrowser promise for the full native binding generation;
+remove it on success/failure. Retain no completed result or time-based PID/window
+cache. Current stored generation/process/boot/executable/window checks remain.
+
+Expanded actual scrubbed-process test goes red at13window requests instead of1;
+after the fix it passes and a later changed-generation observation is rejected.
+Native process/CDP/human-control selection4tests/3files passes. The same current
+13-way observation after coalescing takes353ms and verifies all13callers. Existing
+ownership refusal, human exclusion and fresh post-settlement checks remain intact.
+Both fixes require installed requalification; no native success claim yet.

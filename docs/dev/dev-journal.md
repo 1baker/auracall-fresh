@@ -1,3 +1,11 @@
+## 2026-10-18 — Coalesce unfinished native-generation verification
+
+Ledger batching improved the history replay but the next installed cleanup check
+still failed.13concurrent native checks cost3.373s; sharing only their unfinished
+exact-generation verification costs0.353s. No completed PID/window cache. The
+scrubbed-process red/green also proves a later generation change is rejected;
+4native tests pass. Packaging both changes before releasing actual LitScout tests.
+
 ## 2026-10-18 — Actual qualification retry; ledger burst repair
 
 User rejected inventory-only scope. Peers prepare actual connector/delivery

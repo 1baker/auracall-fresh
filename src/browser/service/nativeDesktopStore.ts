@@ -150,13 +150,26 @@ export async function verifyNativeBrowserForOpening(binding: NativeDesktopBrowse
   } catch (error) { if ((error as NodeJS.ErrnoException).code === 'ENOENT') return false; throw error; }
 }
 
+// Share only an unfinished exact-generation check; retain no PID/window result cache.
+const nativeBrowserVerificationFlights = new Map<string, Promise<boolean>>();
+
 export async function verifyNativeBrowser(binding: NativeDesktopBrowser): Promise<boolean> {
+  const key = nativeBrowserGeneration(binding);
+  const current = nativeBrowserVerificationFlights.get(key);
+  if (current) return current;
+  const verification = (async () => {
   try {
     const [stat, boot] = await Promise.all([fs.readFile(`/proc/${binding.pid}/stat`, 'utf8'), fs.readFile('/proc/sys/kernel/random/boot_id', 'utf8')]);
     if (stat.slice(stat.lastIndexOf(')') + 2).split(' ')[19] !== binding.processStart || boot.trim() !== binding.bootId) return false;
     const current = await observeNativeBrowser(binding.pid, binding.managedProfileDir, binding.display, binding);
     return current.processStart === binding.processStart && current.bootId === binding.bootId && current.executable === binding.executable;
   } catch (error) { if ((error as NodeJS.ErrnoException).code === 'ENOENT') return false; throw error; }
+  })();
+  nativeBrowserVerificationFlights.set(key, verification);
+  try { return await verification; }
+  finally {
+    if (nativeBrowserVerificationFlights.get(key) === verification) nativeBrowserVerificationFlights.delete(key);
+  }
 }
 
 /** A config change cannot move an existing process to root by reusing its CDP port. */

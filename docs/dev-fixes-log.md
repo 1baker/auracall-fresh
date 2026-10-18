@@ -1,3 +1,11 @@
+## 2026-10-18 — Share unfinished native verification without stale PID caching
+
+Concurrent commands can repeat identical expensive window ownership queries.
+Share only an unfinished check keyed by the full native binding generation and
+discard it on settlement. Keep the actual process/boot/executable/window checks
+and force a fresh check after completion; later generation drift still refuses.
+13-way current measurement3.373s→0.353s. Native cleanup acceptance stays separate.
+
 ## 2026-10-18 — Batch durable interaction-ledger mutations during request bursts
 
 A15MB retained ledger was rewritten/fsynced for every reserve/start/settle. Burst
