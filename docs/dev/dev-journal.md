@@ -1,3 +1,14 @@
+## 2026-10-18 — Shared-guard live trial failed; deployment rolled back
+
+Installed d3abdada9 matched584JS files and resolved30/min plus bounded waiting.
+Both LitScout peers retried once: owned-client cleanup timeout. Follow failed at
+desktop admission before backend traffic. Aggregate34permits/31started,peak29/min,
+0new shared warnings; not full HTTP/no429 proof or simultaneous acceptance.
+Trial CLI/config selection restored to pretrial issue331; main API/scheduler and
+browser processes untouched. Unknown records preserved; no automatic retry.
+See notes/2026-10-17-plan0411-shared-backend-admission.md for exact receipts and
+remaining native transport/cleanup reproduction. Plan0411 remains OPEN.
+
 ## 2026-10-18 — Concurrent LitScout/live-follow retry preparation
 
 Both LitScout peers prepared read-only inventory retries on wsl-chrome-3 and wait

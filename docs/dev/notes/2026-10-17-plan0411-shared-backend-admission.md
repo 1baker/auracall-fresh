@@ -120,3 +120,61 @@ with an empty service object before the fix and passes with global values and
 runtime binding precedence afterward. Affected schema/config selection42tests
 passes. Replacement full build/install and exact resolved config verification are
 required before releasing either LitScout peer.
+
+
+## Native trial result and rollback — 2026-10-18
+
+Source d3abdada9 was fully built/installed,584compiled JavaScript files matched,
+and actual resolved configuration confirmed30backend requests/minute with600000ms
+bounded waiting. CLI/MCP wrappers selected it for this trial. Main API94853 and
+its paused scheduler were not restarted or resumed. The previous22:02rate warning
+was explicitly released after the qualified expired-cooldown/native-DOM readback;
+its history and all frozen records were retained.
+
+The two prepared peers each acknowledged the release, verified installed identity
+and ran exactly one fresh installed apps list on wsl-chrome-3. Both returned their
+file-only results, which the coordinator read. Neither sent a prompt, restarted
+a browser, cleared a warning or retried. Each failed with
+OwnedBackendRequestCleanupError: owned backend request client cleanup timed out
+during getProviderSessionProof/readState. Tab16 ran00:09:38–00:10:07UTC; tab36 ran
+00:10:25–00:11:02UTC. This is failed inventory acceptance, not download evidence.
+
+The one installed private proof-server follow attempt failed00:09:04UTC after
+about4.45seconds at desktop admission: Desktop control is busy; automation or
+another human owns the display. It sent0backend requests and completed0passes.
+Fresh later gate-owner readback was empty; no permanent owner or causal attribution
+is inferred. No follow lease remained in the exact parent readback. No owned CLI
+or proof-server process remained after the terminal results; shared browser20905
+was retained. No blanket tab cleanup, custody reset or process signal occurred.
+
+Aggregate ledger meter00:08:55–00:11:44UTC observed34new owned backend permits,
+31started, peak29started admissions per rolling minute,7settled and1explicitly
+unknown effect; other started records remained unresolved and were not rewritten.
+Two distinct utility operations participated. There were0new active shared
+provider warnings. This is account-wide owned-permit evidence, not full HTTP
+coverage or proof of no429 anywhere. The selected ceiling was not exhausted,
+so native waiting behavior is not qualified by this run. The three attempts did
+not overlap after asynchronous dispatch and early failure; simultaneous three-way
+acceptance remains untested. Provider-free waiting/atomic-budget regressions do
+not substitute for that native evidence.
+
+Acceptance failed. At00:12:02UTC, exact unchanged-current config/wrapper checks
+qualified rollback to the original config bytes and prior issue331 launcher
+selection. d3abdada9 remains staged only. No shared budget is claimed globally
+active after rollback. No warning history was erased or reintroduced, and no
+frozen/uncertain records were settled manually. Peers received operational end
+notices that prohibit another automatic attempt. Original provider prompt/call
+budgets remain unchanged. No provider retry after uncertain cleanup.
+
+Private receipts: ~/.auracall/diagnostics/plan0411/shared-trial-activation/
+(receipt.json, warning-release.json, config-before.json, rollback.json),
+shared-retry-readiness.json, and
+measured-shared-follow-2026-10-18T00-08-56-935Z.json.
+Peer/meter receipts: /tmp/plan0411-peer-retry-20261018/{tab16-result.json,
+tab36-result.json,aggregate-latest.json,checkpoint.json}. Request and terminal
+native Wake receipts are in the same private coordination directory.
+
+Remaining blocker: reproduce actual native desktop-command/transport hold and
+owned-request cleanup composition with provider-free fixtures before another
+installed provider attempt. Do not weaken ownership, cleanup or rate guards.
+Plan0411/P92 stays OPEN; issue165 stays closed. Memory disposition remains forbidden.

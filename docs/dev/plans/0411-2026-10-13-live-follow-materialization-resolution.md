@@ -1055,3 +1055,20 @@ cannot report successful completion. See
 ../notes/2026-10-17-plan0411-shared-backend-admission.md for red/green and validation.
 Plan remains OPEN: measured production ceiling, staged activation, changed capture
 and unchanged repeat remain unaccepted; previous429warning is retained.
+
+
+## 2026-10-18 — Operator-requested shared-task native trial
+
+Built/staged d3abdada9;584JS parity and real resolved config30/min,600000ms waiting.
+Two LitScout exact threads each ran one installed read-only apps list and returned
+owned backend request cleanup timeouts. Follow failed desktop admission with0
+backend requests. Shared owned-permit meter34admitted/31started,peak29/min,0new
+shared warnings; full HTTP and simultaneous three-way acceptance are unproven.
+Actual CLI attempts did not overlap after asynchronous release and early failures.
+The trial did not exhaust the ceiling, so native waiting is also unqualified.
+Failed activation rolled back config/wrappers to previous issue331 selection;
+unknown/frozen records and browser processes preserved. No automatic retry after
+uncertain cleanup. Source remains draft PR333; plan OPEN. Next exact boundary is
+provider-free native desktop-hold/request-cleanup composition, then a qualified
+installed retry. Full receipt summary in
+../notes/2026-10-17-plan0411-shared-backend-admission.md.
