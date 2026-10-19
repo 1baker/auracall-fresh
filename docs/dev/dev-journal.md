@@ -1,3 +1,12 @@
+## 2026-10-19 — Issue325 shared custody observation
+
+PR345/87b20beb4 repairs budget cancellation classification. The final predecessor
+capture independently exposed tab-lease registry contention. Isolated256-reader
+replay fails136calls in8.01s; scoped PR335 standalone1460ed0c8 sharing of unfinished
+identical observations passes0.187s. Settled state is never cached; caller results
+are separate clones and writes retain exclusive locking. Plan0438 continues on
+fix/issue325-custody-reads; installed terminal acceptance remains pending.
+
 ## 2026-10-19 — Issue325 capacity cancellation race
 
 PR344 installed inventory still fails cleanup. Targeted aggregate capture shows

@@ -8,12 +8,12 @@ Target: origin/main
 
 ## Current State
 
-User requested actual inventory repair. PR343/c18aec802 and PR344/7c3eb0b61
-are merged; active wrappers remain856276cdb until terminal acceptance. Installed
-7c3eb0b61 still fails cleanup. Current branch fix/issue325-capacity-cancel fixes a
-reproduced synchronous budget-wait cancellation escape;104affected tests,
-typecheck, scoped lint and full build pass. Final predecessor cause capture and
-exact merged/install/terminal verification remain. No successful inventory yet.
+User requested actual inventory repair. PR343/c18aec802, PR344/7c3eb0b61 and
+PR345/87b20beb4 are merged; active wrappers remain856276cdb until terminal
+acceptance. Predecessor installed reads still fail cleanup. Current branch
+fix/issue325-custody-reads addresses reproduced redundant concurrent registry
+observations, reusing only PR335 standalone1460ed0c8. Final merged/install/terminal
+verification remains. No successful inventory yet.
 
 ## Scope and acceptance
 
@@ -158,3 +158,31 @@ no blocker in the scoped cancellation fix. Original whole-workflow acceptance
 remains pending. The post-run native verification identifies the current browser
 process910183, exact assignment and current window; predecessor PID absence does
 not establish current browser absence. No additional launch is required.
+
+## Shared custody observation continuation
+
+The final predecessor stack capture failed after283.38s with tab-lease registry
+lock timeout plus raw dispose cancellation. It is a distinct retained failure,
+not a successful retry of the prior native-cancellation run. No concurrent live
+inventory runs were used. Native process/assignment/window readback passed.
+
+Ranked predictions: redundant concurrent custody reads; an external lock holder;
+corrupt snapshot. Private isolated32-reader control passed0.69s;256read stress
+reproduced136lock timeouts in8.01s without any external holder. Existing PR335
+standalone1460ed0c8 is a directly applicable overlap. Its focused public regression
+fails before repair (2snapshot reads instead of1) and passes with the scoped
+change. Share only unfinished identical list observations across registry
+instances, clone each result, clear successful/failed promises, and keep writes
+under the original exclusive lock. No settled-state cache or ownership reset.
+The same256-reader replay now passes0.187s with no failures. Private snapshots
+are deleted after each replay and never committed. Final source checks, review,
+integration and terminal installed read remain required.
+
+Fourth-slice focused selection:124tests across4suites pass in53.12s. The stronger
+concurrent-result clone control passes separately. Typecheck and full build pass.
+Normal scoped lint passes for the fixture; explicit package lint encounters
+preexisting undeclared-variable diagnostics at the unchanged sameWorkload type
+assertions and existing whole-file formatting debt. No new source lint rule is
+introduced. Serial Standards review preserves local package style; Spec review
+against87b20beb451121608204bc47b78acab8f9a64978 finds no scoped blocker. Source
+review does not establish terminal inventory acceptance.

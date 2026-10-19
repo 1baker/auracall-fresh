@@ -1004,6 +1004,10 @@ class InMemoryBrowserTabLeaseRegistry implements BrowserTabLeaseRegistry {
   }
 }
 
+// Share only concurrent identical observations, never settled custody state.
+// Mutations continue through the exclusive registry lock and atomic persistence.
+const pendingLeaseLists = new Map<string, Promise<BrowserTabLease[]>>();
+
 class FileBackedBrowserTabLeaseRegistry implements BrowserTabLeaseRegistry {
   private readonly registryRoot: string;
   private readonly statePath: string;
@@ -1095,8 +1099,19 @@ class FileBackedBrowserTabLeaseRegistry implements BrowserTabLeaseRegistry {
     return this.read((registry) => registry.findByWorkload(scope, workload));
   }
 
-  list(input?: Parameters<BrowserTabLeaseRegistry['list']>[0]) {
-    return this.read((registry) => registry.list(input));
+  async list(input?: Parameters<BrowserTabLeaseRegistry['list']>[0]) {
+    const key = JSON.stringify([this.registryRoot, input ?? {}]);
+    let pending = pendingLeaseLists.get(key);
+    if (!pending) {
+      pending = this.read((registry) => registry.list(input));
+      pendingLeaseLists.set(key, pending);
+      const clear = () => {
+        if (pendingLeaseLists.get(key) === pending) pendingLeaseLists.delete(key);
+      };
+      void pending.then(clear, clear);
+    }
+    // Each caller owns its result even when it shares the underlying observation.
+    return (await pending).map(cloneLease);
   }
 
   private async read<T>(operation: (registry: InMemoryBrowserTabLeaseRegistry) => Promise<T>): Promise<T> {
