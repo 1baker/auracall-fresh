@@ -12,8 +12,8 @@ import type {
 
 /** Proven cancellation before a backend request was dispatched. */
 export class ProviderBackendRequestCancelledBeforeDispatchError extends Error {
-	constructor() {
-		super("Backend request cancelled before dispatch.");
+	constructor(options?: ErrorOptions) {
+		super("Backend request cancelled before dispatch.", options);
 		this.name = "ProviderBackendRequestCancelledBeforeDispatchError";
 	}
 }
@@ -70,7 +70,8 @@ export interface ProviderTrafficGovernor {
 	readonly attribution: ProviderTrafficAttribution;
 	begin(input: ProviderTrafficActionInput): Promise<ProviderTrafficAction>;
 	checkWarning?(context?: unknown): Promise<void>;
-	admitBackendRequest?(requestKey: string, effect: () => Promise<void>, signal?: AbortSignal): Promise<void>;
+	/** Request callbacks supply their owning live transport, rather than a prior action's probe. */
+	admitBackendRequest?(requestKey: string, effect: () => Promise<void>, signal?: AbortSignal, probeContext?: unknown): Promise<void>;
 	snapshotAdmissionState?(): ProviderTrafficAdmissionState;
 }
 
@@ -243,8 +244,8 @@ export function createProviderTrafficGovernor(input: {
 	return {
 		attribution,
 		checkWarning,
-		...(admitBackendRequest ? { admitBackendRequest: async (requestKey: string, effect: () => Promise<void>, signal?: AbortSignal) => {
-			await checkWarning();
+		...(admitBackendRequest ? { admitBackendRequest: async (requestKey: string, effect: () => Promise<void>, signal?: AbortSignal, probeContext?: unknown) => {
+			await checkWarning(probeContext);
 			assertBackendRequestState();
 			try { await admitBackendRequest(requestKey, effect, signal); }
 			catch (error) {

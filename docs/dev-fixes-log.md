@@ -1,3 +1,17 @@
+## 2026-10-19 — Keep request, transport and inventory observation lifetimes aligned
+
+A warning governor can retain a closed predecessor Runtime; backend callbacks
+must supply their owning live transport. Chrome also invalidates paused Fetch
+IDs when requests are cancelled or documents replaced. Cancel only matching
+queued work, and let the guarded SDK boundary certify whether no send occurred;
+post-send errors remain unknown. Do not blanket-ignore Invalid InterceptionId.
+
+Inventory's response clock must include configured capacity waiting. Keep the
+installed-app surface until its response or bounded observation completes, then
+bound optional linked metadata separately. Abort detaches observers and stops
+later navigation. These repairs preserve outer deadlines, request ceilings,
+warning/ownership fences and historical unknown outcomes.
+
 ## 2026-10-19 — Queue ledger reads with durable mutations
 
 App inventory exposed provider-interaction ledger lock timeouts under retained

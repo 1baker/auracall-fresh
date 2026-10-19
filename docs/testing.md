@@ -1,3 +1,12 @@
+- Backend transport handoff, native cancellation and inventory observation (provider-free, issue325):
+  `pnpm vitest run tests/browser/backendRequestAdmission.test.ts tests/browser/chatgptDeveloperAppInventory.test.ts tests/browser/nativeDesktopCdp.test.ts tests/browser/desktopControlGate.test.ts`.
+  Reused governor probes the owning Runtime after predecessor closure. Seven
+  native-cancellation controls distinguish before/after SDK send, foreign
+  network/frame IDs and non-cancellation failures. Delayed installed payloads
+  survive configured capacity waiting; optional linked metadata stays bounded,
+  and caller abort prevents later navigation. Native process/generation gates
+  and post-send unknown custody remain unchanged.
+
 - Ledger read contention and mixed-batch durability (provider-free, issue325):
   `pnpm vitest run tests/browser-service/interactionLedger.test.ts tests/browser/backendRequestAdmission.test.ts tests/cli/chatgptDeveloperAppsCommand.test.ts`.
   Controlled slow snapshot proves same-instance readers wait instead of consuming

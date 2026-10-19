@@ -1,3 +1,15 @@
+## 2026-10-19 — Issue325 native lifecycle repair continues
+
+PR343/c18aec802 removed ledger read self-contention. Isolated installed inventory
+then exposed repeated Invalid InterceptionId and expired response observation.
+Plan0438/fix/issue325-owned-probe now independently reproduces and repairs closed
+warning-transport handoff, native/document pre-send cancellation and delayed
+installed response lifetime. Only e0f6cf1ec/df6ddbec6/9a056a006 scoped PR335 changes
+are reused; broader draft remains separate. After-wire uncertainty remains fenced.
+The old browser PID exited with unknown actor; supported login restored the same
+managed profile. Only its task-owned old-runtime diagnostic CLI was stopped;
+native ownership remains verified. Final checks and installed acceptance pending.
+
 ## 2026-10-19 — Issue325 terminal inventory repair (Plan0438)
 
 Owner ecochran76; fix/issue325-attachment from36bcd6175. Fine native trace showed

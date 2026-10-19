@@ -77,3 +77,55 @@ repaired and covered by the3existing ownership cases. Mixed commit failure and
 read-only non-persistence are covered. No unrelated PR335 changes are included.
 Source is ready for published-diff review and integration; installed acceptance
 remains a separate gate.
+
+## Native lifecycle continuation
+
+PR343 mergedc18aec802. Its installed597-file parity, contract and32-reader replay
+pass, but terminal inventory remained unaccepted. The original native PID exited
+(actor unknown); OS census found no matching root. Supported login started the
+same managed browser profile; native process/assignment/window proof passed.
+Its old-runtime post-launch diagnostic was still running, so only that task-owned
+CLI was terminated (keepBrowser true); the native browser remained verified.
+
+One isolated c18aec802read ended after262.43s: no installed/linked payload captured,
+then observer cleanup failed with repeated Invalid InterceptionId errors. Private
+aggregate diagnostics excluded request bodies, cookies and raw browser content.
+Current branch fix/issue325-owned-probe continues this same bounded objective.
+
+Three independently red/green invariants now protect the actual chain:
+
+- A warning probe must use the request's own live Runtime, not a closed predecessor.
+  Minimized real guard/governor/observer composition reproduces the same aggregate
+  cleanup failure. Reuses only PR335 standalonee0f6cf1ec's handoff.
+- Native cancellation or document replacement must cancel matching queued requests
+  before SDK send. Copied7controls from PR335df6ddbec6/9a056a006 fail2pre-wire
+  cases before repair and pass after. The guarded transport certifies no SDK call;
+  after-wire failures remain unknown, foreign/non-cancellation events do not cancel.
+  The broader startup/ownership/live-follow changes from PR335 remain excluded.
+- The old12sresponse timer expired while configured capacity waiting still held
+  requests; navigating away after5s could cancel the awaited installed response.
+  A20svirtual response went red before repair. Primary observation now includes
+  the existing configured capacity allowance; optional linked metadata retains a
+  bounded12swindow after root navigation. Missing optional data does not consume
+  the whole capacity allowance. Caller abort removes listeners/timers and prevents
+  restoration/navigation after cancellation. No outer deadline or rate limit raised.
+
+Package/source review and final affected checks precede the second integration
+slice. Native terminal acceptance, active wrapper readback and truthful issue
+closeout remain required; no old unknown record, warning or paused work is cleared.
+
+## Second-slice verification and review
+
+All229affected tests across10suites pass in62.53s, including actual local SDK
+wire/native-generation gates. Typecheck and full build pass. Scoped lint has
+no errors;8existing CDP-casing warnings in the inventory fixture remain unchanged.
+Explicit package-source lint with the repository rules passes. No debug prefixes,
+startup-waiter API or cross-client ownership helper were imported from PR335.
+
+Serial review fixed pointc18aec8021406d75acf8d55ab96e5c2372424654. Standards:
+no accepted blocker; generic send-certainty lives in shared transport and native
+request/frame handling remains provider-local. Spec: optional metadata consuming
+the full capacity allowance was accepted blocking, fixed with a red/green elapsed
+response test; caller-abort/no-post-navigation control passes. Unknown post-wire
+outcomes and original history remain preserved. Source is ready for published
+review/integration; terminal installed acceptance remains required.

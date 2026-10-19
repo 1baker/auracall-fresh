@@ -1,6 +1,8 @@
 import { createHash } from "node:crypto";
+import type Protocol from "devtools-protocol";
 import type { DevToolsConnectionOptions } from "../../../packages/browser-service/src/types.js";
 import type { ResolvedUserConfig } from "../../config.js";
+import { resolveChatgptBackendRequestBudgetWaitMs } from "../../runtime/tenantExecutionLimits.js";
 import {
 	buildChatgptAppComposerLookup,
 	CHATGPT_APP_MENTION_SELECTOR,
@@ -186,7 +188,7 @@ export class ChatgptDeveloperAppBrowserAdapter {
 		try {
 			debugDeveloperApps("reading installed and linked app signals");
 			this.submissionOptions.onInventoryStage?.("inventory");
-			const featureSignature = await captureChatgptDeveloperAppFeatureSignature(client);
+			const featureSignature = await this.captureInventoryFeatureSignature(client);
 			this.throwIfAborted();
 			debugDeveloperApps(
 				options.includeDeveloperMode === false
@@ -205,7 +207,7 @@ export class ChatgptDeveloperAppBrowserAdapter {
 				observedAt: new Date().toISOString(),
 			});
 		} finally {
-			if (originalUrl?.startsWith("https://chatgpt.com/")) {
+			if (!this.abortSignal?.aborted && originalUrl?.startsWith("https://chatgpt.com/")) {
 				this.submissionOptions.onInventoryStage?.("restore-navigation");
 				await navigateChatgpt(client, originalUrl).catch(() => undefined);
 			}
@@ -336,7 +338,7 @@ export class ChatgptDeveloperAppBrowserAdapter {
 		}
 
 		await navigateChatgpt(client, "https://chatgpt.com/plugins");
-		const featureSignature = await captureChatgptDeveloperAppFeatureSignature(client);
+		const featureSignature = await this.captureInventoryFeatureSignature(client);
 		const postCreateState = deriveChatgptDeveloperAppState({
 			identity: null,
 			developerMode: true,
@@ -598,6 +600,19 @@ export class ChatgptDeveloperAppBrowserAdapter {
 			if (hasUnknownOwnedRequestCleanup(error)) throw error;
 		});
 		debugDeveloperApps("developer-app browser client closed");
+	}
+
+	private captureInventoryFeatureSignature(client: ChromeClient): Promise<string> {
+		const config = this.browser.userConfig;
+		const budgetWaitMs = resolveChatgptBackendRequestBudgetWaitMs(
+			config as Record<string, unknown>,
+			config.auracallProfile ?? "default",
+		);
+		return captureChatgptDeveloperAppFeatureSignature(
+			client,
+			12_000 + budgetWaitMs,
+			this.abortSignal,
+		);
 	}
 
 	private async ensureClient(): Promise<ChromeClient> {
@@ -894,20 +909,29 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 	return Boolean(value && typeof value === "object" && !Array.isArray(value));
 }
 
-async function captureChatgptDeveloperAppFeatureSignature(client: ChromeClient): Promise<string> {
+async function captureChatgptDeveloperAppFeatureSignature(
+	client: ChromeClient,
+	timeoutMs: number,
+	signal?: AbortSignal,
+): Promise<string> {
+	signal?.throwIfAborted();
 	const endpoints = {
 		installed: "/backend-api/ps/plugins/installed",
 		linked: "/backend-api/aip/connectors/links/list_accessible",
 	} as const;
 	await client.Network.enable();
+	signal?.throwIfAborted();
 	let resolveInstalled: () => void = () => undefined;
 	const installedReady = new Promise<void>((resolve) => {
 		resolveInstalled = resolve;
 	});
+	let observationDisposed = false;
+	let disposeCapture: () => void = () => undefined;
+	let beginLinkedObservation: () => void = () => undefined;
 	const payloadPromise = new Promise<{
 		installed: unknown | null;
 		linked: unknown | null;
-	}>((resolve) => {
+	}>((resolve, reject) => {
 		const requestKinds = new Map<string, keyof typeof endpoints>();
 		const payloads: { installed: unknown | null; linked: unknown | null } = {
 			installed: null,
@@ -920,12 +944,20 @@ async function captureChatgptDeveloperAppFeatureSignature(client: ChromeClient):
 			clearTimeout(timer);
 			resolve(payloads);
 		};
-		const timer = setTimeout(() => {
+		const finishPartial = () => {
 			if (settled) return;
 			settled = true;
 			resolve(payloads);
-		}, 12_000);
-		client.Network.responseReceived((params) => {
+		};
+		let timer = setTimeout(finishPartial, timeoutMs);
+		beginLinkedObservation = () => {
+			if (settled) return;
+			// Installed inventory owns the capacity-wait allowance. Optional linked
+			// metadata gets its ordinary response window after root navigation.
+			clearTimeout(timer);
+			timer = setTimeout(finishPartial, 12_000);
+		};
+		const onResponse = (params: Protocol.Network.ResponseReceivedEvent) => {
 			if (settled || params.response.status < 200 || params.response.status >= 300) return;
 			for (const [kind, endpoint] of Object.entries(endpoints) as Array<
 				[keyof typeof endpoints, string]
@@ -935,8 +967,8 @@ async function captureChatgptDeveloperAppFeatureSignature(client: ChromeClient):
 					break;
 				}
 			}
-		});
-		client.Network.loadingFinished(async (params) => {
+		};
+		const onFinished = async (params: Protocol.Network.LoadingFinishedEvent) => {
 			if (settled) return;
 			const kind = requestKinds.get(params.requestId);
 			if (!kind) return;
@@ -954,37 +986,72 @@ async function captureChatgptDeveloperAppFeatureSignature(client: ChromeClient):
 			} catch {
 				// Keep waiting for another successful response for this endpoint.
 			}
-		});
+		};
+		const responseSubscription: unknown = client.Network.responseReceived(onResponse);
+		const finishedSubscription: unknown = client.Network.loadingFinished(onFinished);
+		const onAbort = () => {
+			disposeCapture();
+			reject(signal?.reason ?? new Error("App inventory cancelled."));
+		};
+		disposeCapture = () => {
+			if (observationDisposed) return;
+			observationDisposed = true;
+			settled = true;
+			clearTimeout(timer);
+			signal?.removeEventListener("abort", onAbort);
+			for (const [subscription, name, handler] of [
+				[responseSubscription, "Network.responseReceived", onResponse],
+				[finishedSubscription, "Network.loadingFinished", onFinished],
+			] as const) {
+				if (typeof subscription === "function") subscription();
+				else
+					(
+						client as ChromeClient & { removeListener?: (name: string, handler: unknown) => void }
+					).removeListener?.(name, handler);
+			}
+		};
+		signal?.addEventListener("abort", onAbort, { once: true });
+		if (signal?.aborted) onAbort();
 	});
-	const currentUrl = await readCurrentUrl(client);
-	if (currentUrl?.startsWith("https://chatgpt.com/plugins")) {
-		const reloaded = await reloadAndSettle(client, {
-			ignoreCache: true,
-			timeoutMs: 10_000,
-			mutationSource: "chatgpt-developer-apps:inventory-reload",
-		});
-		if (!reloaded.ok) {
-			throw new Error(
-				`ChatGPT developer-app inventory reload did not settle: ${reloaded.reason ?? "unknown"}.`,
-			);
+	// Navigation may still be admitted when cancellation rejects the observation.
+	void payloadPromise.catch(() => undefined);
+	try {
+		signal?.throwIfAborted();
+		const currentUrl = await readCurrentUrl(client);
+		signal?.throwIfAborted();
+		if (currentUrl?.startsWith("https://chatgpt.com/plugins")) {
+			const reloaded = await reloadAndSettle(client, {
+				ignoreCache: true,
+				timeoutMs: 10_000,
+				mutationSource: "chatgpt-developer-apps:inventory-reload",
+			});
+			if (!reloaded.ok) {
+				throw new Error(
+					`ChatGPT developer-app inventory reload did not settle: ${reloaded.reason ?? "unknown"}.`,
+				);
+			}
+			await wait(250);
+		} else {
+			await navigateChatgpt(client, "https://chatgpt.com/plugins");
 		}
-		await wait(250);
-	} else {
-		await navigateChatgpt(client, "https://chatgpt.com/plugins");
+		await Promise.race([installedReady, payloadPromise]);
+		signal?.throwIfAborted();
+		await navigateChatgpt(client, "https://chatgpt.com/");
+		beginLinkedObservation();
+		const payloads = await payloadPromise;
+		const installedPayload = isRecord(payloads.installed) ? payloads.installed : {};
+		const linkedPayload = isRecord(payloads.linked) ? payloads.linked : {};
+		debugDeveloperApps(
+			`installed payload keys=${Object.keys(installedPayload).join(",") || "none"}; linked payload keys=${Object.keys(linkedPayload).join(",") || "none"}`,
+		);
+		return JSON.stringify({
+			inventory_complete: isCompleteChatgptInstalledAppsPayload(payloads.installed),
+			installed_apps: normalizeChatgptInstalledAppProbes(installedPayload.plugins),
+			linked_apps: normalizeChatgptLinkedAppProbes(linkedPayload.links),
+		});
+	} finally {
+		disposeCapture();
 	}
-	await Promise.race([installedReady, wait(5_000)]);
-	await navigateChatgpt(client, "https://chatgpt.com/");
-	const payloads = await payloadPromise;
-	const installedPayload = isRecord(payloads.installed) ? payloads.installed : {};
-	const linkedPayload = isRecord(payloads.linked) ? payloads.linked : {};
-	debugDeveloperApps(
-		`installed payload keys=${Object.keys(installedPayload).join(",") || "none"}; linked payload keys=${Object.keys(linkedPayload).join(",") || "none"}`,
-	);
-	return JSON.stringify({
-		inventory_complete: isCompleteChatgptInstalledAppsPayload(payloads.installed),
-		installed_apps: normalizeChatgptInstalledAppProbes(installedPayload.plugins),
-		linked_apps: normalizeChatgptLinkedAppProbes(linkedPayload.links),
-	});
 }
 
 function isCompleteChatgptInstalledAppsPayload(value: unknown): boolean {

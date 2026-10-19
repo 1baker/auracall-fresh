@@ -1,3 +1,4 @@
+import { CdpCommandCancelledBeforeSendError } from "../../packages/browser-service/src/guardedCdp.js";
 import type {
 	ProviderInteractionLedger,
 	ProviderInteractionScope,
@@ -179,7 +180,8 @@ export function createOwnedBackendRequestAuthority(input: {
 						reservationId: admission.reservation.reservationId,
 						settledAt: now().toISOString(),
 						effectState:
-							!dispatched && error instanceof ProviderBackendRequestCancelledBeforeDispatchError
+							error instanceof ProviderBackendRequestCancelledBeforeDispatchError &&
+							(!dispatched || error.cause instanceof CdpCommandCancelledBeforeSendError)
 								? "none"
 								: "outcome-unknown",
 						outcome: "failed",
