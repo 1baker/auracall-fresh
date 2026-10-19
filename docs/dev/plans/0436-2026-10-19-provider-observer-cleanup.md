@@ -1,6 +1,6 @@
 # Provider observer shutdown diagnosis | Plan0436
 
-State: OPEN
+State: CLOSED
 Owner: ecochran76
 Issue: https://github.com/ecochran76/auracall/issues/337
 Branch: fix/issue337-observer-cleanup
@@ -8,13 +8,15 @@ Target: origin/main
 
 ## Current State
 
-The operator approved proceeding after the diagnosis. PR335 is draft/conflicted
-and contains broader failed live-follow acceptance. Reuse its standalone
-11917b044 shutdown barrier and regression tests in the scoped issue337 PR339,
-without integrating unrelated work. Tests were copied first: the successful
-shutdown case reproduced Fetch domain is not enabled on main before the repair.
-Targeted validation, source review, integration and staged acceptance are running.
-No warning/owner reset, scheduler resume or unknown submission retry is authorized.
+Scoped shutdown repair integrated through PR339 at8504325be and active in CLI/MCP
+runtime `user-runtime-issue337-8504325be`. This reuses only11917b044's8-line barrier
+and regressions; the larger draft/conflicted PR335 remains unchanged. All97affected
+tests, typecheck, scoped lint, build and the installed native reproducer pass.
+The installed runtime contract passes and all597dist files match merged source.
+Full app inventory remains unaccepted: the single staged command timed out at75s
+with empty stdout/stderr. Issue337 stays open; this source-delivery packet is closed.
+No cooldown/owner reset, scheduler/service restart, managed-browser restart or
+unknown submission retry was performed.
 
 ## Scope, acceptance criteria and definition of done
 
@@ -99,3 +101,23 @@ PR335 retains its unrelated open acceptance gates and branch custody.
 - Scoped Biome lint and diff whitespace checks: PASS.
 - Serial Standards/Spec review baseline: main2801e0131, issue337 and this bounded
   scope. Shutdown failures still reject and after-send uncertainty is preserved.
+
+## Integrated and installed readback | 2026-10-19
+
+- PR339 merge:8504325bed1ee207519ad46f3c17d06af41d4834. Only one existing
+  compiled JavaScript file changed from the previous runtime; none were missing.
+- Exact merged-source package staged separately and verified:597matching files,
+  installed runtime `/desktops` contract PASS, real native shutdown loop exit0.
+- CLI/MCP wrappers promoted atomically, with previous wrappers and runtime retained.
+  Active version readback0.1.1 is informational; source/file parity is the proof.
+- Selected AuraCall runtime profile and browser profile bothwsl-chrome-3;
+  targetChatGPT. Local cooldown was inactive immediately before the one read.
+- Staged `apps --target chatgpt list --json`: timeout75s, exit124, empty output.
+  This does not prove successful inventory or attribute the timeout to one stage.
+  Existing issue325 tracks the missing bounded/structured failure surface.
+- Post-attempt native process, ready assignment and current window checks PASS;
+  native browser generation retained. Cooldown file hash unchanged; no probe retry.
+  Fresh OS census:zero remaining disposable browser roots.
+- Private installed identities, checksums, raw command output and summaries stay
+  in the user-scoped issue337 acceptance directory outside Git. Temporary error
+  capture removed. Full inventory acceptance remains a separate open gate.
