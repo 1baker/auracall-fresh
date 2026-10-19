@@ -20,11 +20,18 @@ vi.mock("../../src/browser/service/ui.js", () => ({
 
 describe("developer app inventory with current settings UI", () => {
 	it.each([
-		null,
-		true,
-		false,
-	])("returns complete installed apps with Developer mode observation %s", async (developerMode) => {
+		{ developerMode: null, responseDelay: 0, cancelAfterMs: 0 },
+		{ developerMode: true, responseDelay: 0, cancelAfterMs: 0 },
+		{ developerMode: false, responseDelay: 0, cancelAfterMs: 0 },
+		{ developerMode: true, responseDelay: 20_000, cancelAfterMs: 0 },
+		{ developerMode: true, responseDelay: 20_000, cancelAfterMs: 1_000 },
+	])("observes or cancels installed apps for %j", async ({
+		developerMode,
+		responseDelay,
+		cancelAfterMs,
+	}) => {
 		vi.useFakeTimers();
+		const controller = new AbortController();
 		let url = "https://chatgpt.com/";
 		let responseReceived = (_event: unknown) => {};
 		let loadingFinished = (_event: unknown) => {};
@@ -51,11 +58,16 @@ describe("developer app inventory with current settings UI", () => {
 				navigate: async (input: { url: string }) => {
 					url = input.url;
 					if (url === "https://chatgpt.com/plugins") {
-						responseReceived({
-							requestId: "inventory",
-							response: { status: 200, url: `${url}/backend-api/ps/plugins/installed` },
-						});
-						loadingFinished({ requestId: "inventory" });
+						const deliver = () => {
+							if (url !== "https://chatgpt.com/plugins") return;
+							responseReceived({
+								requestId: "inventory",
+								response: { status: 200, url: `${url}/backend-api/ps/plugins/installed` },
+							});
+							loadingFinished({ requestId: "inventory" });
+						};
+						if (responseDelay) setTimeout(deliver, responseDelay);
+						else deliver();
 					}
 				},
 			},
@@ -85,19 +97,30 @@ describe("developer app inventory with current settings UI", () => {
 		};
 		const adapter = createChatgptDeveloperAppBrowserAdapter(
 			{
-				userConfig: {} as never,
+				userConfig: {
+					services: { chatgpt: { backendRequestBudgetWaitMs: responseDelay ? 60_000 : 0 } },
+				} as never,
 				getUserIdentity: async () => ({ email: "owner@example.test" }) as never,
 				connectDevTools: async () => ({ client: client as never, port: 45015 }),
 			},
 			async () => {
 				throw new Error("unexpected browser creation");
 			},
+			{ abortSignal: controller.signal },
 		);
 		try {
+			const started = Date.now();
 			const result = adapter.readState().then(
 				(state) => ({ state, error: null }),
 				(error) => ({ state: null, error: String(error) }),
 			);
+			if (cancelAfterMs) {
+				setTimeout(() => controller.abort(new Error("fixture inventory cancelled")), cancelAfterMs);
+				await vi.advanceTimersByTimeAsync(cancelAfterMs);
+				expect((await result).error).toContain("fixture inventory cancelled");
+				expect(url).toBe("https://chatgpt.com/plugins");
+				return;
+			}
 			await vi.runAllTimersAsync();
 			const observed = await result;
 			expect(observed.error).toBeNull();
@@ -108,6 +131,7 @@ describe("developer app inventory with current settings UI", () => {
 				apps: [{ name: "Fixture App", enabled: true }],
 			});
 			expect(url).toBe("https://chatgpt.com/");
+			expect(Date.now() - started).toBeLessThanOrEqual(responseDelay + 15_000);
 		} finally {
 			await adapter.close();
 			vi.useRealTimers();

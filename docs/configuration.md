@@ -279,6 +279,10 @@ or app registry to configuration.
   `timeoutMs`. `--verbose` writes stages and deadline values to stderr, leaving
   stdout as JSON. The browser-operation queue has a separate ten-minute admission
   bound; inventory has 45 seconds plus configured backend capacity waiting.
+  Installed-app observation includes that configured capacity waiting. Optional
+  linked metadata has its ordinary 12-second window after root navigation;
+  missing linked data does not consume the entire capacity allowance.
+  Caller cancellation stops observation and later navigation.
   An external 75-second stop can precede either bound. Failure does not authorize
   retries or prove transport cleanup; unknown cleanup remains fenced.
 - `create`, `refresh`, submitted `test`, and `uninstall` require both

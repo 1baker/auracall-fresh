@@ -14,6 +14,13 @@ rewrite it. Mixed-batch results publish only after durable commit. Cross-process
 locking, complete history and warning/ownership fences remain authoritative.
 CLI stage diagnostics preserve original error identity and aggregate causes.
 
+Backend warning probes belong to the request's own live transport. Native
+cancellation/document replacement only releases pre-send work when the guarded
+transport proves the SDK send was not invoked; post-send uncertainty remains
+fenced. Inventory observation includes configured capacity waiting for the
+installed-app response, then separately bounds optional linked metadata. Caller
+abort ends observation and prevents later navigation; outer deadlines remain.
+
 ## Language
 
 **AuraCall runtime profile**:

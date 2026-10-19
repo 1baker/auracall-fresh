@@ -5,6 +5,7 @@ import { expect, test, vi } from "vitest";
 import CDP, {
 	setCdpCommandAdmissionResolver,
 } from "../../packages/browser-service/src/guardedCdp.js";
+import { createProviderTrafficGovernor } from "../../packages/browser-service/src/service/providerTrafficGovernor.js";
 import { createChatgptAccountMirrorMetadataCollector } from "../../src/accountMirror/chatgptMetadataCollector.js";
 import { createAccountMirrorMetadataTrafficPlanController } from "../../src/accountMirror/providerTrafficPlan.js";
 import { setAuracallHomeDirOverrideForTest } from "../../src/auracallHome.js";
@@ -49,6 +50,10 @@ const fixture = vi.hoisted(() => ({
 		fetchDisabled?: boolean;
 		disableError?: string;
 		responseHandler?: (event: unknown) => Promise<void>;
+		loadingFailedHandler?: (event: unknown) => void;
+		frameNavigatedHandler?: (event: unknown) => void;
+		continuationError?: string;
+		onContinueSent?: () => void;
 	}>,
 }));
 vi.mock("chrome-remote-interface", () => ({
@@ -63,14 +68,20 @@ vi.mock("chrome-remote-interface", () => ({
 			fetchDisabled: false,
 			disableError: undefined as string | undefined,
 			responseHandler: undefined as ((event: unknown) => Promise<void>) | undefined,
+			loadingFailedHandler: undefined as ((event: unknown) => void) | undefined,
+			frameNavigatedHandler: undefined as ((event: unknown) => void) | undefined,
+			continuationError: undefined as string | undefined,
+			onContinueSent: undefined as (() => void) | undefined,
 			handler: undefined as ((event: unknown) => Promise<void>) | undefined,
 		};
 		fixture.clients.push(state);
+		let disconnected = false;
 		const client = {
 			send: async (
 				command: string,
 				parameters: { requestId?: string; expression?: string; url?: string },
 			) => {
+				if (disconnected) throw new Error("WebSocket is not open: readyState 3 (CLOSED)");
 				if (command === "Fetch.disable") {
 					state.fetchDisabled = true;
 					state.onDisable?.();
@@ -84,8 +95,9 @@ vi.mock("chrome-remote-interface", () => ({
 						parameters.requestId,
 					);
 				}
+				if (command === "Fetch.continueRequest") state.onContinueSent?.();
 				if (command === "Fetch.continueRequest" && state.failContinuation)
-					throw new Error("Fixture continuation outcome is unknown");
+					throw new Error(state.continuationError ?? "Fixture continuation outcome is unknown");
 				if (command === "Fetch.continueRequest") await state.beforeContinue?.();
 				if (
 					command === "Fetch.continueRequest" &&
@@ -160,6 +172,7 @@ vi.mock("chrome-remote-interface", () => ({
 					if (fixture.page.failClose) throw new Error("fixture transport close outcome unknown");
 					if (fixture.page.stallClose) await new Promise<never>(() => undefined);
 				}
+				disconnected = true;
 			},
 			// biome-ignore lint/style/useNamingConvention: CDP protocol domain.
 			Runtime: {
@@ -169,12 +182,24 @@ vi.mock("chrome-remote-interface", () => ({
 			// biome-ignore lint/style/useNamingConvention: CDP protocol domain.
 			Page: {
 				enable: () => client.send("Page.enable", {}),
+				frameNavigated: (handler: (event: unknown) => void) => {
+					state.frameNavigatedHandler = handler;
+					return () => {
+						state.frameNavigatedHandler = undefined;
+					};
+				},
 				navigate: (input: { url: string }) => client.send("Page.navigate", input),
 			},
 			// biome-ignore lint/style/useNamingConvention: CDP protocol domain.
 			Network: {
 				enable: async () => undefined,
 				loadingFinished: () => () => undefined,
+				loadingFailed: (handler: (event: unknown) => void) => {
+					state.loadingFailedHandler = handler;
+					return () => {
+						state.loadingFailedHandler = undefined;
+					};
+				},
 				responseReceived: (handler: (event: unknown) => Promise<void>) => {
 					state.responseHandler = handler;
 					return () => {
@@ -201,6 +226,65 @@ vi.mock("chrome-remote-interface", () => ({
 		return client;
 	}),
 }));
+
+test("backend warning probes use their owning live transport after an earlier client closes", async () => {
+	const home = await mkdtemp(path.join(os.tmpdir(), "auracall-live-probe-"));
+	setAuracallHomeDirOverrideForTest(home);
+	fixture.clients = [];
+	const gate = new DesktopControlGate("live-probe");
+	setCdpCommandAdmissionResolver(async () => ({
+		run: (_command, effect) => gate.withAutomation("generation", effect),
+		hold: async () => {
+			const held = await gate.holdAutomation("generation");
+			return { run: (_command, effect) => held.run(effect), close: () => held.close() };
+		},
+	}));
+	const governor = createProviderTrafficGovernor({
+		attribution: {
+			provider: "chatgpt",
+			targetId: "live-probe",
+			runtimeProfileId: "fixture",
+			managedBrowserProfile: "/fixture/live-probe",
+			workloadId: "fixture",
+			operationId: "fixture",
+			tabLeaseId: "fixture",
+		},
+		interactionGovernor: { beforeInteraction: async () => undefined } as never,
+		mutationAudit: async () => undefined,
+		probeWarning: async (context) => {
+			await (context as { evaluate: (input: unknown) => Promise<unknown> }).evaluate({
+				expression: "fixture warning probe",
+			});
+			return null;
+		},
+		admitBackendRequest: async (_key, effect) => effect(),
+	});
+	let client: Awaited<ReturnType<typeof CDP>> | undefined;
+	try {
+		client = await CDP({ host: "127.0.0.1", port: 45191 });
+		await governor.checkWarning?.(client.Runtime);
+		await client.close();
+		client = await CDP({ host: "127.0.0.1", port: 45191 });
+		await annotateClientMutationContext(
+			client,
+			{ providerTrafficGovernor: governor },
+			"provider:chatgpt",
+			"live-probe",
+		);
+		await fixture.clients[1].handler?.({
+			requestId: "live-request",
+			request: { url: "https://chatgpt.com/backend-api/conversations" },
+		});
+		await expect(client.close()).resolves.toBeUndefined();
+		expect(fixture.clients[1].requests).toEqual(["live-request"]);
+		client = undefined;
+	} finally {
+		await client?.close().catch(() => undefined);
+		setCdpCommandAdmissionResolver(undefined);
+		setAuracallHomeDirOverrideForTest(null);
+		await rm(home, { recursive: true, force: true });
+	}
+});
 
 test.each([
 	"known",
@@ -2076,8 +2160,10 @@ test.each([
 	}
 }, 20000);
 
-
-test.each(["succeeded", "failed"])("late paused event during owned Fetch shutdown preserves %s outcome", async (outcome) => {
+test.each([
+	"succeeded",
+	"failed",
+])("late paused event during owned Fetch shutdown preserves %s outcome", async (outcome) => {
 	const home = await mkdtemp(path.join(os.tmpdir(), "auracall-shutdown-event-"));
 	setAuracallHomeDirOverrideForTest(home);
 	fixture.clients = [];
@@ -2094,18 +2180,30 @@ test.each(["succeeded", "failed"])("late paused event during owned Fetch shutdow
 	try {
 		client = await CDP({ host: "127.0.0.1", port: 45190 });
 		const factory = createConfiguredProviderTrafficAuthorityFactory({
-			userConfig: { auracallProfile: "shutdown-event", services: { chatgpt: { identity: { email: "operator@example.test" } } } } as never,
-			provider: "chatgpt", managedBrowserProfile: "/fixture/shutdown-event",
-			mutationAudit: async () => undefined, baseOptions: {}, backendRequestLimit: 1,
+			userConfig: {
+				auracallProfile: "shutdown-event",
+				services: { chatgpt: { identity: { email: "operator@example.test" } } },
+			} as never,
+			provider: "chatgpt",
+			managedBrowserProfile: "/fixture/shutdown-event",
+			mutationAudit: async () => undefined,
+			baseOptions: {},
+			backendRequestLimit: 1,
 		});
-		await annotateClientMutationContext(client,
+		await annotateClientMutationContext(
+			client,
 			{ providerTrafficAuthorityFactory: factory, providerTrafficRequired: true },
-			"provider:chatgpt", "shutdown-target");
+			"provider:chatgpt",
+			"shutdown-target",
+		);
 		const state = fixture.clients[0];
 		if (outcome === "failed") state.disableError = "fixture disable failed";
-		state.onDisable = () => { late = state.handler?.({
-			requestId: "late-shutdown-event", request: { url: "https://chatgpt.com/backend-api/conversations" },
-		}); };
+		state.onDisable = () => {
+			late = state.handler?.({
+				requestId: "late-shutdown-event",
+				request: { url: "https://chatgpt.com/backend-api/conversations" },
+			});
+		};
 		if (outcome === "failed") await expect(client.close()).rejects.toThrow();
 		else await expect(client.close()).resolves.toBeUndefined();
 		await late;
@@ -2115,6 +2213,120 @@ test.each(["succeeded", "failed"])("late paused event during owned Fetch shutdow
 		client = undefined;
 	} finally {
 		await late;
+		await client?.close().catch(() => undefined);
+		setCdpCommandAdmissionResolver(undefined);
+		setAuracallHomeDirOverrideForTest(null);
+		await rm(home, { recursive: true, force: true });
+	}
+});
+
+test.each([
+	"before-wire",
+	"after-wire",
+	"foreign-request",
+	"not-cancelled",
+	"document-before-wire",
+	"document-after-wire",
+	"foreign-document",
+])("native request cancellation keeps exact dispatch certainty; phase=%s", async (phase) => {
+	const home = await mkdtemp(path.join(os.tmpdir(), "auracall-native-cancel-"));
+	setAuracallHomeDirOverrideForTest(home);
+	fixture.clients = [];
+	const gate = new DesktopControlGate("native-cancel");
+	const cancelNative = () => {
+		if (phase.includes("document")) {
+			fixture.clients[0]?.frameNavigatedHandler?.({
+				frame: {
+					id: phase === "foreign-document" ? "other-frame" : "frame-1",
+					loaderId: "new-document",
+				},
+			});
+			return;
+		}
+		fixture.clients[0]?.loadingFailedHandler?.({
+			requestId: phase === "foreign-request" ? "other-network" : "network-1",
+			canceled: phase !== "not-cancelled",
+			errorText: "net::ERR_ABORTED",
+		});
+	};
+	setCdpCommandAdmissionResolver(async () => {
+		const admission = {
+			run: async <T>(
+				command: string,
+				effect: () => Promise<T>,
+				options?: { abortSignal?: AbortSignal },
+			) => {
+				if (
+					command === "Fetch.continueRequest" &&
+					phase !== "after-wire" &&
+					phase !== "document-after-wire"
+				)
+					cancelNative();
+				return gate.withAutomation("generation", effect, options);
+			},
+			hold: async (options?: { abortSignal?: AbortSignal }) => {
+				const held = await gate.holdAutomation("generation", options);
+				return {
+					run: <T>(
+						command: string,
+						effect: () => Promise<T>,
+						context?: { abortSignal?: AbortSignal },
+					) => held.run(() => admission.run(command, effect, context)),
+					close: () => held.close(),
+				};
+			},
+		};
+		return admission;
+	});
+	let client: Awaited<ReturnType<typeof CDP>> | undefined;
+	try {
+		client = await CDP({ host: "127.0.0.1", port: 45181 });
+		const config = {
+			auracallProfile: "native-cancel",
+			services: {
+				chatgpt: { identity: { email: "operator@example.test" }, maxBackendRequestsPerMinute: 30 },
+			},
+		} as never;
+		const factory = createConfiguredProviderTrafficAuthorityFactory({
+			userConfig: config,
+			provider: "chatgpt",
+			managedBrowserProfile: "/fixture/native-cancel",
+			mutationAudit: async () => undefined,
+			baseOptions: {},
+		});
+		await annotateClientMutationContext(
+			client,
+			{ providerTrafficAuthorityFactory: factory, providerTrafficRequired: true },
+			"provider:chatgpt",
+			"native-cancel-target",
+		);
+		const state = fixture.clients[0];
+		const beforeWire = phase === "before-wire" || phase === "document-before-wire";
+		const afterWire = phase === "after-wire" || phase === "document-after-wire";
+		state.failContinuation = beforeWire || afterWire;
+		state.continuationError = "Invalid InterceptionId.";
+		if (afterWire) state.onContinueSent = cancelNative;
+		if (!state.handler) throw new Error("Missing interceptor");
+		await state.handler({
+			requestId: "interception-1",
+			networkId: "network-1",
+			frameId: "frame-1",
+			request: { url: "https://chatgpt.com/backend-api/conversations" },
+		});
+		if (afterWire) await expect(client.close()).rejects.toThrow();
+		else await expect(client.close()).resolves.toBeUndefined();
+		expect(state.requests).toEqual(beforeWire ? [] : ["interception-1"]);
+		expect(state.loadingFailedHandler).toBeUndefined();
+		expect(state.frameNavigatedHandler).toBeUndefined();
+		client = undefined;
+		const ledger = createBrowserTabConcurrencyRuntime(config).ledger;
+		if (!ledger) throw new Error("Missing ledger");
+		const rows = (await ledger.list()).filter((row) => row.interactionClass === "backend-request");
+		expect(rows).toHaveLength(1);
+		expect(rows[0].effectState).toBe(
+			beforeWire ? "none" : afterWire ? "outcome-unknown" : "settled",
+		);
+	} finally {
 		await client?.close().catch(() => undefined);
 		setCdpCommandAdmissionResolver(undefined);
 		setAuracallHomeDirOverrideForTest(null);
