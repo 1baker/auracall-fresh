@@ -1,3 +1,14 @@
+## 2026-10-19 — Issue337 scoped repair installed; inventory acceptance open
+
+PR339 integrated8504325be's standalone Fetch-shutdown barrier; broader draftPR335
+is unchanged.97tests, typecheck, lint, build and installed native reproduction
+passed;597installed files matched source and the runtime contract passed. CLI/MCP
+now use user-runtime-issue337-8504325be with previous runtime/wrappers retained.
+One guarded staged inventory read timed out75s with no output; do not claim full
+inventory acceptance. Issue337 remains open, with issue325's timeout/diagnostic
+boundary noted. Browser process/assignment/window verification passed afterward;
+cooldown hash unchanged, no retries/resets or service/browser/scheduler restart.
+
 ## 2026-10-19 — Issue337 scoped observer shutdown repair
 
 Operator approved proceeding. Reused PR335 commit11917b044's standalone shutdown
