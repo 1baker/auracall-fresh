@@ -1,3 +1,10 @@
+- Late paused events during owned Fetch shutdown (provider-free, issue337):
+  `pnpm vitest run tests/browser/backendRequestAdmission.test.ts -t 'late paused event during owned Fetch shutdown'`.
+  Actual observer/guard/authority composition proves callbacks arriving during
+  shutdown issue no subsequent Fetch commands; failed disable still rejects.
+  A separate disposable Chromium differential reproduced the exact protocol
+  failure before the barrier and passed with only this scoped repair.
+
 - Native replacement custody (provider-free, Plan0435):
   `pnpm vitest run tests/cli/browserLoginLaunch.test.ts tests/browser/nativeDesktopRecovery.test.ts tests/browser/manualLoginNative.test.ts tests/browser/nativeDesktopRuntime.test.ts`.
   CLI launch-policy regression plus actual Linux child-process/socket evidence and

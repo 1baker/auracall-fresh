@@ -1,3 +1,12 @@
+## 2026-10-19 — Join queued Fetch callbacks to owned shutdown
+
+A native paused event can reach its callback after Fetch.disable starts. Sending
+failRequest then produces Fetch domain is not enabled during observer cleanup.
+Publish the owned shutdown promise before admitting disable and join late
+callbacks to that outcome. Preserve failed shutdown errors instead of broadly
+suppressing protocol errors. Issue337 reuses PR335 commit11917b044's isolated
+barrier and success/failure regressions without its unrelated live-follow work.
+
 ## 2026-10-19 — Preserve desktop custody across CLI login
 
 The low-level native login wrapper was covered, but CLI option resolution dropped

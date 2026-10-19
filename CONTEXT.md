@@ -39,7 +39,7 @@ provider backend requests; its budget is distinct from their budget. Command-res
 **Provider backend request permit**:
 An account-wide admission reservation for one uniquely identified backend request
 from an owned provider client. Repeated observations of the same request do not
-create another permit. A permit is not proof of a completed provider response.
+create another permit. A permit is not proof of a completed provider response. Once owned interception shutdown begins, queued request callbacks join that shutdown outcome rather than sending further Fetch commands. A failed shutdown remains a cleanup failure.
 Admission snapshots distinguish ready request flow, known budget exhaustion,
 unqualified failures and provider warnings. Collection may yield for known budget
 exhaustion; uncertainty or a provider warning requires a hard stop.
