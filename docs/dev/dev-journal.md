@@ -1,3 +1,12 @@
+## 2026-10-19 — Issue325 list separates optional settings observation
+
+Installed939a54350 collected complete apps but failed cleanup after optional
+settings navigation (500.94s). Omitting only that optional observation produced
+exit0, complete30-app inventory and clean cleanup in271.08s. Plan0438 now routes
+list through existing includeDeveloperMode=false; mutating operations retain
+existing checks. Normal merged/install verification remains pending. The
+optional settings-path failure stays open in337; no cause or repair is claimed.
+
 ## 2026-10-19 — Issue325 shared custody observation
 
 PR345/87b20beb4 repairs budget cancellation classification. The final predecessor

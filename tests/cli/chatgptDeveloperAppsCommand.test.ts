@@ -553,11 +553,17 @@ describe("executeChatgptDeveloperAppOperation", () => {
 	});
 
 	it("lists the account-bound developer-app state without mutation", async () => {
+		const inventory = { ...(await createAdapter().readState()), developerMode: null };
+		const readState = vi.fn(async (options?: { includeDeveloperMode?: boolean }) => {
+			if (options?.includeDeveloperMode !== false)
+				throw new Error("fixture optional settings observation unavailable");
+			return inventory;
+		});
 		const result = await executeChatgptDeveloperAppOperation(
 			{
 				action: "list",
 			},
-			createAdapter(),
+			createAdapter({ readState }),
 		);
 
 		expect(result).toEqual({
@@ -568,7 +574,7 @@ describe("executeChatgptDeveloperAppOperation", () => {
 					email: "eric.cochran@soylei.com",
 					plan: "Pro",
 				},
-				developerMode: true,
+				developerMode: null,
 				inventoryComplete: true,
 				apps: [
 					{

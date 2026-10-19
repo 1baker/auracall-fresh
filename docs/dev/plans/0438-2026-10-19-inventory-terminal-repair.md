@@ -8,12 +8,14 @@ Target: origin/main
 
 ## Current State
 
-User requested actual inventory repair. PR343/c18aec802, PR344/7c3eb0b61 and
-PR345/87b20beb4 are merged; active wrappers remain856276cdb until terminal
-acceptance. Predecessor installed reads still fail cleanup. Current branch
-fix/issue325-custody-reads addresses reproduced redundant concurrent registry
-observations, reusing only PR335 standalone1460ed0c8. Final merged/install/terminal
-verification remains. No successful inventory yet.
+User requested actual terminal inventory repair. PR343–346 are merged through
+939a54350; active wrappers remain856276cdb. Installed939a54350 captured complete
+inventory but failed cleanup after optional settings observation. A one-variable
+minimized run without that observation succeeded in271.08s with30apps and clean
+cleanup. Current branch fix/issue325-inventory-only uses the existing optional
+readState flag for list; mutating operations retain their checks. Normal merged
+installed acceptance remains required. Optional settings-path cleanup is not
+claimed repaired and remains tracked by issue337.
 
 ## Scope and acceptance
 
@@ -186,3 +188,31 @@ assertions and existing whole-file formatting debt. No new source lint rule is
 introduced. Serial Standards review preserves local package style; Spec review
 against87b20beb451121608204bc47b78acab8f9a64978 finds no scoped blocker. Source
 review does not establish terminal inventory acceptance.
+
+## Inventory-only list correction
+
+Installed939a54350normal CLI failed after500.94s at cleanup with Utility operation
+and settlement failed. Backend history for that run contains122settled and18
+proven-unsent requests, no uncertain backend records; cleanup remains unknown.
+No warnings or retained records were cleared. A private diagnostic shim changed
+only readState includeDeveloperMode=false and captured aggregate constructors.
+That minimized CLI read succeeded in271.08s: observed, inventoryComplete=true,
+30apps, Developer mode unknown, client cleanup and utility settlement successful.
+The instrumented/minimized run is causal evidence, not final normal acceptance.
+
+Existing docs define Developer mode as a separate optional observation. list now
+uses the existing inventory-only adapter option, just as refresh-tools already
+does. It does not infer enabled mode, suppress cleanup failures, alter mutation
+checks or increase limits. The existing account-bound list regression now rejects
+unrequested settings observation, goes red before correction, and verifies the
+complete account/app result with unknown mode afterward. Cause of the optional
+settings-path cleanup failure remains unproven and is retained in issue337.
+
+Fifth-slice focused verification:103tests across5suites pass in3.07s, including
+list, terminal exit, inventory, existing-app operations and refresh-tools. The
+list regression first failed with optional settings observation unavailable.
+Typecheck, scoped Biome and full build pass. Serial Standards review against
+939a54350fa36abbbcfc645088e4eea109da6b95 finds no blocker; serial Spec review
+confirms list uses only the existing optional read flag and other action flags
+are unchanged. Optional settings cleanup remains explicitly open, outside the
+terminal list correction. Normal merged installed acceptance remains required.
