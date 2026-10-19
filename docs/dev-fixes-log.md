@@ -1,3 +1,13 @@
+## 2026-10-19 — Share unfinished identical custody observations
+
+Backend request admission repeatedly verifies tab custody. Concurrent identical
+list calls from separate registry instances redundantly parse the same snapshot
+under separate exclusive locks. A private256-read replay reproduced136timeouts;
+sharing only the unfinished observation reduces it to0.187s without failures.
+Clear the promise on either outcome, clone each caller result, and never cache
+settled custody. Subsequent reads see committed mutations; mutation locking and
+historical ownership fences remain unchanged. Reuses PR335 standalone1460ed0c8.
+
 ## 2026-10-19 — Classify cancellation at budget-wait entry
 
 A signal can abort during a warning-ledger read before the budget timer starts.
