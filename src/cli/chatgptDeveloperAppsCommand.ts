@@ -27,6 +27,8 @@ export type DeveloperAppStage =
 	| "interaction-admission"
 	| "cleanup";
 
+const listFailureStages = new WeakMap<Error, DeveloperAppStage>();
+
 export class DeveloperAppTimeoutError extends Error {
 	readonly code = "developer_app_timeout";
 	constructor(
@@ -47,7 +49,10 @@ export function formatChatgptDeveloperAppListFailure(error: unknown): string {
 			action: "list",
 			status: "failed",
 			code: detail?.code ?? "developer_app_failed",
-			stage: detail?.stage ?? "queue-admission",
+			stage:
+				detail?.stage ??
+				(error instanceof Error ? listFailureStages.get(error) : undefined) ??
+				"queue-admission",
 			timeoutMs: detail?.timeoutMs,
 			message: error instanceof Error ? error.message : String(error),
 			cleanup: hasUnknownOwnedRequestCleanup(error) ? "unknown" : "not-qualified",
@@ -534,16 +539,11 @@ export async function runChatgptDeveloperAppOperationForCli(
 	} catch (error) {
 		operationFailure = error;
 		if (input.action !== "list" || error instanceof DeveloperAppTimeoutError) throw error;
-		throw Object.assign(
-			new Error(error instanceof Error ? error.message : String(error), { cause: error }),
-			{
-				stage: failureStage ?? stage,
-				code:
-					typeof (error as { code?: unknown } | null)?.code === "string"
-						? (error as { code: string }).code
-						: "developer_app_failed",
-			},
-		);
+		const failure = error instanceof Error ? error : new Error(String(error));
+		// Diagnostics must preserve the native error class, aggregate causes and
+		// shared governor error identity used by ownership/cleanup callers.
+		listFailureStages.set(failure, failureStage ?? stage);
+		throw failure;
 	} finally {
 		abortController?.abort();
 		if (active.adapter) {

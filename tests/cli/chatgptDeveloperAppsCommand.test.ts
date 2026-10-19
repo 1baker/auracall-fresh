@@ -120,10 +120,10 @@ describe("executeChatgptDeveloperAppOperation", () => {
 					}) as never,
 			},
 		).catch((error: unknown) => error);
-		expect(failure).toMatchObject({
+		expect(failure).toBe(refusal);
+		expect(JSON.parse(formatChatgptDeveloperAppListFailure(failure))).toMatchObject({
 			code: "target-owned",
 			stage: "interaction-admission",
-			cause: refusal,
 		});
 	});
 	it("emits a machine-readable list failure with timeout stage and message", async () => {

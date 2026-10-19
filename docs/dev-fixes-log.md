@@ -1,3 +1,14 @@
+## 2026-10-19 — Queue ledger reads with durable mutations
+
+App inventory exposed provider-interaction ledger lock timeouts under retained
+history. Concurrent reads in one instance separately acquired and parsed the same
+snapshot, contending with themselves. A private32-read replay failed6–7calls at
+about5s; single read passed0.19s. Queue reads with existing mutations under the
+same cross-process lock; share a loaded snapshot, persist only mutating batches,
+and publish mixed-batch results only after commit. The replay now passes0.23s.
+History, warning fences and limits remain intact. CLI stage metadata must also
+preserve original Error identity, AggregateError classes and nested causes.
+
 ## 2026-10-19 — Preserve app inventory stage across deadlines
 
 The deadline constructed a generic Error, while the CLI emitted structured

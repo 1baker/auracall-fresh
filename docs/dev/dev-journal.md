@@ -1,3 +1,14 @@
+## 2026-10-19 — Issue325 terminal inventory repair (Plan0438)
+
+Owner ecochran76; fix/issue325-attachment from36bcd6175. Fine native trace showed
+attachment completes; terminal reads exposed observer cleanup uncertainty and a
+provider-interaction ledger lock timeout. Private isolated32-read replay and a
+63mspublic-seam regression reproduce self-contention. Queued read/operation
+batching removes the replay failure (0.23s), preserving locking/commit authority.
+Broader tests caught the earlier diagnostic wrapper hiding aggregate causes;
+original error identity now retained. Final checks/integration/installed readback
+in progress. No warning clear, ownership reset, prompt or scheduler control.
+
 ## 2026-10-19 — Issue325 diagnostics installed; attachment gate remains
 
 PR341 merged856276cdb; CLI/MCP use the parity-verified597-file installation.
