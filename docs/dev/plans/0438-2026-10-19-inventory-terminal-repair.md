@@ -8,11 +8,12 @@ Target: origin/main
 
 ## Current State
 
-User explicitly requested fixing the remaining workflow after Plan0437.
-Base36bcd6175; active CLI runtime856276cdb. Existing fine debug output proves
-attachment completes. One full-deadline read instead failed at identity after
-29.86s with Provider observer cleanup failed and unknown cleanup. Nested-cause
-capture is in progress; no root-cause hypothesis has been accepted.
+User requested actual inventory repair. PR343/c18aec802 and PR344/7c3eb0b61
+are merged; active wrappers remain856276cdb until terminal acceptance. Installed
+7c3eb0b61 still fails cleanup. Current branch fix/issue325-capacity-cancel fixes a
+reproduced synchronous budget-wait cancellation escape;104affected tests,
+typecheck, scoped lint and full build pass. Final predecessor cause capture and
+exact merged/install/terminal verification remain. No successful inventory yet.
 
 ## Scope and acceptance
 
@@ -116,8 +117,8 @@ closeout remain required; no old unknown record, warning or paused work is clear
 
 ## Second-slice verification and review
 
-All229affected tests across10suites pass in62.53s, including actual local SDK
-wire/native-generation gates. Typecheck and full build pass. Scoped lint has
+All229affected tests across10suites pass in62.53s, including guarded SDK-send/native-generation
+fixtures. Typecheck and full build pass. Scoped lint has
 no errors;8existing CDP-casing warnings in the inventory fixture remain unchanged.
 Explicit package-source lint with the repository rules passes. No debug prefixes,
 startup-waiter API or cross-client ownership helper were imported from PR335.
@@ -129,3 +130,31 @@ the full capacity allowance was accepted blocking, fixed with a red/green elapse
 response test; caller-abort/no-post-navigation control passes. Unknown post-wire
 outcomes and original history remain preserved. Source is ready for published
 review/integration; terminal installed acceptance remains required.
+
+## Capacity-wait cancellation continuation
+
+PR344 merged7c3eb0b61;597-file installed parity and contract pass. Normal read
+failed after275.7s and a targeted aggregate capture after279.65s, both at
+restore-navigation with unknown cleanup. The capture identifies raw native
+AbortError plus Invalid InterceptionId; the retained backend records for that
+capture contain76settled and26proven-unsent requests, no unknown sends.
+
+Current branch fix/issue325-capacity-cancel retains the same owner/objective.
+Ranked predictions: budget-wait entry bypasses cancellation classification;
+warning probe propagates cancellation before admission; or continuation reaches
+wire after interception disappearance. The public authority wait regression
+cancels during listActiveProviderWarnings, after the prior cancellation check.
+It goes red with raw AbortError rather than the certified pre-dispatch error.
+waitForBackendBudget threw synchronously before its caller's promise catch could
+run. Make its entry asynchronous so the existing classification handles both
+already-aborted entry and timer cancellation. Warning and post-wire controls
+remain. A final stack-only capture of the installed predecessor is pending;
+no new live run starts concurrently. Original terminal acceptance remains open.
+
+Third-slice focused validation:104tests across3suites pass in53.12s; typecheck,
+scoped Biome and full build pass. Comparison7c3eb0b615534ef9511c6ca16eb9700c119dc13c:
+serial Standards review found only formatting, repaired; serial Spec review found
+no blocker in the scoped cancellation fix. Original whole-workflow acceptance
+remains pending. The post-run native verification identifies the current browser
+process910183, exact assignment and current window; predecessor PID absence does
+not establish current browser absence. No additional launch is required.

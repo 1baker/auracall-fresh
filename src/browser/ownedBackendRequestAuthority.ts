@@ -224,7 +224,9 @@ export function createOwnedBackendRequestAuthority(input: {
 	};
 }
 
-function waitForBackendBudget(ms: number, signal?: AbortSignal): Promise<void> {
+// Keep an already-aborted entry as a rejection so admission classifies it
+// alongside cancellation during the timer; a synchronous throw bypasses .catch.
+async function waitForBackendBudget(ms: number, signal?: AbortSignal): Promise<void> {
 	signal?.throwIfAborted();
 	return new Promise((resolve, reject) => {
 		const finish = () => {

@@ -1,3 +1,12 @@
+## 2026-10-19 — Issue325 capacity cancellation race
+
+PR344 installed inventory still fails cleanup. Targeted aggregate capture shows
+raw native AbortError and Invalid InterceptionId, with no uncertain backend sends.
+Plan0438/fix/issue325-capacity-cancel reproduces cancellation during warning-ledger
+read, before timer entry. A synchronous throw bypasses the promise catch; async
+entry restores existing pre-dispatch classification. Focused validation and
+installed acceptance pending. No request limit, warning or ownership reset.
+
 ## 2026-10-19 — Issue325 native lifecycle repair continues
 
 PR343/c18aec802 removed ledger read self-contention. Isolated installed inventory

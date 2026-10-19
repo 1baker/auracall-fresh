@@ -13,6 +13,8 @@ with mutations. Concurrent reads share a locked snapshot; pure reads never
 rewrite it. Mixed-batch results publish only after durable commit. Cross-process
 locking, complete history and warning/ownership fences remain authoritative.
 CLI stage diagnostics preserve original error identity and aggregate causes.
+Budget-wait cancellation includes already-aborted timer entry after asynchronous
+ledger reads; proven-unsent cancellation must not poison later admission.
 
 Backend warning probes belong to the request's own live transport. Native
 cancellation/document replacement only releases pre-send work when the guarded

@@ -1,3 +1,12 @@
+## 2026-10-19 — Classify cancellation at budget-wait entry
+
+A signal can abort during a warning-ledger read before the budget timer starts.
+A synchronous throw at wait entry bypassed the caller's promise catch, turning
+proven-unsent cancellation into a raw AbortError and poisoning later admission
+and cleanup. Async wait entry uses the same classifier as timer cancellation.
+The existing public authority test now injects this exact timing; warnings,
+capacity timeout and post-dispatch uncertainty remain distinct controls.
+
 ## 2026-10-19 — Keep request, transport and inventory observation lifetimes aligned
 
 A warning governor can retain a closed predecessor Runtime; backend callbacks
