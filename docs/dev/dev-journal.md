@@ -1,3 +1,13 @@
+## 2026-10-19 — Issue337 native observer teardown diagnosis
+
+Plan0436 confirms a queued Fetch callback can issue failRequest after domain
+shutdown. A real disposable-browser loop fails on main2801e0131 (3.73s) and passes
+on existing PR335 e3ade5d3b (3.46s). Its existing success/failed-shutdown tests pass
+2/2. No duplicate source repair, installation or managed-browser restart. PR335
+integration sequencing is pending the operator's choice; full app inventory
+remains unaccepted. Native fixtures are gone from the OS process census, and
+private debug evidence remains outside Git.
+
 ## 2026-10-19 — Issue326 installed native ownership accepted
 
 Installed c39f0d165 passed current process/assignment/window verification and a
