@@ -1,3 +1,13 @@
+## 2026-10-19 — Preserve desktop custody across CLI login
+
+The low-level native login wrapper was covered, but CLI option resolution dropped
+its browser configuration and could choose generic launch. Test the actual CLI
+option resolver as well as the launcher. Historical stale-receipt incidents are
+not attributed solely from this source finding. Explicit replacement recovery
+must prove old-process absence and current process, window, assignment and owned
+endpoint; failed verification alone never proves absence. Preserve previous
+receipts and unknown submissions instead of rewriting custody by PID guess.
+
 ## 2026-10-18 — Admission cancellation must outlive domain setup
 
 A caller signal on provider options does not automatically reach raw CDP commands.

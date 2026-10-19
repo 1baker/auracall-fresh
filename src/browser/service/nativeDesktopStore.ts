@@ -32,6 +32,10 @@ export class NativeDesktopStore {
   }
   async recordDesktop(desktop: NativeDesktop): Promise<void> { await this.write(`desktop-${nativeDesktopKey(desktop)}.json`, desktopSchema.parse(desktop)); }
   async recordBrowser(browser: NativeDesktopBrowser): Promise<void> { await this.write(`browser-${digest(path.resolve(browser.managedProfileDir))}.json`, browserSchema.parse(browser)); }
+  async recordBrowserReconciliation(previous: NativeDesktopBrowser, replacement: NativeDesktopBrowser): Promise<void> {
+    await this.write(`reconciliation-${randomUUID()}.json`, { recordedAt: new Date().toISOString(), previous, replacement });
+    await this.recordBrowser(replacement);
+  }
   async browsers(): Promise<NativeDesktopBrowser[]> {
     const names = await fs.readdir(this.directory).catch((error: NodeJS.ErrnoException) => { if (error.code === 'ENOENT') return []; throw error; });
     return Promise.all(names.filter(name => /^browser-[a-f0-9]{64}\.json$/.test(name)).map(async name => browserSchema.parse(JSON.parse(await fs.readFile(path.join(this.directory, name), 'utf8')))));

@@ -1,3 +1,13 @@
+## 2026-10-19 — Issue326 native browser custody (Plan0435)
+
+Owner ecochran76; branch `fix/issue326-native-recovery`. CLI login resolver
+regression failed with missing native configuration, then passed after carrying
+the canonical launch policy. Explicit reconciliation requires an exited old PID,
+current process/birth/executable, assignment/window and owned loopback endpoint.
+No live browser was adopted or killed. Source tests (35/35), typecheck, full build and review passed;
+installed provider acceptance remains separate. PR335 documentation overlap is
+additive; its source work is disjoint.
+
 ## 2026-10-18 — PR333 reconciled and runtime activated
 
 User explicitly authorized repo reconciliation and activation. PR333 merged as

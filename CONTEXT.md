@@ -136,3 +136,12 @@ Leased browser endpoints retain service-qualified browser process identity and m
 Developer-app response collection uses the resolved browser launch policy deadline. Fresh-root Chat/current app-test posture does not replace the selected browser.timeoutMs. A timeout after Send preserves effect evidence and forbids automatic resubmission.
 
 **Lease retirement audit**: durable history of AuraCall expiry-close intent and outcome, distinct from the mutable final lease snapshot. Acting process identity is distinct from browser process identity; already-missing is an observation, not proof of an AuraCall close.
+
+
+**Native browser reconciliation**:
+An explicit operator request to replace an exited native browser generation's
+receipt with a currently qualified same-placement process. It proves current
+process birth, executable, managed directory, desktop assignment/window and owned
+loopback endpoint; it preserves the previous receipt, input-control claims and
+managed data. It does not open a page, submit a prompt or infer outcome of an
+unknown submission. Normal inventory never performs reconciliation implicitly.

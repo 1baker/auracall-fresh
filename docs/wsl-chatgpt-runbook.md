@@ -289,3 +289,35 @@ cooldown deadline, while action-specific pacing remains active in the child.
 It adds no blanket quiet period merely because metadata collection finished.
 Historical generic failed/skipped results remain in history and do not prove
 terminal unavailability or suppress newly discovered retrievable inventory.
+
+## Stale native desktop receipt after browser replacement
+
+CLI login now retains the selected native desktop launch policy. Ordinary inventory
+continues to refuse a running browser whose native receipt names an exited process.
+Inspect `auracall --profile <runtime> doctor --target chatgpt --local-only --json`
+and the current process first. Do not infer a composer selector failure from this
+ownership refusal or repeat an unknown submission.
+
+For an independently identified replacement PID, explicitly reconcile with:
+
+```sh
+auracall --profile <runtime> login --target chatgpt --reconcile-native-browser <pid>
+```
+
+This Linux-only operation opens no page and sends no prompt. It requires exactly
+one retained receipt, actual absence of its old PID, unchanged configured desktop
+placement, current assignment and viewing generation, exact managed directory,
+selected executable and process birth, a current window on the retained desktop,
+and a responsive loopback DevTools socket owned by the selected PID. It rechecks
+process/socket/window proof before publishing a new browser identity. The old and
+proposed receipts remain in a private `~/.auracall/native-desktops/reconciliation-*`
+record; such a record is intent evidence if receipt publication fails. Managed
+browser data and input-control claims are preserved. Cookie export and reseeding
+cannot be combined with reconciliation.
+
+If proof is missing or conflicting, reconciliation refuses without changing the
+browser receipt or signalling a process. Resolve the exact ownership/placement
+problem with the operator; do not hand-edit receipts, reuse stale CDP endpoints,
+clear control claims or kill a browser to make the command succeed. After successful
+reconciliation, run one supported read-only inventory command. Provider warnings
+and human-verification pages retain their existing hard stops.
