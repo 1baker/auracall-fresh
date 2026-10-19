@@ -8,6 +8,7 @@ test.each([
 	"continue",
 	"warning",
 	"abort",
+	"abort-before-wait",
 	"timeout",
 ])("shared backend wait preserves %s", async (mode) => {
 	vi.useFakeTimers();
@@ -34,6 +35,14 @@ test.each([
 		});
 	const sent = vi.fn(async () => undefined);
 	await make("a").admit(`sha256:${"a".repeat(64)}`, sent);
+	if (mode === "abort-before-wait") {
+		const readWarnings = ledger.listActiveProviderWarnings.bind(ledger);
+		vi.spyOn(ledger, "listActiveProviderWarnings").mockImplementation(async (input) => {
+			const warnings = await readWarnings(input);
+			controller.abort(new DOMException("Native backend request cancelled.", "AbortError"));
+			return warnings;
+		});
+	}
 	const pending = ["b", "c"].map((id) => make(id).admit(`sha256:${id.repeat(64)}`, sent));
 	const result = Promise.allSettled(pending);
 	await vi.advanceTimersByTimeAsync(0);
@@ -46,7 +55,7 @@ test.each([
 			observedAt: new Date().toISOString(),
 		});
 		await vi.advanceTimersByTimeAsync(1000);
-	} else if (mode === "abort") {
+	} else if (mode === "abort" || mode === "abort-before-wait") {
 		controller.abort(new Error("fixture cancellation"));
 		await vi.advanceTimersByTimeAsync(0);
 	} else if (mode === "timeout") {
@@ -61,6 +70,11 @@ test.each([
 	expect(outcomes.map((item) => item.status)).toEqual(
 		mode === "continue" ? ["fulfilled", "fulfilled"] : ["rejected", "rejected"],
 	);
+	if (mode === "abort" || mode === "abort-before-wait")
+		for (const item of outcomes)
+			expect(item).toMatchObject({
+				reason: { name: "ProviderBackendRequestCancelledBeforeDispatchError" },
+			});
 	if (mode === "timeout")
 		for (const item of outcomes)
 			expect(item).toMatchObject({ reason: { name: "ProviderBackendRequestBudgetExceededError" } });
@@ -143,7 +157,10 @@ test("request transitions remain ordered if wall clock moves backwards", async (
 		tabLeaseId: "clock",
 		backendRequestLimit: 1,
 		assertOwnedLease: async () => undefined,
-		now: () => { timestamp -= 100; return new Date(timestamp); },
+		now: () => {
+			timestamp -= 100;
+			return new Date(timestamp);
+		},
 	});
 	await authority.admit(`sha256:${"f".repeat(64)}`, async () => undefined);
 	const [record] = await ledger.list();
