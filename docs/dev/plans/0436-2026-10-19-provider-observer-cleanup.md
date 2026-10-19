@@ -1,6 +1,6 @@
 # Provider observer shutdown diagnosis | Plan0436
 
-State: CLOSED
+State: OPEN
 Owner: ecochran76
 Issue: https://github.com/ecochran76/auracall/issues/337
 Branch: fix/issue337-observer-cleanup
@@ -8,11 +8,13 @@ Target: origin/main
 
 ## Current State
 
-A disposable real-browser loop reproduces the exact protocol error on main
-2801e0131 and passes on PR335 commit e3ade5d3b. The existing PR already has the
-required shutdown barrier and portable success/failure regressions. No competing
-implementation or installed-runtime change was made. PR335 remains open; source
-integration and full installed inventory acceptance remain unqualified.
+The operator approved proceeding after the diagnosis. PR335 is draft/conflicted
+and contains broader failed live-follow acceptance. Reuse its standalone
+11917b044 shutdown barrier and regression tests in the scoped issue337 PR339,
+without integrating unrelated work. Tests were copied first: the successful
+shutdown case reproduced Fetch domain is not enabled on main before the repair.
+Targeted validation, source review, integration and staged acceptance are running.
+No warning/owner reset, scheduler resume or unknown submission retry is authorized.
 
 ## Scope, acceptance criteria and definition of done
 
@@ -74,6 +76,26 @@ full inventory acceptance. No more account probes were attempted.
 
 No duplicate implementation of PR335, broad cleanup, warning suppression or
 unrequested integration of that larger lane. Repository collaborative policy0032
-requires owner sequencing for overlapping work. The operator was asked whether
-to build on PR335 or use a separately reconciled repair; that choice remains
-pending. Preserve this diagnosis without treating the pending choice as approval.
+requires owner sequencing for overlapping work. The diagnosis initially requested operator sequencing. The later approval is
+recorded below; it authorizes the isolated existing repair, not unrelated failed
+acceptance work from the larger PR335 lane.
+
+## Approved repair continuation
+
+User: "ok go" after the diagnosis and sequencing recommendation. Critical path:
+reuse the exact existing shutdown barrier; validate scoped regressions and native
+loop; self-review PR339 against main2801e0131; integrate only this repair; stage
+and verify the package; check local provider guards before one inventory read.
+Preserve active warnings and stop rather than bypass a blocked provider boundary.
+PR335 retains its unrelated open acceptance gates and branch custody.
+
+## Scoped repair validation
+
+- Tests copied from11917b044 before the source repair: RED with native-style
+  Fetch-domain error through actual observer/guard/authority cleanup.
+- Reused the exact8-line source barrier, adapted only to main context. No other
+  PR335 feature/dependency was taken. Affected4suites:97/97PASS.
+- The same real-Chromium portable reproducer: scoped source exit0 in3.90s.
+- Scoped Biome lint and diff whitespace checks: PASS.
+- Serial Standards/Spec review baseline: main2801e0131, issue337 and this bounded
+  scope. Shutdown failures still reject and after-send uncertainty is preserved.

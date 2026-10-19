@@ -1,3 +1,12 @@
+## 2026-10-19 — Issue337 scoped observer shutdown repair
+
+Operator approved proceeding. Reused PR335 commit11917b044's standalone shutdown
+barrier and tests in PR339; the larger draft/conflicted PR335 remains untouched.
+Copied caller-level regression went red before repair. All97affected tests and
+the disposable native loop pass with only the scoped change. Typecheck/build,
+source review, integration and guarded installed acceptance are in progress.
+No scheduler resume, warning clear, browser restart or submission retry.
+
 ## 2026-10-19 — Issue337 native observer teardown diagnosis
 
 Plan0436 confirms a queued Fetch callback can issue failRequest after domain
