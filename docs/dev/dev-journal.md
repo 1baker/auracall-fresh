@@ -1,3 +1,12 @@
+## 2026-10-19 — Issue326 installed native ownership accepted
+
+Installed c39f0d165 passed current process/assignment/window verification and a
+supported login (exit0). The approved old generation had already exited before
+closure; no signal was sent. Ownership incident326 is resolved. Full apps inventory
+fails later in observer cleanup (`Fetch domain is not enabled`), tracked in
+issue337 with PR335 overlap. No prompt retry, ownership reset or warning clear.
+Private runtime receipts stay outside Git; Plan0435 records the bounded acceptance.
+
 ## 2026-10-19 — Issue326 native browser custody (Plan0435)
 
 Owner ecochran76; branch `fix/issue326-native-recovery`. CLI login resolver

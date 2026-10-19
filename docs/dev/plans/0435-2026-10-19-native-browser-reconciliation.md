@@ -8,9 +8,14 @@ Target: origin/main
 
 ## Current State
 
-CLI login option resolution drops native desktop configuration. Regression at the
-actual CLI option resolver is being verified before repair. Existing live mismatch
-is reporter evidence; its historical cause remains unproven.
+Source repair integrated through PR336 at c39f0d165 and active in the installed
+CLI runtime `user-runtime-issue326-c39f0d165`. Native process, current assignment
+and current window verification passed. Supported installed login exited0 with
+no ownership refusal. The originally approved mismatched process had already
+exited before the authorized close; no signal was sent to its replacement.
+Read-only apps inventory passes native admission but fails downstream observer
+cleanup, tracked separately in https://github.com/ecochran76/auracall/issues/337.
+Historical mismatch attribution remains unproven.
 
 ## Scope and seams
 
@@ -65,3 +70,21 @@ Source repair complete; 162 additional browser/configuration contract tests pass
 (197 total across 17 modules), and the production build passed. Integration uses
 PR336. Existing installed incident remains a separate operational acceptance gate;
 this plan does not authorize unknown submission retries or provider warning clears.
+
+## Installed ownership acceptance | 2026-10-19
+
+- Operator explicitly approved closing/relaunching the mismatched managed browser.
+  Fresh identity readback found that exact generation already absent and a
+  replacement with a matching native receipt. The guarded close stopped before
+  sending a signal; no unnecessary replacement interruption occurred.
+- Independent installed native process verification, current ready-assignment
+  match and exact current desktop-window match all passed before and after
+  the supported commands. Fresh OS process-birth readback passed afterward.
+- `auracall --profile wsl-chrome-3 --verbose login --target chatgpt`: exit0;
+  no ownership refusal. No prompt or unknown submission was repeated.
+- `apps --target chatgpt list --json`: exit1 after native admission, with
+  `OwnedBackendRequestCleanupError` / `Fetch domain is not enabled`. Empty stdout;
+  recorded as issue337, with existing PR335 overlap noted. Full app inventory is
+  not accepted by this packet, and is not represented as repaired ownership.
+- Private process identities, command outputs and `operational-closeout.json`
+  remain in the user-scoped issue326 acceptance directory, outside Git.
