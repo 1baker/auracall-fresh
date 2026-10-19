@@ -8,6 +8,12 @@ and cleanup stages. Queue admission precedes the operation and has its own bound
 The effective inventory deadline includes configured backend capacity waiting.
 A failure receipt does not establish transport cleanup or authorize retries.
 
+Provider-interaction ledger observations share the same-instance operation queue
+with mutations. Concurrent reads share a locked snapshot; pure reads never
+rewrite it. Mixed-batch results publish only after durable commit. Cross-process
+locking, complete history and warning/ownership fences remain authoritative.
+CLI stage diagnostics preserve original error identity and aggregate causes.
+
 ## Language
 
 **AuraCall runtime profile**:

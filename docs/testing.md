@@ -1,3 +1,11 @@
+- Ledger read contention and mixed-batch durability (provider-free, issue325):
+  `pnpm vitest run tests/browser-service/interactionLedger.test.ts tests/browser/backendRequestAdmission.test.ts tests/cli/chatgptDeveloperAppsCommand.test.ts`.
+  Controlled slow snapshot proves same-instance readers wait instead of consuming
+  the lock timeout; pure reads do not rewrite state. Mixed read/write callers
+  receive no results before durable commit and reject on commit failure. Existing
+  cross-instance ceilings/warnings/restart tests retain account authority.
+  Developer-app ownership tests preserve AggregateError classes and nested causes.
+
 - Developer-app inventory failure diagnostics (provider-free, issue325):
   `pnpm vitest run tests/cli/chatgptDeveloperAppsCommand.test.ts tests/cli/developerAppTerminalExit.test.ts`.
   Public operation tests distinguish identity, inventory and cleanup deadlines

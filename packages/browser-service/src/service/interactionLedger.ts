@@ -988,12 +988,13 @@ class FileBackedProviderInteractionLedger implements ProviderInteractionLedger {
   private readonly lockTimeoutMs: number;
   private readonly lockPollMs: number;
 
-  private pendingWrites: Array<{
+  private pendingOperations: Array<{
     operation: (ledger: InMemoryProviderInteractionLedger) => Promise<unknown>;
+    persist: boolean;
     resolve: (value: unknown) => void;
     reject: (error: unknown) => void;
   }> = [];
-  private flushingWrites = false;
+  private flushingOperations = false;
 
   constructor(options: FileBackedProviderInteractionLedgerOptions) {
     this.ledgerRoot = path.resolve(options.ledgerRoot);
@@ -1058,41 +1059,42 @@ class FileBackedProviderInteractionLedger implements ProviderInteractionLedger {
   }
 
   private async read<T>(operation: (ledger: InMemoryProviderInteractionLedger) => Promise<T>): Promise<T> {
-    return this.withLock(async () => operation(await this.loadLedger()));
+    return this.write(operation, false);
   }
 
-  private write<T>(operation: (ledger: InMemoryProviderInteractionLedger) => Promise<T>): Promise<T> {
+  private write<T>(operation: (ledger: InMemoryProviderInteractionLedger) => Promise<T>, persist = true): Promise<T> {
     return new Promise<T>((resolve, reject) => {
-      this.pendingWrites.push({ operation, resolve: value => resolve(value as T), reject });
-      if (!this.flushingWrites) {
-        this.flushingWrites = true;
-        queueMicrotask(() => { void this.flushWrites(); });
+      this.pendingOperations.push({ operation, persist, resolve: value => resolve(value as T), reject });
+      if (!this.flushingOperations) {
+        this.flushingOperations = true;
+        queueMicrotask(() => { void this.flushOperations(); });
       }
     });
   }
 
-  /** Publish no permits/transitions until the entire batch is durably committed.
-   * The existing cross-process lock still owns account admission and ordering. */
-  private async flushWrites(): Promise<void> {
-    while (this.pendingWrites.length) {
-      let batch: typeof this.pendingWrites = [];
+  /** Share a locked snapshot across queued reads and mutations. Publish mutation
+   * outcomes only after durable commit; pure reads never rewrite the snapshot.
+   * The cross-process lock still owns account admission and ordering. */
+  private async flushOperations(): Promise<void> {
+    while (this.pendingOperations.length) {
+      let batch: typeof this.pendingOperations = [];
       try {
         const results = await this.withLock(async () => {
-          batch = this.pendingWrites.splice(0);
+          batch = this.pendingOperations.splice(0);
           const ledger = await this.loadLedger();
           const values: unknown[] = [];
           for (const request of batch) values.push(await request.operation(ledger));
-          await this.persist(ledger.snapshot());
+          if (batch.some(request => request.persist)) await this.persist(ledger.snapshot());
           return values;
         });
-        batch.forEach((request, index) => request.resolve(results[index]));
+        batch.forEach((request, index) => { request.resolve(results[index]); });
       } catch (error) {
         // A failed operation or commit aborts the batch; callers received no uncommitted results.
-        if (!batch.length) batch = this.pendingWrites.splice(0);
+        if (!batch.length) batch = this.pendingOperations.splice(0);
         for (const request of batch) request.reject(error);
       }
     }
-    this.flushingWrites = false;
+    this.flushingOperations = false;
   }
 
   private async loadLedger(): Promise<InMemoryProviderInteractionLedger> {

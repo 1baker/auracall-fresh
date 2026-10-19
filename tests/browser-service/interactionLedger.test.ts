@@ -1,7 +1,7 @@
-import { mkdtemp, rm } from "node:fs/promises";
+import fs, { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import {
 	createFileBackedProviderInteractionLedger,
 	createInMemoryProviderInteractionLedger,
@@ -16,6 +16,52 @@ const foregroundScope: ProviderInteractionScope = {
 };
 
 describe("interactionLedger (package)", () => {
+	test("concurrent readers wait for their own slow snapshot instead of timing out on its lock", async () => {
+		const directory = await mkdtemp(path.join(os.tmpdir(), "auracall-ledger-read-burst-"));
+		let release!: () => void;
+		let entered!: () => void;
+		const loaded = new Promise<void>((resolve) => {
+			entered = resolve;
+		});
+		const paused = new Promise<void>((resolve) => {
+			release = resolve;
+		});
+		const read = fs.readFile.bind(fs);
+		let first = true;
+		const spy = vi
+			.spyOn(fs, "readFile")
+			.mockImplementation(async (...args: Parameters<typeof fs.readFile>) => {
+				if (first && String(args[0]).endsWith("provider-interactions.v1.json")) {
+					first = false;
+					entered();
+					await paused;
+				}
+				return read(...args);
+			});
+		const ledger = createFileBackedProviderInteractionLedger({
+			ledgerRoot: directory,
+			lockTimeoutMs: 5,
+			lockPollMs: 1,
+		});
+		let releaseTimer: ReturnType<typeof setTimeout> | undefined;
+		const firstRead = ledger.list();
+		try {
+			await loaded;
+			// Deliberately hold the snapshot past the lock budget to model slow disk/large history.
+			releaseTimer = setTimeout(release, 50);
+			const reads = await Promise.allSettled([firstRead, ledger.list(), ledger.listEvents()]);
+			expect(reads).toEqual(Array.from({ length: 3 }, () => ({ status: "fulfilled", value: [] })));
+			await expect(
+				fs.stat(path.join(directory, "provider-interactions.v1.json")),
+			).rejects.toMatchObject({ code: "ENOENT" });
+		} finally {
+			release();
+			clearTimeout(releaseTimer);
+			await firstRead;
+			spy.mockRestore();
+			await rm(directory, { recursive: true, force: true });
+		}
+	});
 	test("simultaneous backend callers share one request ceiling and one identity reservation", async () => {
 		const directory = await mkdtemp(path.join(os.tmpdir(), "auracall-backend-race-"));
 		try {
@@ -1084,13 +1130,18 @@ test.each([
 					return value;
 				}),
 		);
-		const outcomes = Promise.allSettled(calls);
+		const observation = ledger.list().then((rows) => {
+			completed++;
+			return rows;
+		});
+		const outcomes = Promise.allSettled([...calls, observation]);
 		await writing;
 		if (mode === "blocked") expect(completed).toBe(0);
 		release();
 		const settled = await outcomes;
 		if (mode === "failed") {
 			expect(settled).toEqual([
+				expect.objectContaining({ status: "rejected" }),
 				expect.objectContaining({ status: "rejected" }),
 				expect.objectContaining({ status: "rejected" }),
 			]);
