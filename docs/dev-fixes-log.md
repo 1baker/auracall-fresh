@@ -1,3 +1,14 @@
+## 2026-10-19 — Verify installed terminal inventory separately
+
+Plan0438 normal installed list on merged e8b704bc7 exits 0 in 271.03 seconds and
+reports `inventoryComplete: true` with 26 apps, successful owned cleanup and utility
+settlement. All 597 build files match; current native process, assignment and
+window proof pass. Wrappers activate only after that result. Optional settings
+cleanup remains tracked in issue337. A prior diagnostic observed 30 apps for the
+same account; preserve both counts without inventing a provider-side cause or
+overstating the existing completeness flag. Private receipts retain failures and
+the accepted read.
+
 ## 2026-10-19 — Keep list independent of optional settings navigation
 
 Installed-app inventory and Developer mode are separate observations. list must

@@ -1,6 +1,6 @@
 # Plan0438 — Repair terminal app inventory
 
-State: OPEN
+State: CLOSED
 Owner: ecochran76
 Issue: https://github.com/ecochran76/auracall/issues/325
 Branch: fix/issue325-attachment
@@ -8,14 +8,13 @@ Target: origin/main
 
 ## Current State
 
-User requested actual terminal inventory repair. PR343–346 are merged through
-939a54350; active wrappers remain856276cdb. Installed939a54350 captured complete
-inventory but failed cleanup after optional settings observation. A one-variable
-minimized run without that observation succeeded in271.08s with30apps and clean
-cleanup. Current branch fix/issue325-inventory-only uses the existing optional
-readState flag for list; mutating operations retain their checks. Normal merged
-installed acceptance remains required. Optional settings-path cleanup is not
-claimed repaired and remains tracked by issue337.
+Terminal inventory outcome accepted. PR343–347 are merged; normal installed
+e8b704bc7 returned exit0/statusobserved/inventoryComplete=true in271.03s, with26
+apps and unknown Developer mode, client cleanup and utility settlement successful.
+CLI/MCP wrappers now select that exact runtime;597build files match, contract
+passes, cooldown hash unchanged, and fresh native process/assignment/window proof
+passes. Optional settings-enabled cleanup remains open in issue337; its cause is
+unproven. Historical failures and unknown ownership records remain preserved.
 
 ## Scope and acceptance
 
@@ -216,3 +215,41 @@ Typecheck, scoped Biome and full build pass. Serial Standards review against
 confirms list uses only the existing optional read flag and other action flags
 are unchanged. Optional settings cleanup remains explicitly open, outside the
 terminal list correction. Normal merged installed acceptance remains required.
+
+## Accepted normal installed outcome
+
+Normal command (no NODE_OPTIONS import or prototype override):
+`auracall --profile wsl-chrome-3 --verbose --browser-keep-browser apps --target chatgpt list --json`.
+Staged installede8b704bc70f451efa5228850c81fc60d43cdd67c from merged PR347:
+exit0, statusobserved, inventoryComplete=true,26apps, Developer modeunknown,
+271.03s. Verbose trace reaches inventorycomplete, restoration and confirmed client
+close; utility settlement returns success. The earlier minimized diagnostic
+returned30apps for the same account; the current read has26common entries and no
+new entries. The source of this provider observation difference is unproven;
+report the current count and do not infer app deletion or independently certify
+pagination completeness beyond the CLI's existing inventoryComplete flag.
+
+All597installed build files match source; installed runtime contract passes.
+Final source slice103affected tests, typecheck, scoped lint and full build pass;
+earlier124/229selections cover shared request/registry repairs. Explicit package
+lint retains its3unchanged baseline diagnostics and formatting debt. No remote CI
+checks were attached to these PRs; local checks are the recorded validation.
+
+Immediately before activation, fresh origin/main readback equalse8b704bc7 and
+PR347provenance isMERGED. Actor ecochran76 activated user-scoped CLI/MCP wrappers
+only after success; wrapper texts and version0.1.1 read back correctly. Native
+process, assignment and window pass after the live read. Guard hash unchanged;
+no prompt, app mutation, warning/owner reset or service/scheduler control.
+
+Private accepted summary, stdout/stderr, stage trace, parity, contract, accounting,
+native proof and activation receipt remain in the user-scoped issue325 acceptance
+directory; no account identifiers, app content, snapshots or auth data in Git.
+Memory disposition forbidden: this session prohibits memory writes without an
+explicit remember request; the existing user-scoped no-write receipt is retained.
+Issue325can close on this terminal outcome; issue326remains closed,337remains open
+for optional settings cleanup. PR335broader work remains separate.
+
+Final full planning audit: 436 candidates, 33 existing validation findings
+(32 missing AGENTS policy targets and Plan0406-1 missing its State header).
+Plan0438 has no audit finding. This is not a clean full-library audit; unrelated
+governance debt was preserved. Closeout branch: docs/issue325-accepted-readback.

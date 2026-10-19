@@ -1,3 +1,20 @@
+## 2026-10-19 — Issue325 installed inventory accepted (Plan0438 closed)
+
+PR347 / e8b704bc7 passes normal installed list in 271.03 seconds: exit 0,
+`observed`, `inventoryComplete: true`, 26 apps, unknown Developer mode and successful
+cleanup/utility settlement. No diagnostic import or prototype override. The prior
+minimized control returned 30 apps for the same account; the current 26 are common.
+The cause of that observation difference is unproven. Preserve the current count
+without inferring deletions or independently attesting pagination.
+
+All 597 build files match. Installed contract and fresh native process, assignment
+and window proof pass; cooldown hash is unchanged. CLI/MCP wrappers now select the
+merged runtime, version 0.1.1. The final 103 affected tests, typecheck, scoped lint
+and build pass. Full planning audit retains 33 preexisting findings, none for
+Plan0438. Issue325 closes on terminal inventory; issue337 remains open for optional
+settings cleanup, and issue326 remains closed. No app mutation, prompt, warning or
+owner reset, service control or memory write.
+
 ## 2026-10-19 — Issue325 list separates optional settings observation
 
 Installed939a54350 collected complete apps but failed cleanup after optional
