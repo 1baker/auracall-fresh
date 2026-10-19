@@ -1,12 +1,13 @@
-## 2026-10-19 — Issue325 inventory diagnostics
+## 2026-10-19 — Issue325 diagnostics installed; attachment gate remains
 
-Plan0437; owner ecochran76; fix/issue325-inventory-diagnostics from ca3ce73b6.
-Minimal timeout lost serializable context; real-adapter identity was initially
-mislabeled inventory. Both red/green loops now pass. Named stages, effective
-deadline, immediate refusal and terminal JSON implemented;101focused tests pass.
-Serial Standards/Spec review repaired unknown-cleanup mislabeling; final checks
-passed with typecheck, full build and scoped lint. PR341 is published; integration
-and installed acceptance remain. No live read, runtime activation, browser restart or guard reset.
+PR341 merged856276cdb; CLI/MCP use the parity-verified597-file installation.
+101affected tests, typecheck, scoped lint, full build, installed identity-timeout
+fixture and runtime contract pass. One25sbounded read last reported attachment;
+full inventory remains unaccepted and325 stays open. Configured600000mscapacity
+waiting makes the inventory deadline645000ms, separately from600000msqueue
+admission. Post-run native process/assignment/window passed; cooldown hash
+unchanged. No retry, owner reset, prompt, browser/service restart or scheduler
+control. Plan0437 diagnostic packet closed; next gate is attachment diagnosis.
 
 ## 2026-10-19 — Issue337 scoped repair installed; inventory acceptance open
 
