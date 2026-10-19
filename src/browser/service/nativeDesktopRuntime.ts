@@ -12,7 +12,7 @@ import { selectPoolDesktop } from './nativeDesktopPool.js';
 interface NativeChromeHandle { pid?: number; port: number; host?: string; kill: () => Promise<unknown> }
 type NativeLaunch = (config: ResolvedBrowserConfig, directory: string, logger: BrowserLogger, options: Parameters<typeof launchChromeCore>[3]) => Promise<NativeChromeHandle>;
 
-async function expectedNativeExecutable(config: ResolvedBrowserConfig): Promise<string> {
+export async function expectedNativeExecutable(config: Pick<ResolvedBrowserConfig, 'chromePath'>): Promise<string> {
   const chromePath = config.chromePath?.trim();
   if (!chromePath) throw new Error('Native Remote View requires a resolved local Chrome or Chromium executable path.');
   const expectedPath = await fs.realpath(chromePath);

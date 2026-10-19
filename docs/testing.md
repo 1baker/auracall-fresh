@@ -1,3 +1,10 @@
+- Native replacement custody (provider-free, Plan0435):
+  `pnpm vitest run tests/cli/browserLoginLaunch.test.ts tests/browser/nativeDesktopRecovery.test.ts tests/browser/manualLoginNative.test.ts tests/browser/nativeDesktopRuntime.test.ts`.
+  CLI launch-policy regression plus actual Linux child-process/socket evidence and
+  local Remote View assignments/windows prove explicit reconciliation and ordinary
+  reuse, with unchanged receipts on qualification failures. Installed browser and
+  provider acceptance are separate.
+
 - Baseline drain/navigation/prompt/budget regression (provider-free):
   `pnpm vitest run tests/http.responsesServer.test.ts tests/browser-service/ui.test.ts tests/browser/browserMutationControlPlane.test.ts tests/browser/desktopRuntimeProfiles.test.ts tests/browser/chatgptPromptAdapter.test.ts tests/browser/llmServicePromptStructure.test.ts tests/browser/llmServiceRateLimit.test.ts --maxWorkers=2`.
   Drain status uses an explicit in-flight gate, and shared write budgets use a

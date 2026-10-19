@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import 'dotenv/config';
+import { resolveBrowserLoginLaunchOptions, type BrowserLoginLaunchOptions } from '../src/cli/browserLoginLaunch.js';
 import { spawn } from 'node:child_process';
 import fs from 'node:fs/promises';
 import JSON5 from 'json5';
@@ -542,16 +543,6 @@ interface BrowserDoctorFeatureReportLike {
   reason: string | null;
 }
 
-interface BrowserLoginLaunchOptions {
-  chromePath: string;
-  chromeProfile: string;
-  manualLoginProfileDir: string;
-  cookiePath?: string;
-  bootstrapCookiePath?: string;
-  chatgptUrl: string;
-  geminiUrl: string;
-  grokUrl: string;
-}
 
 type SetupCommandOptions = Partial<Pick<
   CliOptions,
@@ -9392,69 +9383,6 @@ function formatProviderIdentity(identity: ProviderUserIdentity): string {
   return identity.source?.trim() ? `${core} [${identity.source.trim()}]` : core;
 }
 
-function resolveBrowserLoginLaunchOptions(
-  commandOptions: Pick<
-    CliOptions,
-    | 'browserChromePath'
-    | 'browserChromeProfile'
-    | 'browserCookiePath'
-    | 'browserBootstrapCookiePath'
-    | 'browserDisplay'
-    | 'browserManualLoginProfileDir'
-    | 'browserWslChrome'
-    | 'chatgptUrl'
-    | 'geminiUrl'
-    | 'grokUrl'
-  >,
-  userConfig: ResolvedUserConfig,
-  target: 'chatgpt' | 'gemini' | 'grok',
-): BrowserLoginLaunchOptions {
-  const activeRuntimeProfile = getPreferredRuntimeProfile(userConfig, {
-    explicitProfileName: userConfig.auracallProfile ?? null,
-  });
-  const browserProfileName = getRuntimeProfileBrowserProfileId(activeRuntimeProfile) ?? userConfig.auracallProfile ?? null;
-  const resolvedBrowser = resolveBrowserConfig({
-    ...userConfig.browser,
-    chromePath: commandOptions.browserChromePath ?? userConfig.browser?.chromePath ?? undefined,
-    chromeProfile: commandOptions.browserChromeProfile ?? userConfig.browser?.chromeProfile ?? undefined,
-    chromeCookiePath: commandOptions.browserCookiePath ?? userConfig.browser?.chromeCookiePath ?? undefined,
-    bootstrapCookiePath:
-      commandOptions.browserBootstrapCookiePath ?? userConfig.browser?.bootstrapCookiePath ?? undefined,
-    wslChromePreference: commandOptions.browserWslChrome ?? userConfig.browser?.wslChromePreference ?? undefined,
-    display: commandOptions.browserDisplay ?? userConfig.browser?.display ?? undefined,
-    manualLogin: true,
-    manualLoginProfileDir:
-      commandOptions.browserManualLoginProfileDir ??
-      userConfig.browser?.manualLoginProfileDir ??
-      resolveManagedProfileDirForUserConfig(userConfig, target),
-    target,
-  }, {
-    auracallProfileName: userConfig.auracallProfile ?? null,
-    browserProfileName,
-  });
-  const chromePath = resolvedBrowser.chromePath ?? undefined;
-  if (!chromePath) {
-    throw new Error('Missing browser chromePath. Set browser.chromePath in config or pass --browser-chrome-path.');
-  }
-  const manualLoginProfileDir = resolvedBrowser.manualLoginProfileDir;
-  if (!manualLoginProfileDir) {
-    throw new Error('Unable to resolve a manual-login Chrome profile directory.');
-  }
-  return {
-    chromePath,
-    chromeProfile: resolvedBrowser.chromeProfile ?? 'Default',
-    manualLoginProfileDir,
-    cookiePath: resolvedBrowser.chromeCookiePath ?? undefined,
-    bootstrapCookiePath: resolvedBrowser.bootstrapCookiePath ?? resolvedBrowser.chromeCookiePath ?? undefined,
-    chatgptUrl:
-      commandOptions.chatgptUrl ??
-      userConfig.browser?.chatgptUrl ??
-      userConfig.browser?.url ??
-      CHATGPT_URL,
-    geminiUrl: commandOptions.geminiUrl ?? userConfig.browser?.geminiUrl ?? 'https://gemini.google.com/app',
-    grokUrl: commandOptions.grokUrl ?? userConfig.browser?.grokUrl ?? GROK_URL,
-  };
-}
 
 function resolveSetupLaunchUrl(
   target: 'chatgpt' | 'gemini' | 'grok',
@@ -10178,6 +10106,7 @@ program
   .option('--chatgpt-url <url>', 'Override the ChatGPT URL for login.')
   .option('--gemini-url <url>', 'Override the Gemini web URL for login.')
   .option('--grok-url <url>', 'Override the Grok URL for login.')
+  .option('--reconcile-native-browser <pid>', 'Qualify a live replacement against its exited native desktop generation; do not open a login page.')
   .option('--export-cookies', 'Export Gemini cookies to ~/.auracall/cookies.json while you sign in.')
   .option('--force-reseed-managed-profile', 'Rebuild the managed Aura-Call browser profile from the source Chrome profile before opening login.')
   .addOption(new Option('--browser-chrome-path <path>', 'Chrome/Chromium executable path.'))
@@ -10209,6 +10138,15 @@ program
       fallbackTarget: userConfig.browser?.target ?? 'chatgpt',
     });
     const launchOptions = resolveBrowserLoginLaunchOptions(commandOptions, userConfig, target);
+    if (commandOptions.reconcileNativeBrowser !== undefined) {
+      if (commandOptions.exportCookies || commandOptions.forceReseedManagedProfile) throw new Error('Native reconciliation cannot export cookies or reseed managed data.');
+      const { reconcileNativeDesktopBrowser } = await import('../src/browser/service/nativeDesktopRecovery.js');
+      const { resolveBrowserLaunchPlan } = await import('../src/browser/service/browserLaunchPlan.js');
+      const plan = resolveBrowserLaunchPlan({ source: { kind: 'user-config', config: userConfig }, intent: { provider: target } });
+      const result = await reconcileNativeDesktopBrowser({ config: { ...plan.launchPolicy, ...launchOptions.browserConfig, chromePath: launchOptions.chromePath }, userDataDir: launchOptions.manualLoginProfileDir, pid: Number(commandOptions.reconcileNativeBrowser) });
+      console.log(JSON.stringify(result));
+      return;
+    }
 
     const client = await BrowserAutomationClient.fromConfig(userConfig, {
       target: target === 'grok' ? 'grok' : 'chatgpt',
