@@ -6,6 +6,8 @@ Developer-app inventory diagnostics retain browser resolution, utility/interacti
 admission, identity, attachment, inventory, Developer mode, navigation restoration
 and cleanup stages. Queue admission precedes the operation and has its own bound.
 The effective inventory deadline includes configured backend capacity waiting.
+App list reads use inventory-only observation and do not navigate Developer mode
+settings; unobserved Developer mode remains unknown. Mutation checks are separate.
 A failure receipt does not establish transport cleanup or authorize retries.
 
 Provider-interaction ledger observations share the same-instance operation queue

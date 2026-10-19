@@ -215,7 +215,9 @@ export async function executeChatgptDeveloperAppOperation(
 		input,
 		adapter,
 		await adapter.readState(
-			input.action === "refresh-tools" ? { includeDeveloperMode: false } : undefined,
+			input.action === "list" || input.action === "refresh-tools"
+				? { includeDeveloperMode: false }
+				: undefined,
 		),
 	);
 }

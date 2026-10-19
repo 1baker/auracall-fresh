@@ -3710,3 +3710,14 @@ This exercises the public proof call with real guarded CDP and desktop gate,
 contention introduced at identity reading, cancellation, human ownership, and
 cancellation with native-style continuous backend admission. Passing this does
 not establish live-follow completion or resolve the retained provider429.
+
+### App-list inventory and optional settings
+
+`apps list` uses the existing inventory-only state read. Its complete app/account
+result must survive unavailable optional Developer mode settings; unknown mode
+never authorizes create or replace. The command fixture rejects settings-enabled
+reads for list, while existing mutation tests retain enabled-mode requirements.
+Installed acceptance must verify normal CLI output, inventoryComplete, owned
+cleanup, exact build identity and current native browser proof. A diagnostic shim
+or fixture pass alone does not establish installed acceptance. The settings-path
+cleanup failure observed during Plan0438 remains tracked in issue337.

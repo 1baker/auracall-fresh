@@ -1,3 +1,12 @@
+## 2026-10-19 — Keep list independent of optional settings navigation
+
+Installed-app inventory and Developer mode are separate observations. list must
+not navigate settings merely to report apps: use the existing inventory-only
+read option and preserve unknown Developer mode. A one-variable live control
+changed a failed500.94s read into a successful complete30-app read with clean
+cleanup in271.08s. Create/replace keep their prior checks; this does not establish
+a repair for the optional settings-path cleanup failure, tracked in337.
+
 ## 2026-10-19 — Share unfinished identical custody observations
 
 Backend request admission repeatedly verifies tab custody. Concurrent identical
