@@ -1,13 +1,24 @@
 # Plan0437 — App inventory failure diagnostics
 
-State: OPEN
+State: CLOSED
 
 ## Current State
 
-Issue325; owner ecochran76; branch fix/issue325-inventory-diagnostics from
-ca3ce73b6. A public CLI-operation test reproduces lost stage and serializable
-timeout evidence in 3.83s (test body28ms): expected inventory/code/timeout,
-received empty object. No provider access required.
+Bounded diagnostic delivery complete: PR341 merged856276cdbe14f1e9a134aa757a534ad10bad4dbd.
+CLI/MCP wrappers use user-runtime-issue325-856276cdb.101affected tests, final
+typecheck, scoped lint, build, installed identity-timeout fixture and /desktops
+contract pass;597installed files match merged source. Previous wrappers/runtime
+retained; no service restart. Issue325 stays open for terminal installed inventory
+acceptance. This plan closes the diagnostic packet, not the inventory workflow.
+
+One bounded installed read on runtime/browser profiles wsl-chrome-3 passed queue
+admission and identity; last reported attachment at external25s expiry (exit124,
+stdout0bytes, stderr265bytes). This is stage evidence, not a reproduced internal
+deadline or historical common cause. Current capacity wait600000ms makes inventory
+645000ms; queue admission separately allows600000ms. Neither bound was increased.
+Post-run native process/assignment/window verified; cooldown hash unchanged.
+No retry, ownership reset, prompt or scheduler control. Private evidence retained
+under ~/.auracall/acceptance/issue325-20261019; no private browser content in Git.
 
 ## Scope and acceptance
 
@@ -51,3 +62,10 @@ No claim that source tests explain the historical live blocking stage.
 
 PR341 publishes cbc05ee36. Remote branch equals the validated local checkpoint;
 main remains ca3ce73b6 before integration. No CI checks are configured on the PR.
+
+## Remaining gate
+
+Investigate attachment using a new bounded feedback loop before another live
+probe. Do not bypass admission, clear owner state or infer cleanup from process
+exit. Memory disposition forbidden: developer requires explicit memory-update
+request; recorded no-write receipt, zero Graphiti writes.

@@ -1,3 +1,11 @@
+## Turn 437 | 2026-10-19
+
+Plan0437 diagnostic packet CLOSED; issue325 inventory acceptance OPEN. PR341
+merged856276cdb and verified installation activated for CLI/MCP.101affected
+tests, typecheck, scoped lint/build and installed fixture/contract pass;597files
+match. One25sprobe last reported attachment. Native ownership remains verified;
+cooldown unchanged. No provider retry, guard reset or service/scheduler control.
+
 ## 2026-10-17 | Issue165 canonical acceptance
 
 PR323 integrated23969f469 and canonical runtime installed with595compiled-file
