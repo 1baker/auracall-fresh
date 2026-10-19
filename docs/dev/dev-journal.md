@@ -5,7 +5,8 @@ Minimal timeout lost serializable context; real-adapter identity was initially
 mislabeled inventory. Both red/green loops now pass. Named stages, effective
 deadline, immediate refusal and terminal JSON implemented;101focused tests pass.
 Serial Standards/Spec review repaired unknown-cleanup mislabeling; final checks
-and integration are in progress. No live read, runtime activation, browser restart or guard reset.
+passed with typecheck, full build and scoped lint. PR341 is published; integration
+and installed acceptance remain. No live read, runtime activation, browser restart or guard reset.
 
 ## 2026-10-19 — Issue337 scoped repair installed; inventory acceptance open
 

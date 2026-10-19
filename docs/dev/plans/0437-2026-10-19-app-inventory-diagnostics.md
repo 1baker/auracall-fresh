@@ -35,8 +35,7 @@ on source tests alone. This packet is serial; no delegated work.
 ## Current verification
 
 Focused provider-free selection:101tests across5suites passed in4.10s.
-Typecheck passed before the last cleanup-attribution regression; final check
-and build pending. Scoped Biome passed. Full planning audit retains33preexisting
+Final typecheck, full build and scoped Biome passed. Full planning audit retains33preexisting
 errors (32missing AGENTS policy targets and Plan0406-1 Stateheader); this plan
 introduces no audit finding. No managed browser process was created by fixtures.
 
@@ -49,3 +48,6 @@ Spec: cleanup fallback mislabeled as queue admission was accepted and repaired
 with red/green regression; no remaining accepted blocker. Original admission
 causes and unknown cleanup remain preserved, while JSON excludes raw causes.
 No claim that source tests explain the historical live blocking stage.
+
+PR341 publishes cbc05ee36. Remote branch equals the validated local checkpoint;
+main remains ca3ce73b6 before integration. No CI checks are configured on the PR.
