@@ -1,6 +1,6 @@
 # Native browser custody and reconciliation | Plan0435
 
-State: OPEN
+State: CLOSED
 Owner: ecochran76
 Issue: https://github.com/ecochran76/auracall/issues/326
 Branch: fix/issue326-native-recovery
@@ -53,3 +53,15 @@ main checkout dirt is preserved in its original checkout.
 
 Historical incident attribution remains unproven. This packet proves prevention
 of the identified CLI handoff defect and the explicit recovery contract in source.
+
+- Full production build: PASS. Planning-library audit: FAIL with 33 existing
+  errors (32 missing AGENTS policy targets and Plan0406-1 missing State header).
+  None of those files changed from 8bbe3b0dc; Plan0435 is accepted by the audit.
+- Published source PR: https://github.com/ecochran76/auracall/pull/336.
+
+## Source closeout
+
+Source repair complete; 162 additional browser/configuration contract tests passed
+(197 total across 17 modules), and the production build passed. Integration uses
+PR336. Existing installed incident remains a separate operational acceptance gate;
+this plan does not authorize unknown submission retries or provider warning clears.
