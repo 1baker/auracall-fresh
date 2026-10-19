@@ -134,6 +134,16 @@ export const CHATGPT_DEVELOPER_APP_SERVER_URL_SELECTOR =
 
 const CHATGPT_DEVELOPER_APP_ATTACHMENT_STAGE_TIMEOUT_MS = 10_000;
 
+export type DeveloperAppInventoryStage =
+	| "identity"
+	| "attachment"
+	| "inventory"
+	| "developer-mode"
+	| "restore-navigation";
+export type DeveloperAppBrowserOptions = DeveloperAppSubmissionOptions & {
+	onInventoryStage?: (stage: DeveloperAppInventoryStage) => void;
+};
+
 export interface ChatgptDeveloperAppBrowserClient {
 	readonly userConfig: ResolvedUserConfig;
 	getUserIdentity(options?: BrowserProviderListOptions): Promise<ProviderUserIdentity | null>;
@@ -158,7 +168,7 @@ export class ChatgptDeveloperAppBrowserAdapter {
 		private readonly browser: ChatgptDeveloperAppBrowserClient,
 		_createBrowser: ChatgptDeveloperAppBrowserClientFactory,
 		private readonly abortSignal?: AbortSignal,
-		private readonly submissionOptions: DeveloperAppSubmissionOptions = {},
+		private readonly submissionOptions: DeveloperAppBrowserOptions = {},
 	) {}
 
 	async readState(
@@ -166,13 +176,16 @@ export class ChatgptDeveloperAppBrowserAdapter {
 	): Promise<ChatgptDeveloperAppBrowserState> {
 		this.throwIfAborted();
 		debugDeveloperApps("reading ChatGPT identity");
+		this.submissionOptions.onInventoryStage?.("identity");
 		const identity = await this.browser.getUserIdentity({ abortSignal: this.abortSignal });
 		this.throwIfAborted();
 		debugDeveloperApps("connecting to the managed browser for app inventory");
+		this.submissionOptions.onInventoryStage?.("attachment");
 		const client = await this.ensureClient();
 		const originalUrl = await readCurrentUrl(client);
 		try {
 			debugDeveloperApps("reading installed and linked app signals");
+			this.submissionOptions.onInventoryStage?.("inventory");
 			const featureSignature = await captureChatgptDeveloperAppFeatureSignature(client);
 			this.throwIfAborted();
 			debugDeveloperApps(
@@ -180,6 +193,7 @@ export class ChatgptDeveloperAppBrowserAdapter {
 					? "Developer mode observation not required"
 					: "reading Developer mode",
 			);
+			this.submissionOptions.onInventoryStage?.("developer-mode");
 			const developerMode =
 				options.includeDeveloperMode === false ? null : await readChatgptDeveloperMode(client);
 			this.throwIfAborted();
@@ -192,6 +206,7 @@ export class ChatgptDeveloperAppBrowserAdapter {
 			});
 		} finally {
 			if (originalUrl?.startsWith("https://chatgpt.com/")) {
+				this.submissionOptions.onInventoryStage?.("restore-navigation");
 				await navigateChatgpt(client, originalUrl).catch(() => undefined);
 			}
 		}
@@ -668,7 +683,7 @@ function runDeveloperAppAttachmentStage<T>(
 export function createChatgptDeveloperAppBrowserAdapter(
 	browser: ChatgptDeveloperAppBrowserClient,
 	createBrowser: ChatgptDeveloperAppBrowserClientFactory,
-	options: DeveloperAppSubmissionOptions = {},
+	options: DeveloperAppBrowserOptions = {},
 ): ChatgptDeveloperAppBrowserAdapter {
 	return new ChatgptDeveloperAppBrowserAdapter(
 		browser,

@@ -3,6 +3,71 @@ import { readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import ts from 'typescript';
 import { expect, it } from 'vitest';
+import { DeveloperAppTimeoutError, formatChatgptDeveloperAppListFailure } from '../../src/cli/chatgptDeveloperAppsCommand.js';
+
+it.each([
+	"inventory",
+	"queue-admission",
+])("returns JSON and nonzero status from the actual list action at %s", async (stage) => {
+	const source = readFileSync("bin/auracall.ts", "utf8");
+	const ast = ts.createSourceFile("auracall.ts", source, ts.ScriptTarget.Latest, true);
+	const body = ast.statements.find(
+		(s) => ts.isFunctionDeclaration(s) && s.name?.text === "runChatgptDeveloperAppsCliAction",
+	)!;
+	const compiled = ts.transpile(body.getText(ast), { target: ts.ScriptTarget.ES2022 });
+	let released = 0;
+	let exited = 0;
+	const output: string[] = [];
+	const process = { exitCode: 0, cwd: () => "/fixture", env: {} };
+	const action = new Function(
+		"path",
+		"program",
+		"resolveConfig",
+		"getAuracallHomeDir",
+		"resolveManagedProfileDirForUserConfig",
+		"createFileBackedBrowserOperationDispatcher",
+		"runChatgptDeveloperAppOperationForCli",
+		"formatChatgptDeveloperAppListFailure",
+		"formatBrowserOperationBusyResult",
+		"exitAfterCompletedBrowserUtilityCommand",
+		"process",
+		"console",
+		`${compiled};return runChatgptDeveloperAppsCliAction;`,
+	)(
+		{ join: () => "/fixture" },
+		{ opts: () => ({ json: true }) },
+		async () => ({}),
+		() => "/fixture",
+		() => "/fixture",
+		() => ({
+			acquireQueued: async () =>
+				stage === "queue-admission"
+					? { acquired: false }
+					: {
+							acquired: true,
+							release: async () => {
+								released++;
+							},
+						},
+		}),
+		async () => {
+			throw new DeveloperAppTimeoutError("inventory deadline", "inventory", 10);
+		},
+		formatChatgptDeveloperAppListFailure,
+		() => "operation busy",
+		async () => {
+			exited++;
+		},
+		process,
+		{ log: (value: string) => output.push(value) },
+	);
+	await action({ opts: () => ({}) }, () => ({ action: "list" }));
+	expect(process.exitCode).toBe(1);
+	expect(output).toHaveLength(1);
+	expect(JSON.parse(output[0])).toMatchObject({ action: "list", status: "failed", stage });
+	expect(released).toBe(stage === "inventory" ? 1 : 0);
+	expect(exited).toBe(1);
+});
 
 it.each([['completed', 0], ['failed', 1]] as const)('settles the actual apps CLI action after %s despite retained browser handles', (status, expectedCode) => {
   const source = readFileSync('bin/auracall.ts', 'utf8');
@@ -16,7 +81,7 @@ it.each([['completed', 0], ['failed', 1]] as const)('settles the actual apps CLI
     const resolveConfig=async()=>({});
     const getAuracallHomeDir=()=>'/fixture';
     const resolveManagedProfileDirForUserConfig=()=>'/fixture/browser';
-    const createFileBackedBrowserOperationDispatcher=()=>({acquire:async()=>({acquired:true,release:async()=>{process.stdout.write('RELEASED\\n')}})});
+    const createFileBackedBrowserOperationDispatcher=()=>({acquireQueued:async()=>({acquired:true,release:async()=>{process.stdout.write('RELEASED\\n')}})});
     const runChatgptDeveloperAppOperationForCli=async()=>({action:'test',status:${JSON.stringify(status)},payload:'x'.repeat(200000)});
     const formatChatgptDeveloperAppOperationResult=()=>'';
     const formatBrowserOperationBusyResult=()=>'';

@@ -274,6 +274,13 @@ or app registry to configuration.
 - `auracall --profile <runtime> apps --target chatgpt list --json` is
   read-only. It reports the live account, Developer mode, installed app IDs,
   development scope, enablement, and linked authentication state.
+  Failures return JSON with `status: "failed"`, a named `stage`, `code`,
+  `message`, and nonzero exit status. Deadline failures also report the effective
+  `timeoutMs`. `--verbose` writes stages and deadline values to stderr, leaving
+  stdout as JSON. The browser-operation queue has a separate ten-minute admission
+  bound; inventory has 45 seconds plus configured backend capacity waiting.
+  An external 75-second stop can precede either bound. Failure does not authorize
+  retries or prove transport cleanup; unknown cleanup remains fenced.
 - `create`, `refresh`, submitted `test`, and `uninstall` require both
   `--expected-account <email>` and `--yes`. Exact app IDs are preferred;
   duplicate exact names fail closed.

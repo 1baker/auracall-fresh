@@ -2,6 +2,12 @@
 
 Aura-Call coordinates model requests through configured provider accounts and browser runtimes while preserving explicit identity, execution, and artifact ownership.
 
+Developer-app inventory diagnostics retain browser resolution, utility/interaction
+admission, identity, attachment, inventory, Developer mode, navigation restoration
+and cleanup stages. Queue admission precedes the operation and has its own bound.
+The effective inventory deadline includes configured backend capacity waiting.
+A failure receipt does not establish transport cleanup or authorize retries.
+
 ## Language
 
 **AuraCall runtime profile**:

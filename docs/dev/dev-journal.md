@@ -1,3 +1,12 @@
+## 2026-10-19 — Issue325 inventory diagnostics
+
+Plan0437; owner ecochran76; fix/issue325-inventory-diagnostics from ca3ce73b6.
+Minimal timeout lost serializable context; real-adapter identity was initially
+mislabeled inventory. Both red/green loops now pass. Named stages, effective
+deadline, immediate refusal and terminal JSON implemented;101focused tests pass.
+Serial Standards/Spec review repaired unknown-cleanup mislabeling; final checks
+and integration are in progress. No live read, runtime activation, browser restart or guard reset.
+
 ## 2026-10-19 — Issue337 scoped repair installed; inventory acceptance open
 
 PR339 integrated8504325be's standalone Fetch-shutdown barrier; broader draftPR335
