@@ -229,6 +229,7 @@ import {
 } from '../src/cli/workbenchCapabilitiesCommand.js';
 import {
   formatChatgptDeveloperAppOperationResult,
+  formatChatgptDeveloperAppListFailure,
   runChatgptDeveloperAppOperationForCli,
   type ChatgptDeveloperAppAuth,
   type ChatgptDeveloperAppOperationInput,
@@ -5507,21 +5508,26 @@ async function runChatgptDeveloperAppsCliAction(
     lockRoot: path.join(getAuracallHomeDir(), 'browser-operations'),
   });
   const input = buildInput(commandOptions);
-  const acquired = await dispatcher.acquireQueued({
-    managedProfileDir: resolveManagedProfileDirForUserConfig(userConfig, 'chatgpt'),
-    serviceTarget: 'chatgpt',
-    kind: 'browser-tools',
-    operationClass: input.action === 'list' || (input.action === 'test' && !input.submit)
-      ? 'exclusive-probe'
-      : 'exclusive-mutating',
-    ownerCommand: `apps:${input.action}`,
-  }, { timeoutMs: 10 * 60 * 1000 });
-  if (!acquired.acquired) {
-    throw new Error(formatBrowserOperationBusyResult(acquired));
-  }
+  let acquired: Awaited<ReturnType<typeof dispatcher.acquireQueued>> | undefined;
   let receiptEmitted = false;
   try {
-    const result = await runChatgptDeveloperAppOperationForCli(userConfig, input, { browserOperationOwned: true });
+    if (commandOptions.verbose) console.error(`[apps:${input.action}] stage=queue-admission timeoutMs=600000`);
+    acquired = await dispatcher.acquireQueued({
+      managedProfileDir: resolveManagedProfileDirForUserConfig(userConfig, 'chatgpt'),
+      serviceTarget: 'chatgpt',
+      kind: 'browser-tools',
+      operationClass: input.action === 'list' || (input.action === 'test' && !input.submit)
+        ? 'exclusive-probe'
+        : 'exclusive-mutating',
+      ownerCommand: `apps:${input.action}`,
+    }, { timeoutMs: 10 * 60 * 1000 });
+    if (!acquired.acquired) {
+      throw new Error(formatBrowserOperationBusyResult(acquired));
+    }
+    const result = await runChatgptDeveloperAppOperationForCli(userConfig, input, {
+      browserOperationOwned: true,
+      onProgress: commandOptions.verbose ? (progress) => console.error(`[apps:${input.action}] stage=${progress.stage}${progress.timeoutMs === undefined ? '' : ` timeoutMs=${progress.timeoutMs}`}`) : undefined,
+    });
     if (result.action !== 'list' && (result.status === 'failed' || (result.action === 'refresh-tools' && result.status !== 'completed'))) process.exitCode = 1;
     if (commandOptions.json) {
       console.log(JSON.stringify(result, null, 2));
@@ -5531,13 +5537,19 @@ async function runChatgptDeveloperAppsCliAction(
     console.log(formatChatgptDeveloperAppOperationResult(result));
     receiptEmitted = true;
   } catch (error) {
+    if (input.action === 'list' && commandOptions.json) {
+      process.exitCode = 1;
+      console.log(formatChatgptDeveloperAppListFailure(error));
+      receiptEmitted = true;
+      return;
+    }
     if (input.action !== 'refresh-tools' || !commandOptions.json) throw error;
     process.exitCode = 1;
     console.log(JSON.stringify({ action: input.action, status: 'unconfirmed', retrySafe: false,
       message: error instanceof Error ? error.message : String(error) }, null, 2));
     receiptEmitted = true;
   } finally {
-    await acquired.release();
+    if (acquired?.acquired) await acquired.release();
     if (receiptEmitted) await exitAfterCompletedBrowserUtilityCommand();
   }
 }

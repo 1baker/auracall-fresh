@@ -1,3 +1,12 @@
+## 2026-10-19 — Preserve app inventory stage across deadlines
+
+The deadline constructed a generic Error, while the CLI emitted structured
+failures only for refresh-tools. Track named stages through the real adapter,
+snapshot the stage at timeout, and serialize list failures before terminal exit.
+Verbose stages and the effective deadline distinguish configured capacity waiting
+from dispatcher admission. External 75-second expiry alone identifies neither.
+Preserve cleanup uncertainty and admission causes; never reset custody.
+
 ## 2026-10-19 — Join queued Fetch callbacks to owned shutdown
 
 A native paused event can reach its callback after Fetch.disable starts. Sending

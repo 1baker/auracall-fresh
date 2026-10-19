@@ -2,10 +2,12 @@ import { describe, expect, it, vi } from "vitest";
 import { createInMemoryProviderInteractionLedger } from "../../packages/browser-service/src/service/interactionLedger.js";
 import { createInMemoryBrowserTabLeaseRegistry } from "../../packages/browser-service/src/service/tabLeaseRegistry.js";
 import { runConfiguredChatgptUtilityOperation } from "../../src/browser/configuredChatgptUtilityAffinity.js";
+import { OwnedBackendRequestCleanupError } from "../../src/browser/ownedBackendRequestAuthority.js";
 import { createChatgptTabProvisioner } from "../../src/browser/providers/chatgptTabProvisioner.js";
 import {
 	type ChatgptDeveloperAppAdapter,
 	executeChatgptDeveloperAppOperation,
+	formatChatgptDeveloperAppListFailure,
 	formatChatgptDeveloperAppOperationResult,
 	runChatgptDeveloperAppOperationForCli,
 } from "../../src/cli/chatgptDeveloperAppsCommand.js";
@@ -57,6 +59,128 @@ function createAdapter(
 }
 
 describe("executeChatgptDeveloperAppOperation", () => {
+	it("preserves unknown cleanup attribution after a primary list timeout", async () => {
+		const failure = await runChatgptDeveloperAppOperationForCli(
+			{} as never,
+			{ action: "list" },
+			{
+				listTimeoutMs: 10,
+				createBrowser: async () => ({}) as never,
+				createAdapter: () => ({
+					...createAdapter({ readState: () => new Promise<never>(() => undefined) }),
+					close: async () => {
+						throw new OwnedBackendRequestCleanupError(new Error("close unconfirmed"));
+					},
+				}),
+			},
+		).catch((error: unknown) => error);
+		expect(JSON.parse(formatChatgptDeveloperAppListFailure(failure))).toMatchObject({
+			stage: "cleanup",
+			cleanup: "unknown",
+		});
+	});
+	it("attributes a stalled close to cleanup instead of inventory", async () => {
+		const failure = await runChatgptDeveloperAppOperationForCli(
+			{} as never,
+			{ action: "list" },
+			{
+				listTimeoutMs: 10,
+				createBrowser: async () => ({}) as never,
+				createAdapter: () => ({
+					...createAdapter(),
+					close: () => new Promise<never>(() => undefined),
+				}),
+			},
+		).catch((error: unknown) => error);
+		expect(failure).toMatchObject({ code: "developer_app_timeout", stage: "cleanup" });
+	});
+	it("returns interaction refusal immediately with its stage and original cause", async () => {
+		const refusal = Object.assign(
+			new Error("Provider interaction admission denied: target-owned."),
+			{ code: "target-owned" },
+		);
+		const failure = await runChatgptDeveloperAppOperationForCli(
+			{} as never,
+			{ action: "list" },
+			{
+				createBrowser: async () =>
+					({
+						runUtilityBrowserOperation: async ({
+							run,
+						}: {
+							run: (options: unknown) => Promise<unknown>;
+						}) =>
+							run({
+								interactionGovernor: {
+									beforeInteraction: async () => {
+										throw refusal;
+									},
+								},
+							}),
+					}) as never,
+			},
+		).catch((error: unknown) => error);
+		expect(failure).toMatchObject({
+			code: "target-owned",
+			stage: "interaction-admission",
+			cause: refusal,
+		});
+	});
+	it("emits a machine-readable list failure with timeout stage and message", async () => {
+		const failure = await runChatgptDeveloperAppOperationForCli(
+			{} as never,
+			{ action: "list" },
+			{
+				listTimeoutMs: 10,
+				createBrowser: () => new Promise<never>(() => undefined),
+			},
+		).catch((error: unknown) => error);
+		expect(JSON.parse(formatChatgptDeveloperAppListFailure(failure))).toMatchObject({
+			action: "list",
+			status: "failed",
+			code: "developer_app_timeout",
+			stage: "browser-resolution",
+			timeoutMs: 10,
+			message: "ChatGPT developer-app list timed out after 10ms.",
+		});
+	});
+	it("retains the stalled inventory stage in a serializable list timeout", async () => {
+		const failure = await runChatgptDeveloperAppOperationForCli(
+			{} as never,
+			{ action: "list" },
+			{
+				listTimeoutMs: 10,
+				createBrowser: async () => ({}) as never,
+				createAdapter: () => ({
+					...createAdapter({ readState: () => new Promise<never>(() => undefined) }),
+					close: async () => undefined,
+				}),
+			},
+		).catch((error: unknown) => error);
+		expect(JSON.parse(JSON.stringify(failure))).toMatchObject({
+			code: "developer_app_timeout",
+			stage: "inventory",
+			timeoutMs: 10,
+		});
+	});
+	it("names identity when the real inventory adapter stalls before attachment", async () => {
+		const progress: { stage: string; timeoutMs?: number }[] = [];
+		const failure = await runChatgptDeveloperAppOperationForCli(
+			{} as never,
+			{ action: "list" },
+			{
+				listTimeoutMs: 10,
+				onProgress: (event) => progress.push(event),
+				createBrowser: async () =>
+					({
+						getUserIdentity: () => new Promise<never>(() => undefined),
+					}) as never,
+			},
+		).catch((error: unknown) => error);
+		expect(failure).toMatchObject({ stage: "identity", timeoutMs: 10 });
+		expect(progress).toContainEqual({ stage: "browser-resolution", timeoutMs: 10 });
+		expect(progress).toContainEqual({ stage: "identity" });
+	});
 	it.each([
 		"confirmation",
 		"account",

@@ -5,6 +5,7 @@ import {
 	type ChatgptDeveloperAppBrowserClient,
 	type ChatgptDeveloperAppBrowserClientFactory,
 	createChatgptDeveloperAppBrowserAdapter,
+	type DeveloperAppInventoryStage,
 } from "../browser/providers/chatgptDeveloperApps.js";
 import {
 	annotateClientMutationContext,
@@ -18,6 +19,43 @@ import { resolveChatgptBackendRequestBudgetWaitMs } from "../runtime/tenantExecu
 
 const DEFAULT_CHATGPT_DEVELOPER_APP_LIST_TIMEOUT_MS = 45_000;
 const DEFAULT_CHATGPT_DEVELOPER_APP_CLOSE_TIMEOUT_MS = 5_000;
+
+export type DeveloperAppStage =
+	| DeveloperAppInventoryStage
+	| "browser-resolution"
+	| "utility-admission"
+	| "interaction-admission"
+	| "cleanup";
+
+export class DeveloperAppTimeoutError extends Error {
+	readonly code = "developer_app_timeout";
+	constructor(
+		message: string,
+		readonly stage: DeveloperAppStage,
+		readonly timeoutMs: number,
+	) {
+		super(message);
+		this.name = "DeveloperAppTimeoutError";
+	}
+}
+
+/** Stable JSON receipt; never serialize browser objects or raw error causes. */
+export function formatChatgptDeveloperAppListFailure(error: unknown): string {
+	const detail = error as { code?: string; stage?: string; timeoutMs?: number } | null;
+	return JSON.stringify(
+		{
+			action: "list",
+			status: "failed",
+			code: detail?.code ?? "developer_app_failed",
+			stage: detail?.stage ?? "queue-admission",
+			timeoutMs: detail?.timeoutMs,
+			message: error instanceof Error ? error.message : String(error),
+			cleanup: hasUnknownOwnedRequestCleanup(error) ? "unknown" : "not-qualified",
+		},
+		null,
+		2,
+	);
+}
 
 export interface ChatgptDeveloperAppAccount {
 	email: string | null;
@@ -67,6 +105,7 @@ type ChatgptDeveloperAppCliAdapter = ChatgptDeveloperAppAdapter & {
 };
 
 export interface ChatgptDeveloperAppCliDependencies {
+	onProgress?: (progress: { stage: DeveloperAppStage; timeoutMs?: number }) => void;
 	browserOperationOwned?: boolean;
 	listTimeoutMs?: number;
 	refreshToolsTimeoutMs?: number;
@@ -82,6 +121,7 @@ export interface ChatgptDeveloperAppCliDependencies {
 			abortSignal?: AbortSignal;
 			browserOperationOwned?: boolean;
 			modelStrategy?: BrowserModelStrategy;
+			onInventoryStage?: (stage: DeveloperAppInventoryStage) => void;
 		},
 	) => ChatgptDeveloperAppCliAdapter;
 }
@@ -362,10 +402,18 @@ export async function runChatgptDeveloperAppOperationForCli(
 			? new AbortController()
 			: null;
 	const active: { adapter: ChatgptDeveloperAppCliAdapter | null } = { adapter: null };
+	let stage: DeveloperAppStage = "browser-resolution";
+	let failureStage: DeveloperAppStage | undefined;
+	let operationFailure: unknown;
+	const reportStage = (nextStage: DeveloperAppStage) => {
+		stage = nextStage;
+		dependencies.onProgress?.({ stage });
+	};
 	const operation = async () => {
 		const browser = await createBrowser(userConfig, { target: "chatgpt" });
 		abortController?.signal.throwIfAborted();
 		const run = async (listOptions: BrowserProviderListOptions) => {
+			reportStage("interaction-admission");
 			await listOptions.interactionGovernor?.beforeInteraction("generic", abortController?.signal);
 			const exactBrowser = scopeChatgptDeveloperAppBrowser(browser, listOptions);
 			active.adapter = createAdapter(
@@ -378,11 +426,13 @@ export async function runChatgptDeveloperAppOperationForCli(
 				{
 					abortSignal: abortController?.signal,
 					browserOperationOwned: dependencies.browserOperationOwned,
+					onInventoryStage: reportStage,
 				},
 			);
 			abortController?.signal.throwIfAborted();
 			let adapterFailure: { error: unknown } | undefined;
 			try {
+				reportStage("inventory");
 				if (input.action === "test" && input.submit) {
 					return {
 						action: "list" as const,
@@ -404,9 +454,11 @@ export async function runChatgptDeveloperAppOperationForCli(
 				}
 				return await executeChatgptDeveloperAppOperation(input, active.adapter);
 			} catch (error) {
+				failureStage = stage;
 				adapterFailure = { error };
 				throw error;
 			} finally {
+				reportStage("cleanup");
 				const adapter = active.adapter;
 				active.adapter = null;
 				await closeDeveloperAppAdapter(adapter, adapterFailure);
@@ -419,6 +471,7 @@ export async function runChatgptDeveloperAppOperationForCli(
 			throw new Error("ChatGPT developer-app affinity requires utility-operation support.");
 		}
 		const submitting = input.action === "test" && input.submit;
+		reportStage("utility-admission");
 		const observed = browser.runUtilityBrowserOperation
 			? await browser.runUtilityBrowserOperation({
 					options: { abortSignal: abortController?.signal },
@@ -465,11 +518,31 @@ export async function runChatgptDeveloperAppOperationForCli(
 					userConfig.auracallProfile ?? "default",
 				),
 		);
+		dependencies.onProgress?.({ stage, timeoutMs });
 		return await withChatgptDeveloperAppDeadline(
 			operation(),
 			timeoutMs,
 			`ChatGPT developer-app ${input.action} timed out after ${timeoutMs}ms.`,
 			(error) => abortController?.abort(error),
+			() =>
+				new DeveloperAppTimeoutError(
+					`ChatGPT developer-app ${input.action} timed out after ${timeoutMs}ms.`,
+					stage,
+					timeoutMs,
+				),
+		);
+	} catch (error) {
+		operationFailure = error;
+		if (input.action !== "list" || error instanceof DeveloperAppTimeoutError) throw error;
+		throw Object.assign(
+			new Error(error instanceof Error ? error.message : String(error), { cause: error }),
+			{
+				stage: failureStage ?? stage,
+				code:
+					typeof (error as { code?: unknown } | null)?.code === "string"
+						? (error as { code: string }).code
+						: "developer_app_failed",
+			},
 		);
 	} finally {
 		abortController?.abort();
@@ -483,7 +556,16 @@ export async function runChatgptDeveloperAppOperationForCli(
 				closeTimeoutMs,
 				`ChatGPT developer-app browser client close timed out after ${closeTimeoutMs}ms.`,
 			).catch((error: unknown) => {
-				if (hasUnknownOwnedRequestCleanup(error)) throw error;
+				if (hasUnknownOwnedRequestCleanup(error)) {
+					if (input.action !== "list") throw error;
+					throw Object.assign(
+						new AggregateError(
+							operationFailure === undefined ? [error] : [operationFailure, error],
+							"Developer-app owned cleanup remains unknown.",
+						),
+						{ stage: "cleanup", code: "developer_app_cleanup_unknown" },
+					);
+				}
 			});
 		}
 	}
@@ -558,6 +640,7 @@ async function withChatgptDeveloperAppDeadline<T>(
 	timeoutMs: number,
 	message: string,
 	onTimeout?: (error: Error) => void,
+	createError?: () => Error,
 ): Promise<T> {
 	let timeout: ReturnType<typeof setTimeout> | null = null;
 	try {
@@ -565,7 +648,7 @@ async function withChatgptDeveloperAppDeadline<T>(
 			operation,
 			new Promise<never>((_resolve, reject) => {
 				timeout = setTimeout(() => {
-					const error = new Error(message);
+					const error = createError?.() ?? new Error(message);
 					try {
 						onTimeout?.(error);
 					} finally {

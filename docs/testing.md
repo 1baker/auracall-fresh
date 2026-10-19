@@ -1,3 +1,10 @@
+- Developer-app inventory failure diagnostics (provider-free, issue325):
+  `pnpm vitest run tests/cli/chatgptDeveloperAppsCommand.test.ts tests/cli/developerAppTerminalExit.test.ts`.
+  Public operation tests distinguish identity, inventory and cleanup deadlines
+  and preserve immediate refusal. Actual CLI action fixtures prove JSON/nonzero
+  status, queue refusal and release before terminal exit. Provider reads and
+  managed-browser cleanup remain separate acceptance.
+
 - Late paused events during owned Fetch shutdown (provider-free, issue337):
   `pnpm vitest run tests/browser/backendRequestAdmission.test.ts -t 'late paused event during owned Fetch shutdown'`.
   Actual observer/guard/authority composition proves callbacks arriving during
