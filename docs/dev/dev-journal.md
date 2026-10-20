@@ -1,3 +1,29 @@
+## 2026-10-19 — Issue311 plain-prose diagnostic regression repaired locally
+
+Plan0441 qualifies the original route from contemporaneous private diagnostics.
+Original Stop/answer observations bracket but do not resolve completion time versus
+the session error. Current public collector returns the original answer in10192ms;
+non-whitespace content exactly matches the authoritative original read. An initially
+strict table-whitespace oracle is retained as a false positive.
+
+The same page exposes a reproducible progress defect: snapshot557chars versus
+assistant-turn-no-text/zero. Sanitized regression RED19ms then GREEN8ms; wrapper
+child control passes, role/boundary controls remain red. Root-class control was
+invalid under the fixture's exact-selector matching and is not hypothesis evidence.
+Progress now includes plain role-bearing root prose after preferred content and
+retains exclusions/boundaries. Affected127tests/8suites pass (one existing skip),
+typecheck/scoped lint pass; build, review/integration and installed readback pending.
+No prompt, retry, timeout increase or historical-root-cause claim. Issue311 stays
+open for the unresolved historical timing evidence.
+
+## 2026-10-19 — Issue311 completed-answer timeout diagnosis starts
+
+Plan0441/fix/issue311-completed-answer starts from80d7caf0d. Matching retained
+session metadata confirms the180s timeout but has no runtime locator and empty
+model logs. Narrow original-window history has two unqualified route candidates;
+next qualify identity and construct a deterministic collector loop. No prompt,
+retry or timeout increase. Issue317 remains separately blocked under Plan0440.
+
 ## 2026-10-19 — Issue317 diagnosis reaches missing-evidence gate
 
 Plan0440 remains OPEN; historical missing-Light failure is unreproduced. All 21

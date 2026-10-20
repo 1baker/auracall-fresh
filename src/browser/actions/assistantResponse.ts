@@ -795,7 +795,9 @@ function buildAssistantResponseProgressExpression(responseBoundary?: AssistantRe
     }
     const candidates = [];
     if (assistantTurn) {
-      if (assistantTurn.matches?.(CONTENT_SELECTOR)) candidates.push(assistantTurn);
+      // Like the collector, accept plain role-bearing prose without a markdown
+      // wrapper. Descendant content stays preferred; exclusions apply below.
+      candidates.push(assistantTurn);
       candidates.push(...Array.from(assistantTurn.querySelectorAll(CONTENT_SELECTOR)));
     }
     let assistantTextChars = 0;

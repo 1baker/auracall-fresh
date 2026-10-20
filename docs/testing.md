@@ -3736,3 +3736,16 @@ fail; restored source passes. Lost/expired ownership and storage failure abort e
 if the callback ignores cancellation, and all heartbeat timers stop. Both storage
 adapters preserve meaningful-use time and absolute expiry; stale maintenance cannot
 invalidate a renewed claim. Settlement must not revive a failed heartbeat.
+
+### Plain assistant prose and progress (issue311)
+
+`pnpm vitest run tests/browser/pageActionsExpressions.test.ts tests/browser/pageActions.test.ts tests/browser/observationLease.test.ts`
+
+A sanitized retained-conversation fixture has a role-bearing search unit with
+plain prose and no article, legacy role or markdown wrapper. Snapshot and progress
+must agree that it has answer text. Before repair, progress reports zero chars;
+adding only a content wrapper passes, while role/boundary controls retain failure.
+Keep descendant prose preferred over parent chrome, reject tool-only parent text,
+and reject turns below the response boundary. Progress carries counts/fingerprints,
+not raw answer text. These checks do not establish when a historical answer
+completed relative to its outer session deadline; preserve that uncertainty.

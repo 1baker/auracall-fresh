@@ -150,6 +150,32 @@ describe('browser automation expressions', () => {
     });
   });
 
+  test('response progress recognizes the same plain search-unit answer as the collector', () => {
+    // Sanitized from the retained issue311 conversation: role-bearing search
+    // unit, plain prose, no article/legacy role or markdown wrapper.
+    const unit = new FixtureElement(
+      { 'data-content-search-unit-key': 'fixture-turn:assistant' },
+      'Read-only connector answer.',
+      'Read-only connector answer.',
+      '<p>Read-only connector answer.</p>',
+      [ASSISTANT_ROLE_SELECTOR],
+    );
+
+    expect(runAssistantSnapshotFixture([unit], 0)).toMatchObject({
+      text: 'Read-only connector answer.',
+      turnIndex: 0,
+    });
+    expect(runAssistantProgressFixture({ turns: [unit], responseBoundary: 0 })).toMatchObject({
+      state: 'assistant-text',
+      assistantTextChars: 27,
+      assistantTurnIndex: 0,
+    });
+    expect(runAssistantProgressFixture({ turns: [unit], responseBoundary: 1 })).toMatchObject({
+      state: 'no-assistant-turn',
+      assistantTextChars: 0,
+    });
+  });
+
   test('assistant extractor skips an earlier tool card and returns later final prose in the same turn', () => {
     const toolCard = new FixtureElement({ 'data-testid': 'tool-approval-card' });
     const toolStatus = new FixtureElement(
@@ -216,7 +242,7 @@ describe('browser automation expressions', () => {
       {},
       { '[data-testid="tool-approval-card"]': toolCard },
     );
-    const turn = new FixtureElement({ 'data-turn': 'assistant' }, '', '', '', [], {
+    const turn = new FixtureElement({ 'data-turn': 'assistant' }, toolStatus.innerText, toolStatus.textContent, '', [], {
       '.markdown': [toolStatus],
       '[data-testid="tool-approval-card"]': [toolCard],
     });
@@ -261,8 +287,8 @@ describe('browser automation expressions', () => {
         'data-message-id': 'message-experiment-51-turn-03',
         'data-testid': 'conversation-turn-experiment-51-03',
       },
-      '',
-      '',
+      'Provider control chrome',
+      'Provider control chrome',
       '',
       [],
       {
