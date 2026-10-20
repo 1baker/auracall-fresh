@@ -1,3 +1,16 @@
+## 2026-10-20 — Issue275 verified as already repaired
+
+Issue275 ownership JSON parsing is repaired by PR279 / 212f3ef489f3574172bb1c9129b4c0698f319e47.
+Current source and active installed issue311 runtime retain validation and atomic
+publication. Focused desktop gate/observation/native tests: 12 passed in 12.51s.
+Installed public withAutomation probe rejects empty, truncated, null and empty-object
+records with actionable ownership errors, preserves bytes and dispatches zero effects.
+Only temporary fixture directories were touched; no live owner recovery or provider
+operation. Existing checked-in issue253-control-diagnosis red/green receipts preserve
+the original failure. No new runtime patch or installation needed. Reconcile issue275
+as completed; historical origin of the corrupt record remains unproven.
+Memory disposition forbidden: no explicit memory save request.
+
 ## 2026-10-19 — Issue311 diagnostic correction installed (Plan0441 packet closed)
 
 PR352 / 6b07a6c845b27c0facb9415dbd31c3aa09cc1c17 passes installed public readback
