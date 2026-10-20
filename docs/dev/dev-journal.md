@@ -1,3 +1,22 @@
+## 2026-10-19 — Issue317 diagnosis reaches missing-evidence gate
+
+Plan0440 remains OPEN; historical missing-Light failure is unreproduced. All 21
+focused tests and bounded installed selector probes pass, including exact Sol
+Medium-to-Light with Instant readback. Model/effort controls are captured privately;
+GPT-6/Instant restored, no Send. Stalled tab census and failed bounded trusted-pointer
+inspection are retained separately. No matching original browser postmortem found
+in the bounded search; file-searcher coverage is degraded. User asked for the
+original diagnostic location or sanitized failing menu. No trustworthy red-capable
+loop yet: follow Matt's Phase1 stop, retain fail-closed semantics, and do not claim
+a source repair. Runtime and wrappers remain unchanged.
+
+## 2026-10-19 — Issue317 Light selector repair starts (Plan0440)
+
+User requested fixing the next triaged ticket. Serial lane fix/issue317-light-selector
+starts from be4a6967a. Baseline 21 thinking-time tests pass; the reported intermittent
+missing-Light symptom is not reproduced. Next: capture bounded model/effort controls
+and create a minimized regression before hypothesis testing. No Send or app mutation.
+
 ## 2026-10-19 — Issue337 installed settings cleanup accepted (Plan0439 closed)
 
 Merged PR349 / 510bbc1225952d069cf867fea8bddd81d8aa8203 passes the installed
