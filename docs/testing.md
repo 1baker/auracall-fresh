@@ -3749,3 +3749,9 @@ Keep descendant prose preferred over parent chrome, reject tool-only parent text
 and reject turns below the response boundary. Progress carries counts/fingerprints,
 not raw answer text. These checks do not establish when a historical answer
 completed relative to its outer session deadline; preserve that uncertainty.
+
+Plan0441 / PR352 installed readback on the qualified original conversation verifies
+public progress reports 557 chars (matching snapshot) and the public collector returns
+the full authoritative answer in 10832 ms. Compare non-whitespace content because
+rendered table cells introduce whitespace; retain the initial overly strict oracle
+as a false positive. This does not prove completion before the historical deadline.

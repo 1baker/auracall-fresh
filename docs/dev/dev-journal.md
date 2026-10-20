@@ -1,3 +1,20 @@
+## 2026-10-19 — Issue311 diagnostic correction installed (Plan0441 packet closed)
+
+PR352 / 6b07a6c845b27c0facb9415dbd31c3aa09cc1c17 passes installed public readback
+on the qualified original conversation: progress 557 chars/assistant-text instead of
+zero; collector returns the full original answer in 10832 ms with exact non-whitespace
+equivalence. All 597 build files match; installed contract, native process/assignment/
+window and unchanged guard checks pass. CLI/MCP wrappers now select the tested
+build, version 0.1.1. Focused 164 tests / 10 suites pass with one existing skip, plus
+typecheck/build/scoped lint; 33 planning findings are unchanged baseline debt.
+
+The bounded progress defect is repaired. Historical completion relative to the
+180s deadline remains unproven; issue311 stays open as needs-info. No prompt,
+execution retry, timeout increase, browser restart or owner/warning reset. Private
+receipts preserve failed probes, corrected whitespace oracle, original timing,
+source regression, build parity and activation. Memory disposition forbidden:
+no explicit save request. Issue317/Plan0440 remains separately blocked.
+
 ## 2026-10-19 — Issue311 plain-prose diagnostic regression repaired locally
 
 Plan0441 qualifies the original route from contemporaneous private diagnostics.
