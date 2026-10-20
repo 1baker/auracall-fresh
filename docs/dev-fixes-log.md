@@ -1,3 +1,11 @@
+## 2026-10-20 — Reconcile stale ownership-parse ticket
+
+Issue275 is covered by PR279's ownership validation and atomic publication.
+Verify the active installed module before proposing another patch: current public
+admission rejects malformed records without SyntaxError, preserves custody and
+runs no effect. The historical corruption cause remains unknown; do not delete a
+retained ownership record to make inventory succeed.
+
 ## 2026-10-19 — Include plain assistant prose in passive progress
 
 Issue311 original-conversation inspection exposed snapshot/progress disagreement:
