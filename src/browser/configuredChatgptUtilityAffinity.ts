@@ -18,6 +18,7 @@ import {
 	type BrowserTabLeaseRegistry,
 	getCurrentTabLeaseOwnerIdentity,
 	type TabLeaseClaim,
+	type TabLeaseScope,
 } from "../../packages/browser-service/src/service/tabLeaseRegistry.js";
 import { reconcileStaleTabLeases } from "../../packages/browser-service/src/service/tabLeaseRestartReconciliation.js";
 import { acquireEphemeralBrowserTab } from "../accountMirror/liveFollowTabCoordinator.js";
@@ -25,8 +26,8 @@ import { withAccountMirrorProviderTrafficPlan } from "../accountMirror/providerT
 import { resolveConfiguredServiceAccountId } from "../config/serviceAccountIdentity.js";
 import type { ResolvedUserConfig } from "../config.js";
 import {
-	resolveChatgptBackendRequestsPerMinute,
 	resolveChatgptBackendRequestBudgetWaitMs,
+	resolveChatgptBackendRequestsPerMinute,
 	resolveChatgptInteractionsPerMinute,
 	resolveChatgptTenantLimits,
 } from "../runtime/tenantExecutionLimits.js";
@@ -249,6 +250,15 @@ export async function runConfiguredChatgptUtilityOperation<TResult>(input: {
 		closeTarget: ({ host, port, targetId }) => closeTarget({ host, port }, targetId),
 	});
 
+	const leaseHeartbeat = maintainUtilityLease({
+		registry: runtime.registry,
+		tab,
+		scope,
+		utilityId: input.utilityId,
+		now,
+		abortSignal: input.options?.abortSignal,
+	});
+
 	let effectState: "settled" | "outcome-unknown" = "settled";
 	let outcome: "succeeded" | "failed" = "succeeded";
 	let warningRecordError: unknown = null;
@@ -263,6 +273,7 @@ export async function runConfiguredChatgptUtilityOperation<TResult>(input: {
 		recordLibraryInventoryStage(input.options, "affinity-build-options");
 		const options = await input.buildListOptions({
 			...(input.options ?? {}),
+			abortSignal: leaseHeartbeat.signal,
 			host: tab.endpoint.host,
 			port: tab.endpoint.port,
 			tabTargetId: tab.lease.targetId,
@@ -300,19 +311,7 @@ export async function runConfiguredChatgptUtilityOperation<TResult>(input: {
 			baseGovernor,
 			now,
 		});
-		const assertOwnedLease = async () => {
-			const lease = (await runtime.registry?.list({ scope, states: ["active"] }))?.find(
-				(candidate) => candidate.leaseId === tab.lease.leaseId,
-			);
-			if (
-				!lease ||
-				lease.ownerOperationId !== input.utilityId ||
-				lease.targetId !== tab.lease.targetId ||
-				lease.revision !== tab.claim.revision
-			) {
-				throw new Error("Provider traffic tab lease ownership changed before utility action.");
-			}
-		};
+		const assertOwnedLease = leaseHeartbeat.assertOwnedLease;
 		backendRequests =
 			backendRequestLimit !== undefined
 				? createOwnedBackendRequestAuthority({
@@ -443,6 +442,24 @@ export async function runConfiguredChatgptUtilityOperation<TResult>(input: {
 		}
 		execution = { ok: false, error };
 	}
+	const heartbeatFailure = await leaseHeartbeat.stop();
+	if (heartbeatFailure) {
+		outcome = "failed";
+		effectState =
+			input.mutability === "provider-mutating" && providerRunStarted
+				? "outcome-unknown"
+				: "settled";
+		execution = {
+			ok: false,
+			error:
+				execution.ok || execution.error === heartbeatFailure.error
+					? heartbeatFailure.error
+					: new AggregateError(
+							[execution.error, heartbeatFailure.error],
+							"Utility operation and heartbeat failed.",
+						),
+		};
+	}
 	recordLibraryInventoryCleanupPhase(input.options, "affinity-settlement-started");
 	const settlement = settleConfiguredChatgptUtilityOperation({
 		governor,
@@ -455,6 +472,7 @@ export async function runConfiguredChatgptUtilityOperation<TResult>(input: {
 		initialError: warningRecordError,
 		backendRequests,
 		operationError: execution.ok ? undefined : execution.error,
+		heartbeatFailed: Boolean(heartbeatFailure),
 	});
 	const settlementResult = await waitForConfiguredChatgptUtilitySettlement(
 		settlement,
@@ -484,6 +502,85 @@ export async function runConfiguredChatgptUtilityOperation<TResult>(input: {
 	return execution.value;
 }
 
+/** Keep a responsive owner live through capacity waits and cleanup. Registry
+ * renewal advances the claim; serialize our observations with that update so
+ * neither a stale local read nor a maintenance snapshot can win the race. */
+function maintainUtilityLease(input: {
+	registry: BrowserTabLeaseRegistry;
+	tab: Awaited<ReturnType<typeof acquireEphemeralBrowserTab>>;
+	scope: TabLeaseScope;
+	utilityId: string;
+	now: () => Date;
+	abortSignal?: AbortSignal;
+}) {
+	const abort = new AbortController();
+	const signal = input.abortSignal
+		? AbortSignal.any([input.abortSignal, abort.signal])
+		: abort.signal;
+	let pending = Promise.resolve();
+	const owned = <T>(operation: () => Promise<T>): Promise<T> => {
+		const result = pending.then(operation);
+		pending = result.then(
+			() => undefined,
+			() => undefined,
+		);
+		return result;
+	};
+	let failure: { error: unknown } | undefined;
+	let stopped = false;
+	let timer: ReturnType<typeof setTimeout> | undefined;
+	let renewal = Promise.resolve();
+	const schedule = () => {
+		timer = setTimeout(() => {
+			renewal = owned(async () => {
+				const renewed = await input.registry.heartbeat({
+					claim: input.tab.claim,
+					now: input.now().toISOString(),
+					idleTtlMs: 5 * 60_000,
+				});
+				if (!renewed.ok)
+					throw new Error(`ChatGPT utility lease heartbeat failed: ${renewed.conflict.kind}.`);
+				input.tab.claim = renewed.value.claim;
+				input.tab.lease = renewed.value.lease;
+			}).then(
+				() => {
+					if (!stopped) schedule();
+				},
+				(error: unknown) => {
+					failure = { error };
+					abort.abort(error);
+				},
+			);
+		}, 30_000);
+		timer.unref?.();
+	};
+	schedule();
+	return {
+		signal,
+		assertOwnedLease: () =>
+			owned(async () => {
+				if (failure) throw failure.error;
+				const lease = (await input.registry.list({ scope: input.scope, states: ["active"] })).find(
+					(candidate) => candidate.leaseId === input.tab.lease.leaseId,
+				);
+				if (
+					!lease ||
+					lease.ownerOperationId !== input.utilityId ||
+					lease.targetId !== input.tab.lease.targetId ||
+					lease.revision !== input.tab.claim.revision
+				)
+					throw new Error("Provider traffic tab lease ownership changed before utility action.");
+			}),
+		async stop() {
+			stopped = true;
+			clearTimeout(timer);
+			await renewal;
+			await pending;
+			return failure;
+		},
+	};
+}
+
 async function settleConfiguredChatgptUtilityOperation(input: {
 	governor: ReturnType<typeof createLedgerBackedBrowserInteractionGovernor> | null;
 	registry: BrowserTabLeaseRegistry;
@@ -495,6 +592,7 @@ async function settleConfiguredChatgptUtilityOperation(input: {
 	initialError: unknown;
 	backendRequests?: ReturnType<typeof createOwnedBackendRequestAuthority>;
 	operationError?: unknown;
+	heartbeatFailed: boolean;
 }): Promise<unknown> {
 	const failures: unknown[] = input.initialError ? [input.initialError] : [];
 	let effectState = input.effectState;
@@ -515,33 +613,36 @@ async function settleConfiguredChatgptUtilityOperation(input: {
 		}
 	}
 	let claim: TabLeaseClaim = input.tab.claim;
-	try {
-		const used = await input.registry.recordMeaningfulUse({
-			claim,
-			now: input.now().toISOString(),
-			idleTtlMs: 5 * 60_000,
-			effectState,
-		});
-		if (!used.ok) throw new Error(`ChatGPT utility heartbeat failed: ${used.conflict.kind}.`);
-		claim = used.value.claim;
-	} catch (error) {
-		failures.push(error);
+	// Failed liveness must not turn final settlement into a lease revival.
+	if (!input.heartbeatFailed) {
 		try {
-			const current = (await input.registry.list()).find(
-				(lease) =>
-					lease.leaseId === input.tab.lease.leaseId &&
-					lease.state === "active" &&
-					lease.ownerOperationId === input.utilityId,
-			);
-			if (current) {
-				claim = {
-					leaseId: current.leaseId,
-					revision: current.revision,
-					operationId: input.utilityId,
-				};
+			const used = await input.registry.recordMeaningfulUse({
+				claim,
+				now: input.now().toISOString(),
+				idleTtlMs: 5 * 60_000,
+				effectState,
+			});
+			if (!used.ok) throw new Error(`ChatGPT utility heartbeat failed: ${used.conflict.kind}.`);
+			claim = used.value.claim;
+		} catch (error) {
+			failures.push(error);
+			try {
+				const current = (await input.registry.list()).find(
+					(lease) =>
+						lease.leaseId === input.tab.lease.leaseId &&
+						lease.state === "active" &&
+						lease.ownerOperationId === input.utilityId,
+				);
+				if (current) {
+					claim = {
+						leaseId: current.leaseId,
+						revision: current.revision,
+						operationId: input.utilityId,
+					};
+				}
+			} catch (recoveryError) {
+				failures.push(recoveryError);
 			}
-		} catch (recoveryError) {
-			failures.push(recoveryError);
 		}
 	}
 	try {

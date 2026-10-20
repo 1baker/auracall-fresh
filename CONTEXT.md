@@ -17,6 +17,11 @@ locking, complete history and warning/ownership fences remain authoritative.
 CLI stage diagnostics preserve original error identity and aggregate causes.
 Identical concurrent tab-custody lists share only an unfinished observation,
 with separate caller clones; completed custody state is never cached.
+Active utility operations renew tab-owner liveness every 30 seconds through
+provider work and cleanup. A heartbeat advances the fenced claim without changing
+last meaningful use or the absolute deadline. Renewal and local ownership checks
+are serialized. Expired/lost claims or storage failure abort work; failed renewal
+cannot revive ownership during final settlement. Idle operations stop renewing.
 Budget-wait cancellation includes already-aborted timer entry after asynchronous
 ledger reads; proven-unsent cancellation must not poison later admission.
 
