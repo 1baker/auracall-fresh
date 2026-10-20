@@ -1,3 +1,19 @@
+## 2026-10-19 — Keep long utility work alive without relaxing expiry
+
+Settings-enabled inventory exposed a missing active-owner heartbeat. A bounded
+installed capture failed after 378.60 seconds with utility ownership changed and
+stale heartbeat/idle claims. Maintenance had expired the five-minute lease while
+work waited under the configured request budget. A virtual-time public utility
+and maintenance loop reproduces the same error in 18 ms; short work and absent
+maintenance controls pass.
+
+Renew only responsive active work, every 30 seconds through cleanup. Registry
+heartbeats advance the claim for maintenance CAS protection while preserving
+last meaningful use and absolute expiry. Serialize local renewal/ownership reads.
+Lost/expired ownership or storage failure aborts work, and settlement never renews
+a failed heartbeat. Stop and drain renewal before final settlement. Existing live
+process expiry remains enforced; no ownership, warning or request limit is reset.
+
 ## 2026-10-19 — Verify installed terminal inventory separately
 
 Plan0438 normal installed list on merged e8b704bc7 exits 0 in 271.03 seconds and

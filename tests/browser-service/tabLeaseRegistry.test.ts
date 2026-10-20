@@ -17,6 +17,92 @@ const scope: TabLeaseScope = {
 };
 
 describe("tabLeaseRegistry (package)", () => {
+	test.each([
+		"memory",
+		"file",
+	])("heartbeat renews liveness without fabricating meaningful use; %s", async (storage) => {
+		const directory = await mkdtemp(path.join(os.tmpdir(), "tab-lease-heartbeat-"));
+		const registry =
+			storage === "file"
+				? createFileBackedBrowserTabLeaseRegistry({ registryRoot: directory })
+				: createInMemoryBrowserTabLeaseRegistry();
+		try {
+			const reserved = await registry.reserve({
+				scope,
+				targetId: "target-heartbeat",
+				workload: { kind: "ephemeral", operationId: "active-work" },
+				operationId: "active-work",
+				now: "2026-10-19T12:00:00.000Z",
+				idleTtlMs: 60_000,
+				absoluteTtlMs: 90_000,
+			});
+			if (!reserved.ok) throw new Error("Expected reservation");
+			const missed = await registry.reserve({
+				scope,
+				targetId: "missed-heartbeat",
+				workload: { kind: "ephemeral", operationId: "missed-heartbeat" },
+				operationId: "missed-heartbeat",
+				now: "2026-10-19T12:00:00.000Z",
+				idleTtlMs: 60_000,
+				absoluteTtlMs: 90_000,
+			});
+			if (!missed.ok) throw new Error("Expected second reservation");
+			await expect(
+				registry.heartbeat({
+					claim: missed.value.claim,
+					now: "2026-10-19T12:01:00.000Z",
+					idleTtlMs: 60_000,
+				}),
+			).resolves.toMatchObject({
+				ok: false,
+				conflict: { kind: "invalid-transition" },
+			});
+			const renewed = await registry.heartbeat({
+				claim: reserved.value.claim,
+				now: "2026-10-19T12:00:45Z",
+				idleTtlMs: 60_000,
+			});
+			expect(renewed).toMatchObject({
+				ok: true,
+				value: {
+					lease: {
+						heartbeatAt: "2026-10-19T12:00:45.000Z",
+						lastMeaningfulUseAt: "2026-10-19T12:00:00.000Z",
+						idleExpiresAt: "2026-10-19T12:01:30.000Z",
+						absoluteExpiresAt: "2026-10-19T12:01:30.000Z",
+					},
+				},
+			});
+			await expect(
+				registry.markLost({
+					leaseId: reserved.value.lease.leaseId,
+					expectedRevision: reserved.value.claim.revision,
+					now: "2026-10-19T12:01:00Z",
+					reason: "heartbeat-expired",
+				}),
+			).resolves.toMatchObject({ ok: false, conflict: { kind: "stale-claim" } });
+			if (!renewed.ok) throw new Error("Expected renewed claim");
+			await expect(
+				registry.heartbeat({
+					claim: renewed.value.claim,
+					now: "2026-10-19T12:01:31Z",
+					idleTtlMs: 60_000,
+				}),
+			).resolves.toMatchObject({ ok: false, conflict: { kind: "invalid-transition" } });
+			const observed =
+				storage === "file"
+					? await createFileBackedBrowserTabLeaseRegistry({ registryRoot: directory }).list()
+					: await registry.list();
+			expect(observed[0]).toMatchObject({
+				state: "active",
+				heartbeatAt: "2026-10-19T12:00:45.000Z",
+				lastMeaningfulUseAt: "2026-10-19T12:00:00.000Z",
+			});
+		} finally {
+			await rm(directory, { recursive: true, force: true });
+		}
+	});
+
 	test("concurrent custody reads share only unfinished snapshots across registry instances", async () => {
 		const directory = await mkdtemp(path.join(os.tmpdir(), "tab-lease-read-contention-"));
 		const first = createFileBackedBrowserTabLeaseRegistry({ registryRoot: directory });
@@ -579,7 +665,7 @@ describe("tabLeaseRegistry (package)", () => {
 		).toMatchObject({ targetId: "target-b", revision: 1 });
 	});
 
-	test("extends idle lifetime only for meaningful use and never past absolute expiry", async () => {
+	test("meaningful use renews idle lifetime within absolute expiry", async () => {
 		const registry = createInMemoryBrowserTabLeaseRegistry({ createLeaseId: () => "lease-a" });
 		const reserved = await registry.reserve({
 			scope,

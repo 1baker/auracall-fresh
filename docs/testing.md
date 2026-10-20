@@ -3721,3 +3721,17 @@ Installed acceptance must verify normal CLI output, inventoryComplete, owned
 cleanup, exact build identity and current native browser proof. A diagnostic shim
 or fixture pass alone does not establish installed acceptance. The settings-path
 cleanup failure observed during Plan0438 remains tracked in issue337.
+
+### Long utility ownership and maintenance (issue337)
+
+`pnpm vitest run tests/browser/configuredChatgptUtilityAffinity.test.ts tests/browser-service/tabLeaseRegistry.test.ts tests/browser-service/tabLeaseRestartReconciliation.test.ts`
+
+A virtual-time utility read crosses the five-minute heartbeat deadline while a
+second maintenance owner reconciles it. Before repair it reproduces the installed
+ownership-change and stale-claim aggregate in milliseconds; short work and absent
+maintenance are controls. A delayed storage acknowledgement overlaps an ownership
+check and proves claim serialization. Removing that serialization makes the test
+fail; restored source passes. Lost/expired ownership and storage failure abort even
+if the callback ignores cancellation, and all heartbeat timers stop. Both storage
+adapters preserve meaningful-use time and absolute expiry; stale maintenance cannot
+invalidate a renewed claim. Settlement must not revive a failed heartbeat.

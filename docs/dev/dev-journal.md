@@ -1,3 +1,24 @@
+## 2026-10-19 — Issue337 ownership expiry reproduced and repaired locally
+
+Plan0439 capture on installed e8b704bc7 fails after 378.60 seconds: utility ownership
+changed, then heartbeat/idle stale claims. The minimized public utility/maintenance
+loop reproduces this in 18 ms only after crossing the five-minute heartbeat with
+maintenance present. Active utility work now renews liveness through cleanup;
+meaningful use, absolute deadlines and expiry of unresponsive owners remain
+separate. Serialization has a mutation-tested concurrent acknowledgement case.
+Lost ownership, storage failure and expired renewal remain errors; failed renewal
+cannot be revived by settlement. Local validation/review, integration and installed
+settings/list acceptance remain pending. No PR335 code was imported.
+
+## 2026-10-19 — Issue337 settings cleanup repair starts (Plan0439)
+
+User requested fixing the remaining settings-enabled cleanup failure. The accepted
+list-only runtime remains active. Work begins on fix/issue337-settings-cleanup
+from333f03e99 in the isolated continuation worktree. One bounded nested-cause
+capture restores only optional settings observation, after current native proof.
+No app mutation, warning/owner reset or broader PR335 integration. Exact cause,
+fast regression and installed acceptance remain pending.
+
 ## 2026-10-19 — Issue325 installed inventory accepted (Plan0438 closed)
 
 PR347 / e8b704bc7 passes normal installed list in 271.03 seconds: exit 0,

@@ -1,14 +1,17 @@
 import { vi as activityMock } from "vitest";
+
 activityMock.mock("../../src/browser/chatgptTabActivity.js", async (importOriginal) => {
 	const original = await importOriginal<typeof import("../../src/browser/chatgptTabActivity.js")>();
 	return { ...original, requireInactiveChatgptTab: activityMock.fn(async () => {}) };
 });
+
 import { describe, expect, test, vi } from "vitest";
 
 import { createInMemoryProviderInteractionLedger } from "../../packages/browser-service/src/service/interactionLedger.js";
 import { ProviderInteractionGovernorClosedError } from "../../packages/browser-service/src/service/ledgerInteractionGovernor.js";
 import type { BrowserMutationRecord } from "../../packages/browser-service/src/service/mutationDispatcher.js";
 import { createInMemoryBrowserTabLeaseRegistry } from "../../packages/browser-service/src/service/tabLeaseRegistry.js";
+import { reconcileStaleTabLeases } from "../../packages/browser-service/src/service/tabLeaseRestartReconciliation.js";
 import { runConfiguredChatgptUtilityOperation } from "../../src/browser/configuredChatgptUtilityAffinity.js";
 import type { BrowserProviderListOptions } from "../../src/browser/providers/types.js";
 
@@ -23,6 +26,128 @@ const userConfig = {
 } as never;
 
 describe("configured ChatGPT utility affinity", () => {
+	test.each([
+		"active",
+		"lost-owner",
+		"storage-failure",
+		"expired",
+	])("maintains utility custody or fails closed; %s", async (mode) => {
+		vi.useFakeTimers();
+		vi.setSystemTime(new Date("2026-10-19T12:00:00Z"));
+		const owner = { processId: process.pid, instanceId: "fixture-utility" };
+		const registry = createInMemoryBrowserTabLeaseRegistry({ ownerIdentity: owner });
+		const ledger = createInMemoryProviderInteractionLedger();
+		const storageError = new Error("fixture heartbeat storage unavailable");
+		let signal: AbortSignal | undefined;
+		try {
+			const operation = runConfiguredChatgptUtilityOperation({
+				userConfig,
+				browserService: {
+					resolveServiceTarget: async () => ({
+						host: "127.0.0.1",
+						port: 45011,
+						managedBrowserProfile: "/managed/runtime-1/chatgpt",
+					}),
+				} as never,
+				utilityId: "settings-inventory",
+				mutability: "read-only",
+				options: { configuredUrl: "https://chatgpt.com/library", requireExistingTarget: true },
+				buildListOptions: async (options) => options,
+				run: async (options) => {
+					signal = options.abortSignal;
+					if (mode !== "active") {
+						if (mode === "storage-failure")
+							vi.spyOn(registry, "heartbeat").mockRejectedValueOnce(storageError);
+						else if (mode === "lost-owner") {
+							const [lease] = await registry.list();
+							await registry.markLost({
+								leaseId: lease.leaseId,
+								expectedRevision: lease.revision,
+								now: new Date().toISOString(),
+								reason: "restart-unverified",
+							});
+						}
+						if (mode === "expired") vi.setSystemTime(new Date(Date.now() + 5 * 60_000 + 1));
+						await vi.advanceTimersByTimeAsync(30_001);
+						expect(signal?.aborted).toBe(true);
+						// Deliberately ignore cancellation: the controller must still reject success.
+						return "observed";
+					}
+					await vi.advanceTimersByTimeAsync(5 * 60_000 + 1);
+					await reconcileStaleTabLeases({
+						registry,
+						scope: {
+							runtimeProfileId: "runtime-1",
+							service: "chatgpt",
+							managedBrowserProfile: "/managed/runtime-1/chatgpt",
+							tenantKey: "service-account:chatgpt:account-id=account-1",
+						},
+						currentOwner: { processId: process.pid + 100_000, instanceId: "maintenance" },
+						isOwnerAlive: () => true,
+					});
+					const heartbeat = registry.heartbeat.bind(registry);
+					let release!: () => void;
+					let entered!: () => void;
+					const held = new Promise<void>((resolve) => {
+						release = resolve;
+					});
+					const started = new Promise<void>((resolve) => {
+						entered = resolve;
+					});
+					vi.spyOn(registry, "heartbeat").mockImplementationOnce(async (input) => {
+						const result = await heartbeat(input);
+						entered();
+						await held;
+						return result;
+					});
+					await vi.advanceTimersByTimeAsync(30_000);
+					await started;
+					const governor = options.providerTrafficGovernor;
+					if (!governor) throw new Error("Expected provider traffic governor");
+					const actionResult = governor
+						.begin({
+							kind: "navigate",
+							interactionClass: "conversation-read",
+							source: "fixture:settings-restore",
+						})
+						.then(
+							(action) => ({ ok: true as const, action }),
+							(error) => ({ ok: false as const, error }),
+						);
+					await vi.advanceTimersByTimeAsync(0);
+					release();
+					const observed = await actionResult;
+					if (!observed.ok) throw observed.error;
+					const action = observed.action;
+					await action?.settle({ outcome: "succeeded" });
+					return "observed";
+				},
+				deps: {
+					currentOwner: owner,
+					isOwnerAlive: () => true,
+					createRuntime: () => ({ registry, ledger }) as never,
+					listTargets: async () =>
+						[{ id: "library-target", url: "https://chatgpt.com/library" }] as never,
+					mutationAudit: async () => undefined,
+				},
+			});
+			if (mode === "active") await expect(operation).resolves.toBe("observed");
+			else if (mode === "storage-failure") await expect(operation).rejects.toBe(storageError);
+			else if (mode === "expired") {
+				await expect(operation).rejects.toThrow(
+					"ChatGPT utility lease heartbeat failed: invalid-transition.",
+				);
+				expect((await registry.list())[0]).toMatchObject({
+					idleExpiresAt: "2026-10-19T12:05:00.000Z",
+					lastMeaningfulUseAt: "2026-10-19T12:00:00.000Z",
+				});
+			} else await expect(operation).rejects.toThrow("Utility operation and settlement failed.");
+			expect(vi.getTimerCount()).toBe(0);
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
 	test("adopts the existing exact Library target without opening or closing a page", async () => {
 		const registry = createInMemoryBrowserTabLeaseRegistry({
 			createLeaseId: (() => {

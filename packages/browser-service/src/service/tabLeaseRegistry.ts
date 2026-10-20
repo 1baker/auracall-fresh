@@ -179,6 +179,15 @@ export interface BrowserTabLeaseRegistry {
     lease: BrowserTabLease;
     claim: TabLeaseClaim;
   }>>;
+  /** Renew active-owner liveness without recording meaningful provider activity. */
+  heartbeat(input: {
+    claim: TabLeaseClaim;
+    now: string;
+    idleTtlMs: number;
+  }): Promise<TabLeaseResult<{
+    lease: BrowserTabLease;
+    claim: TabLeaseClaim;
+  }>>;
   recordMeaningfulUse(input: {
     claim: TabLeaseClaim;
     now: string;
@@ -586,16 +595,18 @@ class InMemoryBrowserTabLeaseRegistry implements BrowserTabLeaseRegistry {
     };
   }
 
-  async recordMeaningfulUse(input: {
-    claim: TabLeaseClaim;
-    now: string;
-    idleTtlMs: number;
-    targetFingerprint?: string | null;
-    effectState?: TabLeaseEffectState;
-  }): Promise<TabLeaseResult<{
-    lease: BrowserTabLease;
-    claim: TabLeaseClaim;
-  }>> {
+  recordMeaningfulUse(input: Parameters<BrowserTabLeaseRegistry['recordMeaningfulUse']>[0]) {
+    return this.renewHeartbeat(input, true);
+  }
+
+  heartbeat(input: Parameters<BrowserTabLeaseRegistry['heartbeat']>[0]) {
+    return this.renewHeartbeat({ claim: input.claim, now: input.now, idleTtlMs: input.idleTtlMs }, false);
+  }
+
+  private async renewHeartbeat(
+    input: Parameters<BrowserTabLeaseRegistry['recordMeaningfulUse']>[0],
+    meaningfulUse: boolean,
+  ): ReturnType<BrowserTabLeaseRegistry['recordMeaningfulUse']> {
     const existing = this.leases.get(input.claim.leaseId);
     if (!existing) return { ok: false, conflict: { kind: 'not-found' } };
     if (
@@ -610,6 +621,10 @@ class InMemoryBrowserTabLeaseRegistry implements BrowserTabLeaseRegistry {
 
     const nowMs = parseTimestamp(input.now, 'now');
     const absoluteExpiresAtMs = parseTimestamp(existing.absoluteExpiresAt, 'absoluteExpiresAt');
+    if (!meaningfulUse && (nowMs >= parseTimestamp(existing.idleExpiresAt, 'idleExpiresAt') ||
+      (!isTabLeaseTtlExempt(existing) && nowMs >= absoluteExpiresAtMs))) {
+      return { ok: false, conflict: { kind: 'invalid-transition', lease: cloneLease(existing) } };
+    }
     if (nowMs > absoluteExpiresAtMs && !isTabLeaseTtlExempt(existing)) {
       return { ok: false, conflict: { kind: 'invalid-transition', lease: cloneLease(existing) } };
     }
@@ -618,7 +633,7 @@ class InMemoryBrowserTabLeaseRegistry implements BrowserTabLeaseRegistry {
       ...existing,
       revision: existing.revision + 1,
       heartbeatAt: now,
-      lastMeaningfulUseAt: now,
+      lastMeaningfulUseAt: meaningfulUse ? now : existing.lastMeaningfulUseAt,
       idleExpiresAt: new Date(
         isTabLeaseTtlExempt(existing)
           ? nowMs + normalizeTtl(input.idleTtlMs, 'idleTtlMs')
@@ -1045,6 +1060,10 @@ class FileBackedBrowserTabLeaseRegistry implements BrowserTabLeaseRegistry {
 
   bindConversation(input: Parameters<BrowserTabLeaseRegistry['bindConversation']>[0]) {
     return this.write((registry) => registry.bindConversation(input));
+  }
+
+  heartbeat(input: Parameters<BrowserTabLeaseRegistry['heartbeat']>[0]) {
+    return this.write((registry) => registry.heartbeat(input));
   }
 
   recordMeaningfulUse(input: Parameters<BrowserTabLeaseRegistry['recordMeaningfulUse']>[0]) {
