@@ -1,6 +1,6 @@
 # Plan0441 — Diagnose completed-answer collection timeout
 
-State: OPEN
+State: CLOSED
 Owner: ecochran76
 Issue: https://github.com/ecochran76/auracall/issues/311
 Branch: fix/issue311-completed-answer
@@ -8,14 +8,16 @@ Target: origin/main
 
 ## Current State
 
-The original conversation is qualified by a contemporaneous private readback.
-Current installed collection returns its original answer with only rendered-table
-whitespace differences. Historical completion versus deadline remains unproven.
-A separately confirmed passive-progress defect (557-char snapshot but zero text
-reported) is reproduced in19ms and locally repaired with a sanitized regression.
-Affected127tests/8suites, typecheck and scoped lint pass; build, integration and
-installed progress proof remain pending. Issue311 remains open for historical
-timing evidence; Plan0440/issue317 is a separate blocked diagnosis.
+The bounded diagnostic correction is merged in PR352 /
+6b07a6c845b27c0facb9415dbd31c3aa09cc1c17 and installed acceptance passes.
+The original conversation is qualified by contemporaneous private diagnostics.
+Installed public collection returns its full original answer in 10832 ms (exact
+non-whitespace equivalence), and public progress now reports assistant-text and
+557 chars, matching the snapshot instead of zero. CLI/MCP wrappers select this
+accepted build, version 0.1.1. Source checks pass 164 tests / 10 suites with one existing
+skip; exact build, installed contract, native process/assignment/window and guard
+proof pass. Historical completion time versus the old deadline remains unknown;
+issue311 stays open with a needs-info disposition. Plan0440/issue317 remains separate.
 
 ## Scope and acceptance
 
@@ -40,13 +42,13 @@ The exact original source artifact and contemporaneous diagnostics identify the
 original route. At16:04:24 Stop is present; at16:04:38 the later final answer is
 absent. Session terminal error is16:05:05; completion is first observed16:05:21,
 with a persisted answer proof at16:05:58. Completion before the deadline remains
-unproven. Current public collector returns that original answer in10192ms with
+unproven. Current public collector returns that original answer in 10192 ms with
 exact non-whitespace content equivalence; first oracle was too strict about table
 whitespace and is retained as a false positive, not bug evidence.
 
 A separate diagnostic contradiction is verified on the same qualified page:
-snapshot557chars, but progress reports assistant-turn-no-text and zero chars.
-A sanitized public expression fixture reproduces it in19ms. Bound this repair to
+snapshot557 chars, but progress reports assistant-turn-no-text and zero chars.
+A sanitized public expression fixture reproduces it in 19 ms. Bound this repair to
 accurate passive progress for a role-bearing plain answer without a markdown
 wrapper. Preserve existing content preference, excluded/tool-card checks and
 response-boundary qualification. No historical timeout root-cause or full incident
@@ -55,7 +57,7 @@ boundary rejection) are stated before one-variable controls. Wrapper-child addit
 passes; role and boundary controls retain failure. Original test is restored.
 
 Source repair, regression controls, affected checks, separate Standards/Spec
-review, exact merged installed progress readback and docs remain pending. Keep
+review, exact merged installed progress readback and docs are complete below. Keep
 issue311 open for historical timing uncertainty even after the bounded diagnostic
 correction lands. Original timeouts and failed diagnostic reads remain preserved.
 
@@ -71,8 +73,28 @@ response boundary. No new interface, alias, provider data or diagnostic logging.
 Affected collector/progress/recovery:127pass,1existing skip,8suites in10.93s.
 CLI/browser session runner:37pass,2suites in3.19s, including explicit overall
 timeout persistence. Total164passed; this is a focused selection, not full suite.
-Typecheck, build, scoped Biome and diff checks pass. Planning audit retains33
-preexisting findings, none for Plan0441. Fixed comparison80d7caf0d: primary
+Typecheck, build, scoped Biome and diff checks pass. Planning audit retains 33
+preexisting findings, none for Plan0441. Fixed comparison 80d7caf0d: primary
 Standards review finds no blocking convention, privacy, passive-read or ownership
 change; Spec review accepts the bounded diagnostic correction and records
-historical timeout attribution as unfulfilled. Installed proof remains pending.
+historical timeout attribution as unfulfilled. Installed proof is accepted below.
+
+## Installed acceptance and packet closeout
+
+Staged exact freshly fetched merged 6b07a6c84. All 597 dist files match; installed
+`/desktops` contract and fresh native process/assignment/window proof pass. Read the
+qualified retained original page through the installed public progress reader and
+collector, with native coordination, no diagnostic imports and no submission.
+Progress reports557 chars and assistant-text throughout. Collector returns in 10832 ms;
+all non-whitespace content exactly matches the authoritative original answer.
+Completion chrome is absent in the current UI; this is a current readback, not
+historical completion timing proof. CLI/MCP wrappers activate only after acceptance,
+current remote/native readback and an unchanged guard hash. Version remains0.1.1.
+
+This closes the bounded diagnosis/correction packet. Issue311 remains open for
+pre-deadline completion evidence, or another qualified in-flight trace; do not
+resubmit its prompt automatically. Current answer recovery and diagnostic correction
+are verified; historical timeout attribution is unproven. No timeout increase,
+provider execution retry, auth/owner/warning reset, browser replacement or memory
+write. Memory disposition forbidden: no explicit save request. Private raw and
+curated evidence stays under the issue311-completed-answer-20261019 acceptance root.

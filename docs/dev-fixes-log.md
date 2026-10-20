@@ -2,7 +2,7 @@
 
 Issue311 original-conversation inspection exposed snapshot/progress disagreement:
 557 chars of extractable answer, but passive progress reported assistant-turn-no-text
-and zero chars. A sanitized fixture reproduces this in19ms. A content-wrapper
+and zero chars. A sanitized fixture reproduces this in 19 ms. A content-wrapper
 control passes; legacy-role and no-boundary controls retain failure. Progress now
 accepts the qualified assistant turn's own text after preferred descendants, using
 the existing excluded-subtree and response-boundary gates. Tool-only root text and
@@ -11,7 +11,10 @@ observation.
 
 This repairs a confirmed diagnostic defect, not a proven cause of the historical
 180s timeout. Original records show Stop before the error and completion only in a
-later readback; exact completion time remains unknown. The current public collector
+later readback; exact completion time remains unknown.
+Installed PR352 acceptance reports 557 chars/assistant-text and collects the full
+original answer in 10832 ms. Exact build/native/guard checks precede wrapper activation.
+ The current public collector
 returns the original answer with only table-whitespace differences. Do not label
 that formatting difference as data loss or increase the deadline to hide it.
 
