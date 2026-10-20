@@ -6,6 +6,13 @@ Developer-app inventory diagnostics retain browser resolution, utility/interacti
 admission, identity, attachment, inventory, Developer mode, navigation restoration
 and cleanup stages. Queue admission precedes the operation and has its own bound.
 The effective inventory deadline includes configured backend capacity waiting.
+Passive assistant progress includes plain prose owned by the qualified assistant
+turn when a provider omits its markdown wrapper. Descendant content remains
+preferred; tool/composer exclusions and response boundaries still apply. Snapshot
+text, passive progress, completion, terminal deadline and later recovery evidence
+are separate observations. A later completed answer cannot prove pre-deadline
+completion.
+
 App list reads use inventory-only observation and do not navigate Developer mode
 settings; unobserved Developer mode remains unknown. Mutation checks are separate.
 A failure receipt does not establish transport cleanup or authorize retries.

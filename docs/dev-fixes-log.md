@@ -1,3 +1,20 @@
+## 2026-10-19 — Include plain assistant prose in passive progress
+
+Issue311 original-conversation inspection exposed snapshot/progress disagreement:
+557 chars of extractable answer, but passive progress reported assistant-turn-no-text
+and zero chars. A sanitized fixture reproduces this in19ms. A content-wrapper
+control passes; legacy-role and no-boundary controls retain failure. Progress now
+accepts the qualified assistant turn's own text after preferred descendants, using
+the existing excluded-subtree and response-boundary gates. Tool-only root text and
+parent chrome controls remain protected. No expansion clicks are added to passive
+observation.
+
+This repairs a confirmed diagnostic defect, not a proven cause of the historical
+180s timeout. Original records show Stop before the error and completion only in a
+later readback; exact completion time remains unknown. The current public collector
+returns the original answer with only table-whitespace differences. Do not label
+that formatting difference as data loss or increase the deadline to hide it.
+
 ## 2026-10-19 — Keep long utility work alive without relaxing expiry
 
 Settings-enabled inventory exposed a missing active-owner heartbeat. A bounded
