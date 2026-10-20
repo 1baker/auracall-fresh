@@ -1,3 +1,20 @@
+## 2026-10-19 — Issue337 installed settings cleanup accepted (Plan0439 closed)
+
+Merged PR349 / 510bbc1225952d069cf867fea8bddd81d8aa8203 passes the installed
+settings-enabled public-adapter read in 504.89 seconds and normal installed CLI
+list in 279.03 seconds. Both exit 0, observed, inventoryComplete=true, 26 identical
+app identities and unknown Developer mode. Cleanup and settlement pass. Actual
+registry observations beyond five minutes show active renewed liveness while
+meaningful-use time stays unchanged. No diagnostic imports or prototype overrides.
+
+All 597 build files match; installed contract and current native process,
+assignment and window proof pass. Guard hash is unchanged. CLI/MCP wrappers now
+select the tested merged runtime, version 0.1.1. Final 274 tests / 15 suites, typecheck,
+build and scoped lint pass; three package lint and 33 planning audit findings are
+baseline debt. Standards and Spec review have no remaining blocker. Private
+receipts: `~/.auracall/acceptance/issue337-settings-20261019/`. No PR335 import,
+app mutation, prompt, browser restart, owner/warning reset or memory write.
+
 ## 2026-10-19 — Issue337 ownership expiry reproduced and repaired locally
 
 Plan0439 capture on installed e8b704bc7 fails after 378.60 seconds: utility ownership

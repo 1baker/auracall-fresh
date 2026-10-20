@@ -14,6 +14,12 @@ Lost/expired ownership or storage failure aborts work, and settlement never rene
 a failed heartbeat. Stop and drain renewal before final settlement. Existing live
 process expiry remains enforced; no ownership, warning or request limit is reset.
 
+Plan0439 installed proof on merged PR349: settings-enabled public-adapter read
+passes in 504.89 seconds; ordinary CLI list passes in 279.03 seconds, both with
+26 apps and clean cleanup/settlement. Unknown mode remains unknown. Exact build,
+native browser proof and unchanged guard precede CLI/MCP activation.
+
+
 ## 2026-10-19 — Verify installed terminal inventory separately
 
 Plan0438 normal installed list on merged e8b704bc7 exits 0 in 271.03 seconds and

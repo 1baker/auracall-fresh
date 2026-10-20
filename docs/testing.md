@@ -3720,7 +3720,8 @@ reads for list, while existing mutation tests retain enabled-mode requirements.
 Installed acceptance must verify normal CLI output, inventoryComplete, owned
 cleanup, exact build identity and current native browser proof. A diagnostic shim
 or fixture pass alone does not establish installed acceptance. The settings-path
-cleanup failure observed during Plan0438 remains tracked in issue337.
+cleanup failure observed during Plan0438 is repaired by Plan0439 / PR349; its
+separate installed settings-enabled read passes in 504.89 seconds.
 
 ### Long utility ownership and maintenance (issue337)
 
