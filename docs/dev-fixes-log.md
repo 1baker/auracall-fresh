@@ -1,3 +1,10 @@
+## 2026-10-21 — Reconcile stale inventory-diagnostic ticket
+
+Issue247 is covered by PR341's stage preservation and structured list failure
+output. Fresh source and installed compiled CLI checks prove JSON and nonzero
+status on bounded failures. Keep queue admission, operation and cleanup stages
+distinct; diagnostic delivery does not identify the historical timeout cause.
+
 ## 2026-10-20 — Reconcile stale composer-editor ticket
 
 Issue257 is covered by PR284's current rich-editor qualification. Fresh source and

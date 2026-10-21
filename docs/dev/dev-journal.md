@@ -1,3 +1,15 @@
+## 2026-10-21 — Issue247 diagnostics verified as already repaired
+
+PR341/cbc05ee36 (Plan0437) already supplies structured app-list failures and named
+stages. Fresh focused CLI/terminal selection:53tests/2files pass in4.60s. Active
+installed issue311 build:5selected checks pass in3.73s,48unselected, covering
+browser-resolution/identity/inventory timeout attribution and actual compiled CLI
+JSON/nonzero output for inventory and queue admission. Temporary installed copies
+removed. Existing Plan0438 normal installed list acceptance separately proves
+successful inventory; no new live command, provider effect or runtime patch needed.
+Reconcile issue247's diagnostic defect only; historical timeout cause remains
+unknown. Memory forbidden: no explicit save request.
+
 ## 2026-10-20 — Issue257 verified as already repaired
 
 PR284 / 806c968c1 repaired the captured rich-composer editor-not-found defect.
