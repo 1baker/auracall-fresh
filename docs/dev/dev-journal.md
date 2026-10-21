@@ -1,3 +1,17 @@
+## 2026-10-20 — Issue257 verified as already repaired
+
+PR284 / 806c968c1 repaired the captured rich-composer editor-not-found defect.
+Current focused tests:44passed/2files in2.90s. Active installed issue311 runtime
+public clear seam:7selected cases passed in829ms,10unselected cases skipped,
+covering current/legacy editor, hidden/dialog/ambiguous/unrelated rejection and
+editor disappearance. Temporary installed fixture copy removed. No live input,
+provider submission, new runtime patch or installation. Original red/green and
+installed evidence remain in evidence/issue253-current-app-composer; later native
+app-selection/clear acceptance is in issue253-startup-close-settlement/native-no-submit.md.
+That native command timed out after its completed receipt; clean CLI termination
+is a separate unaccepted boundary. Reconcile only issue257's missing-editor defect.
+Memory forbidden: no explicit save request.
+
 ## 2026-10-20 — Issue275 verified as already repaired
 
 Issue275 ownership JSON parsing is repaired by PR279 / 212f3ef489f3574172bb1c9129b4c0698f319e47.
