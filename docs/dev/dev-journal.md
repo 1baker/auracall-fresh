@@ -1,3 +1,13 @@
+## 2026-10-21 — Issue245 recovery fix installed (Plan0442 closed)
+
+PR358/555b4b9e8 installed:597file parity and contract pass. Public installed utility
+cases pass with real native absence/presence census; initial external-module mock
+control was invalid and replaced. CLI/MCP/API now user-runtime-issue245, API PID99557
+HTTP200, scheduler paused and23previous paused jobs preserved. Browser PID81391/start
+28446377, assignment/window and warning hash unchanged.77source tests, typecheck,
+build and scoped lint pass. No live browser shutdown, lease deletion or provider
+submission. Historical disappearance attribution unknown. Memory forbidden.
+
 ## 2026-10-21 — Issue245 utility recovery regression repaired locally
 
 Plan0442 identifies missing native absence verifier in utility acquisition. Exact
