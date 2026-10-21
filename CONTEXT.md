@@ -186,3 +186,7 @@ unknown submission. Normal inventory never performs reconciliation implicitly.
 Utility cold startup uses strict native browser absence proof before the shared
 coordinator reconciles safe retained tab leases. Missing CDP alone never authorizes
 lease release; unknown custody blocks startup.
+
+Debugger readiness failure carries owned-child exit evidence when observed.
+BROWSER_PROCESS_EXITED_BEFORE_CDP means an exit code or signal was observed;
+BROWSER_CDP_NOT_READY preserves unknown exit attribution and grants no restart.

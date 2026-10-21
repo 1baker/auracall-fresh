@@ -1,3 +1,11 @@
+## 2026-10-21 — Worktree cleanup and Issue226 readiness integration
+
+Removed17clean merged worktrees and pruned3missing registrations;13remain.
+Dirty/unmerged lanes and branches preserved. PR262 is an unmerged existing readiness
+repair; port its source/tests onto current main under Plan0443. Fresh owned child
+exit RED genericCDP error,29lifecycle tests GREEN after typed classification.
+No live browser effects; validation/install pending. Historical exit actor unknown.
+
 ## 2026-10-21 — Issue245 recovery fix installed (Plan0442 closed)
 
 PR358/555b4b9e8 installed:597file parity and contract pass. Public installed utility

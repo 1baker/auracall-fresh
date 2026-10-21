@@ -40,13 +40,14 @@ function createExecFileMock() {
 async function importChromeLifecycleWithMocks(options: {
 	registeredPid?: number | null;
 	onLaunch?: () => void;
+	readinessFailure?: boolean;
 	existingProcess?: { pid: number; port: number; commandLine: string } | null;
 }) {
 	const execFileMock = createExecFileMock();
 	const unregisterInstance = vi.fn(async (..._args: unknown[]) => {});
 	const unregisterInstanceIfMatches = vi.fn(async (..._args: unknown[]) => true);
 	const registerInstance = vi.fn(async (_registryOptions: unknown, _instance: unknown) => {});
-	const chromeProcess = new EventEmitter();
+	const chromeProcess = Object.assign(new EventEmitter(), { exitCode: null as number | null, signalCode: null as string | null });
 	const findActiveInstance = vi.fn(async () => {
 		if (!options.registeredPid) {
 			return null;
@@ -80,9 +81,14 @@ async function importChromeLifecycleWithMocks(options: {
 			port = 9222;
 			chromeProcess = chromeProcess;
 			remoteDebuggingPipes = undefined;
+			isDebuggerReady?: () => Promise<void>;
 			spawn() {}
 			async launch() {
 				options.onLaunch?.();
+				if (options.readinessFailure) {
+					chromeProcess.exitCode = 1;
+					await this.isDebuggerReady?.();
+				}
 			}
 			async kill() {}
 		},
@@ -94,6 +100,7 @@ async function importChromeLifecycleWithMocks(options: {
 		unregisterInstanceIfMatches,
 	}));
 	vi.doMock("../../packages/browser-service/src/processCheck.js", () => ({
+		isPortOpen: vi.fn(async () => !options.readinessFailure),
 		isDevToolsResponsive,
 		findChromePidUsingUserDataDir: vi.fn(async () => options.existingProcess?.pid ?? null),
 		findChromeProcessUsingUserDataDir,
@@ -131,6 +138,22 @@ async function importChromeLifecycleWithMocks(options: {
 }
 
 describe("chromeLifecycle ownership", () => {
+	test("classifies an owned browser exit before CDP readiness with scoped recovery instruction", async () => {
+		const root = await mkdtemp(path.join(os.tmpdir(), "chrome-dead-readiness-"));
+		try {
+			const { chromeLifecycle } = await importChromeLifecycleWithMocks({ readinessFailure: true });
+			const directory = path.join(root, "managed", "chatgpt");
+			await expect(chromeLifecycle.launchChrome({
+				chromePath: "/usr/bin/google-chrome", chromeProfile: "Default", manualLogin: true,
+				managedProfileRoot: path.join(root, "managed"), headless: true,
+			} as never, directory, () => undefined)).rejects.toMatchObject({
+				code: "BROWSER_PROCESS_EXITED_BEFORE_CDP",
+				processId: 44567, exitCode: 1, profileDirectory: directory,
+				recoveryAction: "inspect_browser_launch_diagnostics",
+			});
+		} finally { await rm(root, { recursive: true, force: true }); }
+	});
+
 	test("persists owned shutdown and exit attribution for the same browser generation", async () => {
 		const root = await mkdtemp(path.join(os.tmpdir(), "chrome-exit-attribution-"));
 		try {

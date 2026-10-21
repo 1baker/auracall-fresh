@@ -1,3 +1,11 @@
+## 2026-10-21 — Retain owned child evidence in CDP readiness failures
+
+Integrate retained PR262 readiness repair against current main. A child exit code
+or signal observed by the owning launcher qualifies BROWSER_PROCESS_EXITED_BEFORE_CDP;
+otherwise use BROWSER_CDP_NOT_READY and explicitly preserve unknown exit attribution.
+Expose PID/managed directory and inspect_browser_launch_diagnostics recovery guidance.
+Do not convert a port timeout into restart authority or infer stale-lock causation.
+
 ## 2026-10-21 — Utility startup must supply native absence proof
 
 Developer-app utility acquisition omitted the strict native absence verifier used
