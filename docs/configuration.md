@@ -1168,3 +1168,7 @@ AuraCall records expiry cleanup in `~/.auracall/browser-coordination/tab-leases/
 The journal is append-only, created with mode600, and hashes managed browser/account scope. It does not contain prompts, responses or account identifiers. Failure to write the pre-close record preserves the tab. Existing activity, target and ownership checks remain in force. These records describe future instrumented actions; they cannot establish an earlier unrecorded close actor.
 
 Developer-app submission defaults to preserving the model on its fresh composer. To request a model on that submitted page, explicitly pass `--model chatgpt:fast --browser-model-strategy select --browser-thinking-time light` before `apps test`. A model selected on a separate utility tab does not prove the submitted page uses it. Explicit current/ignore strategies leave thinking selection unchanged.
+
+Developer-app inventory can reconcile safe retained leases on cold startup only
+when native process verification proves the managed browser absent. An unavailable
+CDP endpoint alone does not authorize lease deletion or browser replacement.

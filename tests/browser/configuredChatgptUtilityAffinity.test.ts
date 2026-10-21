@@ -1,3 +1,10 @@
+import { verifyChromeProcessAbsent } from "../../packages/browser-service/src/processCheck.js";
+
+vi.mock("../../packages/browser-service/src/processCheck.js", async (importOriginal) => ({
+	...(await importOriginal<typeof import("../../packages/browser-service/src/processCheck.js")>()),
+	verifyChromeProcessAbsent: vi.fn(async () => false),
+}));
+
 import { vi as activityMock } from "vitest";
 
 activityMock.mock("../../src/browser/chatgptTabActivity.js", async (importOriginal) => {
@@ -592,4 +599,69 @@ describe("configured ChatGPT utility affinity", () => {
 			outcome: "failed",
 		});
 	});
+});
+
+test.each([
+	true,
+	false,
+])("utility cold startup reconciles idle leases only with native absence: %s", async (absent) => {
+	const registry = createInMemoryBrowserTabLeaseRegistry();
+	const ledger = createInMemoryProviderInteractionLedger();
+	const scope = {
+		runtimeProfileId: "runtime-1",
+		service: "chatgpt",
+		managedBrowserProfile: "/managed/runtime-1/chatgpt",
+		tenantKey: "service-account:chatgpt:account-id=account-1",
+	};
+	const now = () => new Date();
+	const reserved = await registry.reserve({
+		scope,
+		targetId: "gone",
+		workload: { kind: "ephemeral", operationId: "old" },
+		operationId: "old",
+		now: now().toISOString(),
+		idleTtlMs: 300000,
+		absoluteTtlMs: 3600000,
+	});
+	if (!reserved.ok) throw new Error("fixture reserve failed");
+	await registry.idle({
+		claim: reserved.value.claim,
+		now: now().toISOString(),
+		effectState: "settled",
+	});
+	const resolveServiceTarget = vi.fn(async ({ ensurePort }) => ({
+		host: ensurePort ? "127.0.0.1" : undefined,
+		port: ensurePort ? 45011 : undefined,
+		managedBrowserProfile: scope.managedBrowserProfile,
+	}));
+	const run = vi.fn(async () => "observed");
+	vi.mocked(verifyChromeProcessAbsent).mockResolvedValue(absent);
+	try {
+		const pending = runConfiguredChatgptUtilityOperation({
+			userConfig,
+			browserService: { resolveServiceTarget } as never,
+			utilityId: "inventory",
+			mutability: "read-only",
+			buildListOptions: async (o) => o,
+			run,
+			deps: {
+				createRuntime: () => ({ registry, ledger }) as never,
+				listTargets: async () => [],
+				openTarget: async () => ({ id: "new", targetId: "new", url: "https://chatgpt.com/" }),
+				closeTarget: async () => {},
+			} as never,
+		});
+		if (absent) {
+			await expect(pending).resolves.toBe("observed");
+			expect((await registry.list()).find((l) => l.targetId === "gone")?.state).toBe("released");
+			expect(run).toHaveBeenCalledOnce();
+		} else {
+			await expect(pending).rejects.toThrow("tab-leases-active");
+			expect((await registry.list()).find((l) => l.targetId === "gone")?.state).toBe("idle");
+			expect(run).not.toHaveBeenCalled();
+			expect(resolveServiceTarget.mock.calls.some(([o]) => o.ensurePort)).toBe(false);
+		}
+	} finally {
+		vi.mocked(verifyChromeProcessAbsent).mockResolvedValue(false);
+	}
 });
