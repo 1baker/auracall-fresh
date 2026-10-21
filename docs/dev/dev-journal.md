@@ -1,3 +1,13 @@
+## 2026-10-21 — Issue226 source merged, verified installation staged
+
+PR360/727fbf35d implements typed observed-child exit versus unknownCDP readiness.
+94focused tests, typecheck/build pass; lint-only2baseline warnings, legacy format
+check failure retained. Staged issue226-readiness runtime597file parity, contract
+and4public installed checks pass. Current API status twice reports1active browser
+interaction; wrappers/API stay issue245 pending idle deployment gate. No restart,
+live input or lock deletion performed.17worktrees removed,3registrations pruned,
+13preserved. Plan0443 remains OPEN for activation. Memory forbidden.
+
 ## 2026-10-21 — Worktree cleanup and Issue226 readiness integration
 
 Removed17clean merged worktrees and pruned3missing registrations;13remain.
