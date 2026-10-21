@@ -1,3 +1,11 @@
+## 2026-10-20 — Reconcile stale composer-editor ticket
+
+Issue257 is covered by PR284's current rich-editor qualification. Fresh source and
+installed public-seam checks pass, including fail-closed qualification controls.
+The later native no-submit receipt proves selection/clearing, while its outer CLI
+timeout remains a distinct failure. Do not equate a narrow selector repair with
+clean command termination or full app submission acceptance.
+
 ## 2026-10-20 — Reconcile stale ownership-parse ticket
 
 Issue275 is covered by PR279's ownership validation and atomic publication.
