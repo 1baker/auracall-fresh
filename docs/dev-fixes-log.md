@@ -1,3 +1,12 @@
+## 2026-10-21 — Utility startup must supply native absence proof
+
+Developer-app utility acquisition omitted the strict native absence verifier used
+by configured live-follow. Its shared coordinator could not reconcile settled idle
+leases and denied cold startup with tab-leases-active. Supply that verifier at the
+utility boundary; retain ordinary registry release rules. Missing endpoint alone
+never authorizes release. Public regression proves recovery with native absence and
+unchanged blocking without it; no manual lease deletion or browser replacement.
+
 ## 2026-10-21 — Reconcile stale inventory-diagnostic ticket
 
 Issue247 is covered by PR341's stage preservation and structured list failure

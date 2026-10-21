@@ -3,6 +3,7 @@ import {
 	listChromeTargets,
 	openChromeTarget,
 } from "../../packages/browser-service/src/chromeLifecycle.js";
+import { verifyChromeProcessAbsent } from "../../packages/browser-service/src/processCheck.js";
 import { createBrowserInteractionGovernor } from "../../packages/browser-service/src/service/interactionGovernor.js";
 import { createLedgerBackedBrowserInteractionGovernor } from "../../packages/browser-service/src/service/ledgerInteractionGovernor.js";
 import {
@@ -211,6 +212,7 @@ export async function runConfiguredChatgptUtilityOperation<TResult>(input: {
 		absoluteTtlMs: 60 * 60_000,
 		now,
 		resolveExistingEndpoint: async () => toEndpoint(initialTarget),
+		verifyBrowserAbsent: () => verifyChromeProcessAbsent(managedBrowserProfile),
 		startBrowser: async () => {
 			const target = await input.browserService.resolveServiceTarget({
 				serviceId: "chatgpt",

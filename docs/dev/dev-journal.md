@@ -1,3 +1,11 @@
+## 2026-10-21 — Issue245 utility recovery regression repaired locally
+
+Plan0442 identifies missing native absence verifier in utility acquisition. Exact
+public-seam RED tab-leases-active with settled idle lease, GREEN after2line wiring;
+unknown-absence control retains lease and dispatches no startup/effect. Initial test
+mock setup failure was invalid and corrected before valid red. No live effects.
+Affected validation and integration pending; historical browser exit actor unknown.
+
 ## 2026-10-21 — Issue247 diagnostics verified as already repaired
 
 PR341/cbc05ee36 (Plan0437) already supplies structured app-list failures and named

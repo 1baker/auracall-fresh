@@ -182,3 +182,7 @@ process birth, executable, managed directory, desktop assignment/window and owne
 loopback endpoint; it preserves the previous receipt, input-control claims and
 managed data. It does not open a page, submit a prompt or infer outcome of an
 unknown submission. Normal inventory never performs reconciliation implicitly.
+
+Utility cold startup uses strict native browser absence proof before the shared
+coordinator reconciles safe retained tab leases. Missing CDP alone never authorizes
+lease release; unknown custody blocks startup.
