@@ -41,3 +41,20 @@ as baseline formatting debt rather than widened churn. Diff check passes.
 Standards review: retained existing launcher seam and cleanup, no ownership bypass.
 Spec review: typed observed exit versus unproven readiness and recovery guidance
 qualified; historical exit actors remain unknown. No accepted source blocker.
+
+## Merged and staged acceptance
+
+PR360 merged727fbf35d592d2ea3007c10b4676ebfe38149e08. Staged runtime
+~/.auracall/user-runtime-issue226-readiness has597exact matching dist files;
+installed /desktops contract passes. Four installed public readiness checks pass:
+exit code, exit signal, unproven exit and original cancellation identity. No
+browser launch/provider effects. Private script/parity/contract and cleanup receipts
+are under ~/.auracall/acceptance/issue226-readiness-20261021/.
+
+Activation is pending: two fresh status reads report1active browser interaction,
+although API foreground/drain are idle and scheduler/completions remain paused.
+Do not restart the API or replace active wrappers until fresh idle/native/guard
+checks qualify deployment. Current CLI/MCP/API remain issue245. This is a real
+runtime gate, not a source or installed-fixture failure. Issue226 remains open
+until deployment acceptance; original browser exit attribution remains unknown.
+Memory forbidden: no explicit save request.
