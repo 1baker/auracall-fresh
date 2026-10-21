@@ -907,3 +907,9 @@ A shutdown return is not proof of process exit. Adopted handles do not expose
 owned child exit callbacks. Pre-readiness failures, external process deaths,
 direct CDP Browser.close and per-target retirement are outside this journal.
 This source change requires runtime adoption before installed evidence is expected.
+
+CDP readiness failures expose `BROWSER_PROCESS_EXITED_BEFORE_CDP` when the owning
+launcher observed child exit, otherwise `BROWSER_CDP_NOT_READY`. Recovery action
+`inspect_browser_launch_diagnostics` requires inspecting the recorded PID, exit
+code/signal and managed directory before retrying through AuraCall. Neither error
+authorizes killing an unverified owner or deleting a retained lock.

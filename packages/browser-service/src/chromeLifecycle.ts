@@ -55,11 +55,41 @@ function readAbortReason(signal: AbortSignal): unknown {
   return signal.reason ?? new Error('Browser launch aborted.');
 }
 
+export interface OwnedBrowserReadinessState {
+  processId?: number;
+  exitCode?: number | null;
+  exitSignal?: string | null;
+  profileDirectory?: string;
+}
+
+export class BrowserDebuggerReadinessError extends Error {
+  readonly code: 'BROWSER_PROCESS_EXITED_BEFORE_CDP' | 'BROWSER_CDP_NOT_READY';
+  readonly recoveryAction = 'inspect_browser_launch_diagnostics';
+  readonly processId?: number;
+  readonly exitCode?: number | null;
+  readonly exitSignal?: string | null;
+  readonly profileDirectory?: string;
+
+  constructor(host: string, port: number, state?: OwnedBrowserReadinessState) {
+    const exited = state?.exitCode != null || state?.exitSignal != null;
+    super(`Chrome DevTools ${host}:${port} did not become ready. ` +
+      (exited ? 'The owned browser process exited before readiness. ' : 'Browser exit is not proven. ') +
+      'Inspect browser launch diagnostics before retrying through AuraCall; do not restart an unverified browser owner.');
+    this.name = 'BrowserDebuggerReadinessError';
+    this.code = exited ? 'BROWSER_PROCESS_EXITED_BEFORE_CDP' : 'BROWSER_CDP_NOT_READY';
+    this.processId = state?.processId;
+    this.exitCode = state?.exitCode;
+    this.exitSignal = state?.exitSignal;
+    this.profileDirectory = state?.profileDirectory;
+  }
+}
+
 export async function probeChromeDebuggerPort(options: {
   host: string;
   port: number;
   abortSignal?: AbortSignal;
   probe?: (host: string, port: number) => Promise<boolean>;
+  readOwnedProcessState?: () => OwnedBrowserReadinessState;
 }): Promise<void> {
   const { abortSignal } = options;
   abortSignal?.throwIfAborted();
@@ -78,7 +108,7 @@ export async function probeChromeDebuggerPort(options: {
     ]);
     abortSignal?.throwIfAborted();
     if (!ready) {
-      throw new Error(`Chrome DevTools ${options.host}:${options.port} did not become ready`);
+      throw new BrowserDebuggerReadinessError(options.host, options.port, options.readOwnedProcessState?.());
     }
   } finally {
     if (onAbort && abortSignal) {
@@ -423,6 +453,7 @@ export async function launchChrome(
             onStage: options.onStage,
           })
         : await launchWithCustomHost({
+            profileDirectory: userDataDir,
             chromeFlags: effectiveChromeFlags,
             chromePath: config.chromePath ?? undefined,
             userDataDir: launcherUserDataDir,
@@ -2151,6 +2182,7 @@ async function launchWithCustomHost({
   chromeFlags,
   chromePath,
   userDataDir,
+  profileDirectory,
   host,
   requestedPort,
   ignoreDefaultFlags,
@@ -2161,6 +2193,7 @@ async function launchWithCustomHost({
   chromeFlags: string[];
   chromePath?: string | null;
   userDataDir: string | boolean;
+  profileDirectory?: string;
   host: string | null;
   requestedPort?: number;
   ignoreDefaultFlags?: boolean;
@@ -2208,6 +2241,12 @@ async function launchWithCustomHost({
       host: debugHost,
       port: debugPort,
       abortSignal,
+      readOwnedProcessState: () => ({
+        processId: launcher.pid,
+        exitCode: launcher.chromeProcess?.exitCode,
+        exitSignal: launcher.chromeProcess?.signalCode,
+        profileDirectory,
+      }),
     });
   };
 

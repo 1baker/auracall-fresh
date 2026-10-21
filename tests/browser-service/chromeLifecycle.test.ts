@@ -161,12 +161,12 @@ describe('chromeLifecycle (package)', () => {
     await expect(probe).rejects.toThrow('context deadline');
   });
 
-  test('rejects a bounded debugger probe when the port is not ready', async () => {
+  test('classifies an unready debugger without claiming an unobserved browser exit', async () => {
     await expect(probeChromeDebuggerPort({
       host: '127.0.0.1',
       port: 45015,
       probe: async () => false,
-    })).rejects.toThrow('Chrome DevTools 127.0.0.1:45015 did not become ready');
+    })).rejects.toMatchObject({ code: 'BROWSER_CDP_NOT_READY', recoveryAction: 'inspect_browser_launch_diagnostics', message: expect.stringContaining('Browser exit is not proven') });
   });
 
   test('returns a completed browser launch without cleanup', async () => {
