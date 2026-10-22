@@ -662,6 +662,13 @@ temporarily absent rows remain pending; changed baseline rows become uncertain.
 No background polling or resend occurs. `generationSignal: "unverified"` exposes
 the remaining native generation-detector qualification; fixtures do not establish
 provider acceptance or subscription entitlement.
+On Grok, a provider-issued conversation URL may include one UUID `rid` query
+parameter. Readback validates it and pins the canonical conversation path, so a
+response-selector change does not change the conversation identity. Extra or
+duplicate parameters, fragments, credentials, other origins and changed paths
+are refused. Configured routes still cannot contain queries or fragments. The
+composer may use either the observed combobox or textbox role; exactly one in
+total is required. The rid is never represented as a native message ID.
 
 `frontend_send` takes `routeId`, a caller-generated `requestId` (8-128 letters,
 digits, hyphens or underscores), `text` (up to 8192 characters), and optional

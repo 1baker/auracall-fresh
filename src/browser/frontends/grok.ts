@@ -17,7 +17,7 @@ export function inspectGrokMessages(doc: Document, url: string) {
 	const label = (node: Element) => node.getAttribute("aria-label") ?? "";
 	const composers = Array.from(
 		doc.querySelectorAll(
-			'div[contenteditable="true"][role="combobox"][aria-label="Ask Grok anything"]',
+			'div[contenteditable="true"][role="combobox"][aria-label="Ask Grok anything"], div[contenteditable="true"][role="textbox"][aria-label="Ask Grok anything"]',
 		),
 	).filter(
 		(node) =>
@@ -168,6 +168,8 @@ export function inspectGrokMessages(doc: Document, url: string) {
 			stopCount,
 			unexpectedDialogCount,
 			visibleComposerCount: composers.length,
+			composerRole: composer?.getAttribute("role") ?? null,
+			composerEmpty,
 		},
 		generating:
 			Array.from(

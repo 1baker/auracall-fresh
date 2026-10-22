@@ -292,6 +292,22 @@ async function messagingFixture(startUrl = "https://chatgpt.com/c/messaging-fixt
 }
 
 describe("durable frontend messages through MCP", () => {
+	it("keeps ChatGPT rid query URLs unsupported without replay", async () => {
+		const f = await messagingFixture();
+		try {
+			const call = await f.connect();
+			await call("frontend_send", { requestId: "chatgpt-rid", text: "Return BLUE-17" });
+			f.setUrl("https://chatgpt.com/c/messaging-fixture?rid=12345678-1234-1234-1234-123456789abc");
+			expect(await call("frontend_status", { requestId: "chatgpt-rid" })).toMatchObject({
+				ok: false,
+				code: "origin_mismatch",
+			});
+			expect(f.stats().clicks).toBe(1);
+		} finally {
+			await f.cleanup();
+		}
+	});
+
 	it("reads two connected replies and reopens the same saved receipt after restart", async () => {
 		const f = await messagingFixture();
 		try {

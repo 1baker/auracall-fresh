@@ -110,6 +110,34 @@ const recipes: Record<FrontendRoute["provider"], MessageRecipe> = {
 const isRootUrl = (route: FrontendRoute, value: string) => value === recipes[route.provider].root;
 const isConversationUrl = (route: FrontendRoute, value: unknown): value is string =>
 	typeof value === "string" && recipes[route.provider].conversation.test(value);
+/** Only Grok's observed response selector is transient; conversation identity stays pinned. */
+function observedConversationUrl(route: FrontendRoute, value: unknown): string | null {
+	if (typeof value !== "string") return null;
+	if (route.provider !== "grok" || isRootUrl(route, value) || recipes.grok.conversation.test(value))
+		return value;
+	try {
+		const url = new URL(value);
+		const parameters = Array.from(url.searchParams.entries());
+		const canonical = url.origin + url.pathname;
+		if (
+			url.protocol !== "https:" ||
+			url.hostname !== "grok.com" ||
+			url.port ||
+			url.username ||
+			url.password ||
+			url.hash ||
+			value.includes("#") ||
+			!isConversationUrl(route, canonical) ||
+			parameters.length !== 1 ||
+			parameters[0][0] !== "rid" ||
+			!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(parameters[0][1])
+		)
+			return null;
+		return canonical;
+	} catch {
+		return null;
+	}
+}
 const derivedKey = (index: number, role: string, text: string) =>
 	createHash("sha256")
 		.update(JSON.stringify([index, role, text]))
@@ -196,13 +224,15 @@ export class FrontendMessages {
 		});
 		if (result.targetId !== route.serviceTabHandle.targetId)
 			throw new FrontendError("target_mismatch", "The retained target changed.");
+		const observedUrl = observedConversationUrl(route, result.url);
 		if (
+			observedUrl === null ||
 			result.ok !== true ||
-			(result.url !== route.expectedUrl &&
+			(observedUrl !== route.expectedUrl &&
 				!(
 					allowFirstConversation &&
 					isRootUrl(route, route.expectedUrl) &&
-					isConversationUrl(route, result.url)
+					isConversationUrl(route, observedUrl)
 				))
 		)
 			throw new FrontendError("origin_mismatch", "The retained conversation changed.");
@@ -261,6 +291,7 @@ export class FrontendMessages {
 		};
 		if (observation.url !== result.url)
 			throw new FrontendError("origin_mismatch", "The conversation URL changed.");
+		observation.url = observedUrl;
 		if (route.provider === "grok" && observation.scopeCount !== 1 && allowScopeChurn)
 			return observation;
 		if (observation.model !== route.expectedModel)

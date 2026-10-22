@@ -37,6 +37,7 @@ async function fixture(startUrl = "https://grok.com/", roleMain = false) {
 	let rootLag = false;
 	let noSend = false;
 	let overlayAfterFill = false;
+	let afterClick: ((click: number) => string) | undefined;
 	const rect = { x: 10, y: 10, left: 10, top: 10, right: 110, bottom: 50, width: 100, height: 40 };
 	// linkedom has no layout engine. Explicit layout/hit-test boundary fixtures.
 	Object.defineProperty(window.Element.prototype, "getBoundingClientRect", {
@@ -125,7 +126,7 @@ async function fixture(startUrl = "https://grok.com/", roleMain = false) {
 			expect(step.type).toBe("click");
 			expect(nodes[0].getAttribute("type")).toBe("submit");
 			clicks++;
-			if (!rootLag) url = "https://grok.com/c/fixture";
+			if (!rootLag) url = afterClick ? afterClick(clicks) : "https://grok.com/c/fixture";
 			for (const [role, text] of [
 				["user", composer.textContent],
 				["assistant", clicks === 1 ? "BLUE-17" : "BLUE-17 remembered"],
@@ -189,6 +190,9 @@ async function fixture(startUrl = "https://grok.com/", roleMain = false) {
 		setTarget: (v: string) => {
 			target = v;
 		},
+		setAfterClick: (value: (click: number) => string) => {
+			afterClick = value;
+		},
 		cleanup: async () => {
 			for (const c of clients) await c.close();
 			for (const s of servers) await s.close();
@@ -200,6 +204,131 @@ async function fixture(startUrl = "https://grok.com/", roleMain = false) {
 }
 
 describe("Grok durable conversation through public MCP", () => {
+	it("adopts only the canonical conversation across rid changes, textbox transition and restart", async () => {
+		const f = await fixture();
+		vi.useFakeTimers({ toFake: ["Date"] });
+		try {
+			f.setAfterClick(
+				(click) =>
+					`https://grok.com/c/fixture?rid=${click === 1 ? "12345678-1234-1234-1234-123456789abc" : "abcdef01-2345-6789-abcd-0123456789ab"}`,
+			);
+			const call = await f.connect();
+			expect(
+				await call("frontend_send", { requestId: "grok-rid-first", text: "Return BLUE-17" }),
+			).toMatchObject({ status: "sent", conversationUrl: null });
+			f.composer.setAttribute("role", "textbox");
+			expect(await call("frontend_status", { requestId: "grok-rid-first" })).toMatchObject({
+				status: "sent",
+				conversationUrl: "https://grok.com/c/fixture",
+			});
+			const again = await f.connect();
+			vi.setSystemTime(Date.now() + 1500);
+			expect(await again("frontend_status", { requestId: "grok-rid-first" })).toMatchObject({
+				status: "completed",
+				conversationUrl: "https://grok.com/c/fixture",
+				output: "BLUE-17",
+				identityKind: "derived_sequence",
+			});
+			expect(
+				await again("frontend_send", {
+					requestId: "grok-rid-second",
+					text: "Recall the first answer",
+					previousRequestId: "grok-rid-first",
+				}),
+			).toMatchObject({ status: "sent" });
+			await again("frontend_status", { requestId: "grok-rid-second" });
+			vi.setSystemTime(Date.now() + 1500);
+			expect(await again("frontend_status", { requestId: "grok-rid-second" })).toMatchObject({
+				status: "completed",
+				output: "BLUE-17 remembered",
+				conversationUrl: "https://grok.com/c/fixture",
+			});
+			expect(f.stats().clicks).toBe(2);
+			f.setUrl("https://grok.com/c/different?rid=12345678-1234-1234-1234-123456789abc");
+			expect(
+				await again("frontend_send", {
+					requestId: "grok-wrong-path",
+					text: "Do not send",
+					previousRequestId: "grok-rid-second",
+				}),
+			).toMatchObject({ ok: false, code: "origin_mismatch" });
+			expect(f.stats().clicks).toBe(2);
+		} finally {
+			await f.cleanup();
+		}
+	});
+
+	it.each([
+		"https://grok.com/c/fixture?rid=12345678-1234-1234-1234-123456789abc&rid=abcdef01-2345-6789-abcd-0123456789ab",
+		"https://grok.com/c/fixture?rid=",
+		"https://grok.com/c/fixture?rid=invalid",
+		"https://grok.com/c/fixture?rid=12345678-1234-1234-1234-123456789abc&extra=1",
+		"https://grok.com/c/fixture?rid=12345678-1234-1234-1234-123456789abc#fragment",
+		"https://user@grok.com/c/fixture?rid=12345678-1234-1234-1234-123456789abc",
+		"https://grok.com:444/c/fixture?rid=12345678-1234-1234-1234-123456789abc",
+		"http://grok.com/c/fixture?rid=12345678-1234-1234-1234-123456789abc",
+		"https://www.grok.com/c/fixture?rid=12345678-1234-1234-1234-123456789abc",
+	])("refuses unsupported observed URL %s without replaying a saved send", async (url) => {
+		const f = await fixture();
+		try {
+			f.setAfterClick(() => url);
+			const call = await f.connect();
+			await call("frontend_send", { requestId: "grok-bad-rid", text: "Return BLUE-17" });
+			expect(await call("frontend_status", { requestId: "grok-bad-rid" })).toMatchObject({
+				ok: false,
+				code: "origin_mismatch",
+			});
+			expect(
+				await call("frontend_send", { requestId: "grok-bad-rid", text: "Return BLUE-17" }),
+			).toMatchObject({ status: "sent", conversationUrl: null });
+			expect(f.stats().clicks).toBe(1);
+		} finally {
+			await f.cleanup();
+		}
+	});
+
+	it("reconciles the preserved sent record after a rejected URL without migrating or resending", async () => {
+		const f = await fixture();
+		vi.useFakeTimers({ toFake: ["Date"] });
+		try {
+			const call = await f.connect();
+			await call("frontend_send", { requestId: "grok-preserved", text: "Return BLUE-17" });
+			f.setUrl("https://grok.com/c/fixture?unexpected=1");
+			expect(await call("frontend_status", { requestId: "grok-preserved" })).toMatchObject({
+				ok: false,
+				code: "origin_mismatch",
+			});
+			f.setUrl("https://grok.com/c/fixture?rid=12345678-1234-1234-1234-123456789abc");
+			f.composer.setAttribute("role", "textbox");
+			const again = await f.connect();
+			await again("frontend_status", { requestId: "grok-preserved" });
+			vi.setSystemTime(Date.now() + 1500);
+			expect(await again("frontend_status", { requestId: "grok-preserved" })).toMatchObject({
+				status: "completed",
+				output: "BLUE-17",
+			});
+			expect(f.stats()).toMatchObject({ clicks: 1, fills: 1 });
+		} finally {
+			await f.cleanup();
+		}
+	});
+
+	it("refuses simultaneous textbox and combobox composers before input", async () => {
+		const f = await fixture();
+		try {
+			const other = f.composer.cloneNode(true) as Element;
+			other.setAttribute("role", "textbox");
+			f.form.append(other);
+			const call = await f.connect();
+			expect(
+				await call("frontend_send", { requestId: "grok-two-roles", text: "Do not send" }),
+			).toMatchObject({ ok: false, code: "composer_unavailable" });
+			expect(f.stats()).toMatchObject({ clicks: 0, fills: 0 });
+		} finally {
+			await f.cleanup();
+		}
+	});
+
 	it("uses role=main and an empty P/BR editor for linked exact-text replies", async () => {
 		const f = await fixture("https://grok.com/", true);
 		vi.useFakeTimers({ toFake: ["Date"] });

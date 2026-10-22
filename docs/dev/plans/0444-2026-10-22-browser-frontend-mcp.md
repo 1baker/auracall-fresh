@@ -411,3 +411,26 @@ Post-fill input and user messages retain exact matching. No prompts/fills/clicks
 have occurred; redo all native gates immediately before the approved send.
 
 D2/D3 validation:159focused tests/10files PASS (38Grok+121prior), typecheck, scoped lint without warnings and full build PASS. Native acceptance remains pending.
+
+
+S3 native variant: one authorized native frontend_send delivered and saved sent,
+then the first status probe rejected the provider-issued /c/<id>?rid=<UUID> URL.
+No resend/follow-up occurred. Read-only evidence also showed the same composer
+switches to role=textbox after the first send. Claude12 approved R1-R5: one
+Grok-only canonicalizer validates exact HTTPS host/credentials/port/fragment,
+conversation path, one UUID rid and no other query. Preserve exact raw URL
+agreement, compare/persist canonical conversation identity, and keep configured
+query routes rejected. Accept exactly one combobox/textbox composer in total;
+retain all form/hit/text gates. Public RED3fail87pass, then90PASS across Grok/S2
+workflow tests. The saved native record needs no migration/version change.
+After full validation/commit, status may reconcile this SAME request only (19
+remaining of20); no more input until completed and a fresh linked-turn preflight.
+
+R1-R4 followthrough retains all earlier source gates. Initial typecheck caught
+a TypeScript negative type-predicate narrowing in the URL helper; use the
+existing regex's boolean result instead. A compiled test was launched after
+that unsuccessful build and failed for missing staged assets; full build is
+now successful and compiled checks rerun serially. These validation-order errors
+are lead errors, not provider evidence or baseline failures.
+
+R1-R4 final validation:172focused tests/10files PASS (50Grok,122other), full typecheck, warning-free scoped lint and complete build PASS. Resume status only on the existing first native request after this commit.

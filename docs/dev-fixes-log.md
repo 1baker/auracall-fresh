@@ -1,3 +1,12 @@
+## 2026-10-22 — Grok changes its URL and editor after the first send
+
+One authorized native Send exposed /c/<id>?rid=<UUID> and role=textbox after the
+root's combobox. Preserve the saved sent record; validate the sole UUID rid while
+pinning the canonical conversation path. Keep raw URL agreement and reject
+foreign/extra queries, fragments and changed paths. Accept exactly one textbox or
+combobox. This is a provider readback variant, not a retry or new store version.
+Public RED3fail/87pass then90workflow PASS; full validation recorded in Plan0444.
+
 ## 2026-10-22 — Preserve identity provenance and stability on Grok
 
 Grok's visible message content lacks proven stable native IDs. Keep native IDs
