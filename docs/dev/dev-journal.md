@@ -1,3 +1,7 @@
+## 2026-10-22 — Durable frontend send/status S2
+
+Native frontend input now has persisted request IDs and one-probe status reconciliation. Two linked MCP replies survive service reconstruction in local fixtures; timeout/conflict/changed route/occupied composer/process locks fail safely. Peer caught an interrupted-prepared record; regression red then corrected. Focused101tests/typecheck pass; full build PASS, regression4112pass/2known-fail/11skip; Claude final10 and separate Standards review PASS; bounded S2 accepted for commit. Signed-in providers remain unavailable; HOST02 unchanged.
+
 ## 2026-10-22 — Isolate invalid frontend configuration
 
 Human-requested F1 correction preserves strict config validation for direct callers and makes MCP startup register disabled frontend tools on invalid_config. Sibling tools remain usable. Public SDK regression37tests passes; compiled RED reproduced the original connection closure. Human1M allowance carries fixed baseline/spending; no browser/provider/LIVE changes.

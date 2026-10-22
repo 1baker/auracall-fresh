@@ -38,6 +38,8 @@ describe('frontend configuration failure isolation through MCP', () => {
       for (const [name, args] of [
         ['frontend_inspect', { routeId: 'anything' }],
         ['frontend_configure', { routeId: 'anything', effort: 'pro' }],
+        ['frontend_send', { routeId: 'anything', requestId: 'startup-test', text: 'test' }],
+        ['frontend_status', { routeId: 'anything', requestId: 'startup-test' }],
       ] as const) {
         const response = await client.callTool({ name, arguments: args });
         expect(response.isError).toBe(true);

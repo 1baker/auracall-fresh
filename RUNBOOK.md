@@ -1,3 +1,7 @@
+# Turn 202610220635 | 2026-10-22
+
+Plan0444 S2: implement saved frontend send/status receipts, one native Send click, restart/readback and uncertain-send exclusion. Public MCP/serialized DOM plus process-crash fixture101focused tests pass; typecheck pass. Peer8 crash-window finding repaired. Full build PASS; full regression4112pass/2known-fail/11skip; Claude final10 and separate Standards review PASS; bounded S2 accepted for commit; actual providers and HOST02 remain held.
+
 # Turn 202610110405 | 2026-10-22
 
 Plan0444 / AU-WEB-MCP01-S1: user redirected to actual frontend MCP behavior. Source/test-only ChatGPT inspect/configure packet, own branch, broker contract read back without launch. Direct chat authority recorded; no old receipt reuse. Historical HOST-02 hold unchanged.

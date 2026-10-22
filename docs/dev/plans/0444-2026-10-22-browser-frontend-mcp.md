@@ -158,3 +158,121 @@ and the compiled smoke supplies its own temporary child home. Keep those
 isolation mechanisms. No real session/provider state was read by the fixture.
 The750k checkpoint remains advisory; clean-stop and ambiguous early-stop readings
 are documented interpretations, with no automatic process-controller claim.
+
+## S2 execution packet v1 | 2026-10-22
+
+State: CLOSED (S2 source/fixture packet; parent provider acceptance remains OPEN). Owner: native thread 01a16096-da12-7753-8d44-e299c2172cef.
+Peer: auracall-frontend-send-status-20261022, revision4, explicit planning ACCEPT.
+Codex accepts the same scope, steps and completion checks, including all three
+peer amendments. S1/F1 remain completed; HOST-02 remains held. S2 was predeclared
+above, rather than replacing an exhausted task. The current human instruction
+is to move forward; canonical objective /o/auracall has Implement selections for
+ChatGPT and linked replies. No new provider/account or installation authority.
+
+Current state: inspect/configure are committed e0e7e762 and offline validated.
+Sending, persistence and linked replies do not exist on the frontend seam yet.
+Current no-launch access plan finds zero compatible retained browsers. This
+packet delivers source and local-fixture acceptance; real workflow remains pending.
+Use the amended shared1M allowance, fixed baseline143981; last sample158000 lead
+used /842000 upper-bound remaining, combinedUNKNOWN. No refill or counter reset.
+
+Outcome: frontend_send(routeId,requestId,text,previousRequestId?) produces one
+saved request receipt. frontend_status(routeId,requestId) can read and reconcile
+it after restart without ever sending again. Require an existing exact ChatGPT
+/c/<id> route, retained target, expected model, an empty composer and no active
+generation. No new-chat navigation, API fallback, arbitrary caller JS or repair.
+
+Steps, serialized under this owner:
+1. Add version1 validated frontend records in the AuraCall home, reusing existing
+   filesystem conventions without the legacy retryable execution runner. Names
+   are validated opaque IDs; bind content, prior request and exact route identity.
+   Same ID/content returns the saved receipt; conflicting reuse refuses.
+2. Create private0700 storage. Durable writes:0600 exclusive temporary file,
+   fsync file, atomic rename, fsync directory. Unknown/corrupt schemas return a
+   typed error and are never overwritten. One exclusive per-target lock covers
+   configure/send/status. Record pid/hostname/requestId/createdAt; never steal a
+   lock. Status reports lock_orphaned for a proven dead local holder. Manual
+   operator inspection/clear is the documented recovery, never automatic.
+3. Save intent before native fill. Fixed read-only DOM detection checks the
+   composer exactly equals text before persisting sending and one Send click.
+   Mismatch is failed_presend with no click; only a new ID can retry. Sending or
+   later uncertainty blocks further sends until readonly status reconciles it.
+4. Status makes at most one probe. Require baseline message identity, exactly one
+   fresh user message matching text, fresh nonempty assistant identity/text,
+   stopped generation and same conversation/model/target. A follow-up references
+   a completed request on the same route and immediate conversation tail.
+   No background polling, automatic resend or automatic stale-lock recovery.
+5. Expose strict MCP inputs and idempotency annotations; keep malformed frontend
+   configuration isolated from all sibling MCP tools. Update user docs and the
+   existing journal/runbook/roadmap, then commit the reviewed source packet.
+
+Completion checks: observe red then green at public MCP for two linked turns,
+restart/readback, duplicate and conflicting IDs, fill mismatch, click timeout,
+crash-held lock, cross-process exclusion, occupied composer, changed target,
+model/conversation and interleaved user turns. Test serialized readonly DOM,
+malformed record/version and filesystem persistence. Regress existing frontend
+controls/startup; run typecheck, scoped lint and full build. Comprehensive prior
+baseline is4087passed/2known failures/11skipped, not a green full suite. Local
+fixtures are not signed-in provider acceptance. Peer milestone and final review
+must grade Standards and bounded S2 Spec separately; parent Spec stays PARTIAL.
+
+Non-goals: S1 polish, HOST-02, Claude/Grok adapters, OAuth HTTP, browser launch,
+provider sends, installs, LIVE changes. Terminal condition: reviewed committed
+S2 source/fixture result or a concrete gate, preserving unmeasured/live boundaries.
+
+
+### S2 implementation and review checkpoint
+
+Peer revision6 explicitly accepted packet v1 and clarified status locking;
+revision8 accepted code with a must-fix interrupted-prepared window. The red MCP
+regression reproduced that window and direct-call untyped ID error (2fail), then
+both were fixed. Status now locks and converts prepared to failed_presend with
+presend_interrupted and zero probes, because sending always precedes the click.
+Same ID remains non-retrying; another ID can proceed only with a clear composer.
+Initial publication deliberately uses fsynced temp+exclusive hardlink+directory
+fsync (peer accepted), avoiding cross-target same-ID overwrites; updates rename.
+Lost initial-create races currently fail safely with record_write_failed.
+
+Focused Linux regression101tests/9files PASS; typecheck PASS. Scoped lint initial
+warnings were corrected before final validation. Includes existing S1 controls,
+configuration failure isolation and actual child process crash lock coverage.
+No need to repeat original API/schema tests independently after this combined run.
+Status always reads the saved receipt without a lock, and only its single probe
+requires the shared lock. Orphan/foreign/unproven holders return receipt+lock state
+without probing; no automatic stealing. Inspect/configure now require the same
+private writable home lock and fail on orphan locks. Send overlapping controls
+fails immediately. Corrupt records conservatively block all sends. Prepared
+recovery is automatic only under an acquired lock; unresolved sending/sent/
+uncertain with no matching evidence stays held for operator inspection and a
+separately approved recovery. Never delete a receipt or change IDs to replay it.
+Multiple assistant DOM nodes and virtualized history remain live-acceptance risks;
+current detector refuses them instead of claiming a reply. Full build, full suite
+and final peer check pending at this checkpoint. Parent Spec remains PARTIAL.
+
+
+### S2 final validation before commit
+
+Linux full provider-free regression:427files,423passed/2failed/2skipped;
+4125tests,4112passed/2failed/11skipped,170.59seconds. Failures are the same
+llmServicePromptStructure and browser/login cases already reproduced on base
+ a3d365fe. Compared with S1's4087passed baseline, seven F1 startup regressions and
+18S2 workflow cases account for the25additional passes and one added test file.
+This is not a clean full-suite PASS. Focused101tests/9files PASS; typecheck PASS;
+scoped lint clean with no warnings; complete build PASS. Compiled stdio lists all
+four frontend tools, isolates invalid config while sessions still works, and
+attempts zero outbound connections under a network-blocking preload.
+Seven changed code/test files match the Linux validation copy by SHA256
+(/tmp/auracall-s2-source-parity.json). Separate fresh no-launch access plans for
+ChatGPT, Claude and Grok each report zero compatible retained browsers. No browser,
+provider, installer or LIVE effects. The parent acceptance remains1/6(16%).
+Last native budget184393/1M lead output used (baseline143981), combinedUNKNOWN.
+
+
+S2 final peer revision10: Standards PASS, bounded S2 Spec PASS, DONE/LOW;
+reported validation not independently rerun. Separate Codex Standards review
+PASS with a nonblocking duplicated terminal-state-list heuristic; leave it for
+future relevant work. Separate Codex Spec review found no behavioral violation,
+with only the pending commit keeping its pre-commit verdict PARTIAL. The source
+commit below closes that packet requirement. Parent Spec remains PARTIAL; real
+provider acceptance and retained DEV route are still missing. No new approvals,
+peer capacity, source deployment or LIVE acceptance arise from these grades.

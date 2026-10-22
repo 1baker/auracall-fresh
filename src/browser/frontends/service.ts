@@ -3,6 +3,8 @@ import {
 	resolveChatgptPowerSliderTarget,
 } from "../actions/chatgptPowerSlider.js";
 import { chatgptInspectionExpression } from "./chatgpt.js";
+import { FrontendMessages } from "./messages.js";
+import { FrontendRequestStore, frontendTargetKey } from "./requestStore.js";
 import {
 	FrontendError,
 	type FrontendBroker,
@@ -20,6 +22,10 @@ const sliderValue = (value: unknown): boolean =>
 
 export class FrontendService {
 	private readonly locks = new Map<string, Promise<void>>();
+	private readonly requestStore = new FrontendRequestStore();
+	private readonly messages = new FrontendMessages(this.requestStore, {
+		request: (route, request) => this.request(route, request),
+	});
 	constructor(
 		readonly routes: FrontendRoute[],
 		readonly broker: FrontendBroker,
@@ -34,6 +40,19 @@ export class FrontendService {
 	async inspect(routeId: string): Promise<Record<string, unknown>> {
 		const route = this.route(routeId);
 		return this.serial(route, async () => this.publicObservation(route, await this.observe(route)));
+	}
+
+	async send(
+		routeId: string,
+		requestId: string,
+		text: string,
+		previousRequestId?: string,
+	): Promise<Record<string, unknown>> {
+		return this.messages.send(this.route(routeId), requestId, text, previousRequestId);
+	}
+
+	async status(routeId: string, requestId: string): Promise<Record<string, unknown>> {
+		return this.messages.status(this.route(routeId), requestId);
 	}
 
 	async configure(routeId: string, effort: FrontendEffort): Promise<Record<string, unknown>> {
@@ -348,7 +367,7 @@ export class FrontendService {
 		this.locks.set(id, current);
 		await previous;
 		try {
-			return await operation();
+			return await this.requestStore.withLock(frontendTargetKey(route), "controls", operation);
 		} finally {
 			release();
 			if (this.locks.get(id) === current) this.locks.delete(id);

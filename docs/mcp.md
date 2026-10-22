@@ -634,3 +634,55 @@ log-tail checks as one release gate before live dogfood.
   ```
 - Tools and resources operate on the same session store as `auracall status|session`.
 - Defaults (model/engine/etc.) come from your Aura-Call CLI config; see `docs/configuration.md` or `~/.auracall/config.json`.
+
+
+### `frontend_send` and `frontend_status`
+
+`frontend_send` takes `routeId`, a caller-generated `requestId` (8-128 letters,
+digits, hyphens or underscores), `text` (up to 8192 characters), and optional
+`previousRequestId`. Configure an existing exact `https://chatgpt.com/c/<id>`
+conversation through `AURACALL_FRONTEND_CONFIG`; the retained handle and visible
+model must match. The composer must be empty and generation stopped. This path
+uses native frontend fill and one Send click through Agent Browser. It neither
+launches a browser nor calls a model API. Current qualification is local fixtures
+only (`liveVerified:false`), not real signed-in acceptance.
+
+Keep the request ID before calling. Repeating the same ID/content returns the
+saved receipt without input; changing content under that ID refuses. Call
+`frontend_status` with the same route/ID to read the reply, user and assistant
+message IDs and current status. It performs at most one read-only probe per call,
+never a send. Status reads the receipt without a lock and acquires the shared
+per-target lock only for reconciliation. A completed previous request must still
+be the exact conversation tail before a linked follow-up is allowed.
+
+Receipts live in the private AuraCall home `frontend-requests` directory. They
+contain prompt/reply text; keep that directory private. Initial records publish
+an fsynced 0600 temporary file with an exclusive hard link (no overwrite race);
+updates use fsynced temporary file, rename, then directory fsync. Unknown versions
+and malformed records are preserved. One corrupt record currently blocks new
+sends on every target; inspect and repair only through a separately reviewed
+operator recovery, never discard evidence just to make sending proceed.
+
+`sent` means native input was confirmed, not that a reply completed. A timeout
+returns `uncertain`; `sending` after a crash is also unresolved. Both block new
+sends on that target until status sees the exact new user text followed by a
+fresh completed assistant reply. Never change the request ID to replay an unknown
+send. Multiple assistant nodes or incomplete/virtualized history currently fail
+closed; qualifying actual provider variants remains part of live acceptance.
+
+Inspect/configure/send/status share a filesystem target lock. Inspect/configure
+now need writable private AuraCall storage as well. A send overlapping controls
+returns `lock_held` rather than waiting. Status returns its saved receipt with
+`lock_held`, `lock_foreign_host`, `lock_unproven` or `lock_orphaned` without probing
+when ownership is unavailable. No tool steals or removes an existing lock.
+
+For an orphan, the operator must inspect its exact recorded host/pid/request and
+prove the original holder is gone before manually clearing only that target's
+lock. Do not clear a foreign-host or unproven lock. After clearance, status can
+convert a remaining `prepared` record to `failed_presend/presend_interrupted`
+without browser input, since Send always follows a durable `sending` marker.
+Any remaining composer draft still needs operator review before another request.
+For `sending`/`uncertain`/`sent` without matching reply evidence, preserve the
+receipt and inspect that exact conversation manually. This slice has no forced
+completion/abandon API; unresolved requests stay blocking until verified readback
+or a separately approved recovery. No automatic retry or receipt deletion.

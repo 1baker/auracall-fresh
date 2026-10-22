@@ -1,3 +1,7 @@
+## 2026-10-22 — Save Send intent before frontend input
+
+Persist prepared before fill and sending before one Send click; recover by the same opaque request ID, never replay an uncertain send. Shared target locks exclude control/input races across processes. A prepared record under a newly acquired lock can become failed_presend after interruption without probing: the sending marker always precedes the click. Initial exclusive hard-link publication avoids overwriting concurrent same-ID requests on different target locks.
+
 ## 2026-10-22 — Optional frontend configuration must not disable sibling MCP tools
 
 Catch only the optional frontend loader invalid_config at startup and expose a typed disabled inspect/configure surface. Keep strict loader behavior, missing-route distinction, error redaction and unexpected-error propagation. Validate through an SDK client plus the existing sessions sibling.

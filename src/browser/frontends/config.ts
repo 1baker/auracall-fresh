@@ -18,7 +18,7 @@ const configSchema = z
 	.object({ brokerBaseUrl: z.string(), routes: z.array(routeSchema).max(32) })
 	.strict();
 
-export type FrontendTools = Pick<FrontendService, "inspect" | "configure">;
+export type FrontendTools = Pick<FrontendService, "inspect" | "configure" | "send" | "status">;
 
 /** Bad opt-in configuration disables frontend calls without disabling sibling tools. */
 export async function createStartupFrontendService(
@@ -31,7 +31,7 @@ export async function createStartupFrontendService(
 		const unavailable = async (): Promise<Record<string, unknown>> => {
 			throw new FrontendError("invalid_config", error.message);
 		};
-		return { inspect: unavailable, configure: unavailable };
+		return { inspect: unavailable, configure: unavailable, send: unavailable, status: unavailable };
 	}
 }
 

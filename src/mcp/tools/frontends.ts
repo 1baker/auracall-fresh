@@ -2,6 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { FrontendTools } from "../../browser/frontends/config.js";
 import { FrontendError } from "../../browser/frontends/types.js";
+import { requestIdSchema } from "../../browser/frontends/requestStore.js";
 
 /** Expose only opaque route IDs and documented effort values to MCP clients. */
 export function registerFrontendTools(server: McpServer, service: FrontendTools): void {
@@ -51,5 +52,35 @@ export function registerFrontendTools(server: McpServer, service: FrontendTools)
 			annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
 		},
 		({ routeId, effort }) => respond(() => service.configure(routeId, effort)),
+	);
+	server.registerTool(
+		"frontend_send",
+		{
+			description:
+				"Send once through a configured existing ChatGPT frontend conversation. Save requestId; repeat only that same ID/content to recover the receipt. Never automatically replays uncertain input.",
+			inputSchema: route.extend({
+				requestId: requestIdSchema,
+				text: z.string().min(1).max(8192),
+				previousRequestId: requestIdSchema.optional(),
+			}),
+			annotations: {
+				readOnlyHint: false,
+				destructiveHint: false,
+				idempotentHint: true,
+				openWorldHint: true,
+			},
+		},
+		({ routeId, requestId, text, previousRequestId }) =>
+			respond(() => service.send(routeId, requestId, text, previousRequestId)),
+	);
+	server.registerTool(
+		"frontend_status",
+		{
+			description:
+				"Read a saved frontend request and perform at most one read-only conversation probe. Returns saved replies and message IDs; never types or sends, including after restart.",
+			inputSchema: route.extend({ requestId: requestIdSchema }),
+			annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: true },
+		},
+		({ routeId, requestId }) => respond(() => service.status(routeId, requestId)),
 	);
 }

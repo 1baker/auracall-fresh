@@ -1,4 +1,4 @@
-- OPEN P91 | Browser frontend MCP: [Plan0444](docs/dev/plans/0444-2026-10-22-browser-frontend-mcp.md). Current state: S1 source/test work; no provider or LIVE acceptance.
+- OPEN P91 | Browser frontend MCP: [Plan0444](docs/dev/plans/0444-2026-10-22-browser-frontend-mcp.md). Current state: S1/F1 committed; S2 durable send/status source and local workflow tests in review. No provider or LIVE acceptance.
 
 - Completed P89: [Plan0404](docs/dev/plans/0404-2026-10-10-demand-driven-desktop-pool.md) implements automatic rail Wake, configurable native capacity and guarded shrink; PR270 installed with maximum10, five occupied desktops and one ready spare;14 original routes preserved.
 

@@ -153,3 +153,470 @@ describe("synthetic frontend workflow through public MCP and HTTP", () => {
 		}
 	});
 });
+
+function requiredElement(doc: Document, selector: string): Element {
+	const node = doc.querySelector(selector);
+	if (!node) throw new Error(`Missing fixture element: ${selector}`);
+	return node;
+}
+
+// S2: public protocol coverage. The fixture changes only in response to native
+// ui_action input; production's serialized readonly detector supplies all reads.
+async function messagingFixture() {
+	const { mkdtemp, rm } = await import("node:fs/promises");
+	const { tmpdir } = await import("node:os");
+	const { join } = await import("node:path");
+	const { setAuracallHomeDirOverrideForTest } = await import("../src/auracallHome.js");
+	const home = await mkdtemp(join(tmpdir(), "auracall-send-"));
+	setAuracallHomeDirOverrideForTest(home);
+	const url = "https://chatgpt.com/c/messaging-fixture";
+	const { document } = parseHTML(
+		'<html><body><button data-testid="model-switcher-dropdown-button">GPT fixture</button><main></main><textarea id="prompt-textarea"></textarea><button data-testid="send-button">Send</button></body></html>',
+	);
+	const handle = {
+		valid: true,
+		browserId: "message-browser",
+		sessionName: "message-session",
+		profileId: "message-profile",
+		tabId: "message-tab",
+		targetId: "message-target",
+	};
+	const route = {
+		id: "messages",
+		provider: "chatgpt" as const,
+		expectedUrl: url,
+		expectedModel: "GPT fixture",
+		serviceTabHandle: handle,
+		profileCapabilityEnv: "FIXTURE_CAPABILITY",
+	};
+	let clicks = 0;
+	let probes = 0;
+	let timeoutClick = false;
+	let mismatchFill = false;
+	let observedUrl = url;
+	let target = handle.targetId;
+	const broker = async (request: Record<string, unknown>) => {
+		expect(request.serviceTabHandle).toEqual(handle);
+		expect(request.repairPolicy).toBe("reject_only");
+		expect(request.profileLeasePolicy).toBe("reject");
+		const common = { ok: true, targetId: target, url: observedUrl };
+		if (request.action === "probe") {
+			probes++;
+			const detector = (request.probe as { detectors: { id: string; expression: string }[] })
+				.detectors[0];
+			return {
+				...common,
+				detectors: [
+					{
+						id: detector.id,
+						ok: true,
+						resultTruncated: false,
+						result: runInNewContext(detector.expression, {
+							document,
+							location: { href: observedUrl },
+						}),
+					},
+				],
+			};
+		}
+		expect(request.action).toBe("ui_action");
+		const step = (
+			request.uiAction as { steps: { type: string; selector: string; value?: string }[] }
+		).steps[0];
+		const node = document.querySelector(step.selector) as HTMLTextAreaElement;
+		expect(node).toBeTruthy();
+		if (step.type === "fill") {
+			if (typeof step.value !== "string") throw new Error("Missing native fill text");
+			node.value = mismatchFill ? "wrong input" : step.value;
+		} else {
+			expect(step.type).toBe("click");
+			expect(node.getAttribute("data-testid")).toBe("send-button");
+			clicks++;
+			const text = (document.querySelector("#prompt-textarea") as HTMLTextAreaElement).value;
+			for (const [role, content] of [
+				["user", text],
+				["assistant", clicks === 1 ? "BLUE-17" : "BLUE-17 remembered"],
+			]) {
+				const el = document.createElement("div");
+				el.setAttribute("data-message-author-role", role);
+				el.setAttribute("data-message-id", `${role}-${clicks}`);
+				el.textContent = content;
+				requiredElement(document, "main").append(el);
+			}
+			(document.querySelector("#prompt-textarea") as HTMLTextAreaElement).value = "";
+			if (timeoutClick) throw new Error("unconfirmed native response");
+		}
+		return { ...common, steps: [{ index: 0, type: step.type, ok: true }] };
+	};
+	const servers: McpServer[] = [];
+	const clients: Client[] = [];
+	const connect = async () => {
+		const server = new McpServer({ name: "send-fixture", version: "1" });
+		registerFrontendTools(server, new FrontendService([route], broker));
+		const client = new Client({ name: "send-fixture", version: "1" });
+		const [a, b] = InMemoryTransport.createLinkedPair();
+		await server.connect(b);
+		await client.connect(a);
+		servers.push(server);
+		clients.push(client);
+		return async (name: string, args: Record<string, unknown>) =>
+			(await client.callTool({ name, arguments: { routeId: route.id, ...args } }))
+				.structuredContent as Record<string, unknown>;
+	};
+	return {
+		connect,
+		document,
+		home,
+		route,
+		stats: () => ({ clicks, probes }),
+		setTimeout: () => {
+			timeoutClick = true;
+		},
+		setMismatch: () => {
+			mismatchFill = true;
+		},
+		setUrl: (value: string) => {
+			observedUrl = value;
+		},
+		setTarget: (value: string) => {
+			target = value;
+		},
+		cleanup: async () => {
+			for (const c of clients) await c.close();
+			for (const s of servers) await s.close();
+			setAuracallHomeDirOverrideForTest(null);
+			await rm(home, { recursive: true, force: true });
+		},
+	};
+}
+
+describe("durable frontend messages through MCP", () => {
+	it("reads two connected replies and reopens the same saved receipt after restart", async () => {
+		const f = await messagingFixture();
+		try {
+			const call = await f.connect();
+			expect(
+				await call("frontend_send", { requestId: "request-one", text: "Return BLUE-17" }),
+			).toMatchObject({ requestId: "request-one", status: "sent", liveVerified: false });
+			expect(await call("frontend_status", { requestId: "request-one" })).toMatchObject({
+				status: "completed",
+				output: "BLUE-17",
+				userMessageId: "user-1",
+				assistantMessageId: "assistant-1",
+			});
+			const afterRestart = await f.connect();
+			expect(
+				await afterRestart("frontend_send", { requestId: "request-one", text: "Return BLUE-17" }),
+			).toMatchObject({ status: "completed", output: "BLUE-17" });
+			expect(f.stats().clicks).toBe(1);
+			expect(
+				await afterRestart("frontend_send", {
+					requestId: "request-two",
+					text: "What was your actual previous answer?",
+					previousRequestId: "request-one",
+				}),
+			).toMatchObject({ status: "sent" });
+			expect(await afterRestart("frontend_status", { requestId: "request-two" })).toMatchObject({
+				status: "completed",
+				output: "BLUE-17 remembered",
+				previousRequestId: "request-one",
+			});
+			expect(f.stats().clicks).toBe(2);
+		} finally {
+			await f.cleanup();
+		}
+	});
+});
+
+describe("frontend message safety and recovery through MCP", () => {
+	it("rejects conflicting IDs and reads an uncertain click without replaying it", async () => {
+		const f = await messagingFixture();
+		try {
+			const call = await f.connect();
+			f.setTimeout();
+			expect(
+				await call("frontend_send", { requestId: "timeout-one", text: "Return BLUE-17" }),
+			).toMatchObject({ status: "uncertain" });
+			expect(
+				await call("frontend_send", { requestId: "timeout-one", text: "different" }),
+			).toMatchObject({ code: "request_conflict" });
+			expect(
+				await call("frontend_send", { requestId: "timeout-one", text: "Return BLUE-17" }),
+			).toMatchObject({ status: "uncertain" });
+			expect(
+				await call("frontend_send", { requestId: "timeout-two", text: "another" }),
+			).toMatchObject({ code: "request_unresolved" });
+			expect(f.stats().clicks).toBe(1);
+			const before = f.stats().probes;
+			expect(await call("frontend_status", { requestId: "timeout-one" })).toMatchObject({
+				status: "completed",
+				output: "BLUE-17",
+			});
+			expect(f.stats().probes - before).toBe(1);
+			expect(f.stats().clicks).toBe(1);
+		} finally {
+			await f.cleanup();
+		}
+	});
+	it("records a failed composer readback with zero send clicks and does not retry that ID", async () => {
+		const f = await messagingFixture();
+		try {
+			const call = await f.connect();
+			f.setMismatch();
+			expect(
+				await call("frontend_send", { requestId: "mismatch-one", text: "exact text" }),
+			).toMatchObject({ status: "failed_presend" });
+			const before = f.stats();
+			expect(
+				await call("frontend_send", { requestId: "mismatch-one", text: "exact text" }),
+			).toMatchObject({ status: "failed_presend" });
+			expect(f.stats()).toEqual(before);
+			expect(f.stats().clicks).toBe(0);
+		} finally {
+			await f.cleanup();
+		}
+	});
+	it.each([
+		"occupied",
+		"generating",
+		"target",
+		"url",
+		"model",
+		"duplicate-message",
+	])("refuses unsafe frontend state: %s", async (kind) => {
+		const f = await messagingFixture();
+		try {
+			const call = await f.connect();
+			if (kind === "occupied")
+				(f.document.querySelector("#prompt-textarea") as HTMLTextAreaElement).value =
+					"unsent human draft";
+			if (kind === "generating")
+				requiredElement(f.document, "main").innerHTML =
+					'<button data-testid="stop-button">Stop</button>';
+			if (kind === "target") f.setTarget("foreign-target");
+			if (kind === "url") f.setUrl("https://chatgpt.com/c/another");
+			if (kind === "model")
+				requiredElement(f.document, '[data-testid="model-switcher-dropdown-button"]').textContent =
+					"another model";
+			if (kind === "duplicate-message")
+				requiredElement(f.document, "main").innerHTML =
+					'<div data-message-author-role="user" data-message-id="duplicate">one</div><div data-message-author-role="assistant" data-message-id="duplicate">two</div>';
+			const result = await call("frontend_send", { requestId: "unsafe-one", text: "test" });
+			expect(result).toMatchObject({ ok: false });
+			expect(f.stats().clicks).toBe(0);
+		} finally {
+			await f.cleanup();
+		}
+	});
+	it("refuses a follow-up when a human turn has interleaved since the saved reply", async () => {
+		const f = await messagingFixture();
+		try {
+			const call = await f.connect();
+			await call("frontend_send", { requestId: "linked-one", text: "one" });
+			await call("frontend_status", { requestId: "linked-one" });
+			requiredElement(f.document, "main").insertAdjacentHTML(
+				"beforeend",
+				'<div data-message-author-role="user" data-message-id="human-extra">human text</div>',
+			);
+			expect(
+				await call("frontend_send", {
+					requestId: "linked-two",
+					text: "two",
+					previousRequestId: "linked-one",
+				}),
+			).toMatchObject({ code: "continuity_mismatch" });
+			expect(f.stats().clicks).toBe(1);
+		} finally {
+			await f.cleanup();
+		}
+	});
+	it("does not accept an unrelated user turn as the requested reply", async () => {
+		const f = await messagingFixture();
+		try {
+			const call = await f.connect();
+			await call("frontend_send", { requestId: "poll-one", text: "one" });
+			requiredElement(f.document, '[data-message-author-role="user"]').textContent =
+				"other person text";
+			expect(await call("frontend_status", { requestId: "poll-one" })).toMatchObject({
+				status: "sent",
+				code: "continuity_mismatch",
+				output: null,
+			});
+			expect(await call("frontend_send", { requestId: "poll-two", text: "two" })).toMatchObject({
+				code: "request_unresolved",
+			});
+		} finally {
+			await f.cleanup();
+		}
+	});
+	it.each([
+		"malformed",
+		"version",
+	])("preserves %s records and refuses to overwrite them", async (kind) => {
+		const f = await messagingFixture();
+		try {
+			const { mkdir, writeFile, readFile } = await import("node:fs/promises");
+			const { join } = await import("node:path");
+			const path = join(f.home, "frontend-requests", "corrupt-one.json");
+			await mkdir(join(f.home, "frontend-requests"), { mode: 0o700 });
+			const contents = kind === "version" ? JSON.stringify({ version: 2 }) : "invalid JSON";
+			await writeFile(path, contents);
+			const call = await f.connect();
+			expect(await call("frontend_send", { requestId: "corrupt-one", text: "one" })).toMatchObject({
+				code: "record_invalid",
+			});
+			expect(await call("frontend_status", { requestId: "corrupt-one" })).toMatchObject({
+				code: "record_invalid",
+			});
+			expect(await readFile(path, "utf8")).toBe(contents);
+			expect(f.stats().clicks).toBe(0);
+		} finally {
+			await f.cleanup();
+		}
+	});
+	it("refuses arbitrary code, handles, paths and invalid prior request IDs in public inputs", async () => {
+		const f = await messagingFixture();
+		try {
+			const call = await f.connect();
+			for (const args of [
+				{ requestId: "../../escape", text: "x" },
+				{ requestId: "safe-request", text: "x", script: "arbitrary code" },
+				{ requestId: "safe-request", text: "x", previousRequestId: "bad" },
+				{ requestId: "safe-request", text: "x", serviceTabHandle: {} },
+			]) {
+				expect(await call("frontend_send", args)).toBeUndefined();
+			}
+			expect(f.stats()).toEqual({ clicks: 0, probes: 0 });
+		} finally {
+			await f.cleanup();
+		}
+	});
+	it("blocks simultaneous requests from separate services on the same retained target", async () => {
+		const f = await messagingFixture();
+		try {
+			const call = await f.connect();
+			const other = await f.connect();
+			const results = await Promise.all([
+				call("frontend_send", { requestId: "parallel-one", text: "one" }),
+				other("frontend_send", { requestId: "parallel-two", text: "two" }),
+			]);
+			expect(results.filter((r) => r.status === "sent")).toHaveLength(1);
+			expect(
+				results.filter((r) =>
+					["lock_held", "lock_unproven", "request_unresolved"].includes(String(r.code)),
+				),
+			).toHaveLength(1);
+			expect(f.stats().clicks).toBe(1);
+		} finally {
+			await f.cleanup();
+		}
+	});
+	it("reports a process-held lock and a crash orphan without probing or stealing it", async () => {
+		const f = await messagingFixture();
+		let child: import("node:child_process").ChildProcess | undefined;
+		try {
+			const call = await f.connect();
+			await call("frontend_send", { requestId: "orphan-one", text: "one" });
+			const { spawn } = await import("node:child_process");
+			const { once } = await import("node:events");
+			const moduleUrl = new URL("../src/browser/frontends/requestStore.ts", import.meta.url).href;
+			const script = `import {FrontendRequestStore,frontendTargetKey} from ${JSON.stringify(moduleUrl)};const route=JSON.parse(process.env.FIXTURE_ROUTE);await new FrontendRequestStore().withLock(frontendTargetKey(route),'child-lock',async()=>{process.stdout.write('locked\\n');await new Promise(()=>{});});`;
+			const homeVariable = "AURACALL_HOME_DIR";
+			const routeVariable = "FIXTURE_ROUTE";
+			child = spawn(process.execPath, ["--import", "tsx", "--input-type=module", "-e", script], {
+				env: {
+					...process.env,
+					[homeVariable]: f.home,
+					[routeVariable]: JSON.stringify(f.route),
+				},
+				stdio: ["ignore", "pipe", "pipe"],
+			});
+			if (!child.stdout) throw new Error("Missing child output");
+			await Promise.race([
+				once(child.stdout, "data"),
+				once(child, "exit").then(() => {
+					throw new Error("lock child exited before readiness");
+				}),
+			]);
+			const before = f.stats().probes;
+			expect(await call("frontend_status", { requestId: "orphan-one" })).toMatchObject({
+				status: "sent",
+				lockState: "lock_held",
+			});
+			expect(await call("frontend_send", { requestId: "orphan-two", text: "two" })).toMatchObject({
+				code: "lock_held",
+			});
+			const exited = once(child, "exit");
+			child.kill("SIGKILL");
+			await exited;
+			expect(await call("frontend_status", { requestId: "orphan-one" })).toMatchObject({
+				status: "sent",
+				lockState: "lock_orphaned",
+			});
+			expect(await call("frontend_send", { requestId: "orphan-two", text: "two" })).toMatchObject({
+				code: "lock_orphaned",
+			});
+			expect(f.stats().probes).toBe(before);
+			expect(f.stats().clicks).toBe(1);
+		} finally {
+			if (child?.exitCode === null && child.signalCode === null) child.kill("SIGKILL");
+			await f.cleanup();
+		}
+	});
+});
+
+it("recovers an interrupted prepared intent without probing or sending", async () => {
+	const f = await messagingFixture();
+	try {
+		const call = await f.connect();
+		f.setMismatch();
+		await call("frontend_send", { requestId: "prepared-one", text: "one" });
+		const { readFile, writeFile } = await import("node:fs/promises");
+		const { join } = await import("node:path");
+		const path = join(f.home, "frontend-requests", "prepared-one.json");
+		const record = JSON.parse(await readFile(path, "utf8"));
+		record.status = "prepared";
+		record.code = null;
+		await writeFile(path, JSON.stringify(record));
+		const before = f.stats();
+		expect(await call("frontend_status", { requestId: "prepared-one" })).toMatchObject({
+			status: "failed_presend",
+			code: "presend_interrupted",
+		});
+		expect(f.stats()).toEqual(before);
+		(f.document.querySelector("#prompt-textarea") as HTMLTextAreaElement).value = "";
+		expect(await call("frontend_send", { requestId: "prepared-two", text: "two" })).toMatchObject({
+			status: "failed_presend",
+		});
+		expect(f.stats().clicks).toBe(0);
+	} finally {
+		await f.cleanup();
+	}
+});
+it("gives direct service callers a typed invalid request ID before broker input", async () => {
+	const service = new FrontendService(
+		[
+			{
+				id: "route",
+				provider: "chatgpt",
+				expectedUrl: "https://chatgpt.com/c/fixture",
+				expectedModel: "fixture",
+				profileCapabilityEnv: "FIXTURE_CAPABILITY",
+				serviceTabHandle: {
+					valid: true,
+					browserId: "browser",
+					tabId: "tab",
+					targetId: "target",
+					profileId: "fixture",
+					sessionName: "session",
+				},
+			},
+		],
+		async () => {
+			throw new Error("Unexpected broker input");
+		},
+	);
+	await expect(service.send("route", "bad", "text")).rejects.toMatchObject({
+		code: "invalid_request_id",
+	});
+});
