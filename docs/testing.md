@@ -1,4 +1,21 @@
 - Backend transport handoff, native cancellation and inventory observation (provider-free, issue325):
+
+## Protected frontend HTTP MCP (Plan0444 S4)
+
+Build first with `pnpm run build`, then run `pnpm exec vitest run tests/mcp.http.test.ts tests/mcp.http.config.test.ts tests/mcp.http.security.test.ts tests/mcp.http.process.test.ts --maxWorkers=1`.
+These checks exercise real loopback HTTP through official SDK clients, signed
+positive/negative tokens, operation scopes, route masking, bounded input,
+shared target locking, linked fixture replies and persisted restart recovery.
+The process fixture requires the existing `openssl` command and compiled MCP
+entry point. It creates its own HTTPS signing-key server, certificate and fake
+Agent Browser HTTP broker; only its child trusts the fixture certificate.
+No actual provider, AS, installed service or retained browser is contacted.
+
+Do not run a build concurrently with compiled MCP tests: build cleanup can
+remove their entry/assets. Final regression uses `pnpm exec vitest run --maxWorkers=1`
+with live-test opt-ins absent. Preserve and identify existing baseline failures;
+fixture success does not qualify actual shared SSO or HTTP-to-provider acceptance.
+
   `pnpm vitest run tests/browser/backendRequestAdmission.test.ts tests/browser/chatgptDeveloperAppInventory.test.ts tests/browser/nativeDesktopCdp.test.ts tests/browser/desktopControlGate.test.ts`.
   Reused governor probes the owning Runtime after predecessor closure. Seven
   native-cancellation controls distinguish before/after SDK send, foreign

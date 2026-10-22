@@ -1,3 +1,26 @@
+# Turn 202610221810 | 2026-10-22
+
+Plan0444 S4 adds explicit `auracall-mcp --http`: exactly four frontend tools,
+loopback listener, protected-resource metadata, signed JWT access-token typing,
+exact issuer/one audience/subject, operation scopes and a route allowlist.
+Default stdio and core receipts/locks stay unchanged. Adversarial HTTP tests
+show zero SDK/service construction for invalid authority and no hidden-route
+data/effects. Linked fixture replies survive a real compiled CLI process restart
+with production HTTPS signing-key fetch and no replay. Administrator provisioning
+is documented separately from the required normal Authelia sign-in flow.
+
+SDK1.25.1 had two published transport advisories; pin1.32.0 and review its small
+closure with scoped Hono/IP overrides. Introduced versions have no audit findings;
+repository audit remains nonclean from inherited dependencies. No SDKv2 migration,
+installed service, AS/client/ingress/vault or provider/browser change. Final serial regression4225PASS/2known failures/65pending across452files,
+including all39HTTP checks, plus typecheck/build/zero-warning scoped lint PASS.
+Claude final16 inspected source and accepted owner-run evidence: Standards PASS,
+S4 source Spec PASS, no blockers, DONE/LOW. Source packet closed; parent PARTIAL.
+Regression SHA3939cbc355a88d5d1747a82f20adbfa911aa0765a86129bb38cfeddcf0810b7a;
+private logs in validation/evidence/s4-final. Plan0444 records nonblocking wording,
+wrapping, wrong-subject403 and drain follow-ups; none expands active scope. Native Grok evidence remains embedded-path only; ChatGPT/Claude/SSO and
+actual HTTP/provider acceptance remain pending. Parent3/6=50%, HOST02 held.
+
 # Turn 202610221610 | 2026-10-22
 
 The user's explicit accept-all cookie choice at16:05:08.928Z lifted the notice

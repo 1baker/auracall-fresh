@@ -6,7 +6,7 @@ For agent/app workflow patterns, including setup-vs-execution separation,
 scoped keys, response batches, attachments, and polling rules, see
 `docs/agent-workflows.md`.
 
-## Frontend intelligence controls (development S1)
+## Frontend intelligence controls (development)
 
 `frontend_inspect({routeId})` reads the visible ChatGPT model and intelligence.
 `frontend_configure({routeId, effort})` accepts `light`, `standard`, `extended`,
@@ -16,14 +16,14 @@ must match after input. Lost focus, model/URL drift, unavailable controls and
 unexpected movement stop the operation. At most four arrows and six UI actions
 are allowed. Uncertain input is never automatically replayed.
 
-Set `AURACALL_FRONTEND_CONFIG` to a private JSON file with `brokerBaseUrl` and
+Administrator provisioning only: set `AURACALL_FRONTEND_CONFIG` to a private JSON file with `brokerBaseUrl` and
 `routes`. `brokerBaseUrl` must be an explicit loopback HTTP origin, such as
 `http://127.0.0.1:38551`; obtain the actual port from your Agent Browser service.
 Each route contains:
 
 - `id`: the opaque `routeId` clients may use.
-- `provider`: `chatgpt` in S1.
-- `expectedUrl`: the exact retained HTTPS ChatGPT page URL.
+- `provider`: `chatgpt` or `grok`; intelligence configuration is ChatGPT-only.
+- `expectedUrl`: the exact retained HTTPS provider page URL.
 - `expectedModel`: the exact visible model-button text.
 - `serviceTabHandle`: the existing broker-issued handle, including `valid:true`,
   `browserId`, `profileId`, `tabId`, `targetId`, and `sessionName` or
@@ -46,11 +46,80 @@ refusal does not authorize launch, repair or a replacement browser.
 
 Tool output contains route IDs and bounded visible state; it omits handles and
 credentials. `verified:true` means the requested setting matched that call's
-readback. `liveVerified:false` records that this development slice has no
-qualified live-provider acceptance. S1 is ChatGPT-only, stdio-only and has no
-Send action. Claude/Grok, durable replies and OAuth HTTP integration remain
-separate pending slices. The reusable OAuth MCP skill/starter is a foundation,
-not proof those provider workflows work.
+readback. The control recipe's `liveVerified:false` remains qualified: actual
+ChatGPT intelligence acceptance is pending. Durable `frontend_send` and
+`frontend_status` now support ChatGPT and Grok; their persistence and native
+Grok acceptance boundaries are documented below. Claude remains unsupported
+until an exact Agent Browser-owned binding and frontend recipe are qualified.
+
+## Protected frontend HTTP MCP (development S4)
+
+The default `auracall-mcp` entry point remains stdio with the existing tools.
+Explicit `auracall-mcp --http` selects a separate stateless Streamable HTTP
+resource exposing exactly `frontend_inspect`, `frontend_configure`,
+`frontend_send` and `frontend_status`. It does not initialize legacy/admin MCP
+services. The listener binds only `127.0.0.1`, default port3100; administrator
+managed HTTPS ingress must preserve the configured resource Host and restrict
+network access. This is reviewed source/local-fixture work, not an installed or
+externally available endpoint.
+
+Ordinary browser use must follow the shared Authelia sign-in and remembered
+central session. No second AuraCall login, token-paste form or WSL setup belongs
+in that flow. OAuth protects the MCP connection; provider website sign-in and
+browser custody still belong to Agent Browser. Actual shared SSO, authorization
+server/client registration and native client acceptance are separate, pending
+integration gates owned by the shared-service operator.
+
+Administrator provisioning only: `AURACALL_FRONTEND_OAUTH_CONFIG` names an
+explicit private JSON file (regular file, no symlink, <=16KiB, no group/world
+permissions). Provision it privately alongside the existing frontend route
+configuration; do not put subject IDs, retained handles or credentials in shared
+artifacts. Required fields:
+
+| Field | Meaning |
+| --- | --- |
+| `resource` | Exact canonical HTTPS MCP URL, including its path; also the token audience. |
+| `issuer` | Exact trusted HTTPS issuer, matching `iss` without normalization. |
+| `jwksUri` | Explicit trusted HTTPS signing-key URL; redirects are refused. |
+| `subject` | One exact approved issuer subject; multi-user use is unsupported. |
+| `routeIds` | Unique server-owned route allowlist, 1–32 configured IDs. |
+| `port` | Optional loopback port, 1–65535; default3100. |
+| `origins` | Optional additional exact HTTPS Origin allowlist, at most8. |
+
+The resource provides RFC9728 protected-resource metadata at the root and its
+path-suffixed well-known URL. It advertises the configured issuer/resource and
+`frontend:read`, `frontend:send`, `frontend:configure` scopes intentionally.
+Missing/invalid authority gets a401 challenge pointing to that metadata.
+Read/status require `frontend:read`, Send requires `frontend:send`, and
+intelligence changes require `frontend:configure`. Insufficient scope returns403
+before service effects. Routes outside the allowlist have no service effects.
+
+Only one header Bearer token is accepted. JWT access-token validation requires
+RS256/ES256, `typ: at+jwt` (including `application/at+jwt`), signature, exact
+issuer, one exact resource audience, expiry, the configured subject and grants.
+Opaque tokens, ID-token types, untyped JWTs, query/body tokens and duplicate
+Authorization headers are refused. This implements access-token typing, not the
+full RFC9068 `client_id`/`iat`/`jti` profile. The actual authorization server must
+be verified to emit this profile before activation. Browser cookies, gateway
+identity headers and forwarded bearer injection do not replace MCP authority.
+Tokens and private claims never pass to frontend adapters or tool output.
+
+Before SDK dispatch, ingress enforces Host/Origin, POST-only MCP, JSON-only
+bodies <=64KiB, depth<=16, nodes<=2048 and no JSON-RPC batches. Each HTTP request
+uses a fresh stateless MCP server/transport; the existing shared FrontendService,
+disk receipts and target locks preserve one-send/restart behavior. HTTP status
+masks foreign-route IDs as missing. HTTP send masks foreign binding failures as
+a generic content conflict and leaves foreign receipts untouched. Global
+request-ID availability is not concealed between routes of this single owner;
+this is not a multi-principal isolation design.
+
+Tests cover real HTTP/official SDK clients, adversarial signed tokens, scoped
+operations, route privacy, concurrent input, linked fixture replies and restart.
+A compiled CLI process test uses a local HTTPS signing-key server and a synthetic
+Agent Browser broker, then restarts the process and proves cached recovery adds
+no input. These fixtures do not establish actual OAuth consent, Authelia SSO,
+provider login, or production HTTP-broker acceptance. Existing embedded Grok
+native acceptance remains distinct, at3/6=50% overall. HOST02 stays held.
 
 ## Tools
 

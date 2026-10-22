@@ -137,6 +137,14 @@ export interface CreateMcpServicesDeps {
 }
 
 export async function startMcpServer(): Promise<void> {
+  if (process.argv.slice(2).includes('--http')) {
+    if (process.argv.slice(2).length !== 1) {
+      throw new Error('Use auracall-mcp --http with its explicit configuration file.');
+    }
+    const { startFrontendHttpServer } = await import('./http/server.js');
+    await startFrontendHttpServer();
+    return;
+  }
   const services = await createDefaultMcpServices();
   const server = new McpServer(
     {

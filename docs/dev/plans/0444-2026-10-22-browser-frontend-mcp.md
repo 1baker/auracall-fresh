@@ -2,7 +2,182 @@
 
 State: OPEN
 
-## Current packet: S3 Grok send/status, 22 October 2026
+## Current packet: S4 protected HTTP frontend tools | 2026-10-22
+
+State: SOURCE ACCEPTED/CLOSED; integration pending. Exact peer task auracall-oauth-frontend-s4-20261022, native owner
+01a16096-da12-7753-8d44-e299c2172cef, branch feature/auracall-web-mcp-01a16096,
+source checkpoint16faa856. Human direction: continue AuraCall for the next2-3h,
+review/copy the Image Generator Previews ticket pattern. Objective auracall55
+preserves all6Implement selections and3/6=50%. Image-generator24 supplies the
+presentation pattern only: plain outcome tickets plus distinct output/test/review
+proof. Its drawing work, grades and authority are not copied into AuraCall.
+
+Outcome: an opt-in OAuth-protected HTTP MCP resource exposes only the existing
+four frontend tools to one exact configured issuer/subject, with operation scopes
+and a server-owned route allowlist. Stdio remains the default. Reuse the same
+FrontendService/receipt store/global target locks. Unknown subject, wrong
+signature/issuer/audience/expiry, insufficient scope and unauthorized routes
+refuse before service effects; auth tokens never reach browser adapters.
+Multi-principal operation is unsupported. JWT/JWKS validation is separate from
+provider website login. Root owns actual AS/Authelia/LastPass/ingress work.
+
+Scope: src/mcp/http/{config,auth,scopedFrontend,server}.ts, small --http startup
+branch, dependency metadata, tests/mcp.http*.test.ts and matching docs. No
+browser/provider sends, actual issuer/client registration, deployment, service
+restart, installer/HOST02 work or new account/browser binding. S2 live gate,
+S3 history, peer counters, existing API bearer and LIVE remain unchanged.
+
+Claude plan2 and review4 accept RED-first HTTP metadata/401/SDK initialize/list
+and then scoped implementation. Public tracer failed missing HTTP server module;
+log /tmp/auracall-s4-red.log. That is a missing-capability RED, not a passing
+workflow test. Replan6 accepts the security-required v1 dependency amendment:
+@modelcontextprotocol/sdk1.25.1 -> exact1.32.0. Official advisories
+GHSA-46jr-4wx8-v453 and GHSA-rvq5-wwqv-78pq affect the old pin. No SDKv2 migration.
+All dependency changes stay in the owned DEV branch/private validation copy;
+no installed runtime changes. Review every changed resolution and preserve the
+known baseline failures tests/browser/llmServicePromptStructure.test.ts and
+tests/browser/login.test.ts. The initially promised jose-only lockfile change
+is superseded explicitly by this security evidence.
+
+Dependency milestone / Claude drift8: exact SDK1.32.0 plus one jose6.1.3.
+Two persistent pnpm.overrides apply only to this closure:
+@modelcontextprotocol/sdk>hono=4.13.11 fixes GHSA-5r4p-p66f-jhc7;
+express-rate-limit@8.6.2>ip-address=10.7.1 fixes GHSA-h3mg-xc3c-68pw.
+Cached manifests and semver confirm both selected versions satisfy upstream
+ranges. The version-qualified rate-limit selector must be rechecked whenever
+that package is bumped; otherwise the override stops applying. Unrelated socks
+still resolves its original ip-address10.1.0, an inherited out-of-scope advisory.
+Final frozen offline install passed. Initial25 downloads lack package-level
+trace (UNKNOWN); final package set and lock integrities are reviewed. The
+repository audit remains nonclean; introduced exact versions have no findings.
+
+Serial dependency baseline:4186PASS/2known failures/65pending across448files;
+typecheck and full build PASS. The intentionally new RED test was held outside
+the validation suite for that check, then restored and confirmed missing only
+the unimplemented HTTP server. One parallel run transiently failed S2 test
+“reports a process-held lock and a crash orphan without probing or stealing it”;
+focused40PASS and complete serial baseline-only. A standalone Node experiment
+confirmed an unresolved Promise alone can exit13; record this fixture timing
+risk, with no S2 test/source change or hidden exclusion. Source/validation
+src/tests bytes match apart from the disclosed RED hold. Minimal HTTP work now
+proceeds under drift8; no old peer/budget/host gate changes.
+
+HTTP privacy disposition / Claude replan12: private configuration read/parse
+errors use one fixed message without the file contents/path (public test RED
+then GREEN). HTTP status masks foreign-route binding as request_missing, equal
+to unknown-ID status. HTTP send maps either foreign replay/previous binding to
+uniform request_conflict, equal to an ordinary same-route content conflict.
+Other source codes pass through; stdio/core/store remain unchanged.
+
+The earlier reviewer demand that a foreign-ID send byte-match a new unknown-ID
+send was withdrawn: unknown IDs must create one new send. A send wrapper cannot
+distinguish its two binding-error origins without a core change or an extra
+potentially mutating status call. Single-owner request-ID availability across
+routes is NOT concealed; no send-side route-existence or multi-principal secrecy
+claim is made. Guarantees: no foreign reply/URL/receipt fields, unchanged foreign
+receipt bytes, no hidden-target effects, no new record for a refused previous-ID
+send. Public RFC9728 issuer/resource/scopes remain intentionally advertised;
+private JWT claims/tokens never enter adapters, errors or logs.
+
+Shared sign-in clarification,22Oct2026: apply the root-owned
+PRIVATE-TOOL-SSO-ACCEPTANCE.md rule to AuraCall. Authelia is the only normal
+browser sign-in; remembered central login carries across tools in the same
+browser. No additional app username/password, key/token-paste form or WSL setup
+in ordinary use. Any setup examples here are administrator-only provisioning.
+Machine/MCP grants remain resource- and scope-bound, privately provisioned;
+provider authority stays with Agent Browser. Gateway identity headers, browser
+cookies and forwarded bearer injection are not substitutes for MCP authority.
+No shorter forced MFA interval is introduced by this HTTP resource.
+
+AS, vault, same-browser SSO and actual client/provider acceptance are not active
+or verified by local fixtures. An OIDC ID token must not be accepted as an MCP
+access token. New policy-conformance tests demonstrate that the draft verifier
+still accepts typ=JWT or missing typ when other claims are valid (RED200 vs401).
+Claude drift14 accepts the narrow resource token profile: signed JWT access tokens with
+RFC9068 at+jwt typing, in addition to existing alg/iss/aud/sub/exp/scope checks.
+The verifier now requires at+jwt, including its application/at+jwt media form; ID-token/missing types are refused uniformly. Full RFC9068 client_id/iat/jti validation is a possible follow-up, not claimed here. Root must confirm the actual AS client emits this access-token profile; AS stays PASS_FIXTURE_ONLY. Opaque-token introspection and AS changes stay outside this packet; unsupported
+profiles must fail closed. This tightens existing token validation without new
+endpoints, users, permissions, task identities or counter resets.
+
+Work block: qualify dependencies and make the first real-HTTP tracer green;
+then prove adverse-token/scope/route/body limits, real service locking and receipt
+restart through the public HTTP client; finish affected/full regressions, docs
+and separate Standards/Spec review. Revisit the browser prerequisites only under
+their existing exact task identities if actual clearance arrives. Time is a work
+window, not an acceptance claim or budget refill.
+
+Required application bounds: strict HTTPS resource/issuer/JWKS; public root and
+path-suffixed RFC9728 metadata; Host/Origin allowlist before transport; header-only
+bearer; 405 GET/DELETE; stream body <=64KiB; iterative depth<=16/nodes<=2048 and
+no batches before SDK dispatch; per-request fresh server/stateless transport.
+Fixture key injection does not weaken production HTTPS validation. Local signed
+JWT/JWKS tests prove source behavior only, not actual OAuth consent or provider
+acceptance. At latest carried sample405007/1000000lead output used, fixed
+baseline143981; combined lead+peer UNKNOWN. No progress percentage changes until
+a currently required outcome is newly verified.
+
+
+S4 process qualification: the compiled installed-package entry point is tested
+with `--http`, real HTTPS JWKS through the production resolver, synthetic broker
+HTTP, two linked fixture replies, and an actual child-process restart. Recovery
+and duplicate same-ID Send preserve exact receipt bytes with zero new probes or
+clicks. Only owned loopback fixtures/private temporary files are created and
+removed. OpenSSL supplies an ephemeral fixture certificate; trust is scoped to
+the exact child environment. This does not contact an AS or provider.
+An initial source-tsx harness failed because tsx name-preservation adds __name
+references to serialized DOM functions. It was corrected to the actual compiled
+CLI entry, matching the established compiled MCP tests; no production/S2 change
+was made. The corrected process fixture passes. Four HTTP files now contain39
+focused checks; final validation and peer disposition are recorded below.
+
+
+Final owner validation: all39HTTP checks/4files PASS inside the complete serial
+suite:4225PASS,2known failures,65pending,452files. Both failures match the
+pre-S4 dependency baseline exactly: llmServicePromptStructure / “keeps exact
+developer-app mention verification and effect evidence symmetric in shared local
+and remote lifecycle”; login / “derives login prep from the resolved launch
+profile”. There are no new failures; the full suite exit1/success:false is retained,
+not described as globally green. Full typecheck/build and scoped lint zero
+warnings PASS. Startup diff reduced to8lines, preserving surrounding original
+format/import order; it has separate zero-warning lint and final typecheck.
+
+Raw serial JSON SHA256:
+3939cbc355a88d5d1747a82f20adbfa911aa0765a86129bb38cfeddcf0810b7a.
+The11-file frozen source/test/dependency manifest SHA256:
+77ddfcc584dcf3ecdc11f76c467347f142500797392b24104a1250c818422709.
+Logs/JSON/manifests are retained privately in the validation copy's
+`evidence/s4-final`, rather than depending only on /tmp. Reproduce by building
+first, then running the four documented tests or `pnpm exec vitest run --maxWorkers=1`
+with live opt-ins absent. No build overlaps compiled tests. Full JSON is not
+published because it includes internal fixture paths; summary and reproducer
+remain in source. Native sample18:07:08.480Z:572651lead used,427349upper-bound
+remaining of1000000, baseline143981; combined lead+peer UNKNOWN.
+
+Claude final16 independently inspected HTTP code, startup, dependency pins,
+Plan0444 and core error literals; no tests rerun by the peer. It accepted the
+owner's logged validation, Standards PASS and S4 source Spec PASS, verdict DONE,
+drift LOW, no blockers. Codex independently verified all final JSON counts, exact
+two baseline titles, hashes, source/validation bytes and unchanged core code.
+S4 source is CLOSED/ACCEPTED. Parent stays OPEN/PARTIAL,3/6=50%; AS remains
+PASS_FIXTURE_ONLY. Actual AS/SSO/provider/Pro security signoff is not implied.
+
+Nonblocking follow-ups, recorded without another repair loop: startup usage
+wording should name the environment-selected config rather than imply a config
+argument; line98 wrapping is cosmetic; wrong-subject403 reveals valid trusted
+signature but is accepted in this single-owner model; SIGTERM draining remains
+out of scope (restart durability is verified). No new selectable tickets or
+acceptance claims are created for these observations.
+
+Peer final's generic no-push recommendation is not adopted for source backup:
+standing personal-branch authorization and source policy0013 require reviewed
+end-of-slice backup. This only publishes the existing owned DEV branch; it is
+not a release, PR, merge, install, deployment or changed provider authority.
+All AS/ingress/vault/provider/HOST02 holds remain controlling. Exact task final16
+has task4/final1/drift1/plan0 remaining; no counters reset. Next integration needs
+the root-owned actual Authelia at+jwt client/SSO and deployment gates, plus the
+existing ChatGPT clearance and exact Claude browser binding.
+
+## Historical packet: S3 Grok send/status, 22 October 2026
 
 Owner: native thread 01a16096-da12-7753-8d44-e299c2172cef on
 feature/auracall-web-mcp-01a16096, starting at a6ebcd56. The continuing human
@@ -49,7 +224,7 @@ not authority to add another auth server or a provider website sign-in method.
 
 ## Current State
 
-The user explicitly requested browser-front-end ChatGPT Pro intelligence, Claude effort and Grok conversations through MCP, and said "ok go" on 2026-10-22. The OAuth skill/starter is separately available. S1/S2 source and S3 source are implemented on feature/auracall-web-mcp-01a16096 from a3d365fe. One real Grok round trip is verified through the embedded MCP harness; linked replies and complete three-provider acceptance remain pending. Current S3 outcome and recovery are recorded below; earlier packet states remain historical.
+The user explicitly requested browser-front-end ChatGPT Pro intelligence, Claude effort and Grok conversations through MCP, and said "ok go" on 2026-10-22. The OAuth skill/starter is separately available. S1/S2 source and S3 source are implemented on feature/auracall-web-mcp-01a16096 from a3d365fe. Two real linked Grok replies and restart readback are verified through the embedded MCP harness. S3 is CLOSED at16faa856/Claude18. Complete three-provider acceptance remains pending. Current S4 work is above; earlier packet states remain historical.
 
 ## AU-WEB-MCP01-S1 | Inspect and configure ChatGPT intelligence
 
