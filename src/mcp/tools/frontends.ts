@@ -1,10 +1,10 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import type { FrontendService } from "../../browser/frontends/service.js";
+import type { FrontendTools } from "../../browser/frontends/config.js";
 import { FrontendError } from "../../browser/frontends/types.js";
 
 /** Expose only opaque route IDs and documented effort values to MCP clients. */
-export function registerFrontendTools(server: McpServer, service: FrontendService): void {
+export function registerFrontendTools(server: McpServer, service: FrontendTools): void {
 	const route = z.object({ routeId: z.string().min(1) }).strict();
 	const effort = route.extend({
 		effort: z.enum(["light", "standard", "extended", "heavy", "pro"]),

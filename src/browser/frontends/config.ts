@@ -18,6 +18,23 @@ const configSchema = z
 	.object({ brokerBaseUrl: z.string(), routes: z.array(routeSchema).max(32) })
 	.strict();
 
+export type FrontendTools = Pick<FrontendService, "inspect" | "configure">;
+
+/** Bad opt-in configuration disables frontend calls without disabling sibling tools. */
+export async function createStartupFrontendService(
+	env: NodeJS.ProcessEnv = process.env,
+): Promise<FrontendTools> {
+	try {
+		return await createConfiguredFrontendService(env);
+	} catch (error) {
+		if (!(error instanceof FrontendError) || error.code !== "invalid_config") throw error;
+		const unavailable = async (): Promise<Record<string, unknown>> => {
+			throw new FrontendError("invalid_config", error.message);
+		};
+		return { inspect: unavailable, configure: unavailable };
+	}
+}
+
 /** Missing opt-in config registers fail-closed tools without contacting a broker. */
 export async function createConfiguredFrontendService(
 	env: NodeJS.ProcessEnv = process.env,

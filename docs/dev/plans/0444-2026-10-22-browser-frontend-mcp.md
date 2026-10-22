@@ -112,3 +112,37 @@ send/status integration, and no OAuth HTTP hookup. Historical HOST02 is unchange
 
 
 Final peer revision10 CONTINUE/LOW: code inspection only, reported tests not rerun. Standards B+; bounded S1 Spec meets with F1 open; full goal NOT MET. F1 (medium): malformed opt-in frontend config currently aborts the whole existing MCP server startup. Follow-up should isolate invalid_config to frontend calls; no live release until resolved. Low: inconsistent starting label can spend one focus action before refusing. No new work within remaining allowance.
+
+
+## F1 correction and human allowance amendment, 2026-10-22
+
+The human requested "fix thr invalid front end configuration", then granted
+"each tab gets 1M token allocation to complete the objectibe" and directed
+"ask matt and grill and grade" with an unfinished/non-progressing chat cutoff.
+This explicit grant supersedes the100k allocation; baseline143981 and all
+spending carry forward. Lead measured use was100766 at the earlier stop;
+combined usage including unmeasured peer output remains UNKNOWN. The750k
+checkpoint is an advisory proposal, not a separately stated human number.
+At1M, interpret ending the chat as saving exact-owner work/evidence/handoff and
+ending agent work while preserving browser custody and history. The ambiguous
+"and or" early-stop condition uses the existing two-review no-progress trigger;
+newly verified requirements and improved grades are progress, not more files.
+Ask Matt is a router; there is no external Matt answer or invented approval.
+This is instruction-level enforcement, not an installed process-kill controller.
+Previews currently still hardcodes100k; its distinct1M policy slice is being
+prepared in an owned worktree, not claimed deployed.
+
+F1 change: keep createConfiguredFrontendService strict; startup uses
+createStartupFrontendService, catching only invalid_config. Its disabled typed
+frontend tools return a generic invalid_config for every route; sibling tools
+remain registered. Missing config remains route_missing. Unexpected errors are
+rethrown, and there is no network or capability lookup at startup. Public MCP
+regressions cover malformed JSON, directory/missing paths, oversized files and
+non-loopback broker URLs while the real sessions sibling still works. Red was
+observed at compiled stdio: the original bad config closed the MCP connection.
+Final focused regression62pass (8files), including existing MCP schema/server;
+typecheck, scoped lint and complete build PASS. Compiled stdio with malformed
+config preserves exactly the normal tool-name set, returns invalid_config only
+for frontend calls, successfully calls the real sessions sibling and attempts
+zero outbound network operations. F1 is resolved in source; no installation or
+live provider qualification is claimed. Peer revision12 approved F1 plan; no counter reset.

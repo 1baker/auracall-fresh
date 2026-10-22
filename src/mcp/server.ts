@@ -7,7 +7,7 @@ import { getCliVersion } from '../version.js';
 import { clearConfiguredAggregateProviderWarning } from '../browser/configuredProviderWarningClear.js';
 import { registerConsultTool } from './tools/consult.js';
 import { registerFrontendTools } from './tools/frontends.js';
-import { createConfiguredFrontendService } from '../browser/frontends/config.js';
+import { createStartupFrontendService } from '../browser/frontends/config.js';
 import { registerSessionsTool } from './tools/sessions.js';
 import { registerSessionResources } from './tools/sessionResources.js';
 import { registerTeamRunTool } from './tools/teamRun.js';
@@ -151,7 +151,7 @@ export async function startMcpServer(): Promise<void> {
   );
 
   registerConsultTool(server);
-  registerFrontendTools(server, await createConfiguredFrontendService());
+  registerFrontendTools(server, await createStartupFrontendService());
   registerResponseCreateTool(server, {
     responsesService: services.responsesService,
   });

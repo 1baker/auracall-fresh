@@ -1,3 +1,7 @@
+## 2026-10-22 — Optional frontend configuration must not disable sibling MCP tools
+
+Catch only the optional frontend loader invalid_config at startup and expose a typed disabled inspect/configure surface. Keep strict loader behavior, missing-route distinction, error redaction and unexpected-error propagation. Validate through an SDK client plus the existing sessions sibling.
+
 ## 2026-10-22 — Treat keyboard slider input as frontend control
 
 The grouped ui_action recipe lacks press, but ordinary broker press honors an explicit retained tab handle and skips autolaunch. Use focus plus allowlisted native arrows with observed focus and one-step readback. Keep serviceTabHandle top-level and key in params; use authenticated broker capability rather than invented taskAuthority. No mutation JavaScript or uncertain replay.

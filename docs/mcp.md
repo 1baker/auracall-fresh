@@ -35,7 +35,9 @@ Each route contains:
 
 Startup loads configuration without connecting to the broker or looking up a
 capability value. Missing configuration or no routes returns `route_missing` on
-calls. Malformed configuration refuses startup. On every actual operation the
+calls. Invalid opt-in configuration disables only the frontend tools: calls return
+`invalid_config` while other MCP tools remain available. Direct callers of the
+strict configuration loader still receive its validation error. On every actual operation the
 client reads `/api/service/contracts`, requires service-request v1 and the
 `probe`, `ui_action` and `press` actions, then posts once to
 `/api/service/request`. The capability travels only in the Authorization header.
