@@ -2,7 +2,120 @@
 
 State: OPEN
 
-## Current packet: S4 protected HTTP frontend tools | 2026-10-22
+## Current packet: S5 Claude frontend | 2026-10-22
+
+State: SOURCE CANDIDATE ACCEPTED; Claude ticket OPEN, native blocked/unverified-grounding. Owner
+01a16096-da12-7753-8d44-e299c2172cef, peer task
+auracall-claude-frontend-s5-20261022 revision8, source5d0d5aad.
+The human's next-implementation instruction and all six saved Implement choices
+cover this previously unimplemented Claude ticket. This does not reopen S2, S3,
+S4 or HOST02, or grant capacity to an old task. Shared1M allowance baseline143981
+carries; last measured603237lead used/396763upper-bound remaining, combinedUNKNOWN.
+
+Outcome: the existing four public frontend tools gain a Claude-local native UI
+recipe for inspection, exact visible effort selection and durable linked replies.
+No API fallback, bundled-service registry, broker, store format, global provider
+lists, installed service, AS, ingress or LIVE change. Edit only new
+src/browser/frontends/claude.ts; frontends types/config/service/messages; MCP
+frontend effort schema/descriptions; new matching tests and docs. Existing Grok
+and ChatGPT tests are frozen. A recipe trait may reproduce their current branches
+exactly; any need to change those tests stops that generalization.
+
+Official Claude Help article8664678 documents model menu -> Effort and the
+Low/Medium/High/Extra high/Max labels. The article is product guidance, not DOM
+grounding or availability proof for this account/model. Selectors and current
+model availability remain explicitly unverified-grounding. Never map a nearby
+label or change the thinking toggle. Missing capability returns a typed
+effort_unsupported_for_model; malformed/missing evidence refuses input.
+
+Native intake: the shared registered profile has authenticated_target=claude,
+despite its ChatGPT name. Historical readiness is not current custody. Exact
+Linux150 hash/profile compatibility and one task/service/claude preference passed
+no-launch preflight. One broker tab_new reported success18:38:12.501Z; first
+read-only probe failed session not running. New browser exited0 at18:38:12.998Z;
+the prior owned Grok browser exited0 at18:38:13.145Z. Cause UNKNOWN; singleton or
+display teardown are hypotheses, not attribution. No effort/input/Send/close,
+repair or relaunch. Only the new task preference was retired; readback plus
+preflight confirm no_matching_preference_binding. Both ended handles are invalid.
+The native attempt is held, with no replay; Agent Browser owner received the
+bounded lifecycle evidence. The native stop receipt stays in the private S5
+evidence directory. Current ChatGPT and unrelated lab inventory remain present.
+
+Claude plan2/replan6/drift8 accept this source-only fallback. Public MCP/config
+RED first; then scoped implementation with visible-label/readback, strict local
+claude.ai /new and /chat/id, adverse URL/login/challenge/draft/dialog/generation/
+selector/model gates, shared target locking and two linked synthetic replies
+across restart. Native selectors remain unverified and the parent staysPARTIAL
+3/6=50%. No source result substitutes for the real Claude milestone.
+
+Before any application edits, seven existing frontend/MCP suites pass148/148
+(50Grok,40durable workflow,25controls,7startup,16broker,3config,7DOM).
+Keep all original test bytes/counts unchanged and rerun them after trait dispatch.
+Then typecheck/build/scoped lint, relevant HTTP regressions and final peer review.
+Source-only fixtures cannot establish native Claude or shared SSO acceptance.
+
+S5 owner checkpoint: RED0pass/28fail at the public MCP/config seam; missing
+provider/effort support, not a live success. Minimal source then28new checks
+PASS; seven frozen provider suites148PASS with byte-identical test files, plus
+all39HTTP checks PASS, total215/12files. Typecheck/full build/scoped zero-warning
+lint PASS. Initial typecheck rejected widening Claude efforts into the typed
+ChatGPT helper; guard its own existing target table before dispatch. New fixture
+lock assertion used a nonexistent code; corrected only that new test to the
+documented lock_held, with no source/core change.
+
+Agent Browser owner independently read the two exact stderr logs: X-connection
+errors within about0.3ms precede both exits. A common interruption is a strong
+inference; same endpoint, display reset, actor and cause are NOT established.
+No native recovery is authorized by that finding. The scoped S5 row is retired;
+new and historical Grok handles remain invalid. Keep the prior completed
+Grok receipts unchanged as historical accepted evidence.
+
+S5 source candidate awaits milestone review; actual/native Spec remainsPARTIAL.
+No secret/account strings, browser handles or raw launch logs are published.
+
+S5 remediation / Claude milestone10: no blocking source findings. Accepted
+the open-menu finding as a concrete in-scope safety improvement. OptionB avoids
+any automatic cleanup click after failed/uncertain input: a typed optional
+menuMayBeOpen:true is carried through FrontendError/MCP only when asserted by
+Claude control failure. All old responses omit it. Send treats an open model
+menu as busy. Two public RED fixtures failed (missing detail and unintended
+synthetic Send), then pass in the final suite. Unsupported effort remains
+ok:false structured content without MCP isError; docs/descriptions corrected.
+
+Final owner-run serial suite4255PASS/2exact known failures/65pending across453files.
+All30Claude checks plus148old-provider and39HTTP checks pass:217/12focused files.
+The two failures remain llmServicePromptStructure / “keeps exact developer-app
+mention verification and effect evidence symmetric in shared local and remote
+lifecycle”, and login / “derives login prep from the resolved launch profile”.
+The full suite exit1/success:false remains explicit, not globally green.
+Typecheck, full build and scoped lint zero warnings PASS. Seven original
+provider suites remain byte-identical to5d0d5aad; no test weakened or excluded.
+
+Regression JSON SHA256:
+d559753a02da038e57d238a41cb4f5bf81c8390cf4c7362f3ad51e80007a4d05.
+Frozen7-file implementation/new-test manifest SHA256:
+d4961e5807683191b4045624ccc949cdda0741b41fc7107a3d9af924042f566e.
+Raw logs/JSON retained privately in validation/evidence/s5-final; reproduce with
+the documented tests and serial full suite after building, live opt-ins absent.
+Raw fixture paths/native logs are not published. Claude final12 independently
+inspected the accepted menu remediation and its error transport; the peer ran no
+tests and accepted owner-reported counts/hashes. Standards PASS; Spec PARTIAL,
+candidate only, DONE/LOW. Codex verified every final count, digest and unchanged
+old test byte directly. The optional generic transport failure can omit the
+menu flag; documented as a nonblocking limitation, with no new source change.
+
+Candidate checkpoint only: no real Claude UI compatibility or completed ticket
+claim. The original Grok handle remains invalid; its receipts are historical.
+The retired S5 binding is not reusable. Root and Agent Browser answered the
+fact request, but no cause/recovery/current-custody proof is established. Native
+work remains held; no new binding or retry follows this source checkpoint.
+Existing personal branch backup under policy0013 is allowed; no PR, merge,
+deployment, AS/vault/ingress/install/LIVE work. Exact peer task final12 retains
+task6/final1/drift2/plan1; no counters or ticket/budget reset.
+Latest native sample19:33:59.682Z:686817lead used/313183upper-bound remaining of1M;
+fixed baseline143981, combined lead+peerUNKNOWN. No counters reset.
+
+## Historical packet: S4 protected HTTP frontend tools | 2026-10-22
 
 State: SOURCE ACCEPTED/CLOSED; integration pending. Exact peer task auracall-oauth-frontend-s4-20261022, native owner
 01a16096-da12-7753-8d44-e299c2172cef, branch feature/auracall-web-mcp-01a16096,

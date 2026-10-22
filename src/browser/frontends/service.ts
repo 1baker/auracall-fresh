@@ -1,14 +1,17 @@
 import {
+	CHATGPT_POWER_SLIDER_TARGETS,
+	type ChatgptPowerEffort,
 	interpretChatgptPowerSlider,
 	resolveChatgptPowerSliderTarget,
 } from "../actions/chatgptPowerSlider.js";
 import { chatgptInspectionExpression } from "./chatgpt.js";
+import { configureClaudeEffort, inspectClaudeControls, isClaudeFrontendUrl } from "./claude.js";
 import { FrontendMessages } from "./messages.js";
 import { FrontendRequestStore, frontendTargetKey } from "./requestStore.js";
 import {
-	FrontendError,
 	type FrontendBroker,
 	type FrontendEffort,
+	FrontendError,
 	type FrontendObservation,
 	type FrontendRoute,
 } from "./types.js";
@@ -39,6 +42,10 @@ export class FrontendService {
 
 	async inspect(routeId: string): Promise<Record<string, unknown>> {
 		const route = this.route(routeId);
+		if (route.provider === "claude")
+			return this.serial(route, () =>
+				inspectClaudeControls(route, (request) => this.request(route, request)),
+			);
 		this.requireControls(route);
 		return this.serial(route, async () => this.publicObservation(route, await this.observe(route)));
 	}
@@ -58,9 +65,20 @@ export class FrontendService {
 
 	async configure(routeId: string, effort: FrontendEffort): Promise<Record<string, unknown>> {
 		const route = this.route(routeId);
+		if (route.provider === "claude")
+			return this.serial(route, () =>
+				configureClaudeEffort(
+					route,
+					effort,
+					(request) => this.request(route, request),
+					this.maxUiSteps,
+				),
+			);
 		this.requireControls(route);
 		return this.serial(route, async () => {
-			const target = resolveChatgptPowerSliderTarget(effort);
+			const target = Object.hasOwn(CHATGPT_POWER_SLIDER_TARGETS, effort)
+				? resolveChatgptPowerSliderTarget(effort as ChatgptPowerEffort)
+				: null;
 			if (!target)
 				throw new FrontendError("unknown_effort", "Choose a documented intelligence level.");
 			let observation = await this.observe(route);
@@ -225,7 +243,7 @@ export class FrontendService {
 			typeof (handle.sessionName ?? handle.ownerSessionId) !== "string" ||
 			!(handle.sessionName ?? handle.ownerSessionId) ||
 			!route.expectedModel ||
-			!["chatgpt", "grok"].includes(route.provider)
+			!["chatgpt", "grok", "claude"].includes(route.provider)
 		)
 			throw new FrontendError("invalid_route", "The retained route or provider is invalid.");
 		let url: URL;
@@ -236,10 +254,16 @@ export class FrontendService {
 		}
 		if (
 			url.protocol !== "https:" ||
-			url.hostname !== (route.provider === "grok" ? "grok.com" : "chatgpt.com") ||
+			url.hostname !==
+				(route.provider === "grok"
+					? "grok.com"
+					: route.provider === "claude"
+						? "claude.ai"
+						: "chatgpt.com") ||
 			url.username ||
 			url.password ||
-			url.port
+			url.port ||
+			(route.provider === "claude" && !isClaudeFrontendUrl(route.expectedUrl))
 		)
 			throw new FrontendError(
 				"origin_mismatch",

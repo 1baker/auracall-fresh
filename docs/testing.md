@@ -1,5 +1,17 @@
 - Backend transport handoff, native cancellation and inventory observation (provider-free, issue325):
 
+## Claude frontend candidate (Plan0444 S5)
+
+Run `pnpm exec vitest run tests/mcp.claudeFrontendWorkflow.test.ts --maxWorkers=1`.
+The semantic DOM fixture executes the production serialized read-only recipe
+and simulates native click/fill at the broker boundary. It tests explicit config,
+provider-specific effort levels, exact visible-label/readback, missing capability,
+strict URL and adverse frontend states, the shared target lock, two connected
+synthetic replies and saved-receipt recovery after service reconstruction.
+Selectors are unverified-grounding; this suite does not establish real Claude
+UI compatibility or a native provider response. Retain all148 existing
+frontend/MCP checks unchanged and the39HTTP checks when changing dispatch.
+
 ## Protected frontend HTTP MCP (Plan0444 S4)
 
 Build first with `pnpm run build`, then run `pnpm exec vitest run tests/mcp.http.test.ts tests/mcp.http.config.test.ts tests/mcp.http.security.test.ts tests/mcp.http.process.test.ts --maxWorkers=1`.

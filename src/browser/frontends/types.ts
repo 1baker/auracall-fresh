@@ -1,14 +1,24 @@
 /** Server-owned routes bind frontend operations to an existing broker target. */
 export interface FrontendRoute {
 	id: string;
-	provider: "chatgpt" | "grok";
+	provider: "chatgpt" | "grok" | "claude";
 	expectedUrl: string;
 	expectedModel: string;
 	serviceTabHandle: Record<string, unknown>;
 	profileCapabilityEnv: string;
 }
 
-export type FrontendEffort = "light" | "standard" | "extended" | "heavy" | "pro";
+export type FrontendEffort =
+	| "light"
+	| "standard"
+	| "extended"
+	| "heavy"
+	| "pro"
+	| "low"
+	| "medium"
+	| "high"
+	| "xhigh"
+	| "max";
 
 export interface FrontendControl {
 	selector: string;
@@ -39,6 +49,7 @@ export class FrontendError extends Error {
 	constructor(
 		readonly code: string,
 		message: string,
+		readonly menuMayBeOpen?: true,
 	) {
 		super(message);
 		this.name = "FrontendError";

@@ -22,7 +22,7 @@ Administrator provisioning only: set `AURACALL_FRONTEND_CONFIG` to a private JSO
 Each route contains:
 
 - `id`: the opaque `routeId` clients may use.
-- `provider`: `chatgpt` or `grok`; intelligence configuration is ChatGPT-only.
+- `provider`: `chatgpt`, `grok` or the ungrounded development `claude` recipe.
 - `expectedUrl`: the exact retained HTTPS provider page URL.
 - `expectedModel`: the exact visible model-button text.
 - `serviceTabHandle`: the existing broker-issued handle, including `valid:true`,
@@ -49,8 +49,54 @@ credentials. `verified:true` means the requested setting matched that call's
 readback. The control recipe's `liveVerified:false` remains qualified: actual
 ChatGPT intelligence acceptance is pending. Durable `frontend_send` and
 `frontend_status` now support ChatGPT and Grok; their persistence and native
-Grok acceptance boundaries are documented below. Claude remains unsupported
-until an exact Agent Browser-owned binding and frontend recipe are qualified.
+Grok acceptance boundaries are documented below. The Claude recipe below is a source-only candidate until its UI grounding and
+actual frontend workflow are qualified.
+
+## Claude frontend candidate (development S5)
+
+The same four tools now include a Claude-local recipe. Administrator-provisioned
+routes use provider `claude`, exact `https://claude.ai/new` or
+`https://claude.ai/chat/<id>`, and the exact visible model-button label.
+Other hosts, HTTP, credentials, query strings, fragments and login redirects
+are refused. This does not add a Claude API or a bundled global service.
+
+Claude effort values are `low`, `medium`, `high`, `xhigh` and `max`; ChatGPT
+keeps `light`, `standard`, `extended`, `heavy`, `pro`. Levels do not alias
+between providers. The [documented Claude effort menu](https://support.claude.com/en/articles/8664678-change-the-model-effort-and-thinking-settings)
+supplies the labels; `xhigh` matches only visible “Extra high”. Current model
+availability and DOM selectors are NOT grounded against this account's UI.
+All candidate selectors/labels and `unverified-grounding` status live together
+in frontends/claude.ts; tool output carries that qualification.
+
+Configure performs bounded broker-native clicks, reads visible effort state
+after each action, and confirms the final selected level with the menu closed.
+It never changes the thinking toggle or sends a prompt. A model without the
+Effort menu returns `ok:false` structured content with `effort_unsupported_for_model`,
+without MCP `isError`. Unknown labels are
+never mapped to a nearby level. Missing, ambiguous, covered or disabled controls,
+a draft, model/URL drift, login, challenge, generation or unrelated dialog
+prevent further input. Inspector/configure share the existing durable target
+lock with Send. Success confirms the menu is closed. If a change fails after
+opening it, the typed error includes `menuMayBeOpen:true`; no automatic cleanup
+click follows uncertain input. Send refuses a visibly open model menu.
+An unexpected transport failure can return `frontend_failed` without that flag;
+a failed configure call never guarantees that the menu is closed.
+
+Claude Send/status reuse the same saved request IDs, intent-before-input,
+one-click Send, continuity and no-replay rules. As with Grok, native message
+IDs are not invented: receipts use derived_sequence observation keys with
+two unchanged assistant observations at least one second apart. Restarted
+services read the same completed receipt without more input. This is synthetic
+logic evidence, not proof of actual Claude completion or generation signals.
+
+Native intake made one governed tab acquisition. Its browser exited before the
+first read-only probe; the previous Grok browser exited in the same second.
+Both logs contain nearly simultaneous X-connection errors, but a shared
+endpoint, initiator and cause remain unknown. No effort selection or prompt
+was sent. The new scoped preference was retired and both ended handles are
+invalid. Native retry needs the existing custody/milestone path; do not reuse
+the historical handles or silently relaunch. Real Claude effort/replies and
+shared SSO/HTTP-provider acceptance remain pending; overall progress stays50%.
 
 ## Protected frontend HTTP MCP (development S4)
 

@@ -1,14 +1,15 @@
-import { z } from "zod";
 import { createHash } from "node:crypto";
+import { z } from "zod";
+import { claudeMessagesExpression } from "./claude.js";
 import { grokMessagesExpression } from "./grok.js";
-import { FrontendError, type FrontendRoute } from "./types.js";
 import {
+	type FrontendRequestRecord,
 	type FrontendRequestStore,
 	frontendRouteBinding,
 	frontendTargetKey,
 	requestIdSchema,
-	type FrontendRequestRecord,
 } from "./requestStore.js";
+import { FrontendError, type FrontendRoute } from "./types.js";
 
 /** Serialized read-only DOM recipe; no input or network operations. */
 export function inspectChatgptMessages(doc: Document, url: string) {
@@ -91,20 +92,33 @@ type Observation = Omit<z.infer<typeof observationSchema>, "messages"> & {
 	messages: { id: string; role: "user" | "assistant"; text: string }[];
 };
 interface MessageRecipe {
+	derivedIdentity: boolean;
+	label: string;
 	root: string;
 	conversation: RegExp;
 	expression(): string;
 }
 const recipes: Record<FrontendRoute["provider"], MessageRecipe> = {
 	chatgpt: {
+		derivedIdentity: false,
+		label: "ChatGPT",
 		root: "https://chatgpt.com/",
 		conversation: /^https:\/\/chatgpt\.com\/c\/[a-zA-Z0-9_-]+$/,
 		expression: chatgptMessagesExpression,
 	},
 	grok: {
+		derivedIdentity: true,
+		label: "Grok",
 		root: "https://grok.com/",
 		conversation: /^https:\/\/grok\.com\/c\/[a-zA-Z0-9_-]+$/,
 		expression: grokMessagesExpression,
+	},
+	claude: {
+		derivedIdentity: true,
+		label: "Claude",
+		root: "https://claude.ai/new",
+		conversation: /^https:\/\/claude\.ai\/chat\/[a-zA-Z0-9_-]+$/,
+		expression: claudeMessagesExpression,
 	},
 };
 const isRootUrl = (route: FrontendRoute, value: string) => value === recipes[route.provider].root;
@@ -161,11 +175,11 @@ export class FrontendMessages {
 				"The saved request belongs to a different retained route.",
 			);
 		if (
-			(route.provider === "grok" &&
+			(recipes[route.provider].derivedIdentity &&
 				(record.identityKind !== "derived_sequence" ||
 					record.userMessageId !== null ||
 					record.assistantMessageId !== null)) ||
-			(route.provider === "chatgpt" && record.identityKind === "derived_sequence")
+			(!recipes[route.provider].derivedIdentity && record.identityKind === "derived_sequence")
 		)
 			throw new FrontendError(
 				"record_invalid",
@@ -254,7 +268,7 @@ export class FrontendMessages {
 		if (!parsed.success)
 			throw new FrontendError("probe_failed", "Conversation evidence is invalid or incomplete.");
 		const raw = parsed.data;
-		if (route.provider === "grok") {
+		if (recipes[route.provider].derivedIdentity) {
 			if (raw.challengePresent !== false)
 				throw new FrontendError(
 					"human_verification",
@@ -272,7 +286,7 @@ export class FrontendMessages {
 			if (raw.scopeCount === 1 && (!raw.composerSelector || !raw.composerReady))
 				throw new FrontendError(
 					"composer_unavailable",
-					"A unique enabled Grok composer is required.",
+					`A unique enabled ${recipes[route.provider].label} composer is required.`,
 				);
 		}
 		if (route.provider === "chatgpt" && raw.model === null)
@@ -280,8 +294,9 @@ export class FrontendMessages {
 		const observation: Observation = {
 			...raw,
 			messages: raw.messages.map((message, index) => {
-				const id =
-					route.provider === "grok" ? derivedKey(index, message.role, message.text) : message.id;
+				const id = recipes[route.provider].derivedIdentity
+					? derivedKey(index, message.role, message.text)
+					: message.id;
 				if (!id) throw new FrontendError("probe_failed", "Native message identities are missing.");
 				return {
 					...message,
@@ -292,7 +307,7 @@ export class FrontendMessages {
 		if (observation.url !== result.url)
 			throw new FrontendError("origin_mismatch", "The conversation URL changed.");
 		observation.url = observedUrl;
-		if (route.provider === "grok" && observation.scopeCount !== 1 && allowScopeChurn)
+		if (recipes[route.provider].derivedIdentity && observation.scopeCount !== 1 && allowScopeChurn)
 			return observation;
 		if (observation.model !== route.expectedModel)
 			throw new FrontendError("model_drift", "The visible model changed.");
@@ -402,11 +417,11 @@ export class FrontendMessages {
 				activeRoute = { ...route, expectedUrl: previousUrl };
 			}
 			const observation = await this.observe(activeRoute);
-			if (route.provider === "grok") {
+			if (recipes[route.provider].derivedIdentity) {
 				if (!observation.composerSelector || !observation.composerReady)
 					throw new FrontendError(
 						"composer_unavailable",
-						"A unique enabled Grok composer is required.",
+						`A unique enabled ${recipes[route.provider].label} composer is required.`,
 					);
 				if (!observation.composerHit)
 					throw new FrontendError(
@@ -418,7 +433,7 @@ export class FrontendMessages {
 				!observation.composerReady ||
 				observation.composer !== "" ||
 				observation.generating ||
-				(route.provider === "grok" && observation.composerEmpty !== true)
+				(recipes[route.provider].derivedIdentity && observation.composerEmpty !== true)
 			)
 				throw new FrontendError(
 					"composer_busy",
@@ -458,7 +473,7 @@ export class FrontendMessages {
 				assistantMessageId: null,
 				output: null,
 				code: null,
-				...(route.provider === "grok"
+				...(recipes[route.provider].derivedIdentity
 					? {
 							identityKind: "derived_sequence" as const,
 							observedUserKey: null,
@@ -472,11 +487,11 @@ export class FrontendMessages {
 			try {
 				await this.ui(activeRoute, "fill", text, observation.composerSelector);
 				const filled = await this.observe(activeRoute);
-				if (route.provider === "grok") {
+				if (recipes[route.provider].derivedIdentity) {
 					if (!filled.sendSelector || !filled.sendReady)
 						throw new FrontendError(
 							"send_unavailable",
-							"A unique enabled Grok Send control is required.",
+							`A unique enabled ${recipes[route.provider].label} Send control is required.`,
 						);
 					if (!filled.sendHit)
 						throw new FrontendError(
@@ -500,7 +515,7 @@ export class FrontendMessages {
 			} catch (error) {
 				record.status = "failed_presend";
 				record.code =
-					route.provider === "grok" && error instanceof FrontendError
+					recipes[route.provider].derivedIdentity && error instanceof FrontendError
 						? error.code
 						: "presend_unconfirmed";
 				await this.store.write(record);
@@ -559,13 +574,17 @@ export class FrontendMessages {
 						"The saved conversation binding is invalid; it was preserved.",
 					);
 				const activeRoute = { ...route, expectedUrl: record.conversationUrl ?? route.expectedUrl };
-				const observation = await this.observe(activeRoute, adopting, route.provider === "grok");
-				if (route.provider === "grok" && observation.scopeCount !== 1) {
+				const observation = await this.observe(
+					activeRoute,
+					adopting,
+					recipes[route.provider].derivedIdentity,
+				);
+				if (recipes[route.provider].derivedIdentity && observation.scopeCount !== 1) {
 					record.candidate = null;
 					await this.store.write(record);
 					return { ...this.receipt(record), code: "unsupported_scope" };
 				}
-				if (route.provider === "grok" && observation.messages.length === 0) {
+				if (recipes[route.provider].derivedIdentity && observation.messages.length === 0) {
 					record.candidate = null;
 					await this.store.write(record);
 					return this.receipt(record);
@@ -580,10 +599,10 @@ export class FrontendMessages {
 					(fresh[0] && (fresh[0].role !== "user" || fresh[0].text !== record.text)) ||
 					(fresh[1] && fresh[1].role !== "assistant")
 				) {
-					if (adopting || route.provider === "grok") {
+					if (adopting || recipes[route.provider].derivedIdentity) {
 						record.status = "uncertain";
 						record.code = "continuity_mismatch";
-						if (route.provider === "grok") record.candidate = null;
+						if (recipes[route.provider].derivedIdentity) record.candidate = null;
 						await this.store.write(record);
 					}
 					return { ...this.receipt(record), code: "continuity_mismatch" };
@@ -605,8 +624,8 @@ export class FrontendMessages {
 					!!fresh[1].text.trim() &&
 					!observation.generating &&
 					observation.composer === "" &&
-					(route.provider !== "grok" || observation.composerEmpty === true);
-				if (route.provider === "grok") {
+					(!recipes[route.provider].derivedIdentity || observation.composerEmpty === true);
+				if (recipes[route.provider].derivedIdentity) {
 					if (!ready) {
 						record.candidate = null;
 						await this.store.write(record);
@@ -621,7 +640,7 @@ export class FrontendMessages {
 				}
 				if (ready) {
 					record.status = "completed";
-					if (route.provider === "grok") {
+					if (recipes[route.provider].derivedIdentity) {
 						record.observedUserKey = fresh[0].id;
 						record.observedAssistantKey = fresh[1].id;
 						record.candidate = null;

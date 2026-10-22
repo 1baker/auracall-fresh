@@ -1,3 +1,34 @@
+# Turn 202610221900 | 2026-10-22
+
+S5 adds a Claude-local semantic UI recipe to the existing four MCP tools:
+provider-specific effort values, strict claude.ai /new and /chat binding,
+native click/readback and shared durable linked replies. Selectors and current
+model availability are explicitly unverified-grounding; documented effort
+labels alone do not establish UI support. Existing Grok branches are preserved
+by a recipe trait, with all148 original tests byte-identical and passing.
+New public MCP/config RED28fail -> GREEN28pass; combined provider/HTTP215pass
+across12files. Typecheck/build/scoped lint zero warnings pass. One new fixture
+initially expected nonexistent lock_busy; corrected to documented lock_held.
+The expanded effort union needed a guarded ChatGPT table lookup; no helper,
+broker, store format, global service/provider lists or API oracle changed.
+
+Native acquisition passed exact supported binding/preflight, returned a handle,
+then the first read-only probe found its session stopped. Claude and prior Grok
+processes exited0 about150ms apart; two X-connection errors are observed, but
+same endpoint and cause are unknown. No UI input, effort, prompt, close, repair
+or relaunch. Only the new scoped preference was retired; no matching binding
+readback confirmed. Ended handles stay invalid. Agent Browser owner received
+the evidence; native retry is held. ParentPARTIAL,3/6=50%, AS/HOST02 unchanged.
+Final serial4255PASS/2known failures/65pending across453files; all30Claude,
+148unchanged provider and39HTTP checks pass. Typecheck/build/zero-warning lint
+PASS. Open-menu RED2fail fixed with typed menuMayBeOpen and no Send while open,
+without cleanup after uncertain input. Evidence/digests and final review in
+Plan0444. Claude final12: Standards PASS, Spec PARTIAL; source candidate only,
+DONE/LOW, peer source inspection with owner-run test evidence. Actual Claude
+ticket stays open, selectors unverified-grounding, old Grok handle invalid;
+retired row not reusable. Native recovery/current custody remain unproved.
+Only scoped DEV source backup; no retry, new binding, install or promotion.
+
 # Turn 202610221810 | 2026-10-22
 
 Plan0444 S4 adds explicit `auracall-mcp --http`: exactly four frontend tools,
