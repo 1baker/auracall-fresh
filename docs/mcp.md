@@ -640,8 +640,8 @@ log-tail checks as one release gate before live dogfood.
 
 `frontend_send` takes `routeId`, a caller-generated `requestId` (8-128 letters,
 digits, hyphens or underscores), `text` (up to 8192 characters), and optional
-`previousRequestId`. Configure an existing exact `https://chatgpt.com/c/<id>`
-conversation through `AURACALL_FRONTEND_CONFIG`; the retained handle and visible
+`previousRequestId`. Configure either the exact `https://chatgpt.com/` root or an existing
+`https://chatgpt.com/c/<id>` conversation through `AURACALL_FRONTEND_CONFIG`; the retained handle and visible
 model must match. The composer must be empty and generation stopped. This path
 uses native frontend fill and one Send click through Agent Browser. It neither
 launches a browser nor calls a model API. Current qualification is local fixtures
@@ -686,3 +686,31 @@ For `sending`/`uncertain`/`sent` without matching reply evidence, preserve the
 receipt and inspect that exact conversation manually. This slice has no forced
 completion/abandon API; unresolved requests stay blocking until verified readback
 or a separately approved recovery. No automatic retry or receipt deletion.
+
+
+Fresh-chat first send: the root route is allowed only on an empty conversation
+with a clear composer. The same request receipt remains bound to the original
+route and retained tab. After one Send click, status adopts the new exact
+`https://chatgpt.com/c/<id>` only when the fresh user message exactly matches the
+saved input and no unrelated turns appear. The adopted URL is saved before
+completion and required on all later probes. A mismatch remains uncertain with
+no automatic retry. Query/fragment roots, temporary-chat flags, custom GPTs and
+project paths are unsupported and refuse before input.
+
+Keep a root route configured for its receipt lineage. Every follow-up must name
+its completed `previousRequestId`; each new receipt inherits the adopted URL and
+requires the exact previous reply at that conversation's tail. Receipts without
+this field from older versions remain usable only on their exact configured
+`/c/<id>` routes and never become fresh-root receipts. Three linked turns and
+restart persistence are covered by local public MCP fixtures. These checks do
+not prove signed-in provider acceptance.
+
+
+First-send review16 clarification: an uncertain adoption may later recover on a
+fresh read-only status probe if every target/model/user/URL gate matches; no
+input is replayed. A root receipt that never gains a verified /c/<id> remains
+sent/uncertain and cannot complete. conversationUrl is private/local MCP
+receipt data: omit actual conversation IDs from shared progress summaries.
+Focused121tests/9files PASS; typecheck, scoped lint and full build PASS. The
+three-turn root/restart fixture and all prior frontend cases pass. Source
+inspection accepted at peer16; presentation remains a separate unresolved gate.

@@ -1,3 +1,7 @@
+## 2026-10-22 — Bind a first-send receipt before the conversation URL exists
+
+A fresh ChatGPT root has no conversation ID before Send. Keep the original route/retained-target binding, allow an empty-root first send, then adopt only a strict same-origin conversation URL after exact fresh-user readback. Persist that URL on every linked receipt and never use a changed URL as permission to replay input. Missing legacy URL fields remain existing-conversation-only.
+
 ## 2026-10-22 — Save Send intent before frontend input
 
 Persist prepared before fill and sending before one Send click; recover by the same opaque request ID, never replay an uncertain send. Shared target locks exclude control/input races across processes. A prepared record under a newly acquired lock can become failed_presend after interruption without probing: the sending marker always precedes the click. Initial exclusive hard-link publication avoids overwriting concurrent same-ID requests on different target locks.

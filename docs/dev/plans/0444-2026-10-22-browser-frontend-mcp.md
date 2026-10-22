@@ -276,3 +276,58 @@ with only the pending commit keeping its pre-commit verdict PARTIAL. The source
 commit below closes that packet requirement. Parent Spec remains PARTIAL; real
 provider acceptance and retained DEV route are still missing. No new approvals,
 peer capacity, source deployment or LIVE acceptance arise from these grades.
+
+
+## S2 live-acquisition and first-send correction | 2026-10-22
+
+The human explicitly requested connecting Google Chrome and opening ChatGPT,
+Claude and Grok through MCP using existing subscriptions. Same task/baseline and
+caps retained: peer replan12 and drift14; no fresh task or grant. Source fa76150b
+could only send in existing conversations; this prevented the requested normal
+new-chat workflow. Peer14 accepted a narrow correction, including all four
+required tightenings: inherited URL on every turn, no unproven adoption,
+lookalike-root refusal and exact previous receipt/target/handle binding.
+
+Actual effects: default stock-Chrome profile preflight was incompatible. The
+lead explicitly selected the already-registered, compatible chatgpt-pro native
+Chrome152 binding and requested a fresh access plan/preflight, which passed.
+This was an operator-selected registered route, NOT the default recommendation;
+no registry records were changed and no unrelated profile/lease was borrowed.
+One MCP tab_new opened ChatGPT in a headless browser. A single auth probe found
+'Just a moment...' human verification, no composer and no model picker. No
+further ChatGPT probe, input, reload, send or model change followed that challenge.
+The retained tab remains open. remote_view_open refused because no display
+allocation or route-pool entry is available; this does not provide a human view.
+The lead acknowledges the presentation gap and preserves the retained session.
+
+Grok's existing validated Chromium route passed preflight; one MCP tab_new opened
+it. Read-only checks found an account menu, no login/challenge and an onboarding
+heading; composer visibility and subscription remain unverified. No prompts or
+controls were submitted. Claude stock/default preflights have no matching
+executable preference; no Claude browser was opened. HOST-02 remains held.
+
+First-send correction: accept only the literal root or strict /c/<id>. Root must
+have zero messages before fill; persist the original route/handle binding, then
+one sending marker and one click. Status adopts a new /c/<id> only with the exact
+fresh user text and at most one assistant, under the same target/model. Unknown
+adoption becomes uncertain and blocks sends. Every linked receipt inherits the
+adopted URL; previous requests must be completed, same target hash/handle and
+conversation tail. Legacy v1 receipts missing conversationUrl stay c/<id>-only.
+No navigation, replay, browser repair, new provider sender or HTTP OAuth added.
+
+Public MCP RED observed conversation_required on a three-turn fresh-root test
+(/tmp/auracall-first-send-red.log). Green:120focused tests/9files, including
+38workflow cases, first-send timeout recovery, URL drift, incorrect user/extra
+turns, old v1 receipts and changed/missing previous bindings. Typecheck and scoped
+lint PASS. Build and remaining peer checks pending at this checkpoint. No paid
+API fallback or extra credits. Overall provider Spec remains PARTIAL.
+
+
+First-send review16 clarification: an uncertain adoption may later recover on a
+fresh read-only status probe if every target/model/user/URL gate matches; no
+input is replayed. A root receipt that never gains a verified /c/<id> remains
+sent/uncertain and cannot complete. conversationUrl is private/local MCP
+receipt data: omit actual conversation IDs from shared progress summaries.
+Focused121tests/9files PASS; typecheck, scoped lint and full build PASS. The
+three-turn root/restart fixture and all prior frontend cases pass. Source
+inspection accepted at peer16; presentation remains a separate unresolved gate.

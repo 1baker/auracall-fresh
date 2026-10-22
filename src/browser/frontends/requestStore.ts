@@ -17,6 +17,7 @@ const recordSchema = z
 		targetKey: z.string().length(64),
 		text: z.string().min(1).max(8192),
 		previousRequestId: requestIdSchema.nullable(),
+		conversationUrl: z.string().max(2048).nullable().optional(),
 		status: z.enum(["prepared", "failed_presend", "sending", "sent", "uncertain", "completed"]),
 		baseline: z.array(z.string().min(1).max(256)).max(200),
 		userMessageId: z.string().max(256).nullable(),

@@ -1,3 +1,7 @@
+## 2026-10-22 — Actual browser acquisition and fresh-chat correction
+
+MCP browser acquisition now observed: native Chrome opened ChatGPT but hit human verification with no usable viewer route. Grok opened; onboarding/control state and subscription remain unverified. Claude executable binding is missing. No sends. Corrected the independently found existing-chat-only limitation;120focused checks pass with three-turn URL inheritance and conservative adoption. Remaining build/review and visible browser handoff are pending.
+
 ## 2026-10-22 — Durable frontend send/status S2
 
 Native frontend input now has persisted request IDs and one-probe status reconciliation. Two linked MCP replies survive service reconstruction in local fixtures; timeout/conflict/changed route/occupied composer/process locks fail safely. Peer caught an interrupted-prepared record; regression red then corrected. Focused101tests/typecheck pass; full build PASS, regression4112pass/2known-fail/11skip; Claude final10 and separate Standards review PASS; bounded S2 accepted for commit. Signed-in providers remain unavailable; HOST02 unchanged.

@@ -76,6 +76,9 @@ const observationSchema = z.object({
 		.max(200),
 });
 type Observation = z.infer<typeof observationSchema>;
+const isRootUrl = (value: string) => value === "https://chatgpt.com/";
+const isConversationUrl = (value: unknown): value is string =>
+	typeof value === "string" && /^https:\/\/chatgpt\.com\/c\/[a-zA-Z0-9_-]+$/.test(value);
 interface MessageOperations {
 	request(route: FrontendRoute, request: Record<string, unknown>): Promise<Record<string, unknown>>;
 }
@@ -86,7 +89,10 @@ export class FrontendMessages {
 		private readonly operations: MessageOperations,
 	) {}
 	private bound(route: FrontendRoute, record: FrontendRequestRecord): void {
-		if (record.binding !== frontendRouteBinding(route))
+		if (
+			record.binding !== frontendRouteBinding(route) ||
+			record.targetKey !== frontendTargetKey(route)
+		)
 			throw new FrontendError(
 				"request_binding_mismatch",
 				"The saved request belongs to a different retained route.",
@@ -97,6 +103,7 @@ export class FrontendMessages {
 			requestId,
 			routeId,
 			previousRequestId,
+			conversationUrl,
 			status,
 			userMessageId,
 			assistantMessageId,
@@ -108,6 +115,7 @@ export class FrontendMessages {
 			requestId,
 			routeId,
 			previousRequestId,
+			conversationUrl,
 			status,
 			userMessageId,
 			assistantMessageId,
@@ -116,7 +124,10 @@ export class FrontendMessages {
 			liveVerified: false,
 		};
 	}
-	private async observe(route: FrontendRoute): Promise<Observation> {
+	private async observe(
+		route: FrontendRoute,
+		allowFirstConversation = false,
+	): Promise<Observation> {
 		const result = await this.operations.request(route, {
 			action: "probe",
 			timeoutMs: 5000,
@@ -128,7 +139,11 @@ export class FrontendMessages {
 		});
 		if (result.targetId !== route.serviceTabHandle.targetId)
 			throw new FrontendError("target_mismatch", "The retained target changed.");
-		if (result.ok !== true || result.url !== route.expectedUrl)
+		if (
+			result.ok !== true ||
+			(result.url !== route.expectedUrl &&
+				!(allowFirstConversation && isRootUrl(route.expectedUrl) && isConversationUrl(result.url)))
+		)
 			throw new FrontendError("origin_mismatch", "The retained conversation changed.");
 		const detectors = result.detectors as {
 			id?: unknown;
@@ -148,7 +163,7 @@ export class FrontendMessages {
 		if (!parsed.success)
 			throw new FrontendError("probe_failed", "Conversation evidence is invalid or incomplete.");
 		const observation = parsed.data;
-		if (observation.url !== route.expectedUrl)
+		if (observation.url !== result.url)
 			throw new FrontendError("origin_mismatch", "The conversation URL changed.");
 		if (observation.model !== route.expectedModel)
 			throw new FrontendError("model_drift", "The visible model changed.");
@@ -207,14 +222,10 @@ export class FrontendMessages {
 				"invalid_request",
 				"Provide bounded text and a valid prior request ID.",
 			);
-		if (
-			!/^\/c\/[a-zA-Z0-9_-]+$/.test(new URL(route.expectedUrl).pathname) ||
-			new URL(route.expectedUrl).search ||
-			new URL(route.expectedUrl).hash
-		)
+		if (!isRootUrl(route.expectedUrl) && !isConversationUrl(route.expectedUrl))
 			throw new FrontendError(
-				"conversation_required",
-				"Configure an existing exact ChatGPT conversation URL.",
+				"invalid_route",
+				"Configure the exact ChatGPT root or a supported conversation URL.",
 			);
 		const replay = (saved: FrontendRequestRecord) => {
 			this.bound(route, saved);
@@ -235,17 +246,37 @@ export class FrontendMessages {
 					"request_unresolved",
 					"Read status for the previous request before sending another.",
 				);
-			const observation = await this.observe(route);
+			let activeRoute = route;
+			let previous: FrontendRequestRecord | null = null;
+			if (previousRequestId) {
+				previous = await this.store.read(previousRequestId);
+				if (!previous)
+					throw new FrontendError("previous_missing", "The previous request does not exist.");
+				this.bound(route, previous);
+				const previousUrl =
+					previous.conversationUrl ??
+					(previous.conversationUrl === undefined && isConversationUrl(route.expectedUrl)
+						? route.expectedUrl
+						: null);
+				if (previous.status !== "completed" || !isConversationUrl(previousUrl))
+					throw new FrontendError(
+						"continuity_mismatch",
+						"The previous request needs a completed, bound conversation.",
+					);
+				activeRoute = { ...route, expectedUrl: previousUrl };
+			}
+			const observation = await this.observe(activeRoute);
 			if (!observation.composerReady || observation.composer !== "" || observation.generating)
 				throw new FrontendError(
 					"composer_busy",
 					"The composer must be empty and generation stopped.",
 				);
-			if (previousRequestId) {
-				const previous = await this.store.read(previousRequestId);
-				if (!previous)
-					throw new FrontendError("previous_missing", "The previous request does not exist.");
-				this.bound(route, previous);
+			if (isRootUrl(activeRoute.expectedUrl) && observation.messages.length !== 0)
+				throw new FrontendError(
+					"conversation_not_empty",
+					"A fresh root page must have no messages.",
+				);
+			if (previous) {
 				if (
 					previous.status !== "completed" ||
 					observation.messages.at(-1)?.id !== previous.assistantMessageId ||
@@ -264,6 +295,9 @@ export class FrontendMessages {
 				targetKey: frontendTargetKey(route),
 				text,
 				previousRequestId: previousRequestId ?? null,
+				conversationUrl: isConversationUrl(activeRoute.expectedUrl)
+					? activeRoute.expectedUrl
+					: null,
 				status: "prepared",
 				baseline: observation.messages.map((message) => message.id),
 				userMessageId: null,
@@ -273,8 +307,8 @@ export class FrontendMessages {
 			};
 			await this.store.write(record, true);
 			try {
-				await this.ui(route, "fill", text);
-				const filled = await this.observe(route);
+				await this.ui(activeRoute, "fill", text);
+				const filled = await this.observe(activeRoute);
 				if (
 					!filled.composerReady ||
 					!filled.sendReady ||
@@ -296,7 +330,7 @@ export class FrontendMessages {
 			record.status = "sending";
 			await this.store.write(record);
 			try {
-				await this.ui(route, "click");
+				await this.ui(activeRoute, "click");
 				record.status = "sent";
 			} catch {
 				record.status = "uncertain";
@@ -328,7 +362,24 @@ export class FrontendMessages {
 					return this.receipt(record);
 				}
 				if (record.status === "completed") return this.receipt(record);
-				const observation = await this.observe(route);
+				const adopting = isRootUrl(route.expectedUrl) && record.conversationUrl === null;
+				if (adopting && record.baseline.length !== 0)
+					throw new FrontendError(
+						"record_invalid",
+						"A fresh-chat receipt must have an empty baseline.",
+					);
+				if (
+					(isRootUrl(route.expectedUrl) && record.conversationUrl === undefined) ||
+					(record.conversationUrl != null &&
+						(!isConversationUrl(record.conversationUrl) ||
+							(!isRootUrl(route.expectedUrl) && record.conversationUrl !== route.expectedUrl)))
+				)
+					throw new FrontendError(
+						"record_invalid",
+						"The saved conversation binding is invalid; it was preserved.",
+					);
+				const activeRoute = { ...route, expectedUrl: record.conversationUrl ?? route.expectedUrl };
+				const observation = await this.observe(activeRoute, adopting);
 				const baseline = observation.messages
 					.slice(0, record.baseline.length)
 					.map((message) => message.id);
@@ -338,10 +389,27 @@ export class FrontendMessages {
 					fresh.length > 2 ||
 					(fresh[0] && (fresh[0].role !== "user" || fresh[0].text !== record.text)) ||
 					(fresh[1] && fresh[1].role !== "assistant")
-				)
+				) {
+					if (adopting) {
+						record.status = "uncertain";
+						record.code = "continuity_mismatch";
+						await this.store.write(record);
+					}
 					return { ...this.receipt(record), code: "continuity_mismatch" };
+				}
+				if (adopting && isConversationUrl(observation.url)) {
+					if (!fresh[0]) {
+						record.status = "uncertain";
+						record.code = "continuity_mismatch";
+						await this.store.write(record);
+						return this.receipt(record);
+					}
+					record.conversationUrl = observation.url;
+					await this.store.write(record);
+				}
 				if (
 					fresh.length === 2 &&
+					(!isRootUrl(route.expectedUrl) || isConversationUrl(record.conversationUrl)) &&
 					fresh[1].text.trim() &&
 					!observation.generating &&
 					observation.composer === ""

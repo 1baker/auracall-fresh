@@ -1,3 +1,7 @@
+# Turn 202610221330 | 2026-10-22
+
+Plan0444 S2: actual MCP opened ChatGPT native Chrome (human verification; viewer route unavailable) and Grok Chromium (controls/subscription unverified). Claude binding absent. Retained sessions preserved, no sends. First-send defect reproduced RED and repaired;120focused tests pass, typecheck/lint PASS; build/review pending. HOST02 unchanged.
+
 # Turn 202610220635 | 2026-10-22
 
 Plan0444 S2: implement saved frontend send/status receipts, one native Send click, restart/readback and uncertain-send exclusion. Public MCP/serialized DOM plus process-crash fixture101focused tests pass; typecheck pass. Peer8 crash-window finding repaired. Full build PASS; full regression4112pass/2known-fail/11skip; Claude final10 and separate Standards review PASS; bounded S2 accepted for commit; actual providers and HOST02 remain held.

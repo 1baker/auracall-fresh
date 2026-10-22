@@ -162,14 +162,14 @@ function requiredElement(doc: Document, selector: string): Element {
 
 // S2: public protocol coverage. The fixture changes only in response to native
 // ui_action input; production's serialized readonly detector supplies all reads.
-async function messagingFixture() {
+async function messagingFixture(startUrl = "https://chatgpt.com/c/messaging-fixture") {
 	const { mkdtemp, rm } = await import("node:fs/promises");
 	const { tmpdir } = await import("node:os");
 	const { join } = await import("node:path");
 	const { setAuracallHomeDirOverrideForTest } = await import("../src/auracallHome.js");
 	const home = await mkdtemp(join(tmpdir(), "auracall-send-"));
 	setAuracallHomeDirOverrideForTest(home);
-	const url = "https://chatgpt.com/c/messaging-fixture";
+	const url = startUrl;
 	const { document } = parseHTML(
 		'<html><body><button data-testid="model-switcher-dropdown-button">GPT fixture</button><main></main><textarea id="prompt-textarea"></textarea><button data-testid="send-button">Send</button></body></html>',
 	);
@@ -232,6 +232,7 @@ async function messagingFixture() {
 			expect(step.type).toBe("click");
 			expect(node.getAttribute("data-testid")).toBe("send-button");
 			clicks++;
+			if (url === "https://chatgpt.com/") observedUrl = "https://chatgpt.com/c/messaging-fixture";
 			const text = (document.querySelector("#prompt-textarea") as HTMLTextAreaElement).value;
 			for (const [role, content] of [
 				["user", text],
@@ -619,4 +620,260 @@ it("gives direct service callers a typed invalid request ID before broker input"
 	await expect(service.send("route", "bad", "text")).rejects.toMatchObject({
 		code: "invalid_request_id",
 	});
+});
+
+describe("starting a fresh frontend conversation through MCP", () => {
+	it("adopts the new conversation URL and carries it across restart and three linked turns", async () => {
+		const f = await messagingFixture("https://chatgpt.com/");
+		try {
+			let call = await f.connect();
+			expect(
+				await call("frontend_send", { requestId: "fresh-one", text: "Return BLUE-17" }),
+			).toMatchObject({ status: "sent", conversationUrl: null });
+			expect(await call("frontend_status", { requestId: "fresh-one" })).toMatchObject({
+				status: "completed",
+				conversationUrl: "https://chatgpt.com/c/messaging-fixture",
+				output: "BLUE-17",
+			});
+			call = await f.connect();
+			expect(
+				await call("frontend_send", {
+					requestId: "fresh-two",
+					text: "Repeat the actual marker",
+					previousRequestId: "fresh-one",
+				}),
+			).toMatchObject({
+				status: "sent",
+				conversationUrl: "https://chatgpt.com/c/messaging-fixture",
+			});
+			expect(await call("frontend_status", { requestId: "fresh-two" })).toMatchObject({
+				status: "completed",
+				conversationUrl: "https://chatgpt.com/c/messaging-fixture",
+			});
+			expect(
+				await call("frontend_send", {
+					requestId: "fresh-three",
+					text: "Repeat once more",
+					previousRequestId: "fresh-two",
+				}),
+			).toMatchObject({
+				status: "sent",
+				conversationUrl: "https://chatgpt.com/c/messaging-fixture",
+			});
+			expect(await call("frontend_status", { requestId: "fresh-three" })).toMatchObject({
+				status: "completed",
+				conversationUrl: "https://chatgpt.com/c/messaging-fixture",
+			});
+			expect(f.stats().clicks).toBe(3);
+		} finally {
+			await f.cleanup();
+		}
+	});
+});
+
+describe("fresh frontend conversation boundaries", () => {
+	it.each([
+		"https://chatgpt.com/?model=pro",
+		"https://chatgpt.com/?temporary-chat=true",
+		"https://chatgpt.com/g/custom",
+		"https://chatgpt.com/g/g-p-project/c/fixture",
+		"https://chatgpt.com/c/fixture?x=1",
+		"https://chatgpt.com/c/fixture#fragment",
+	])("refuses unsupported root or conversation URL %s", async (url) => {
+		const f = await messagingFixture(url);
+		try {
+			const call = await f.connect();
+			expect(await call("frontend_send", { requestId: "invalid-url", text: "test" })).toMatchObject(
+				{ code: "invalid_route" },
+			);
+			expect(f.stats()).toEqual({ clicks: 0, probes: 0 });
+		} finally {
+			await f.cleanup();
+		}
+	});
+	it("refuses root mode when the supposedly new page already contains a message", async () => {
+		const f = await messagingFixture("https://chatgpt.com/");
+		try {
+			requiredElement(f.document, "main").innerHTML =
+				'<div data-message-author-role="user" data-message-id="prior-user">old user text</div>';
+			const call = await f.connect();
+			expect(await call("frontend_send", { requestId: "not-empty", text: "test" })).toMatchObject({
+				code: "conversation_not_empty",
+			});
+			expect(f.stats().clicks).toBe(0);
+		} finally {
+			await f.cleanup();
+		}
+	});
+	it.each([
+		"wrong-user",
+		"extra-user",
+		"no-user",
+	])("does not adopt an unverified new conversation: %s", async (kind) => {
+		const f = await messagingFixture("https://chatgpt.com/");
+		try {
+			const call = await f.connect();
+			await call("frontend_send", { requestId: "adoption-one", text: "specific test" });
+			if (kind === "wrong-user")
+				requiredElement(f.document, '[data-message-author-role="user"]').textContent =
+					"different text";
+			if (kind === "extra-user")
+				requiredElement(f.document, "main").insertAdjacentHTML(
+					"beforeend",
+					'<div data-message-author-role="user" data-message-id="extra-user">extra</div>',
+				);
+			if (kind === "no-user") requiredElement(f.document, "main").innerHTML = "";
+			expect(await call("frontend_status", { requestId: "adoption-one" })).toMatchObject({
+				status: "uncertain",
+				conversationUrl: null,
+				output: null,
+				code: "continuity_mismatch",
+			});
+			expect(
+				await call("frontend_send", { requestId: "adoption-two", text: "another" }),
+			).toMatchObject({ code: "request_unresolved" });
+			const before = f.stats();
+			expect(
+				await call("frontend_send", { requestId: "adoption-one", text: "specific test" }),
+			).toMatchObject({ status: "uncertain" });
+			expect(f.stats()).toEqual(before);
+			expect(f.stats().clicks).toBe(1);
+		} finally {
+			await f.cleanup();
+		}
+	});
+	it("pins the adopted URL while the first reply is still generating", async () => {
+		const f = await messagingFixture("https://chatgpt.com/");
+		try {
+			const call = await f.connect();
+			await call("frontend_send", { requestId: "pending-one", text: "test" });
+			requiredElement(f.document, "main").insertAdjacentHTML(
+				"beforeend",
+				'<button data-testid="stop-button">Stop</button>',
+			);
+			expect(await call("frontend_status", { requestId: "pending-one" })).toMatchObject({
+				status: "sent",
+				conversationUrl: "https://chatgpt.com/c/messaging-fixture",
+			});
+			f.setUrl("https://chatgpt.com/c/other");
+			expect(await call("frontend_status", { requestId: "pending-one" })).toMatchObject({
+				code: "origin_mismatch",
+			});
+			expect(f.stats().clicks).toBe(1);
+		} finally {
+			await f.cleanup();
+		}
+	});
+	it("recovers a timed out first-send click without sending again", async () => {
+		const f = await messagingFixture("https://chatgpt.com/");
+		try {
+			let call = await f.connect();
+			f.setTimeout();
+			expect(
+				await call("frontend_send", { requestId: "root-timeout", text: "test" }),
+			).toMatchObject({ status: "uncertain", conversationUrl: null });
+			call = await f.connect();
+			const before = f.stats();
+			expect(
+				await call("frontend_send", { requestId: "root-timeout", text: "test" }),
+			).toMatchObject({ status: "uncertain" });
+			expect(f.stats()).toEqual(before);
+			expect(await call("frontend_status", { requestId: "root-timeout" })).toMatchObject({
+				status: "completed",
+				conversationUrl: "https://chatgpt.com/c/messaging-fixture",
+			});
+			expect(f.stats().clicks).toBe(1);
+		} finally {
+			await f.cleanup();
+		}
+	});
+	it.each([
+		"target-hash",
+		"handle",
+		"missing-url",
+		"null-url",
+		"incomplete",
+	])("refuses an invalid previous request binding: %s", async (kind) => {
+		const f = await messagingFixture("https://chatgpt.com/");
+		try {
+			const call = await f.connect();
+			await call("frontend_send", { requestId: "bound-one", text: "one" });
+			await call("frontend_status", { requestId: "bound-one" });
+			const { readFile, writeFile } = await import("node:fs/promises");
+			const { join } = await import("node:path");
+			const path = join(f.home, "frontend-requests", "bound-one.json");
+			const saved = JSON.parse(await readFile(path, "utf8"));
+			if (kind === "target-hash") saved.targetKey = "0".repeat(64);
+			if (kind === "missing-url") delete saved.conversationUrl;
+			if (kind === "null-url") saved.conversationUrl = null;
+			if (kind === "incomplete") saved.status = "sent";
+			await writeFile(path, JSON.stringify(saved));
+			if (kind === "handle") f.route.serviceTabHandle.tabId = "another-tab";
+			const before = f.stats();
+			const result = await call("frontend_send", {
+				requestId: "bound-two",
+				text: "two",
+				previousRequestId: "bound-one",
+			});
+			expect(result.ok).toBe(false);
+			expect(["request_binding_mismatch", "continuity_mismatch", "request_unresolved"]).toContain(
+				result.code,
+			);
+			expect(f.stats()).toEqual(before);
+		} finally {
+			await f.cleanup();
+		}
+	});
+	it("keeps legacy v1 receipts on their exact configured conversation route", async () => {
+		const f = await messagingFixture();
+		try {
+			let call = await f.connect();
+			await call("frontend_send", { requestId: "legacy-one", text: "one" });
+			await call("frontend_status", { requestId: "legacy-one" });
+			const { readFile, writeFile } = await import("node:fs/promises");
+			const { join } = await import("node:path");
+			const path = join(f.home, "frontend-requests", "legacy-one.json");
+			const saved = JSON.parse(await readFile(path, "utf8"));
+			delete saved.conversationUrl;
+			await writeFile(path, JSON.stringify(saved));
+			call = await f.connect();
+			expect(
+				await call("frontend_send", {
+					requestId: "legacy-two",
+					text: "two",
+					previousRequestId: "legacy-one",
+				}),
+			).toMatchObject({ status: "sent", conversationUrl: f.route.expectedUrl });
+			expect(await call("frontend_status", { requestId: "legacy-two" })).toMatchObject({
+				status: "completed",
+				conversationUrl: f.route.expectedUrl,
+			});
+			expect(f.stats().clicks).toBe(2);
+		} finally {
+			await f.cleanup();
+		}
+	});
+});
+
+it("preserves and refuses a corrupted fresh-chat baseline before any adoption probe", async () => {
+	const f = await messagingFixture("https://chatgpt.com/");
+	try {
+		const call = await f.connect();
+		await call("frontend_send", { requestId: "baseline-one", text: "one" });
+		const { readFile, writeFile } = await import("node:fs/promises");
+		const { join } = await import("node:path");
+		const path = join(f.home, "frontend-requests", "baseline-one.json");
+		const record = JSON.parse(await readFile(path, "utf8"));
+		record.baseline = ["not-a-fresh-root"];
+		const bytes = JSON.stringify(record);
+		await writeFile(path, bytes);
+		const before = f.stats();
+		expect(await call("frontend_status", { requestId: "baseline-one" })).toMatchObject({
+			code: "record_invalid",
+		});
+		expect(f.stats()).toEqual(before);
+		expect(await readFile(path, "utf8")).toBe(bytes);
+	} finally {
+		await f.cleanup();
+	}
 });
