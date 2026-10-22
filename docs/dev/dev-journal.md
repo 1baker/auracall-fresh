@@ -1,3 +1,16 @@
+## 2026-10-22 — First real Grok reply saved; linked turn held
+
+Native Grok round trip passed through public AuraCall tools embedded in-process
+and the existing Agent Browser MCP. Same request grok-native-20261022-first
+completed after three status probes, exact output AURA-GROK-20261022-S3; one fill,
+one click and fresh client/server restarts, no replay. Native IDs remain null;
+derived observation keys and canonical conversation identity are saved privately.
+The linked turn stopped before input: the existing cookie notice covers the
+composer. Claude14 preserves the human cookie-choice gate. Source Standards/Spec
+pass; overall native acceptance PARTIAL.172focused tests/typecheck/lint/build pass.
+HTTP broker path, subscription and generation signals remain unverified. ChatGPT
+human verification and Claude binding remain pending; HOST02 unchanged.
+
 ## 2026-10-22 — Grok public MCP recipe
 
 S3 extends the existing durable frontend workflow with a read-only Grok recipe,

@@ -676,8 +676,13 @@ digits, hyphens or underscores), `text` (up to 8192 characters), and optional
 `https://chatgpt.com/c/<id>` conversation through `AURACALL_FRONTEND_CONFIG`; the retained handle and visible
 model must match. The composer must be empty and generation stopped. This path
 uses native frontend fill and one Send click through Agent Browser. It neither
-launches a browser nor calls a model API. Current qualification is local fixtures
-only (`liveVerified:false`), not real signed-in acceptance.
+launches a browser nor calls a model API. ChatGPT qualification remains local
+fixtures. One real Grok reply has completed through public tools embedded
+in-process and the existing Agent Browser MCP, with durable readback after client
+restart. The linked turn awaits the user's cookie choice because the notice
+covers the composer. The configured HTTP broker, subscription entitlement and
+generation detector remain unqualified. `liveVerified:false` is unchanged; the
+separate native acceptance record is in Plan0444.
 
 Keep the request ID before calling. Repeating the same ID/content returns the
 saved receipt without input; changing content under that ID refuses. Call

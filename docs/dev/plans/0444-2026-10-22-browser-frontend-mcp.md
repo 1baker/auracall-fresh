@@ -49,7 +49,7 @@ not authority to add another auth server or a provider website sign-in method.
 
 ## Current State
 
-The user explicitly requested browser-front-end ChatGPT Pro intelligence, Claude effort and Grok conversations through MCP, and said "ok go" on 2026-10-22. The OAuth skill/starter is separately available; no live provider acceptance exists. This packet implements S1 only, on feature/auracall-web-mcp-01a16096 from a3d365fe.
+The user explicitly requested browser-front-end ChatGPT Pro intelligence, Claude effort and Grok conversations through MCP, and said "ok go" on 2026-10-22. The OAuth skill/starter is separately available. S1/S2 source and S3 source are implemented on feature/auracall-web-mcp-01a16096 from a3d365fe. One real Grok round trip is verified through the embedded MCP harness; linked replies and complete three-provider acceptance remain pending. Current S3 outcome and recovery are recorded below; earlier packet states remain historical.
 
 ## AU-WEB-MCP01-S1 | Inspect and configure ChatGPT intelligence
 
@@ -434,3 +434,62 @@ now successful and compiled checks rerun serially. These validation-order errors
 are lead errors, not provider evidence or baseline failures.
 
 R1-R4 final validation:172focused tests/10files PASS (50Grok,122other), full typecheck, warning-free scoped lint and complete build PASS. Resume status only on the existing first native request after this commit.
+
+
+## S3 native result and held linked turn | 2026-10-22
+
+Source commits:9eff5286 (provider recipe), e533c368 (semantic scope/empty editor),
+a72fe827e18d024aeaefada95aa6682b826a3eb5 (rid/textbox readback). Final focused
+validation172PASS/10files (50Grok,122other); typecheck, scoped lint zero warnings
+and complete build PASS. All repairs observed RED before GREEN. The earlier
+full-suite4112pass/2known-fail/11skip result is historical, not rerun for S3.
+
+Actual path: public AuraCall MCP tools embedded in-process -> existing installed
+Agent Browser MCP -> exact retained signed-in Grok Fast tab. Fresh preflight
+proved unchanged inventory/target, root, empty unique composer, scope and hit
+test. One native fill and one click sent request grok-native-20261022-first.
+After its first status found the rid/textbox variant, the same saved record was
+reconciled read-only after the source repair, without migration or replay.
+Status probes2/3 adopted the canonical conversation and verified identical
+nonempty reply observations >=1s apart. Final status completed, exact output:
+AURA-GROK-20261022-S3. Fresh embedded client/server processes read the same
+receipt; identityKind derived_sequence, native message IDs null, observation
+keys saved privately. Immutable completed receipt SHA256:
+6a671d90958b1a073cfd27ce6e72da9cb4b6321ca693ded07bd94a73ef377475.
+Actual conversation URL and browser handles are intentionally not published.
+
+Linked-turn full preflight stopped before any second send/fill/click because the
+composer's centre was covered by the original cookie-notice dialog. All other
+identity/model/account/scope/empty/viewport gates passed. The second receipt does
+not exist; no send is unresolved. Claude14 accepted source and first-turn proof,
+held cookie controls because their persistent consent effects were unverified,
+and required a human cookie choice. The assertion that Dismiss necessarily
+accepts cookies was not verified; the hold rests on uncertain semantics, not a
+claim of observed acceptance. No Dismiss/Accept/Reject/settings action was taken.
+
+Standards PASS; source Spec PASS; native connected-workflow Spec PARTIAL. A real
+Grok round trip passed via the embedded MCP harness; the HTTP broker path is
+unverified. Two-connected-replies stays pending. The separate
+configured HTTP broker, subscription entitlement and generationSignal remain
+unverified. No paid API fallback, install, registry change, LIVE change or HOST02
+work. ChatGPT still awaits human verification; Claude executable binding absent.
+
+Recovery: the user answers/dismisses the existing Grok cookie notice in the same
+retained tab. A resumed owner first recovers this exact peer task/revision and
+request state. Then one fresh full read-only linked preflight including the hit
+test, the single authorized linked prompt referring to the actual first reply,
+and <=20status checks >=1s apart. Preflight must confirm the same canonical
+conversation (a different rid is allowed), that grok-native-20261022-first remains
+the exact conversation tail, that no cookie notice or other dialog is present,
+and composerHit is true. If the tab navigated away, the path changed, or a new
+dialog, login or challenge appears, stop without navigating back.
+No resend/navigation/new chat/counter reset.
+Preserve the final peer allowance and all existing holds. Budget at latest native
+sample:338730 lead output used /661270 upper-bound remaining, same baseline143981;
+combined lead+peer UNKNOWN. Parent objective remains OPEN.
+
+Claude final16 confirms Standards PASS/source Spec PASS/native PARTIAL and the
+2/6=33% milestone count, with grok-real explicitly limited to the embedded MCP
+harness. Source/report check complete; the same peer task remains held with
+one final check reserved for the actual linked result after the human cookie
+choice. Plan status OPEN; no counter/task/budget reset.
