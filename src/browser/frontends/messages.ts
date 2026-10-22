@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { createHash } from "node:crypto";
+import { grokMessagesExpression } from "./grok.js";
 import { FrontendError, type FrontendRoute } from "./types.js";
 import {
 	type FrontendRequestStore,
@@ -60,7 +62,7 @@ export const chatgptMessagesExpression = () =>
 	`(${inspectChatgptMessages.toString()})(document, location.href)`;
 const observationSchema = z.object({
 	url: z.string(),
-	model: z.string(),
+	model: z.string().nullable(),
 	composer: z.string().nullable(),
 	composerReady: z.boolean(),
 	sendReady: z.boolean(),
@@ -68,17 +70,48 @@ const observationSchema = z.object({
 	messages: z
 		.array(
 			z.object({
-				id: z.string().min(1).max(256),
+				id: z.string().min(1).max(256).nullable(),
 				role: z.enum(["user", "assistant"]),
 				text: z.string().max(64000),
 			}),
 		)
 		.max(200),
+	composerSelector: z.string().min(1).max(2048).nullable().optional(),
+	sendSelector: z.string().min(1).max(2048).nullable().optional(),
+	composerHit: z.boolean().optional(),
+	sendHit: z.boolean().optional(),
+	challengePresent: z.boolean().optional(),
+	loginPresent: z.boolean().optional(),
+	accountPresent: z.boolean().optional(),
+	ambiguousMessages: z.boolean().optional(),
 });
-type Observation = z.infer<typeof observationSchema>;
-const isRootUrl = (value: string) => value === "https://chatgpt.com/";
-const isConversationUrl = (value: unknown): value is string =>
-	typeof value === "string" && /^https:\/\/chatgpt\.com\/c\/[a-zA-Z0-9_-]+$/.test(value);
+type Observation = Omit<z.infer<typeof observationSchema>, "messages"> & {
+	messages: { id: string; role: "user" | "assistant"; text: string }[];
+};
+interface MessageRecipe {
+	root: string;
+	conversation: RegExp;
+	expression(): string;
+}
+const recipes: Record<FrontendRoute["provider"], MessageRecipe> = {
+	chatgpt: {
+		root: "https://chatgpt.com/",
+		conversation: /^https:\/\/chatgpt\.com\/c\/[a-zA-Z0-9_-]+$/,
+		expression: chatgptMessagesExpression,
+	},
+	grok: {
+		root: "https://grok.com/",
+		conversation: /^https:\/\/grok\.com\/c\/[a-zA-Z0-9_-]+$/,
+		expression: grokMessagesExpression,
+	},
+};
+const isRootUrl = (route: FrontendRoute, value: string) => value === recipes[route.provider].root;
+const isConversationUrl = (route: FrontendRoute, value: unknown): value is string =>
+	typeof value === "string" && recipes[route.provider].conversation.test(value);
+const derivedKey = (index: number, role: string, text: string) =>
+	createHash("sha256")
+		.update(JSON.stringify([index, role, text]))
+		.digest("hex");
 interface MessageOperations {
 	request(route: FrontendRoute, request: Record<string, unknown>): Promise<Record<string, unknown>>;
 }
@@ -96,6 +129,17 @@ export class FrontendMessages {
 			throw new FrontendError(
 				"request_binding_mismatch",
 				"The saved request belongs to a different retained route.",
+			);
+		if (
+			(route.provider === "grok" &&
+				(record.identityKind !== "derived_sequence" ||
+					record.userMessageId !== null ||
+					record.assistantMessageId !== null)) ||
+			(route.provider === "chatgpt" && record.identityKind === "derived_sequence")
+		)
+			throw new FrontendError(
+				"record_invalid",
+				"The saved message identity contract does not match this provider.",
 			);
 	}
 	private receipt(record: FrontendRequestRecord): Record<string, unknown> {
@@ -121,6 +165,14 @@ export class FrontendMessages {
 			assistantMessageId,
 			output,
 			code,
+			identityKind: record.identityKind ?? "native",
+			...(record.identityKind === "derived_sequence"
+				? {
+						observedUserKey: record.observedUserKey ?? null,
+						observedAssistantKey: record.observedAssistantKey ?? null,
+						generationSignal: "unverified",
+					}
+				: {}),
 			liveVerified: false,
 		};
 	}
@@ -133,8 +185,10 @@ export class FrontendMessages {
 			timeoutMs: 5000,
 			maxReturnBytes: 98304,
 			probe: {
-				recipeId: "auracall-chatgpt-messages-v1",
-				detectors: [{ id: "messages", type: "evaluate", expression: chatgptMessagesExpression() }],
+				recipeId: `auracall-${route.provider}-messages-v1`,
+				detectors: [
+					{ id: "messages", type: "evaluate", expression: recipes[route.provider].expression() },
+				],
 			},
 		});
 		if (result.targetId !== route.serviceTabHandle.targetId)
@@ -142,7 +196,11 @@ export class FrontendMessages {
 		if (
 			result.ok !== true ||
 			(result.url !== route.expectedUrl &&
-				!(allowFirstConversation && isRootUrl(route.expectedUrl) && isConversationUrl(result.url)))
+				!(
+					allowFirstConversation &&
+					isRootUrl(route, route.expectedUrl) &&
+					isConversationUrl(route, result.url)
+				))
 		)
 			throw new FrontendError("origin_mismatch", "The retained conversation changed.");
 		const detectors = result.detectors as {
@@ -162,7 +220,37 @@ export class FrontendMessages {
 		const parsed = observationSchema.safeParse(detectors[0].result);
 		if (!parsed.success)
 			throw new FrontendError("probe_failed", "Conversation evidence is invalid or incomplete.");
-		const observation = parsed.data;
+		const raw = parsed.data;
+		if (route.provider === "grok") {
+			if (raw.challengePresent !== false)
+				throw new FrontendError(
+					"human_verification",
+					"Human verification requires operator interaction.",
+				);
+			if (raw.loginPresent !== false || raw.accountPresent !== true)
+				throw new FrontendError("login_required", "A signed-in frontend is required.");
+			if (raw.ambiguousMessages !== false)
+				throw new FrontendError("probe_failed", "Conversation rows are ambiguous.");
+			if (!raw.composerSelector || !raw.composerReady)
+				throw new FrontendError(
+					"composer_unavailable",
+					"A unique enabled Grok composer is required.",
+				);
+		}
+		if (route.provider === "chatgpt" && raw.model === null)
+			throw new FrontendError("probe_failed", "The visible model is unavailable.");
+		const observation: Observation = {
+			...raw,
+			messages: raw.messages.map((message, index) => {
+				const id =
+					route.provider === "grok" ? derivedKey(index, message.role, message.text) : message.id;
+				if (!id) throw new FrontendError("probe_failed", "Native message identities are missing.");
+				return {
+					...message,
+					id,
+				};
+			}),
+		};
 		if (observation.url !== result.url)
 			throw new FrontendError("origin_mismatch", "The conversation URL changed.");
 		if (observation.model !== route.expectedModel)
@@ -174,7 +262,12 @@ export class FrontendMessages {
 			throw new FrontendError("probe_failed", "Message identities are ambiguous.");
 		return observation;
 	}
-	private async ui(route: FrontendRoute, type: "fill" | "click", value?: string): Promise<void> {
+	private async ui(
+		route: FrontendRoute,
+		type: "fill" | "click",
+		value?: string,
+		control?: string | null,
+	): Promise<void> {
 		const result = await this.operations.request(route, {
 			action: "ui_action",
 			timeoutMs: 5000,
@@ -184,7 +277,9 @@ export class FrontendMessages {
 				steps: [
 					{
 						type,
-						selector: type === "fill" ? "#prompt-textarea" : 'button[data-testid="send-button"]',
+						selector:
+							control ??
+							(type === "fill" ? "#prompt-textarea" : 'button[data-testid="send-button"]'),
 						...(value === undefined ? {} : { value }),
 					},
 				],
@@ -222,10 +317,10 @@ export class FrontendMessages {
 				"invalid_request",
 				"Provide bounded text and a valid prior request ID.",
 			);
-		if (!isRootUrl(route.expectedUrl) && !isConversationUrl(route.expectedUrl))
+		if (!isRootUrl(route, route.expectedUrl) && !isConversationUrl(route, route.expectedUrl))
 			throw new FrontendError(
 				"invalid_route",
-				"Configure the exact ChatGPT root or a supported conversation URL.",
+				"Configure the exact provider root or a supported conversation URL.",
 			);
 		const replay = (saved: FrontendRequestRecord) => {
 			this.bound(route, saved);
@@ -255,10 +350,10 @@ export class FrontendMessages {
 				this.bound(route, previous);
 				const previousUrl =
 					previous.conversationUrl ??
-					(previous.conversationUrl === undefined && isConversationUrl(route.expectedUrl)
+					(previous.conversationUrl === undefined && isConversationUrl(route, route.expectedUrl)
 						? route.expectedUrl
 						: null);
-				if (previous.status !== "completed" || !isConversationUrl(previousUrl))
+				if (previous.status !== "completed" || !isConversationUrl(route, previousUrl))
 					throw new FrontendError(
 						"continuity_mismatch",
 						"The previous request needs a completed, bound conversation.",
@@ -266,12 +361,24 @@ export class FrontendMessages {
 				activeRoute = { ...route, expectedUrl: previousUrl };
 			}
 			const observation = await this.observe(activeRoute);
+			if (route.provider === "grok") {
+				if (!observation.composerSelector || !observation.composerReady)
+					throw new FrontendError(
+						"composer_unavailable",
+						"A unique enabled Grok composer is required.",
+					);
+				if (!observation.composerHit)
+					throw new FrontendError(
+						"blocked_overlay",
+						"The composer is outside the viewport or covered.",
+					);
+			}
 			if (!observation.composerReady || observation.composer !== "" || observation.generating)
 				throw new FrontendError(
 					"composer_busy",
 					"The composer must be empty and generation stopped.",
 				);
-			if (isRootUrl(activeRoute.expectedUrl) && observation.messages.length !== 0)
+			if (isRootUrl(route, activeRoute.expectedUrl) && observation.messages.length !== 0)
 				throw new FrontendError(
 					"conversation_not_empty",
 					"A fresh root page must have no messages.",
@@ -279,7 +386,8 @@ export class FrontendMessages {
 			if (previous) {
 				if (
 					previous.status !== "completed" ||
-					observation.messages.at(-1)?.id !== previous.assistantMessageId ||
+					observation.messages.at(-1)?.id !==
+						(previous.observedAssistantKey ?? previous.assistantMessageId) ||
 					observation.messages.at(-1)?.text !== previous.output
 				)
 					throw new FrontendError(
@@ -295,7 +403,7 @@ export class FrontendMessages {
 				targetKey: frontendTargetKey(route),
 				text,
 				previousRequestId: previousRequestId ?? null,
-				conversationUrl: isConversationUrl(activeRoute.expectedUrl)
+				conversationUrl: isConversationUrl(route, activeRoute.expectedUrl)
 					? activeRoute.expectedUrl
 					: null,
 				status: "prepared",
@@ -304,11 +412,33 @@ export class FrontendMessages {
 				assistantMessageId: null,
 				output: null,
 				code: null,
+				...(route.provider === "grok"
+					? {
+							identityKind: "derived_sequence" as const,
+							observedUserKey: null,
+							observedAssistantKey: null,
+							candidate: null,
+						}
+					: {}),
 			};
 			await this.store.write(record, true);
+			let sendSelector: string | null | undefined;
 			try {
-				await this.ui(activeRoute, "fill", text);
+				await this.ui(activeRoute, "fill", text, observation.composerSelector);
 				const filled = await this.observe(activeRoute);
+				if (route.provider === "grok") {
+					if (!filled.sendSelector || !filled.sendReady)
+						throw new FrontendError(
+							"send_unavailable",
+							"A unique enabled Grok Send control is required.",
+						);
+					if (!filled.sendHit)
+						throw new FrontendError(
+							"blocked_overlay",
+							"The Send control is outside the viewport or covered.",
+						);
+					sendSelector = filled.sendSelector;
+				}
 				if (
 					!filled.composerReady ||
 					!filled.sendReady ||
@@ -321,16 +451,19 @@ export class FrontendMessages {
 						"composer_mismatch",
 						"Composer readback or conversation changed before Send.",
 					);
-			} catch {
+			} catch (error) {
 				record.status = "failed_presend";
-				record.code = "presend_unconfirmed";
+				record.code =
+					route.provider === "grok" && error instanceof FrontendError
+						? error.code
+						: "presend_unconfirmed";
 				await this.store.write(record);
 				return this.receipt(record);
 			}
 			record.status = "sending";
 			await this.store.write(record);
 			try {
-				await this.ui(activeRoute, "click");
+				await this.ui(activeRoute, "click", undefined, sendSelector);
 				record.status = "sent";
 			} catch {
 				record.status = "uncertain";
@@ -362,17 +495,18 @@ export class FrontendMessages {
 					return this.receipt(record);
 				}
 				if (record.status === "completed") return this.receipt(record);
-				const adopting = isRootUrl(route.expectedUrl) && record.conversationUrl === null;
+				const adopting = isRootUrl(route, route.expectedUrl) && record.conversationUrl === null;
 				if (adopting && record.baseline.length !== 0)
 					throw new FrontendError(
 						"record_invalid",
 						"A fresh-chat receipt must have an empty baseline.",
 					);
 				if (
-					(isRootUrl(route.expectedUrl) && record.conversationUrl === undefined) ||
+					(isRootUrl(route, route.expectedUrl) && record.conversationUrl === undefined) ||
 					(record.conversationUrl != null &&
-						(!isConversationUrl(record.conversationUrl) ||
-							(!isRootUrl(route.expectedUrl) && record.conversationUrl !== route.expectedUrl)))
+						(!isConversationUrl(route, record.conversationUrl) ||
+							(!isRootUrl(route, route.expectedUrl) &&
+								record.conversationUrl !== route.expectedUrl)))
 				)
 					throw new FrontendError(
 						"record_invalid",
@@ -380,6 +514,11 @@ export class FrontendMessages {
 					);
 				const activeRoute = { ...route, expectedUrl: record.conversationUrl ?? route.expectedUrl };
 				const observation = await this.observe(activeRoute, adopting);
+				if (route.provider === "grok" && observation.messages.length === 0) {
+					record.candidate = null;
+					await this.store.write(record);
+					return this.receipt(record);
+				}
 				const baseline = observation.messages
 					.slice(0, record.baseline.length)
 					.map((message) => message.id);
@@ -390,14 +529,15 @@ export class FrontendMessages {
 					(fresh[0] && (fresh[0].role !== "user" || fresh[0].text !== record.text)) ||
 					(fresh[1] && fresh[1].role !== "assistant")
 				) {
-					if (adopting) {
+					if (adopting || route.provider === "grok") {
 						record.status = "uncertain";
 						record.code = "continuity_mismatch";
+						if (route.provider === "grok") record.candidate = null;
 						await this.store.write(record);
 					}
 					return { ...this.receipt(record), code: "continuity_mismatch" };
 				}
-				if (adopting && isConversationUrl(observation.url)) {
+				if (adopting && isConversationUrl(route, observation.url)) {
 					if (!fresh[0]) {
 						record.status = "uncertain";
 						record.code = "continuity_mismatch";
@@ -407,16 +547,36 @@ export class FrontendMessages {
 					record.conversationUrl = observation.url;
 					await this.store.write(record);
 				}
-				if (
+				const ready =
 					fresh.length === 2 &&
-					(!isRootUrl(route.expectedUrl) || isConversationUrl(record.conversationUrl)) &&
-					fresh[1].text.trim() &&
+					(!isRootUrl(route, route.expectedUrl) ||
+						isConversationUrl(route, record.conversationUrl)) &&
+					!!fresh[1].text.trim() &&
 					!observation.generating &&
-					observation.composer === ""
-				) {
+					observation.composer === "";
+				if (route.provider === "grok") {
+					if (!ready) {
+						record.candidate = null;
+						await this.store.write(record);
+						return this.receipt(record);
+					}
+					if (record.candidate?.key !== fresh[1].id) {
+						record.candidate = { key: fresh[1].id, at: Date.now() };
+						await this.store.write(record);
+						return this.receipt(record);
+					}
+					if (Date.now() - record.candidate.at < 1000) return this.receipt(record);
+				}
+				if (ready) {
 					record.status = "completed";
-					record.userMessageId = fresh[0].id;
-					record.assistantMessageId = fresh[1].id;
+					if (route.provider === "grok") {
+						record.observedUserKey = fresh[0].id;
+						record.observedAssistantKey = fresh[1].id;
+						record.candidate = null;
+					} else {
+						record.userMessageId = fresh[0].id;
+						record.assistantMessageId = fresh[1].id;
+					}
 					record.output = fresh[1].text;
 					record.code = null;
 					await this.store.write(record);

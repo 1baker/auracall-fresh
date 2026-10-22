@@ -57,7 +57,7 @@ export function registerFrontendTools(server: McpServer, service: FrontendTools)
 		"frontend_send",
 		{
 			description:
-				"Send once through a configured existing ChatGPT frontend conversation. Save requestId; repeat only that same ID/content to recover the receipt. Never automatically replays uncertain input.",
+				"Send once through a configured ChatGPT or Grok frontend conversation, including an empty root. Save requestId; repeat only that same ID/content to recover the receipt. Never automatically replays uncertain input.",
 			inputSchema: route.extend({
 				requestId: requestIdSchema,
 				text: z.string().min(1).max(8192),

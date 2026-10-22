@@ -7,7 +7,7 @@ import { FrontendError } from "./types.js";
 const routeSchema = z
 	.object({
 		id: z.string().min(1).max(128),
-		provider: z.literal("chatgpt"),
+		provider: z.enum(["chatgpt", "grok"]),
 		expectedUrl: z.string().min(1),
 		expectedModel: z.string().min(1).max(256),
 		serviceTabHandle: z.record(z.string(), z.unknown()),

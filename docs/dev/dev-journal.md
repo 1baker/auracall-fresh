@@ -1,6 +1,18 @@
+## 2026-10-22 — Grok public MCP recipe
+
+S3 extends the existing durable frontend workflow with a read-only Grok recipe,
+native fill/single click, hit-test refusal, explicit derived message identities
+and persisted two-observation stability. Initial public tracer failed
+invalid_route, then150focused tests/10files pass, including29new Grok cases and
+all121prior cases. Typecheck, warning-free scoped lint and build pass; peer
+milestone review and native Grok attempt remain pending. No prompts sent yet.
+ChatGPT has a ready interactive stream but human verification remains pending;
+Grok's welcome was closed once after scoped proof and its Fast composer is visible.
+Claude binding and subscription entitlement remain unverified. HOST02 stays held.
+
 ## 2026-10-22 — Actual browser acquisition and fresh-chat correction
 
-MCP browser acquisition now observed: native Chrome opened ChatGPT but hit human verification with no usable viewer route. Grok opened; onboarding/control state and subscription remain unverified. Claude executable binding is missing. No sends. Corrected the independently found existing-chat-only limitation;120focused checks pass with three-turn URL inheritance and conservative adoption. Remaining build/review and visible browser handoff are pending.
+MCP browser acquisition observed: native Chrome opened ChatGPT but hit human verification. RDP viewer acquisition failed; later CDP stream readiness provided an authenticated viewer handoff, still awaiting human verification. Grok opened; its Fast composer is now observed after one approved welcome Close. Claude executable binding is missing. No sends. First-send correction committed a6ebcd56 with121focused checks, typecheck, lint and build passing. Actual provider acceptance remains pending.
 
 ## 2026-10-22 — Durable frontend send/status S2
 

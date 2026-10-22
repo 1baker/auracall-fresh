@@ -304,6 +304,7 @@ describe("durable frontend messages through MCP", () => {
 				output: "BLUE-17",
 				userMessageId: "user-1",
 				assistantMessageId: "assistant-1",
+				identityKind: "native",
 			});
 			const afterRestart = await f.connect();
 			expect(

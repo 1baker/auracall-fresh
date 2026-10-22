@@ -2,6 +2,51 @@
 
 State: OPEN
 
+## Current packet: S3 Grok send/status, 22 October 2026
+
+Owner: native thread 01a16096-da12-7753-8d44-e299c2172cef on
+feature/auracall-web-mcp-01a16096, starting at a6ebcd56. The continuing human
+instruction and all six saved Implement choices on objective auracall revision38
+cover this packet. Earlier preparation-only instructions were superseded by
+those selections and the explicit frontend implementation direction. HOST-02
+remains held. The current shared tab allowance is 1,000,000 generated output
+tokens, fixed baseline143981; older budgets below are historical. Peer output is
+unmeasured, so combined usage is UNKNOWN; no peer turn is free of that allowance.
+
+Claude task auracall-grok-frontend-s3-20261022 revision6 approves a provider recipe
+and the shared durable request workflow. Scope: src/browser/frontends, public MCP
+tests, and corresponding docs only. No Claude implementation, host installers,
+ChatGPT browser actions, registry writes, new OAuth platform or LIVE changes.
+
+Grok pins the currently observed Fast model, exact root or /c/<id>, one signed-in
+composer and same-form Send control. Native fill and a single click follow
+viewport and hit-test checks. The DOM recipe is read-only. Message identity is
+explicitly derived from position/role/text; native message IDs remain null.
+Completion requires two identical nonempty observations at least one second
+apart, no known generation signal and a verified conversation URL. Generation
+signals remain unverified until captured in native use; fixtures prove no live
+acceptance. Root URL lag and disappearing rows remain pending. Changed baseline
+or unknown click outcomes remain uncertain and never trigger another Send.
+Old ChatGPT v1 receipts retain native identity and their prior behavior.
+
+Acceptance: public MCP two linked replies and restart/idempotence; refusals for
+unsupported URLs, identity/model/target changes, login/challenge, occupied or
+ambiguous controls and overlays; no completion during known generation or after
+one observation. The first tracer failed with invalid_route before implementation
+(/tmp/auracall-grok-red.log). Run affected frontend/legacy tests, typecheck, lint
+and build, then obtain a milestone peer check before any native Grok attempt.
+Native acceptance requires actual replies and saved-request readback through
+AuraCall's public tools under the same owned Agent Browser handle. Stop on human
+verification or an uncertain send; no provider API or extra paid credits.
+
+The human-supplied [OpenSign OAuth guide](https://github.com/CochranResearchGroup/opensign-mcp/blob/main/docs/oauth-mcp.md)
+was read through the connected GitHub reader, file SHA
+98555cdfd4a0197d0a8a0172f06348ab756ca837. Its exact callback/resource binding,
+PKCE, restart-persistent revocation/refresh replay checks, and distinction between
+synthetic TLS tests and real installed-client acceptance are useful references
+for the existing reusable OAuth skill. It is a separate owner-auth implementation,
+not authority to add another auth server or a provider website sign-in method.
+
 ## Current State
 
 The user explicitly requested browser-front-end ChatGPT Pro intelligence, Claude effort and Grok conversations through MCP, and said "ok go" on 2026-10-22. The OAuth skill/starter is separately available; no live provider acceptance exists. This packet implements S1 only, on feature/auracall-web-mcp-01a16096 from a3d365fe.
@@ -331,3 +376,23 @@ receipt data: omit actual conversation IDs from shared progress summaries.
 Focused121tests/9files PASS; typecheck, scoped lint and full build PASS. The
 three-turn root/restart fixture and all prior frontend cases pass. Source
 inspection accepted at peer16; presentation remains a separate unresolved gate.
+
+
+S3 milestone Claude8: G1-G7 accepted; nested markdown/bubble double counting
+(D1) accepted as a blocking fixture gap, reproduced RED, then fixed by reading
+distinct role rows with markdown precedence. D2 main-container presence is a
+native preflight gate; D3 exact-text normalization stays unchanged and uses a
+one-line public marker.150focused tests/10files PASS (29Grok,121prior),
+typecheck/scoped lint without warnings/full build PASS. A compiled-schema run
+overlapping build cleanup failed ENOENT; the post-build serial run passes all150.
+Do not run compiled startup tests concurrently with a build that removes dist.
+
+Claude8 accepts an explicitly labelled embedded MCP acceptance harness: public
+AuraCall tools in-process -> existing installed Agent Browser MCP over stdio,
+with isolated private AuraCall home and exact retained handle. This does not
+qualify the separate HTTP broker configuration. Fresh read-only preflight must
+prove unchanged browser inventory/target, exact root, signed-in Fast, empty unique
+unobstructed composer, main container, and no new dialog. Then one public marker
+send, at most20 sequential status probes >=1s apart, and only after completion
+one linked prompt referring to the actual first reply. Stop any uncertainty,
+login/challenge/new dialog or ambiguous Send; leave cookies untouched.

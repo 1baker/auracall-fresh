@@ -1,7 +1,7 @@
 /** Server-owned routes bind frontend operations to an existing broker target. */
 export interface FrontendRoute {
 	id: string;
-	provider: "chatgpt";
+	provider: "chatgpt" | "grok";
 	expectedUrl: string;
 	expectedModel: string;
 	serviceTabHandle: Record<string, unknown>;

@@ -24,6 +24,14 @@ const recordSchema = z
 		assistantMessageId: z.string().max(256).nullable(),
 		output: z.string().max(64000).nullable(),
 		code: z.string().nullable(),
+		identityKind: z.enum(["native", "derived_sequence"]).optional(),
+		observedUserKey: z.string().length(64).nullable().optional(),
+		observedAssistantKey: z.string().length(64).nullable().optional(),
+		candidate: z
+			.object({ key: z.string().length(64), at: z.number().int().nonnegative() })
+			.strict()
+			.nullable()
+			.optional(),
 	})
 	.strict();
 export type FrontendRequestRecord = z.infer<typeof recordSchema>;

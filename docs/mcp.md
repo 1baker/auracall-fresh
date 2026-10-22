@@ -638,6 +638,25 @@ log-tail checks as one release gate before live dogfood.
 
 ### `frontend_send` and `frontend_status`
 
+Routes support `provider: "grok"` as well as ChatGPT. A Grok route pins the
+visible model (currently observed as `Fast`) and an exact `https://grok.com/` or
+`https://grok.com/c/<id>` URL. Its intelligence inspect/configure operations
+return `controls_unsupported`. Message input uses a unique signed-in composer
+and same-form Send control; covered or offscreen controls return
+`blocked_overlay`. A failed presend may leave the owned draft for operator review.
+Cookie consent, model menus and onboarding are never clicked by this recipe.
+
+Grok receipts report `identityKind: "derived_sequence"`, null native message IDs,
+and explicit `observedUserKey`/`observedAssistantKey` hashes of position, role and
+text. These hashes are observation keys, not provider IDs. ChatGPT and old v1
+receipts retain `identityKind: "native"`. Grok requires two identical nonempty
+reply observations at least one second apart before completion. A busy,
+progressbar, streaming or Stop signal resets the stability check. URL lag and
+temporarily absent rows remain pending; changed baseline rows become uncertain.
+No background polling or resend occurs. `generationSignal: "unverified"` exposes
+the remaining native generation-detector qualification; fixtures do not establish
+provider acceptance or subscription entitlement.
+
 `frontend_send` takes `routeId`, a caller-generated `requestId` (8-128 letters,
 digits, hyphens or underscores), `text` (up to 8192 characters), and optional
 `previousRequestId`. Configure either the exact `https://chatgpt.com/` root or an existing

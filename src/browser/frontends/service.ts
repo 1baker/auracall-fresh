@@ -39,6 +39,7 @@ export class FrontendService {
 
 	async inspect(routeId: string): Promise<Record<string, unknown>> {
 		const route = this.route(routeId);
+		this.requireControls(route);
 		return this.serial(route, async () => this.publicObservation(route, await this.observe(route)));
 	}
 
@@ -57,6 +58,7 @@ export class FrontendService {
 
 	async configure(routeId: string, effort: FrontendEffort): Promise<Record<string, unknown>> {
 		const route = this.route(routeId);
+		this.requireControls(route);
 		return this.serial(route, async () => {
 			const target = resolveChatgptPowerSliderTarget(effort);
 			if (!target)
@@ -178,6 +180,14 @@ export class FrontendService {
 		});
 	}
 
+	private requireControls(route: FrontendRoute): void {
+		if (route.provider !== "chatgpt")
+			throw new FrontendError(
+				"controls_unsupported",
+				"Intelligence controls are not supported for this provider.",
+			);
+	}
+
 	private checkAvailable(observation: FrontendObservation, value: number): void {
 		if (
 			observation.disabled ||
@@ -215,7 +225,7 @@ export class FrontendService {
 			typeof (handle.sessionName ?? handle.ownerSessionId) !== "string" ||
 			!(handle.sessionName ?? handle.ownerSessionId) ||
 			!route.expectedModel ||
-			route.provider !== "chatgpt"
+			!["chatgpt", "grok"].includes(route.provider)
 		)
 			throw new FrontendError("invalid_route", "The retained route or provider is invalid.");
 		let url: URL;
@@ -226,14 +236,14 @@ export class FrontendService {
 		}
 		if (
 			url.protocol !== "https:" ||
-			url.hostname !== "chatgpt.com" ||
+			url.hostname !== (route.provider === "grok" ? "grok.com" : "chatgpt.com") ||
 			url.username ||
 			url.password ||
 			url.port
 		)
 			throw new FrontendError(
 				"origin_mismatch",
-				"The route must name an exact ChatGPT HTTPS page.",
+				"The route must name an exact provider HTTPS page.",
 			);
 		return route;
 	}

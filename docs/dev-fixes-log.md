@@ -1,3 +1,13 @@
+## 2026-10-22 — Preserve identity provenance and stability on Grok
+
+Grok's visible message content lacks proven stable native IDs. Keep native IDs
+null and expose position/role/text observation hashes separately. Require two
+unchanged observations at least one second apart; reset on text change, known
+generation or temporary row disappearance. Use the shared durable sending marker,
+locks and no-replay rule. A single root-first public MCP tracer reproduced the
+unsupported provider;29Grok cases now pass alongside121prior cases. Native
+generation signals and actual connected replies still require separate proof.
+
 ## 2026-10-22 — Bind a first-send receipt before the conversation URL exists
 
 A fresh ChatGPT root has no conversation ID before Send. Keep the original route/retained-target binding, allow an empty-root first send, then adopt only a strict same-origin conversation URL after exact fresh-user readback. Persist that URL on every linked receipt and never use a changed URL as permission to replay input. Missing legacy URL fields remain existing-conversation-only.
