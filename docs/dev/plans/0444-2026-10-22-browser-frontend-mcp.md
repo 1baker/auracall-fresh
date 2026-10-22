@@ -396,3 +396,18 @@ unobstructed composer, main container, and no new dialog. Then one public marker
 send, at most20 sequential status probes >=1s apart, and only after completion
 one linked prompt referring to the actual first reply. Stop any uncertainty,
 login/challenge/new dialog or ambiguous Send; leave cookies untouched.
+
+
+S3 native preflight after9eff5286 reached the exact Grok target via the existing
+Agent Browser MCP with unchanged browser inventory, Fast model, account menu, no
+login/challenge/dialog and no input. It exposed D2/D3: one role=main instead of
+main, and an empty P/BR editor whose innerText is LF but textContent is empty.
+Claude10 approved the narrow repair. Public RED6fail/32pass then38Grok PASS: a
+unique deduplicated visible main/role=main scope; no scope before input returns
+unsupported_scope, navigation churn during status clears stability and stays
+pending. Canonical empty applies only to an editor with no nodes or exactly one
+P containing one BR, no text. Spaces, extra spans and images remain drafts.
+Post-fill input and user messages retain exact matching. No prompts/fills/clicks
+have occurred; redo all native gates immediately before the approved send.
+
+D2/D3 validation:159focused tests/10files PASS (38Grok+121prior), typecheck, scoped lint without warnings and full build PASS. Native acceptance remains pending.

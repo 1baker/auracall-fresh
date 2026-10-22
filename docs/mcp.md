@@ -645,6 +645,12 @@ return `controls_unsupported`. Message input uses a unique signed-in composer
 and same-form Send control; covered or offscreen controls return
 `blocked_overlay`. A failed presend may leave the owned draft for operator review.
 Cookie consent, model menus and onboarding are never clicked by this recipe.
+A single visible `main` or `[role="main"]` region is required. Missing or
+ambiguous scope returns `unsupported_scope` before input; during status it stays
+pending and resets stability. Only a structurally empty editor (no child nodes,
+or exactly one P containing one BR, with empty textContent) has its empty-line
+rendering treated as empty. Whitespace text, extra elements and images remain
+occupied drafts. Post-fill and sent-message text comparisons stay exact.
 
 Grok receipts report `identityKind: "derived_sequence"`, null native message IDs,
 and explicit `observedUserKey`/`observedAssistantKey` hashes of position, role and

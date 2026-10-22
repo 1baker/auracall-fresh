@@ -18,15 +18,15 @@ function element(doc: Document | Element, selector: string): Element {
 }
 
 // Synthetic native-input boundary; reads execute the production serialized DOM recipe.
-async function fixture(startUrl = "https://grok.com/") {
+async function fixture(startUrl = "https://grok.com/", roleMain = false) {
 	const home = await mkdtemp(join(tmpdir(), "auracall-grok-"));
 	setAuracallHomeDirOverrideForTest(home);
 	const { document, window } = parseHTML(
-		'<html><head><title>Grok</title></head><body><button aria-label="Account menu"></button><main></main><form><div contenteditable="true" role="combobox" aria-label="Ask Grok anything"></div><button type="button" aria-label="Attach"></button><button type="button" aria-label="Model: Fast"></button><button type="button" aria-label="Enter voice mode"></button></form></body></html>',
+		`<html><head><title>Grok</title></head><body><button aria-label="Account menu"></button>${roleMain ? '<div role="main"></div>' : "<main></main>"}<form><div contenteditable="true" role="combobox" aria-label="Ask Grok anything"></div><button type="button" aria-label="Attach"></button><button type="button" aria-label="Model: Fast"></button><button type="button" aria-label="Enter voice mode"></button></form></body></html>`,
 	);
 	const composer = element(document, "[contenteditable]");
 	const form = element(document, "form");
-	const main = element(document, "main");
+	const main = element(document, 'main, [role="main"]');
 	let url = startUrl;
 	let target = "grok-target";
 	let clicks = 0;
@@ -200,6 +200,122 @@ async function fixture(startUrl = "https://grok.com/") {
 }
 
 describe("Grok durable conversation through public MCP", () => {
+	it("uses role=main and an empty P/BR editor for linked exact-text replies", async () => {
+		const f = await fixture("https://grok.com/", true);
+		vi.useFakeTimers({ toFake: ["Date"] });
+		try {
+			f.composer.innerHTML = "<p><br></p>";
+			Object.defineProperty(f.composer, "innerText", {
+				configurable: true,
+				get() {
+					return f.composer.textContent === "" ? "\n" : f.composer.textContent;
+				},
+			});
+			const call = await f.connect();
+			expect(
+				await call("frontend_send", { requestId: "grok-role-one", text: "Return BLUE-17" }),
+			).toMatchObject({ status: "sent" });
+			await call("frontend_status", { requestId: "grok-role-one" });
+			vi.setSystemTime(Date.now() + 1500);
+			expect(await call("frontend_status", { requestId: "grok-role-one" })).toMatchObject({
+				status: "completed",
+				output: "BLUE-17",
+			});
+			expect(
+				await call("frontend_send", {
+					requestId: "grok-role-two",
+					text: "Repeat the actual reply",
+					previousRequestId: "grok-role-one",
+				}),
+			).toMatchObject({ status: "sent" });
+			await call("frontend_status", { requestId: "grok-role-two" });
+			vi.setSystemTime(Date.now() + 1500);
+			expect(await call("frontend_status", { requestId: "grok-role-two" })).toMatchObject({
+				status: "completed",
+				output: "BLUE-17 remembered",
+			});
+		} finally {
+			await f.cleanup();
+		}
+	});
+
+	it("deduplicates a main element that also has role=main", async () => {
+		const f = await fixture();
+		try {
+			f.main.setAttribute("role", "main");
+			const call = await f.connect();
+			expect(
+				await call("frontend_send", { requestId: "grok-main-both", text: "Return BLUE-17" }),
+			).toMatchObject({ status: "sent" });
+		} finally {
+			await f.cleanup();
+		}
+	});
+
+	it.each([
+		"zero",
+		"multiple",
+	])("refuses %s visible message scopes before any fill", async (kind) => {
+		const f = await fixture();
+		try {
+			if (kind === "zero") f.main.remove();
+			else f.document.body.insertAdjacentHTML("beforeend", '<section role="main"></section>');
+			const call = await f.connect();
+			expect(
+				await call("frontend_send", { requestId: "grok-scope", text: "Do not send" }),
+			).toMatchObject({ ok: false, code: "unsupported_scope" });
+			expect(f.stats()).toMatchObject({ clicks: 0, fills: 0 });
+		} finally {
+			await f.cleanup();
+		}
+	});
+
+	it.each([
+		"<p>   </p>",
+		"<p><br></p><span></span>",
+		"<p><br></p> ",
+		"<p><img></p>",
+	])("preserves a nonempty or ambiguous editor %s", async (html) => {
+		const f = await fixture();
+		try {
+			f.composer.innerHTML = html;
+			const call = await f.connect();
+			expect(
+				await call("frontend_send", { requestId: "grok-editor", text: "Do not send" }),
+			).toMatchObject({ ok: false, code: "composer_busy" });
+			expect(f.stats()).toMatchObject({ clicks: 0, fills: 0 });
+		} finally {
+			await f.cleanup();
+		}
+	});
+
+	it("resets stability while the message scope is temporarily absent", async () => {
+		const f = await fixture();
+		vi.useFakeTimers({ toFake: ["Date"] });
+		try {
+			const call = await f.connect();
+			await call("frontend_send", { requestId: "grok-scope-churn", text: "Return BLUE-17" });
+			await call("frontend_status", { requestId: "grok-scope-churn" });
+			vi.setSystemTime(Date.now() + 1500);
+			f.main.setAttribute("hidden", "");
+			expect(await call("frontend_status", { requestId: "grok-scope-churn" })).toMatchObject({
+				status: "sent",
+				code: "unsupported_scope",
+				output: null,
+			});
+			f.main.removeAttribute("hidden");
+			expect(await call("frontend_status", { requestId: "grok-scope-churn" })).toMatchObject({
+				status: "sent",
+			});
+			vi.setSystemTime(Date.now() + 1500);
+			expect(await call("frontend_status", { requestId: "grok-scope-churn" })).toMatchObject({
+				status: "completed",
+			});
+		} finally {
+			await f.cleanup();
+		}
+	});
+
 	it("reads one assistant message when markdown is nested in its message bubble", async () => {
 		const f = await fixture();
 		vi.useFakeTimers({ toFake: ["Date"] });

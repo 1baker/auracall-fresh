@@ -84,6 +84,8 @@ const observationSchema = z.object({
 	loginPresent: z.boolean().optional(),
 	accountPresent: z.boolean().optional(),
 	ambiguousMessages: z.boolean().optional(),
+	composerEmpty: z.boolean().optional(),
+	scopeCount: z.number().int().nonnegative().optional(),
 });
 type Observation = Omit<z.infer<typeof observationSchema>, "messages"> & {
 	messages: { id: string; role: "user" | "assistant"; text: string }[];
@@ -179,6 +181,7 @@ export class FrontendMessages {
 	private async observe(
 		route: FrontendRoute,
 		allowFirstConversation = false,
+		allowScopeChurn = false,
 	): Promise<Observation> {
 		const result = await this.operations.request(route, {
 			action: "probe",
@@ -229,9 +232,14 @@ export class FrontendMessages {
 				);
 			if (raw.loginPresent !== false || raw.accountPresent !== true)
 				throw new FrontendError("login_required", "A signed-in frontend is required.");
+			if (raw.scopeCount !== 1 && !allowScopeChurn)
+				throw new FrontendError(
+					"unsupported_scope",
+					"A unique visible conversation scope is required.",
+				);
 			if (raw.ambiguousMessages !== false)
 				throw new FrontendError("probe_failed", "Conversation rows are ambiguous.");
-			if (!raw.composerSelector || !raw.composerReady)
+			if (raw.scopeCount === 1 && (!raw.composerSelector || !raw.composerReady))
 				throw new FrontendError(
 					"composer_unavailable",
 					"A unique enabled Grok composer is required.",
@@ -253,6 +261,8 @@ export class FrontendMessages {
 		};
 		if (observation.url !== result.url)
 			throw new FrontendError("origin_mismatch", "The conversation URL changed.");
+		if (route.provider === "grok" && observation.scopeCount !== 1 && allowScopeChurn)
+			return observation;
 		if (observation.model !== route.expectedModel)
 			throw new FrontendError("model_drift", "The visible model changed.");
 		if (
@@ -373,7 +383,12 @@ export class FrontendMessages {
 						"The composer is outside the viewport or covered.",
 					);
 			}
-			if (!observation.composerReady || observation.composer !== "" || observation.generating)
+			if (
+				!observation.composerReady ||
+				observation.composer !== "" ||
+				observation.generating ||
+				(route.provider === "grok" && observation.composerEmpty !== true)
+			)
 				throw new FrontendError(
 					"composer_busy",
 					"The composer must be empty and generation stopped.",
@@ -513,7 +528,12 @@ export class FrontendMessages {
 						"The saved conversation binding is invalid; it was preserved.",
 					);
 				const activeRoute = { ...route, expectedUrl: record.conversationUrl ?? route.expectedUrl };
-				const observation = await this.observe(activeRoute, adopting);
+				const observation = await this.observe(activeRoute, adopting, route.provider === "grok");
+				if (route.provider === "grok" && observation.scopeCount !== 1) {
+					record.candidate = null;
+					await this.store.write(record);
+					return { ...this.receipt(record), code: "unsupported_scope" };
+				}
 				if (route.provider === "grok" && observation.messages.length === 0) {
 					record.candidate = null;
 					await this.store.write(record);
@@ -553,7 +573,8 @@ export class FrontendMessages {
 						isConversationUrl(route, record.conversationUrl)) &&
 					!!fresh[1].text.trim() &&
 					!observation.generating &&
-					observation.composer === "";
+					observation.composer === "" &&
+					(route.provider !== "grok" || observation.composerEmpty === true);
 				if (route.provider === "grok") {
 					if (!ready) {
 						record.candidate = null;

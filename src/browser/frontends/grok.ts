@@ -10,6 +10,8 @@ export function inspectGrokMessages(doc: Document, url: string) {
 		);
 	};
 	const unique = (nodes: Element[]) => (nodes.length === 1 ? nodes[0] : null);
+	const scopes = Array.from(new Set(doc.querySelectorAll('main, [role="main"]'))).filter(visible);
+	const scope = unique(scopes);
 	const disabled = (node: Element | null) =>
 		!node || node.hasAttribute("disabled") || node.getAttribute("aria-disabled") === "true";
 	const label = (node: Element) => node.getAttribute("aria-label") ?? "";
@@ -24,6 +26,22 @@ export function inspectGrokMessages(doc: Document, url: string) {
 			node.closest("form"),
 	);
 	const composer = unique(composers);
+	const children = composer ? Array.from(composer.childNodes) : [];
+	const paragraph =
+		children.length === 1 && children[0].nodeType === 1 ? (children[0] as Element) : null;
+	const structurallyEmpty =
+		!!composer &&
+		composer.textContent === "" &&
+		(children.length === 0 ||
+			(paragraph?.tagName === "P" &&
+				paragraph.childNodes.length === 1 &&
+				paragraph.firstChild?.nodeType === 1 &&
+				(paragraph.firstChild as Element).tagName === "BR"));
+	const composerText = composer
+		? ((composer as HTMLElement).innerText ?? composer.textContent ?? "")
+		: null;
+	const composerEmpty =
+		structurallyEmpty && composerText !== null && /^[\r\n]*$/.test(composerText);
 	const form = composer?.closest("form");
 	const buttons = form ? Array.from(form.querySelectorAll("button")).filter(visible) : [];
 	const model = unique(buttons.filter((node) => /^Model: .+/.test(label(node))));
@@ -80,7 +98,7 @@ export function inspectGrokMessages(doc: Document, url: string) {
 	const roleSelector = 'div[class*="items-end"], div[class*="items-start"]';
 	let ambiguousMessages = false;
 	for (const content of Array.from(
-		doc.querySelectorAll('main div.message-bubble, main [class*="response-content-markdown"]'),
+		scope?.querySelectorAll('div.message-bubble, [class*="response-content-markdown"]') ?? [],
 	).filter(visible)) {
 		if (content.closest('form, nav, [role="dialog"], [aria-modal="true"]')) continue;
 		const row = content.closest(roleSelector);
@@ -127,7 +145,9 @@ export function inspectGrokMessages(doc: Document, url: string) {
 	return {
 		url,
 		model: model ? label(model).slice(7) : null,
-		composer: composer ? ((composer as HTMLElement).innerText ?? composer.textContent ?? "") : null,
+		composer: composerEmpty ? "" : composerText,
+		composerEmpty,
+		scopeCount: scopes.length,
 		composerReady: !disabled(composer),
 		sendReady: !disabled(send),
 		composerSelector: selector(composer),
@@ -140,6 +160,9 @@ export function inspectGrokMessages(doc: Document, url: string) {
 		ambiguousMessages,
 		diagnostics: {
 			mainPresent: !!doc.querySelector("main"),
+			mainElementCount: doc.querySelectorAll("main").length,
+			roleMainCount: doc.querySelectorAll('[role="main"]').length,
+			scopeCount: scopes.length,
 			busyCount,
 			progressCount,
 			stopCount,
