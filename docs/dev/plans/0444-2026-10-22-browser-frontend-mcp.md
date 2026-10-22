@@ -436,7 +436,7 @@ are lead errors, not provider evidence or baseline failures.
 R1-R4 final validation:172focused tests/10files PASS (50Grok,122other), full typecheck, warning-free scoped lint and complete build PASS. Resume status only on the existing first native request after this commit.
 
 
-## S3 native result and held linked turn | 2026-10-22
+## S3 native linked result, embedded MCP accepted | 2026-10-22
 
 Source commits:9eff5286 (provider recipe), e533c368 (semantic scope/empty editor),
 a72fe827e18d024aeaefada95aa6682b826a3eb5 (rid/textbox readback). Final focused
@@ -458,38 +458,44 @@ keys saved privately. Immutable completed receipt SHA256:
 6a671d90958b1a073cfd27ce6e72da9cb4b6321ca693ded07bd94a73ef377475.
 Actual conversation URL and browser handles are intentionally not published.
 
-Linked-turn full preflight stopped before any second send/fill/click because the
-composer's centre was covered by the original cookie-notice dialog. All other
-identity/model/account/scope/empty/viewport gates passed. The second receipt does
-not exist; no send is unresolved. Claude14 accepted source and first-turn proof,
-held cookie controls because their persistent consent effects were unverified,
-and required a human cookie choice. The assertion that Dismiss necessarily
-accepts cookies was not verified; the hold rests on uncertain semantics, not a
-claim of observed acceptance. No Dismiss/Accept/Reject/settings action was taken.
+The initial linked-turn preflight stopped before input because the original
+cookie notice covered the composer. At 2026-10-22T16:05:08.928Z the user explicitly
+chose “accept all cookies and continue is fine”. That choice superseded the
+cookie hold only. A fresh no-launch plan reused the same retained handle. The
+original notice had one visible, enabled, fully in-viewport, hit-proven accept-all
+control (“Alle cookies accepteren”); one native click cleared it. No consent was
+inferred from the coordinator's earlier acknowledgement.
 
-Standards PASS; source Spec PASS; native connected-workflow Spec PARTIAL. A real
-Grok round trip passed via the embedded MCP harness; the HTTP broker path is
-unverified. Two-connected-replies stays pending. The separate
-configured HTTP broker, subscription entitlement and generationSignal remain
-unverified. No paid API fallback, install, registry change, LIVE change or HOST02
-work. ChatGPT still awaits human verification; Claude executable binding absent.
+A fresh full read-only preflight verified the same canonical conversation and
+exact first user/reply tail, unchanged browser inventory, Fast model, account,
+empty unique composer, composerHit true, and no dialogs, login or challenge.
+One frontend_send created grok-native-20261022-second with previousRequestId
+pointing to grok-native-20261022-first. Its prompt quoted the actual first reply
+and asked for the marker followed by CONNECTED. One fill and one native Send
+click; no navigation, new chat, duplicate browser, resend or first-send replay.
 
-Recovery: the user answers/dismisses the existing Grok cookie notice in the same
-retained tab. A resumed owner first recovers this exact peer task/revision and
-request state. Then one fresh full read-only linked preflight including the hit
-test, the single authorized linked prompt referring to the actual first reply,
-and <=20status checks >=1s apart. Preflight must confirm the same canonical
-conversation (a different rid is allowed), that grok-native-20261022-first remains
-the exact conversation tail, that no cookie notice or other dialog is present,
-and composerHit is true. If the tab navigated away, the path changed, or a new
-dialog, login or challenge appears, stop without navigating back.
-No resend/navigation/new chat/counter reset.
-Preserve the final peer allowance and all existing holds. Budget at latest native
-sample:338730 lead output used /661270 upper-bound remaining, same baseline143981;
-combined lead+peer UNKNOWN. Parent objective remains OPEN.
+Read-only status1 remained sent and persisted a reply candidate; status2
+completed after the same nonempty assistant observation key was seen again
+9.630s later (minimum 1s), with empty composer and no busy/streaming/Stop signal.
+Four message rows represented two user and two assistant turns. Exact output:
+AURA-GROK-20261022-S3 CONNECTED. Status3, from fresh client/server processes,
+returned the cached completed receipt without a DOM probe or send. Three of the
+20 allowed status checks used; no counters reset. First receipt SHA256 remains
+6a671d90958b1a073cfd27ce6e72da9cb4b6321ca693ded07bd94a73ef377475.
+Second completed receipt SHA256:
+7b859bf16af50ee98cf0ff256ff2a514fdc9fe813bc93bcddaaf038787304ba8.
 
-Claude final16 confirms Standards PASS/source Spec PASS/native PARTIAL and the
-2/6=33% milestone count, with grok-real explicitly limited to the embedded MCP
-harness. Source/report check complete; the same peer task remains held with
-one final check reserved for the actual linked result after the human cookie
-choice. Plan status OPEN; no counter/task/budget reset.
+Claude final18: Standards PASS, source Spec PASS, native Grok linked workflow
+PASS through the embedded MCP path only; drift LOW, verdict DONE. The peer
+cross-checked source and the owner's result report; private native evidence was
+outside its file-access scope. Codex verified the private receipts, status logs,
+unchanged first hash and persisted stability implementation directly.
+continuity-real passes on the embedded Grok MCP path: 3/6 = 50% verified.
+S3 CLOSED after this documentation checkpoint; parent objective PARTIAL/OPEN.
+
+The configured HTTP/OAuth broker, subscription entitlement and generationSignal
+remain unverified; native message IDs remain null with derived_sequence keys.
+ChatGPT human verification, Claude executable binding, HTTP setup and the
+historical HOST02 hold remain open. No installation, registry or LIVE change.
+Budget sample:395799 lead output used /604201 upper-bound remaining of1000000,
+fixed baseline143981; combined lead+peer UNKNOWN. No task/budget/capacity reset.

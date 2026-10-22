@@ -677,12 +677,20 @@ digits, hyphens or underscores), `text` (up to 8192 characters), and optional
 model must match. The composer must be empty and generation stopped. This path
 uses native frontend fill and one Send click through Agent Browser. It neither
 launches a browser nor calls a model API. ChatGPT qualification remains local
-fixtures. One real Grok reply has completed through public tools embedded
-in-process and the existing Agent Browser MCP, with durable readback after client
-restart. The linked turn awaits the user's cookie choice because the notice
-covers the composer. The configured HTTP broker, subscription entitlement and
-generation detector remain unqualified. `liveVerified:false` is unchanged; the
-separate native acceptance record is in Plan0444.
+fixtures. Two real linked Grok replies completed through public tools embedded
+in-process and the existing Agent Browser MCP. The user explicitly selected
+accept-all cookies at 2026-10-22T16:05:08.928Z; the operator made one hit-proven
+native click on the original notice, then rechecked the same conversation,
+exact tail, empty/hit composer and absence of dialogs/login/challenge. The
+single linked send used previousRequestId and the actual first reply. Its
+output was `AURA-GROK-20261022-S3 CONNECTED`: two identical reply observations
+9.630s apart, then fresh-process cached readback (3/20 status calls).
+Claude final18: Standards/source Spec/native Grok linked PASS, embedded path
+only; continuity-real PASS, 3/6=50%. The HTTP/OAuth broker, subscription and
+generation detector remain unqualified; native IDs remain null with
+`derived_sequence` keys. `liveVerified:false` is unchanged. Plan0444 records the
+receipts and qualifications; ChatGPT verification, Claude binding, HTTP setup
+and HOST02 remain open, with no LIVE change.
 
 Keep the request ID before calling. Repeating the same ID/content returns the
 saved receipt without input; changing content under that ID refuses. Call

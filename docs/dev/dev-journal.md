@@ -1,3 +1,24 @@
+## 2026-10-22 — Two real linked Grok replies saved and recovered
+
+The user's explicit accept-all cookie choice at16:05:08.928Z lifted the notice
+hold only. One hit-proven native click on its original accept-all control,
+then strict same-conversation/exact-tail/no-dialog/composer-hit preflight passed.
+One linked send with previousRequestId pointing at the first completed request
+quoted its actual reply. Status sent -> completed after two identical assistant
+observations9.630s apart -> fresh-process cached readback;3/20 status calls,
+four message rows, no replay/navigation/new chat. Exact second output:
+AURA-GROK-20261022-S3 CONNECTED. First receipt SHA unchanged:
+6a671d90958b1a073cfd27ce6e72da9cb4b6321ca693ded07bd94a73ef377475;
+second SHA7b859bf16af50ee98cf0ff256ff2a514fdc9fe813bc93bcddaaf038787304ba8.
+Claude final18 accepts Standards/source Spec/native Grok linked PASS through
+embedded public AuraCall MCP -> installed Agent Browser MCP only. Peer could
+check source and owner report, not private native files; Codex verified those.
+continuity-real PASS;3/6=50%. S3 closed after docs; parent PARTIAL/OPEN.
+Earlier172focused/typecheck/lint/build PASS retained, not rerun for docs.
+HTTP/OAuth broker, subscription and generationSignal remain unverified; native
+IDs null/derived_sequence. ChatGPT challenge, Claude binding, HTTP setup and
+HOST02 hold untouched. No installation or LIVE change.
+
 ## 2026-10-22 — First real Grok reply saved; linked turn held
 
 Native Grok round trip passed through public AuraCall tools embedded in-process
