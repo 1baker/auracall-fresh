@@ -146,3 +146,15 @@ config preserves exactly the normal tool-name set, returns invalid_config only
 for frontend calls, successfully calls the real sessions sibling and attempts
 zero outbound network operations. F1 is resolved in source; no installation or
 live provider qualification is claimed. Peer revision12 approved F1 plan; no counter reset.
+
+
+F1 drift peer revision14: Spec met; Standards A-; code inspection only. Low
+hardening follow-up: name an actual capability variable in an invalid-route
+fixture so its Proxy guard is non-vacuous. The separate valid-route configuration
+test already checks capability non-lookup. Codex rejects the peer concern that
+the sessions sibling reads real developer state: tests/setup-env.ts creates a
+unique temporary AURACALL_HOME_DIR before each worker imports modules (lines17-21),
+and the compiled smoke supplies its own temporary child home. Keep those
+isolation mechanisms. No real session/provider state was read by the fixture.
+The750k checkpoint remains advisory; clean-stop and ambiguous early-stop readings
+are documented interpretations, with no automatic process-controller claim.
