@@ -1,5 +1,7 @@
 import type { ChromeClient, BrowserLogger } from '../types.js';
 import type { ThinkingTimeLevel } from '../../oracle/types.js';
+import { resolveChatgptPowerSliderTarget } from './chatgptPowerSlider.js';
+export { resolveChatgptPowerSliderTarget } from './chatgptPowerSlider.js';
 import type { ProviderUserIdentity } from '../providers/types.js';
 import { MENU_CONTAINER_SELECTOR, MENU_ITEM_SELECTOR } from '../constants.js';
 import { logDomFailure } from '../domDebug.js';
@@ -26,14 +28,6 @@ type ThinkingTimeOutcome =
   | { status: 'option-not-found' };
 
 const THINKING_TIME_EVALUATE_TIMEOUT_MS = 25_000;
-
-const CHATGPT_POWER_SLIDER_TARGETS = {
-  light: { value: 0, label: 'Instant' },
-  standard: { value: 1, label: 'Medium' },
-  extended: { value: 2, label: 'High' },
-  heavy: { value: 3, label: 'Extra High' },
-  pro: { value: 4, label: 'Pro' },
-} satisfies Record<ThinkingTimeLevel | 'pro', { value: number; label: string }>;
 
 export class ThinkingTierUnavailableError extends BrowserAutomationError {
   readonly requestedLevel: ThinkingTimeLevel | 'pro';
@@ -591,12 +585,6 @@ export function buildThinkingTimeExpressionForTest(level: ThinkingTimeLevel | 'p
 
 export function resolveChatgptProModeFromThinkingTime(level: ThinkingTimeLevel | 'pro'): ChatgptProMode {
   return level === 'extended' || level === 'heavy' ? 'extended' : 'standard';
-}
-
-export function resolveChatgptPowerSliderTarget(
-  level: ThinkingTimeLevel | 'pro',
-): { value: number; label: string } {
-  return CHATGPT_POWER_SLIDER_TARGETS[level];
 }
 
 export function isChatgptProModelTarget(desiredModel: string | null | undefined): boolean {

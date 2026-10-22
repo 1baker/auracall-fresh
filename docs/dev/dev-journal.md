@@ -1,3 +1,7 @@
+## 2026-10-22 — Browser frontend MCP S1 in progress
+
+Plan0444 adds server-owned ChatGPT routes, read-only broker probes, bounded mouse/native keyboard slider input and numeric plus visible-label readback. Human clarified keyboard is frontend input. No Send or model API path; no retained provider browser available. Frontend tools are wired to stdio. Full build, typecheck, lint and zero-network compiled smoke pass. Linux regression4087pass/2fail/11skip; both failures reproduce on unchanged base. No live provider acceptance; S2/S3/S4 pending.
+
 ## 2026-10-21 — Issue226 source merged, verified installation staged
 
 PR360/727fbf35d implements typed observed-child exit versus unknownCDP readiness.

@@ -1,3 +1,7 @@
+# Turn 202610110405 | 2026-10-22
+
+Plan0444 / AU-WEB-MCP01-S1: user redirected to actual frontend MCP behavior. Source/test-only ChatGPT inspect/configure packet, own branch, broker contract read back without launch. Direct chat authority recorded; no old receipt reuse. Historical HOST-02 hold unchanged.
+
 ## Turn 437 | 2026-10-19
 
 Plan0437 diagnostic packet CLOSED; issue325 inventory acceptance OPEN. PR341

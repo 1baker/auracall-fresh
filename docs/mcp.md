@@ -6,6 +6,50 @@ For agent/app workflow patterns, including setup-vs-execution separation,
 scoped keys, response batches, attachments, and polling rules, see
 `docs/agent-workflows.md`.
 
+## Frontend intelligence controls (development S1)
+
+`frontend_inspect({routeId})` reads the visible ChatGPT model and intelligence.
+`frontend_configure({routeId, effort})` accepts `light`, `standard`, `extended`,
+`heavy` or `pro`. It clicks an exposed choice, or focuses the slider and sends
+native arrow keys through Agent Browser. Numeric position and the visible label
+must match after input. Lost focus, model/URL drift, unavailable controls and
+unexpected movement stop the operation. At most four arrows and six UI actions
+are allowed. Uncertain input is never automatically replayed.
+
+Set `AURACALL_FRONTEND_CONFIG` to a private JSON file with `brokerBaseUrl` and
+`routes`. `brokerBaseUrl` must be an explicit loopback HTTP origin, such as
+`http://127.0.0.1:38551`; obtain the actual port from your Agent Browser service.
+Each route contains:
+
+- `id`: the opaque `routeId` clients may use.
+- `provider`: `chatgpt` in S1.
+- `expectedUrl`: the exact retained HTTPS ChatGPT page URL.
+- `expectedModel`: the exact visible model-button text.
+- `serviceTabHandle`: the existing broker-issued handle, including `valid:true`,
+  `browserId`, `profileId`, `tabId`, `targetId`, and `sessionName` or
+  `ownerSessionId`. Preserve all additional broker-issued fields. Obtain custody
+  through Agent Browser; do not manufacture a handle or borrow another owner.
+- `profileCapabilityEnv`: the name of an environment variable holding the
+  corresponding Agent Browser capability. Keep the value out of this JSON,
+  prompts, source control and tool arguments.
+
+Startup loads configuration without connecting to the broker or looking up a
+capability value. Missing configuration or no routes returns `route_missing` on
+calls. Malformed configuration refuses startup. On every actual operation the
+client reads `/api/service/contracts`, requires service-request v1 and the
+`probe`, `ui_action` and `press` actions, then posts once to
+`/api/service/request`. The capability travels only in the Authorization header.
+Calls have a timeout and capped response size; redirects are rejected. A broker
+refusal does not authorize launch, repair or a replacement browser.
+
+Tool output contains route IDs and bounded visible state; it omits handles and
+credentials. `verified:true` means the requested setting matched that call's
+readback. `liveVerified:false` records that this development slice has no
+qualified live-provider acceptance. S1 is ChatGPT-only, stdio-only and has no
+Send action. Claude/Grok, durable replies and OAuth HTTP integration remain
+separate pending slices. The reusable OAuth MCP skill/starter is a foundation,
+not proof those provider workflows work.
+
 ## Tools
 
 ### `consult`
