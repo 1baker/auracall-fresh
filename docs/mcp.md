@@ -33,6 +33,14 @@ Each route contains:
   corresponding Agent Browser capability. Keep the value out of this JSON,
   prompts, source control and tool arguments.
 
+Existing-Chrome `connectionRef`/`leaseRef` references, prototype `controlRef`
+handles, and explicit read-only access/attestations are a separate contract.
+The generic frontend client refuses these locally as `invalid_request`, before
+capability lookup or HTTP. Do not wrap them in a `valid:true` service-tab object.
+This check does not issue authority or replace Agent Browser's authentication
+and custody checks. The Browser-owned controlled contract and its receiving
+adapter must be integrated explicitly before that path can be used.
+
 Startup loads configuration without connecting to the broker or looking up a
 capability value. Missing configuration or no routes returns `route_missing` on
 calls. Invalid opt-in configuration disables only the frontend tools: calls return

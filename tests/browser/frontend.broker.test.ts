@@ -1,6 +1,6 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { createServer, type Server } from "node:http";
 import { readFile } from "node:fs/promises";
+import { createServer, type Server } from "node:http";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { createFrontendBroker } from "../../src/browser/frontends/broker.js";
 import type { FrontendBroker } from "../../src/browser/frontends/types.js";
 
@@ -87,6 +87,35 @@ async function fixture(
 const call = (broker: FrontendBroker, body = request) => broker(body, "FIXTURE_CAPABILITY");
 
 describe("pinned synchronous broker contract", () => {
+	it.each([
+		{ accessMode: "read_only" },
+		{ controlPlaneAttestation: { mode: "read_only" } },
+		{
+			connectionRef: "00000000-0000-4000-8000-000000000001",
+			leaseRef: "00000000-0000-4000-8000-000000000002",
+		},
+		{ controlRef: "00000000-0000-4000-8000-000000000003", generation: 1 },
+	])("refuses unsupported existing-Chrome references before HTTP: %j", async (references) => {
+		const requestFetch = vi.fn(
+			async (url: URL | RequestInfo) =>
+				new Response(
+					JSON.stringify(
+						String(url).endsWith("/api/service/contracts")
+							? contract
+							: { success: true, data: { pressed: "ArrowRight" } },
+					),
+				),
+		);
+		const broker = createFrontendBroker({
+			baseUrl: "http://127.0.0.1:1",
+			env,
+			fetch: requestFetch,
+		});
+		await expect(
+			call(broker, { ...request, serviceTabHandle: { ...handle, ...references } }),
+		).rejects.toMatchObject({ code: "invalid_request" });
+		expect(requestFetch).not.toHaveBeenCalled();
+	});
 	it("reads the actual v1 contract before native keyboard dispatch", async () => {
 		const f = await fixture();
 		expect(await call(f.broker)).toEqual({ pressed: "ArrowRight" });

@@ -2,6 +2,67 @@
 
 State: OPEN
 
+## Current execution: AuraCall request/reply proof and owner boundary | 2026-10-23
+
+State: OPEN; controlled existing-Chrome integration depends on DEV-agent-browser.
+Human granted an additional100,000 tokens to the same selected source ticket,
+within the existing2M objective allocation. Carry source baseline1,808,600:
+previous60k ceiling1,868,600; extended160k ceiling1,968,600. All prior spending,
+overrun151, saved choices, native counters, holds and fixed native baseline143981
+remain. Combined historical usage is UNKNOWN. This is not a total-budget refill.
+
+The latest tab-role contract makes AuraCall responsible for browser-backed model
+requests and complete reply readback. DEV-agent-browser owns browser control,
+retained sessions and custody; Artifacts-Previews owns publication/presentation.
+The internal control core ade58dc4 remains an inert optional provider checkpoint;
+AuraCall does not edit that provider tree further or assume its public contract.
+Native queues requested exact handle/action/auth/result semantics from the Browser
+owner and status publication from Previews. Queue receipts are delivery only;
+owner acknowledgment is pending, not provider readiness. Lead Ops has the routing
+request. No other writer is resumed and no budget or custody is transferred.
+
+The receiving generic broker also rejects recognizable existing-Chrome read-only
+or prototype control references before capability lookup/HTTP. Four public broker
+RED cases previously resolved a keyboard request; the minimal guard makes them
+refuse locally. This is a receiving-side constraint, not a new control contract,
+handle issuer, or substitute for authenticated browser custody.
+
+This AuraCall slice adds a frontend-module stdio-process fixture using production
+configuration, broker, message persistence and MCP registration modules. Two linked
+requests traverse MCP and a real loopback HTTP fixture; full multiline UTF-8 output
+and hashes are checked. Both replies are then recovered in a distinct process
+without capability availability and with the HTTP fixture already closed. It
+proves component wiring/readback, not actual model responses or Windows custody.
+
+The first source-run attempts failed because TSX keepNames injected __name into
+functions serialized into another JavaScript realm. That approach stopped; the
+fixture now compiles source modules with keepNames disabled, matching production
+compilation. The next attempt exposed a synthetic rendering mistake: bare DIV text
+collapses newlines. Message fixtures now render explicit BR nodes and rehearse their
+visible text before starting HTTP/processes. Original failures remain in the local
+validation receipt; no browser expression rewrite or production timeout increase.
+
+Final source verification:177 selected frontend checks/9files PASS in a private
+Linux fixture, including both confirmed and uncertain-Send process-restart paths.
+The uncertain path drops HTTP after recording Send, restarts before status, and
+still recovers two complete replies with exactly two total Sends. Cached status
+and repeated request IDs work in another process with HTTP closed/capability
+absent; no additional HTTP/input occurs. Full typecheck and scoped lint4PASS.
+The mounted selection79PASS/1unchanged lock-test5s startup timeout is retained;
+its timeout was not raised. The first Linux typecheck omitted tracked scripts and
+ambient types; that fixture error was corrected and the full check passed. All2489
+tracked source/config/test files match the fixture; dependencies reuse the prior
+byte-verified frozen Linux tree read-only with matching package/lock and selected
+versions. The old dependency tree is not edited and no installer or pnpm shim is run.
+
+Current checkpoint: process/HTTP readback fixture PASS. Scoped lint, typecheck and
+related regressions pass as described above. No production frontend code is
+changed by this verification fixture. Public controlled-MCP adapter remains pending
+its owner's agreed contract; do not implement a guessed wire format or relabel old
+read-only leases. Actual ChatGPT Pro/Grok Heavy acceptance remains PENDING, original
+3/6=50%. Anthropic is retired. Windows, browser/provider, install, service and LIVE
+effects remain held; the earlier restart blocker was resolved by chat recovery.
+
 ## Current packet: Grok Heavy model and provider readback | 2026-10-23
 
 State: OPEN; source candidate validated, native PENDING. Direct human

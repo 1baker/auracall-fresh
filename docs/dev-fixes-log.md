@@ -1,3 +1,19 @@
+## 2026-10-23 — Verify complete replies at the compiled process boundary
+
+Fresh-process reply tests must use compilation compatible with production DOM
+serialization: TSX keepNames may introduce lexical __name helpers unavailable in
+the page realm. Do not hide that mismatch by injecting globals into a browser
+probe. Compile the frontend fixture with keepNames disabled. Represent visible
+multiline message content with actual BR nodes; plain DIV text is whitespace-
+collapsed and is a different oracle. The new component fixture preserves full
+UTF-8 text through MCP, HTTP, private receipts and an offline process restart.
+It is not evidence of provider completion or native browser custody. A genuine
+receiving-side fix also rejects read-only connection/lease and unsupported prototype
+control references on the generic frontend route before HTTP. The explicit
+controlled adapter must wait for its owning provider contract; do not relabel
+references to bypass this refusal. Four RED cases became local refusals. The
+177-case Linux selection, typecheck and scoped lint pass.
+
 ## 2026-10-23 — Grok Heavy selection preserves the model binding
 
 Previously all Grok controls were unsupported. A route explicitly expecting

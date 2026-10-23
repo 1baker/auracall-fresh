@@ -1,4 +1,4 @@
-import { FrontendError, type FrontendBroker } from "./types.js";
+import { type FrontendBroker, FrontendError } from "./types.js";
 
 const record = (value: unknown): value is Record<string, unknown> =>
 	Boolean(value && typeof value === "object" && !Array.isArray(value));
@@ -109,19 +109,24 @@ export function createFrontendBroker(options: {
 	}
 
 	return async (request, capabilityEnv) => {
+		const handle = request.serviceTabHandle;
 		if (
 			!allowedActions.includes(String(request.action)) ||
-			!record(request.serviceTabHandle) ||
-			request.serviceTabHandle.valid !== true ||
+			!record(handle) ||
+			handle.valid !== true ||
+			["connectionRef", "leaseRef", "controlRef"].some((key) => key in handle) ||
+			handle.accessMode === "read_only" ||
+			(record(handle.controlPlaneAttestation) &&
+				handle.controlPlaneAttestation.mode === "read_only") ||
 			"key" in request ||
 			"taskAuthority" in request ||
 			"handle" in request
 		)
 			throw new FrontendError(
 				"invalid_request",
-				"The frontend broker accepts only explicit retained UI operations.",
+				"The frontend broker requires a supported service tab handle; existing-Chrome references need their own adapter.",
 			);
-		if (request.targetId !== undefined && request.targetId !== request.serviceTabHandle.targetId)
+		if (request.targetId !== undefined && request.targetId !== handle.targetId)
 			throw new FrontendError(
 				"target_mismatch",
 				"The explicit target differs from the retained handle.",

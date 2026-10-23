@@ -1,3 +1,23 @@
+## Frontend replies across process and HTTP boundaries (Plan0444)
+
+Run `pnpm exec vitest run tests/mcp.frontendProcessReadback.test.ts`.
+This source-only fixture compiles the production frontend modules into a disposable
+stdio server and uses the real MCP SDK and broker HTTP client against a loopback
+synthetic DOM server. It checks both confirmed input and a dropped HTTP response after the first Send.
+The uncertain case restarts before status; each variant asserts exactly two
+fills/Sends, two linked complete UTF-8 multiline replies and exact content hashes. A distinct process then recovers both
+saved replies with the fixture HTTP server closed and the capability absent; the
+HTTP/input counts remain unchanged, including a repeated Send with the same IDs.
+Its45s per-variant case budget includes compilation and
+two process startups; this is an explicit component-integration tier, not a live test.
+
+TSX name-preservation helpers are not a production compilation condition for
+serialized DOM functions. Use the compiled fixture, not a TSX-launched source
+server or injected helper globals. Explicit BR elements preserve fixture visible
+line breaks; the visible-text oracle is checked before HTTP/process startup.
+No Windows helper, browser, provider, credential store or live runtime is used.
+Real ChatGPT/Grok acceptance and the Browser-owned control contract remain separate.
+
 - Backend transport handoff, native cancellation and inventory observation (provider-free, issue325):
 
 ## Grok Heavy model candidate (Plan0444)
@@ -3805,3 +3825,11 @@ public progress reports 557 chars (matching snapshot) and the public collector r
 the full authoritative answer in 10832 ms. Compare non-whitespace content because
 rendered table cells introduce whitespace; retain the initial overly strict oracle
 as a false positive. This does not prove completion before the historical deadline.
+
+The Plan0444 request/readback selection passes177cases/9files on Linux, including
+four new local refusal cases for existing-Chrome references on the generic broker.
+The broader mounted-drive attempt retained79passes and one unchanged5s lock-child
+startup timeout. Do not raise that timeout. A Linux fixture must include tracked
+scripts and ambient types for the full typecheck, even when only frontend tests
+run. Reused dependency links point to a previously verified frozen Linux tree;
+keep the new node_modules/cache root private and writable, not the frozen tree.

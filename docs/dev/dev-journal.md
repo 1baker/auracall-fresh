@@ -1,3 +1,23 @@
+## 2026-10-23 — Request/reply role and real-process offline readback
+
+Human extended the same source slice by100k within the fixed2M allowance; no
+baseline/counter reset. Latest role routing leaves browser control/custody with
+DEV-agent-browser and AuraCall with model requests and complete reply readback.
+The provider core ade58dc4 stays frozen; native queues request the exact control
+contract and publishable status. No owner acknowledgment or native readiness is
+inferred from delivery. Anthropic and LIVE/browser/provider effects stay retired/held.
+
+New compiled frontend-module process fixture passes two linked UTF-8 reply reads
+through actual MCP stdio and loopback HTTP, then cached full-output recovery in a
+new process with no HTTP server/capability. Initial TSX __name and synthetic DIV
+newline failures are retained; compilation and BR layout correct the harness, not
+production guards. Actual provider acceptance remains3/6=50%. Four valid broker RED cases showed
+read-only/prototype references accepted on the generic transport; the local guard
+now refuses before HTTP. Final177selected checks/9files, full typecheck and scoped
+lint4PASS on the Linux fixture. Mounted79PASS/1old5s lock startup timeout and first
+partial-fixture typecheck errors are preserved; no timeout/dependency change. See
+Plan0444 for the remaining Browser-owner contract dependency and evidence.
+
 ## 2026-10-23 — Grok Heavy model source and bounded reply readback
 
 Direct human instruction adds Heavy selection and requests the working Grok
