@@ -11,6 +11,7 @@ export function createFrontendBroker(options: {
 	fetch?: typeof fetch;
 	timeoutMs?: number;
 	maxResponseBytes?: number;
+	transport?: "stock_chrome";
 }): FrontendBroker {
 	let base: URL;
 	try {
@@ -114,6 +115,7 @@ export function createFrontendBroker(options: {
 			!allowedActions.includes(String(request.action)) ||
 			!record(handle) ||
 			handle.valid !== true ||
+			(handle.kind === "auracall-stock-chrome-v1" && options.transport !== "stock_chrome") ||
 			["connectionRef", "leaseRef", "controlRef"].some((key) => key in handle) ||
 			handle.accessMode === "read_only" ||
 			(record(handle.controlPlaneAttestation) &&

@@ -55797,3 +55797,17 @@ Canonical acceptance note closes scoped Plan0386; issue165closure follows the
 acceptance PR. Wider P92/Plan0411 changed-frontier and scheduler continuation stay
 open; scheduler/all17subscriptions paused,0queued/running/warnings. Memory
 disposition forbidden.
+# 2026-10-23 — Direct stock Chrome source, native setup held
+
+Human selected direct stock Chrome extension/local MCP instead of waiting for
+Agent Browser integration, and granted another100k: objective2.1M, source
+ceiling2,068,600, no spending/baseline/counter reset. Source is confined to this
+AuraCall worktree; no other owner is resumed. New toolbar-shared handles, native
+framing, authenticated loopback broker, explicit stock configuration and standalone
+frontend MCP preserve the existing model/slider/readback recipes. Existing profiles
+and browsers are not launched, copied, navigated or closed. Anthropic is excluded.
+Offline real-process workflows cover ChatGPT Pro and Grok Heavy with two complete
+linked replies each and cached readback after native host exit. Windows startup,
+ACL/launcher/registration, actual Chrome UI and provider replies remain unverified;
+all native/install/LIVE holds and original3/6=50% acceptance persist. Final checks
+and native Codex Standards/Spec reconciliation are recorded in plan0444.

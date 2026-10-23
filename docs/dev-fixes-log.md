@@ -25915,3 +25915,29 @@ from post-provider cleanup using completed wrapper calls, task terminal evidence
 and fresh exact-process absence. Do not rerun successful provider work solely
 because terminal observation lagged. Canonical acceptance retains raw flags and
 independent qualification, with595file parity and2newverified artifacts.
+# 2026-10-23 — Direct stock Chrome transport and strict shared-handle identity
+
+Native Codex review found three additional public-path issues: descendant clicks
+bypassed `Answer now`, canonical empty Grok paragraphs could be refused, and focus
+could move during the last asynchronous guard. Reproductions are retained. Check
+the enclosing actionable control, accept only the existing conservative empty
+editor structures, and revalidate the intended focused empty composer immediately
+before text input without stealing focus back. The revised process fixture runs
+the actual compiled extension event/Port entry for both providers, with simulated
+Chrome protocol/DOM only. These corrections do not prove actual Chrome timing.
+
+The ordinary Chrome route is independent of Agent Browser: a user-clicked extension
+and Chrome-launched native host feed the existing frontend tools. Do not equate
+an open Chrome window with a control channel, relabel an old read-only handle, or
+turn an uncertain send into permission to replay. Stock handles are accepted only
+by the explicit stock adapter. Caller probe JavaScript is replaced by a compiled
+provider recipe; native actions are bounded and session/document-bound.
+
+Native JSON schema decoding reorders handle fields. Comparing JSON strings wrongly
+rejected the same valid handle; compare the declared field values instead. Preserve
+the failing public controller test. The first compiled process test incorrectly
+expected a nonexistent public `value` field; retain its failure and assert the
+documented Pro receipt plus the synthetic slider observation. These are offline
+source checks, not Windows/Chrome/provider acceptance. Windows private-path ACL
+checks are implemented and refuse broad access, but their actual Windows execution
+remains held. See `docs/stock-chrome.md` and plan0444 for the concrete setup boundary.

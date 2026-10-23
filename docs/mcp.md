@@ -931,3 +931,10 @@ receipt data: omit actual conversation IDs from shared progress summaries.
 Focused121tests/9files PASS; typecheck, scoped lint and full build PASS. The
 three-turn root/restart fixture and all prior frontend cases pass. Source
 inspection accepted at peer16; presentation remains a separate unresolved gate.
+# Direct stock Chrome frontend route
+
+The optional stock Chrome adapter reuses `frontend_inspect`, `frontend_configure`,
+`frontend_send` and `frontend_status` with explicitly shared existing ChatGPT/Grok
+conversations. It has a frontend-only stdio entry and does not require Agent Browser
+or start a browser/provider runtime. This is a DEV source candidate, not installed
+or real-browser accepted. See [stock Chrome setup and bounds](stock-chrome.md).

@@ -134,8 +134,12 @@ function conversationUrl(value: unknown): string | null {
 	}
 }
 
+export function grokControlsExpression(): string {
+	return `(({messages,...state})=>({...state,...(${inspectGrokModelMenu.toString()})(document)}))(${grokMessagesExpression()})`;
+}
+
 async function observe(route: FrontendRoute, request: Request) {
-	const expression = `(({messages,...state})=>({...state,...(${inspectGrokModelMenu.toString()})(document)}))(${grokMessagesExpression()})`;
+	const expression = grokControlsExpression();
 	const result = await request({
 		action: "probe",
 		timeoutMs: 5000,

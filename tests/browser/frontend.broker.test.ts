@@ -88,6 +88,7 @@ const call = (broker: FrontendBroker, body = request) => broker(body, "FIXTURE_C
 
 describe("pinned synchronous broker contract", () => {
 	it.each([
+		{ kind: "auracall-stock-chrome-v1" },
 		{ accessMode: "read_only" },
 		{ controlPlaneAttestation: { mode: "read_only" } },
 		{

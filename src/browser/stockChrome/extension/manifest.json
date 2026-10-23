@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "AuraCall — share this Chrome conversation",
+  "version": "0.1.0",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAi7vbNN5xu5gFOq0bUW0dg/e59HnlJ05pPwznZrq3lnAb1Rxe2Xv2X1Av5yL8b9qevbaH67gRpmIoLhuugofJtFLL1r1RQL7+jmMIuvj7VdUGLANpum6YhMIEsstRHlHbuFMDB4gxEUUv1DuO4rfVMlTn/7HzwD+lbso5aUbhXeqg0Jw0D8YdgOSUx5iTu7eZkTIPAP4JhkIVNlf+v1ENZEdo29VshhGT+LKvJFBw76rK0De688I0rZpDda2KFfpQFi/rMJqBXwD641Sdz2vThNbHNZXGOzDXmJgigBc9GZcrq/7sPhkKgHCVUY+X1E/w1fpK9FcZeDTvL/dGJGWw0wIDAQAB",
+  "description": "Explicitly share an existing ChatGPT or Grok tab with your local AuraCall tools.",
+  "permissions": ["debugger", "nativeMessaging", "activeTab"],
+  "host_permissions": ["https://chatgpt.com/*", "https://grok.com/*"],
+  "background": { "service_worker": "worker.js" },
+  "action": { "default_title": "Share or stop sharing this conversation with AuraCall" }
+}

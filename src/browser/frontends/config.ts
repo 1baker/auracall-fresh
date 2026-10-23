@@ -1,5 +1,7 @@
 import { readFile, stat } from "node:fs/promises";
 import { z } from "zod";
+import { createStockChromeBroker } from "../stockChrome/config.js";
+import { stockHandleSchema } from "../stockChrome/protocol.js";
 import { createFrontendBroker } from "./broker.js";
 import { FrontendService } from "./service.js";
 import { FrontendError } from "./types.js";
@@ -16,6 +18,20 @@ const routeSchema = z
 	.strict();
 const configSchema = z
 	.object({ brokerBaseUrl: z.string(), routes: z.array(routeSchema).max(32) })
+	.strict();
+const stockConfigSchema = z
+	.object({
+		transport: z.literal("stock_chrome"),
+		connectionFile: z.string().min(1),
+		routes: z
+			.array(
+				routeSchema.omit({ profileCapabilityEnv: true }).extend({
+					provider: z.enum(["chatgpt", "grok"]),
+					serviceTabHandle: stockHandleSchema,
+				}),
+			)
+			.max(8),
+	})
 	.strict();
 
 export type FrontendTools = Pick<FrontendService, "inspect" | "configure" | "send" | "status">;
@@ -49,7 +65,18 @@ export async function createConfiguredFrontendService(
 		if (!info.isFile() || info.size > 65536) throw new Error("Invalid config file");
 		const contents = await readFile(path, "utf8");
 		if (Buffer.byteLength(contents, "utf8") > 65536) throw new Error("Invalid config size");
-		const config = configSchema.parse(JSON.parse(contents));
+		const parsed = JSON.parse(contents);
+		if (parsed?.transport === "stock_chrome") {
+			const config = stockConfigSchema.parse(parsed);
+			return new FrontendService(
+				config.routes.map((route) => ({
+					...route,
+					profileCapabilityEnv: "AURACALL_STOCK_CHROME_CAPABILITY",
+				})),
+				createStockChromeBroker(config.connectionFile),
+			);
+		}
+		const config = configSchema.parse(parsed);
 		return new FrontendService(
 			config.routes,
 			createFrontendBroker({ baseUrl: config.brokerBaseUrl, env }),

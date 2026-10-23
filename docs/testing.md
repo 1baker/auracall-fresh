@@ -3833,3 +3833,20 @@ startup timeout. Do not raise that timeout. A Linux fixture must include tracked
 scripts and ambient types for the full typecheck, even when only frontend tests
 run. Reused dependency links point to a previously verified frozen Linux tree;
 keep the new node_modules/cache root private and writable, not the frozen tree.
+# Direct stock Chrome source checks
+
+Run `pnpm exec vitest run tests/browser/stockChrome.*.test.ts tests/mcp.stockChromeProcess.test.ts`
+for native framing, exact-user capability privacy, authenticated loopback broker,
+explicit shared-tab controls and setup preparation. The process fixture compiles
+the production native-host and frontend-only MCP entries as standalone bundles,
+runs actual Node child processes and HTTP/native messaging, executes the compiled
+extension toolbar/native-Port entry and supplies a synthetic Chrome Input/DOM
+boundary. It selects ChatGPT Pro/Grok Heavy, checks two complete
+linked UTF8 replies and recovers them after the host and capability file are gone.
+It uses private directories and does not install or invoke Chrome/Windows/providers.
+Each process case has a45s budget; focused guards use Vitest defaults. Linux checks
+do not verify Windows ACL semantics, launcher, registry, Chrome permission prompts,
+provider markup/entitlement or live replies. Those require native acceptance.
+
+`pnpm run build:stock-chrome` prepares the extension and standalone local Node
+entries. `docs/stock-chrome.md` describes the separately held setup/rollback scope.

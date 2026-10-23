@@ -2,6 +2,74 @@
 
 State: OPEN
 
+## Current execution: direct stock Chrome | 2026-10-23
+
+Human explicitly approved a direct extension/local MCP bridge for the already-open
+stock Chrome; Agent Browser integration is future work and is no longer the
+immediate dependency. Native Codex only. An additional100k grant raises the
+objective2M->2.1M and source ceiling1,968,600->2,068,600; fixed baseline143981,
+carried source baseline1,808,600, spending/overruns, choices and holds persist.
+
+Implement in this owned AuraCall worktree only: a user-clicked Chrome extension
+shares one existing ChatGPT/Grok conversation, a Chrome-launched native messaging
+host supplies an authenticated loopback broker, and the existing frontend MCP
+tools consume that route. Reuse frontend model/slider/message recipes and durable
+request IDs. No provider API, cookie copying, browser launch/restart, general CDP
+gateway, automatic retries, or Agent Browser prerequisite. Anthropic is excluded.
+
+The host must accept only its pinned extension origin and its own live shared
+handles. Input is one bounded click/focus/fill/slider key at a time; probes select
+reviewed DOM recipes rather than executing caller-provided JavaScript. Revoke on
+tab/document change or native disconnect; never close/reload a human tab. A lost
+input result is uncertain, never permission to resend. Keep UI control and full
+reply checks in the frontend service and test the public wire, not private maps.
+
+Definition of source done: framing/auth/target/action refusal regressions, a
+compiled real native-process plus MCP/HTTP offline workflow with two full linked
+replies, and a buildable extension/configuration package. Run typecheck, scoped
+lint and affected frontend regressions. Native Codex frozen review reconciles
+material findings. Installation/Windows registry/native browser/provider/service
+and LIVE effects remain held until a concrete reviewed setup scope is eligible.
+Original actual acceptance remains3/6=50% until real frontend evidence changes it.
+
+Native Codex review ledger (one broad pass, bounded remediation):
+
+- STD-01, accepted blocking: an empty descendant bypassed the `Answer now` text
+  guard. The controller now checks its enclosing actionable control and text/aria/
+  title before any mouse dispatch. The public reproduction was RED, then GREEN.
+- SP-01, accepted blocking: the generic fill guard refused Grok's canonical empty
+  paragraph when its rendered text is LF. Match the existing conservative
+  structural-empty semantics; spaces, other structure and real drafts still refuse.
+  The initial linkedom reproduction lacked native rendered LF; its explicit layout
+  boundary was corrected before RED/GREEN. No production expectation was weakened.
+- SP-02, accepted blocking: focus could move during the final document guard and
+  redirect text into another human field. Recheck the exact intended focused
+  composer, availability and empty draft after that guard, without regaining focus.
+  The interleaving reproduction was RED, then GREEN with no Input call.
+
+The public process fixture now executes the actual compiled extension toolbar and
+native-Port entry against a simulated Chrome boundary, rather than substituting
+its controller. Production standalone MCP/native-host child processes remain real.
+Both providers complete two linked full UTF8 replies, and original config/store
+readback survives host/connection-file removal without another browser call.
+The exact selected source checks, build, closed-world review and artifact hashes
+are recorded at closeout; Windows/Chrome/provider qualification remains held.
+
+Final direct-source receipt:203 affected checks/15files PASS in the private Linux
+fixture; full typecheck and final production/standalone package compilation PASS.
+The full declared app/UI/vendor/package build sequence passed before the three
+controller fixes; final affected components were rebuilt afterward. Scoped lint
+passes without warnings. Native Codex Standards review direct_chrome_standards
+and Spec review direct_chrome_spec accepted the three fixes in closed-world
+verification: source Standards PASS and source Spec PASS; full real Spec PARTIAL.
+Reviewer usage and combined historic usage UNKNOWN. The only post-review process-
+test drift was computed global-property names to satisfy lint; production hashes
+were unchanged and the final exact test bytes passed all203 checks. Initial failed
+receipts remain; no test timeout or acceptance gate was weakened. Native setup and
+actual Chrome/provider acceptance still require their separate bounded authority.
+
+Earlier sections below are retained historical execution evidence.
+
 ## Current execution: AuraCall request/reply proof and owner boundary | 2026-10-23
 
 State: OPEN; controlled existing-Chrome integration depends on DEV-agent-browser.
