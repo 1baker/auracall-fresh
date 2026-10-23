@@ -55,7 +55,7 @@ async function fixture() {
 		return { document, route, clicks: 0, probes: 0, ui: 0 };
 	});
 	const brokerRequests: Record<string, unknown>[] = [];
-	const broker = async (request: Record<string, unknown>, capability: string) => {
+	const broker = async (request: Record<string, unknown>, capability?: string) => {
 		expect(capability).toBe("FIXTURE_BROWSER_CAP");
 		const context = contexts.find((c) => c.route.serviceTabHandle.targetId === request.targetId);
 		if (!context) throw new Error("Fixture target changed");

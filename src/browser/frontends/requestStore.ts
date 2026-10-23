@@ -6,6 +6,7 @@ import { join } from "node:path";
 import { z } from "zod";
 import { getAuracallHomeDir } from "../../auracallHome.js";
 import { FrontendError, type FrontendRoute } from "./types.js";
+import { frontendTarget } from "./route.js";
 
 export const requestIdSchema = z.string().regex(/^[a-zA-Z0-9_-]{8,128}$/);
 const recordSchema = z
@@ -45,16 +46,32 @@ const lockSchema = z
 	.strict();
 const digest = (value: unknown) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
 export const frontendTargetKey = (route: FrontendRoute): string =>
-	digest([route.serviceTabHandle.browserId, route.serviceTabHandle.targetId]);
+	digest([frontendTarget(route).browserId, frontendTarget(route).targetId]);
 export const frontendRouteBinding = (route: FrontendRoute): string =>
-	digest([
-		route.id,
-		route.provider,
-		route.expectedUrl,
-		route.expectedModel,
-		...["browserId", "tabId", "targetId", "profileId"].map((key) => route.serviceTabHandle[key]),
-		route.serviceTabHandle.sessionName ?? route.serviceTabHandle.ownerSessionId,
-	]);
+	route.transport === "agent_browser_task"
+		? digest([
+				"agent_browser_task",
+				route.id,
+				route.provider,
+				route.expectedUrl,
+				route.expectedModel,
+				route.nativeTask.authorityRef,
+				route.nativeTask.taskId,
+				route.nativeTask.profileId,
+				route.nativeTask.browserId,
+				route.nativeTask.tabId,
+				route.nativeTask.targetId,
+			])
+		: digest([
+				route.id,
+				route.provider,
+				route.expectedUrl,
+				route.expectedModel,
+				...["browserId", "tabId", "targetId", "profileId"].map(
+					(key) => route.serviceTabHandle[key],
+				),
+				route.serviceTabHandle.sessionName ?? route.serviceTabHandle.ownerSessionId,
+			]);
 const missing = (error: unknown) => (error as NodeJS.ErrnoException)?.code === "ENOENT";
 
 /** Private, crash-conservative receipts. No automatic stale-lock recovery. */

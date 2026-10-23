@@ -3833,6 +3833,18 @@ startup timeout. Do not raise that timeout. A Linux fixture must include tracked
 scripts and ambient types for the full typecheck, even when only frontend tests
 run. Reused dependency links point to a previously verified frozen Linux tree;
 keep the new node_modules/cache root private and writable, not the frozen tree.
+## Native Agent Browser task identity source checks
+
+Native-task identity preparation uses
+`pnpm exec vitest run tests/browser/frontend.nativeTaskBinding.test.ts tests/browser/frontend.config.test.ts tests/mcp.frontends.test.ts tests/mcp.frontendWorkflow.test.ts --maxWorkers=1`.
+The focused fixtures exercise public frontend inspection, legacy HTTP refusal,
+native versus legacy receipt identity and target locking, native configuration
+refusal, and two linked MCP replies across a reopened service with an injected
+synthetic native broker. No production native transport or real browser is used.
+Actual reuse-only admission, authenticated target/completion readback and real
+ChatGPT replies remain separate acceptance requirements. Do not count this source
+selection as browser acceptance.
+
 # Direct stock Chrome source checks
 
 Run `pnpm exec vitest run tests/browser/stockChrome.*.test.ts tests/mcp.stockChromeProcess.test.ts`

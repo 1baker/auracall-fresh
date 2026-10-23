@@ -72,4 +72,36 @@ describe("explicit frontend configuration", () => {
 			await rm(dir, { recursive: true, force: true });
 		}
 	});
+	it("does not treat caller-authored native task metadata as an enabled transport", async () => {
+		const dir = await mkdtemp(join(tmpdir(), "auracall-native-config-"));
+		const path = join(dir, "config.json");
+		const configEnvName = "AURACALL_FRONTEND_CONFIG";
+		const requestFetch = vi.fn();
+		vi.stubGlobal("fetch", requestFetch);
+		try {
+			await writeFile(
+				path,
+				JSON.stringify({
+					brokerBaseUrl: "http://127.0.0.1:1",
+					routes: [
+						{
+							id: "native-fixture",
+							provider: "chatgpt",
+							expectedUrl: "https://chatgpt.com/c/fixture",
+							expectedModel: "Fixture Pro",
+							transport: "agent_browser_task",
+							nativeTask: { taskId: "not-a-grant" },
+						},
+					],
+				}),
+			);
+			await expect(
+				createConfiguredFrontendService({ [configEnvName]: path }),
+			).rejects.toMatchObject({ code: "invalid_config" });
+			expect(requestFetch).not.toHaveBeenCalled();
+		} finally {
+			vi.unstubAllGlobals();
+			await rm(dir, { recursive: true, force: true });
+		}
+	});
 });

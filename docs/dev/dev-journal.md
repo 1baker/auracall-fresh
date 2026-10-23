@@ -1,3 +1,28 @@
+## 2026-10-23 — Preserve native task identity for frontend integration
+
+The human approved Agent Browser-first implementation for the retained signed-in
+ChatGPT frontend and two complete linked replies. Browser owns the supported
+reuse-only connection; AuraCall owns request/reply integration. Native Codex only.
+The current allowance is3.6M/source ceiling3568600 with all spending, baselines,
+13choices, counters and holds carried forward.
+
+Frontend routes now distinguish a native task descriptor from a legacy service
+tab handle. Shared target locking still uses the physical browser/target pair;
+native reply receipts additionally bind the task identity and authority reference.
+Legacy receipt hashes remain unchanged, and native tasks refuse at the legacy
+HTTP broker. Native JSON startup remains closed until a supported authenticated
+Browser transport exists. No caller-authored descriptor grants browser authority.
+
+The initial focused regression observed5fail/1pass before the change, then6pass.
+The first affected selection passed102checks; the expanded native MCP linked-reply
+and recovery selection passed76checks, including rejection of changed authority
+before another probe/input. These are synthetic source checks, not model replies.
+Full typecheck, full declared build and zero-warning scoped lint pass. Across
+the selections247 distinct affected checks/13files pass; final native/config10
+also pass after lint-only corrections. Both independent native source reviews
+PASS with no material findings; see Plan0444 and its durable receipt. No browser/provider,
+Windows, install, service or LIVE effect; actual acceptance remains3/6=50%.
+
 ## 2026-10-23 — Request/reply role and real-process offline readback
 
 Human extended the same source slice by100k within the fixed2M allowance; no

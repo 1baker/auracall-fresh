@@ -1,3 +1,4 @@
+import { frontendTargetId } from "./route.js";
 import { z } from "zod";
 import { grokMessagesExpression } from "./grok.js";
 import { FrontendError, type FrontendRoute } from "./types.js";
@@ -149,7 +150,7 @@ async function observe(route: FrontendRoute, request: Request) {
 			detectors: [{ id: "frontend", type: "evaluate", expression }],
 		},
 	});
-	if (result.targetId !== route.serviceTabHandle.targetId)
+	if (result.targetId !== frontendTargetId(route))
 		throw new FrontendError("target_mismatch", "The retained Grok target changed.");
 	if (result.ok !== true || conversationUrl(result.url) !== route.expectedUrl)
 		throw new FrontendError("origin_mismatch", "The retained Grok conversation changed.");
@@ -244,7 +245,7 @@ export async function configureGrokHeavy(
 			const actions = r.steps as { index?: unknown; type?: unknown; ok?: unknown }[];
 			if (
 				r.ok !== true ||
-				r.targetId !== route.serviceTabHandle.targetId ||
+				r.targetId !== frontendTargetId(route) ||
 				!Array.isArray(actions) ||
 				actions.length !== 1 ||
 				actions[0].index !== 0 ||

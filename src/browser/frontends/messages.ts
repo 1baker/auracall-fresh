@@ -1,3 +1,4 @@
+import { frontendTargetId } from "./route.js";
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import { claudeMessagesExpression } from "./claude.js";
@@ -236,7 +237,7 @@ export class FrontendMessages {
 				],
 			},
 		});
-		if (result.targetId !== route.serviceTabHandle.targetId)
+		if (result.targetId !== frontendTargetId(route))
 			throw new FrontendError("target_mismatch", "The retained target changed.");
 		const observedUrl = observedConversationUrl(route, result.url);
 		if (
@@ -344,7 +345,7 @@ export class FrontendMessages {
 		const steps = result.steps as { index?: unknown; type?: unknown; ok?: unknown }[];
 		if (
 			result.ok !== true ||
-			result.targetId !== route.serviceTabHandle.targetId ||
+			result.targetId !== frontendTargetId(route) ||
 			!Array.isArray(steps) ||
 			steps.length !== 1 ||
 			steps[0]?.index !== 0 ||

@@ -1,3 +1,16 @@
+## 2026-10-23 — Native tasks cannot be disguised as legacy handles
+
+Frontend request/reply logic previously assumed every route contained a legacy
+serviceTabHandle. A native Agent Browser task needs a distinct identity, so the
+frontend service now carries a native task descriptor through its existing broker
+interface and binds saved replies to its authority reference and full task target.
+The descriptor grants no access. Physical target locks and all legacy receipt
+fingerprints retain their prior semantics. The legacy HTTP broker rejects native
+task objects before network access; JSON configuration cannot enable the pending
+native transport. Public MCP fixtures verify two linked replies/recovery and a
+changed-authority refusal with no input. Real attachment still requires Browser's
+authenticated reuse-only admission and action identity/completion contract.
+
 ## 2026-10-23 — Verify complete replies at the compiled process boundary
 
 Fresh-process reply tests must use compilation compatible with production DOM

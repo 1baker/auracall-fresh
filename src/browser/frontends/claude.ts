@@ -1,3 +1,4 @@
+import { frontendTargetId } from "./route.js";
 import { z } from "zod";
 import { FrontendError, type FrontendRoute } from "./types.js";
 
@@ -233,7 +234,7 @@ async function observe(route: FrontendRoute, request: Request) {
 			detectors: [{ id: "frontend", type: "evaluate", expression: claudeInspectionExpression() }],
 		},
 	});
-	if (result.targetId !== route.serviceTabHandle.targetId)
+	if (result.targetId !== frontendTargetId(route))
 		throw new FrontendError("target_mismatch", "The retained target changed.");
 	if (result.ok !== true || result.url !== route.expectedUrl)
 		throw new FrontendError("origin_mismatch", "The retained Claude page changed.");
@@ -335,7 +336,7 @@ export async function configureClaudeEffort(
 		const a = r.steps as { index?: unknown; type?: unknown; ok?: unknown }[];
 		if (
 			r.ok !== true ||
-			r.targetId !== route.serviceTabHandle.targetId ||
+			r.targetId !== frontendTargetId(route) ||
 			!Array.isArray(a) ||
 			a.length !== 1 ||
 			a[0].index !== 0 ||

@@ -110,6 +110,12 @@ A newly created blank crawler target, or a process-owned retained blank explicit
 **Conversation route identity**:
 A root ChatGPT conversation URL may canonicalize into its project URL. Navigation settling and ready-surface reuse follow the exact conversation identity and origin; an explicitly requested project must also match.
 
+Frontend routes retain the identity native to their transport. A native Agent
+Browser task is distinct from a legacy service tab handle. Its local task/profile/
+browser/tab/target and authority reference bind saved replies; they do not grant
+browser authority. Both identities share a physical-target lock. Native transport
+admission and browser custody remain Agent Browser's responsibility.
+
 **Recovery archive evidence**:
 Historical archive availability reduces current missing-asset counts only when its canonical catalog-item locator, provider, AuraCall runtime profile, tenant and asset kind match a current catalog row. Repeated archive copies of the same catalog item count once. Account-wide archive totals do not prove availability of a newly observed asset.
 

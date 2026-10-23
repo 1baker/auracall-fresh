@@ -9,6 +9,7 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { createFrontendBroker } from "../src/browser/frontends/broker.js";
 import { FrontendService } from "../src/browser/frontends/service.js";
 import { registerFrontendTools } from "../src/mcp/tools/frontends.js";
+import type { FrontendRoute } from "../src/browser/frontends/types.js";
 
 /** Exercises MCP -> service -> actual HTTP client -> serialized DOM recipe, entirely on synthetic data. */
 describe("synthetic frontend workflow through public MCP and HTTP", () => {
@@ -196,9 +197,21 @@ async function messagingFixture(startUrl = "https://chatgpt.com/c/messaging-fixt
 	let observedUrl = url;
 	let target = handle.targetId;
 	const broker = async (request: Record<string, unknown>) => {
-		expect(request.serviceTabHandle).toEqual(handle);
-		expect(request.repairPolicy).toBe("reject_only");
-		expect(request.profileLeasePolicy).toBe("reject");
+		if (request.nativeTask) {
+			expect(request.nativeTask).toEqual({
+				authorityRef: "fixture-native-authority-1",
+				taskId: "fixture-native-task",
+				profileId: handle.profileId,
+				browserId: handle.browserId,
+				tabId: handle.tabId,
+				targetId: handle.targetId,
+			});
+			expect(request).not.toHaveProperty("serviceTabHandle");
+		} else {
+			expect(request.serviceTabHandle).toEqual(handle);
+			expect(request.repairPolicy).toBe("reject_only");
+			expect(request.profileLeasePolicy).toBe("reject");
+		}
 		const common = { ok: true, targetId: target, url: observedUrl };
 		if (request.action === "probe") {
 			probes++;
@@ -251,9 +264,26 @@ async function messagingFixture(startUrl = "https://chatgpt.com/c/messaging-fixt
 	};
 	const servers: McpServer[] = [];
 	const clients: Client[] = [];
-	const connect = async () => {
+	const connect = async (authorityRef?: string) => {
 		const server = new McpServer({ name: "send-fixture", version: "1" });
-		registerFrontendTools(server, new FrontendService([route], broker));
+		const connectionRoute: FrontendRoute = authorityRef
+			? {
+					id: route.id,
+					provider: route.provider,
+					expectedUrl: route.expectedUrl,
+					expectedModel: route.expectedModel,
+					transport: "agent_browser_task",
+					nativeTask: {
+						authorityRef,
+						taskId: "fixture-native-task",
+						profileId: handle.profileId,
+						browserId: handle.browserId,
+						tabId: handle.tabId,
+						targetId: handle.targetId,
+					},
+				}
+			: route;
+		registerFrontendTools(server, new FrontendService([connectionRoute], broker));
 		const client = new Client({ name: "send-fixture", version: "1" });
 		const [a, b] = InMemoryTransport.createLinkedPair();
 		await server.connect(b);
@@ -308,10 +338,13 @@ describe("durable frontend messages through MCP", () => {
 		}
 	});
 
-	it("reads two connected replies and reopens the same saved receipt after restart", async () => {
+	it.each([
+		undefined,
+		"fixture-native-authority-1",
+	])("reads two connected replies and reopens the same saved receipt after restart (authority: %s)", async (authorityRef) => {
 		const f = await messagingFixture();
 		try {
-			const call = await f.connect();
+			const call = await f.connect(authorityRef);
 			expect(
 				await call("frontend_send", { requestId: "request-one", text: "Return BLUE-17" }),
 			).toMatchObject({ requestId: "request-one", status: "sent", liveVerified: false });
@@ -322,7 +355,7 @@ describe("durable frontend messages through MCP", () => {
 				assistantMessageId: "assistant-1",
 				identityKind: "native",
 			});
-			const afterRestart = await f.connect();
+			const afterRestart = await f.connect(authorityRef);
 			expect(
 				await afterRestart("frontend_send", { requestId: "request-one", text: "Return BLUE-17" }),
 			).toMatchObject({ status: "completed", output: "BLUE-17" });
@@ -340,6 +373,17 @@ describe("durable frontend messages through MCP", () => {
 				previousRequestId: "request-one",
 			});
 			expect(f.stats().clicks).toBe(2);
+			if (authorityRef) {
+				const before = f.stats();
+				const changedAuthority = await f.connect("fixture-native-authority-2");
+				expect(
+					await changedAuthority("frontend_status", { requestId: "request-two" }),
+				).toMatchObject({
+					ok: false,
+					code: "request_binding_mismatch",
+				});
+				expect(f.stats()).toEqual(before);
+			}
 		} finally {
 			await f.cleanup();
 		}

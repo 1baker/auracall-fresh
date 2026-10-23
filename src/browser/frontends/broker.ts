@@ -113,6 +113,7 @@ export function createFrontendBroker(options: {
 		const handle = request.serviceTabHandle;
 		if (
 			!allowedActions.includes(String(request.action)) ||
+			"nativeTask" in request ||
 			!record(handle) ||
 			handle.valid !== true ||
 			(handle.kind === "auracall-stock-chrome-v1" && options.transport !== "stock_chrome") ||
@@ -140,7 +141,10 @@ export function createFrontendBroker(options: {
 				Object.keys(request.params).length !== 1)
 		)
 			throw new FrontendError("invalid_key", "Only slider arrow keys are permitted.");
-		const token = /^[A-Z_][A-Z0-9_]*$/.test(capabilityEnv) ? env[capabilityEnv] : undefined;
+		const token =
+			typeof capabilityEnv === "string" && /^[A-Z_][A-Z0-9_]*$/.test(capabilityEnv)
+				? env[capabilityEnv]
+				: undefined;
 		if (!token?.trim() || /[\r\n]/.test(token))
 			throw new FrontendError(
 				"authority_missing",

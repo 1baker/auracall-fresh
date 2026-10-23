@@ -2,7 +2,56 @@
 
 State: OPEN
 
-## Current execution: direct stock Chrome | 2026-10-23
+## Current execution: native task MCP integration | 2026-10-23
+
+Human explicitly approved the three-step implementation: Browser owns a supported
+connection to the retained signed-in ChatGPT profile, AuraCall integrates its
+frontend MCP, then Codex verifies two complete linked replies. Agent Browser is
+first; direct stock Chrome remains an option. The same owned branch, selected
+chatgpt/linked-replies work, all13 choices and actual3/6 acceptance persist.
+Current allowance3.6M/source ceiling3568600 carries all spending and baseline143981.
+
+The Browser producer implementation is routed through Chief. Its previous
+read-only qualification is complete and NOT_READY; no foreign task, guessed
+profile alias, read-only reference upgrade or recovery/launch fallback is allowed.
+AuraCall can implement the consumer identity boundary independently: represent a
+native task separately from a legacy serviceTabHandle, retain exact target/grant
+binding for saved replies, and reuse the existing frontend controls/readback.
+The descriptor is server-owned routing metadata, never an authorization grant.
+Actual admission must be enforced by the authenticated Browser transport.
+
+First source slice: accept a distinct ChatGPT native-task route through the
+existing FrontendService/broker interface, preserve legacy route/receipt hashes,
+and refuse native task objects at legacy HTTP ingress. Keep JSON startup config
+closed to native routes until Browser supplies a supported private acquisition
+contract. Do not invent that producer contract or claim an issued task. Test the
+public service boundary and receipt identity, then implement native tool transport
+against the agreed completed-action/identity envelope. Actual2reply acceptance is
+still required; fixtures and source changes do not raise the real50%.
+
+Native identity source checkpoint complete:247 distinct affected checks/13files
+pass across the focused and regression selections, including public MCP linked
+replies/reopened-service recovery, changed-authority refusal, compiled-process
+uncertain-Send recovery, existing provider fixtures and stock Chrome process
+compatibility. Final native/config checks10PASS after two lint-only corrections.
+Full typecheck, full declared build and zero-warning scoped lint13files PASS.
+Vite reports plugin-timing diagnostics only. Initial RED5fail/1pass and the
+typecheck/lint failures are retained as evidence; no deadline or gate was relaxed.
+
+Native Codex frozen Standards and source Spec reviews both PASS with no material
+findings; primary accepts them. Reviewers read source only and ran no tests.
+Combined/reviewer use remains UNKNOWN. The two lint-only deltas were inspected;
+post-review documentation only adds verified receipts and clarifies headings.
+Evidence is retained in the prep workspace at
+`validation/evidence/native-task-identity-20261023/RECEIPT.json`.
+There is still no Browser implementation ACK, issued consumer connection or
+supported native action identity/completion contract. Do not build a guessed
+production wire or repeat the refused browser_open. The next eligible integration
+step is Browser-owner implementation/qualification through Chief, followed by
+the already-approved ChatGPT-only real two-reply acceptance. No new human choice
+or sign-in permission is missing; all13 existing choices and holds persist.
+
+## Historical execution: direct stock Chrome | 2026-10-23
 
 Human explicitly approved a direct extension/local MCP bridge for the already-open
 stock Chrome; Agent Browser integration is future work and is no longer the

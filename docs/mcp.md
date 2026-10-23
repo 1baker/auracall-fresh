@@ -931,6 +931,24 @@ receipt data: omit actual conversation IDs from shared progress summaries.
 Focused121tests/9files PASS; typecheck, scoped lint and full build PASS. The
 three-turn root/restart fixture and all prior frontend cases pass. Source
 inspection accepted at peer16; presentation remains a separate unresolved gate.
+### Native Agent Browser task integration status
+
+The frontend service can retain a native task identity separately from a legacy
+`serviceTabHandle`. The local descriptor records the task, profile, browser, tab,
+target and authority reference; it is routing metadata, not a credential or grant.
+Saved replies bind to that identity, while both transports serialize work against
+the same physical browser target. Legacy saved-reply fingerprints are unchanged.
+The legacy HTTP broker refuses native task objects before making a request.
+
+This is a consumer preparation slice. There is no enabled native-task JSON
+configuration or production native-task transport yet. Agent Browser must supply
+an authenticated reuse-only connection that cannot launch/register/recover a
+browser and confirms the action's target and terminal result. Existing public
+`browser_open` does not provide that contract. Do not paste a foreign task ID,
+convert a read-only lease into a handle, or treat a queue/input acknowledgment as
+a completed model reply. Native ChatGPT Pro and two real linked replies remain
+unverified; source fixtures do not change the recorded 3/6 acceptance.
+
 # Direct stock Chrome frontend route
 
 The optional stock Chrome adapter reuses `frontend_inspect`, `frontend_configure`,

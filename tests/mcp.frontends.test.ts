@@ -4,9 +4,9 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { registerFrontendTools } from "../src/mcp/tools/frontends.js";
 import { FrontendService } from "../src/browser/frontends/service.js";
-import type { FrontendRoute } from "../src/browser/frontends/types.js";
+import type { ServiceFrontendRoute } from "../src/browser/frontends/types.js";
 
-const route: FrontendRoute = {
+const route: ServiceFrontendRoute = {
 	id: "chatgpt-dev",
 	provider: "chatgpt",
 	expectedUrl: "https://chatgpt.com/c/fixture",
@@ -39,7 +39,7 @@ interface Scenario {
 async function run(
 	scenario: Scenario = {},
 	args: Record<string, unknown> = { routeId: route.id, effort: "pro" },
-	override: Partial<FrontendRoute> = {},
+	override: Partial<ServiceFrontendRoute> = {},
 	maxSteps = 6,
 ) {
 	let selected = scenario.value ?? 1;

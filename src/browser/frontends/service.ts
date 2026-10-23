@@ -9,6 +9,7 @@ import { configureClaudeEffort, inspectClaudeControls, isClaudeFrontendUrl } fro
 import { GROK_HEAVY_MODEL, configureGrokHeavy, inspectGrokHeavy } from "./grokControls.js";
 import { FrontendMessages } from "./messages.js";
 import { FrontendRequestStore, frontendTargetKey } from "./requestStore.js";
+import { frontendRequest, frontendTargetId, validateFrontendBinding } from "./route.js";
 import {
 	type FrontendBroker,
 	type FrontendEffort,
@@ -247,23 +248,8 @@ export class FrontendService {
 				"route_missing",
 				"Configure an explicit retained frontend route first.",
 			);
-		if (!route.profileCapabilityEnv || !/^[A-Z_][A-Z0-9_]*$/.test(route.profileCapabilityEnv))
-			throw new FrontendError(
-				"authority_missing",
-				"The route needs an explicit broker capability environment variable.",
-			);
-		const handle = route.serviceTabHandle;
-		if (
-			!record(handle) ||
-			handle.valid !== true ||
-			["browserId", "tabId", "targetId", "profileId"].some(
-				(field) => typeof handle[field] !== "string" || !handle[field],
-			) ||
-			typeof (handle.sessionName ?? handle.ownerSessionId) !== "string" ||
-			!(handle.sessionName ?? handle.ownerSessionId) ||
-			!route.expectedModel ||
-			!["chatgpt", "grok", "claude"].includes(route.provider)
-		)
+		validateFrontendBinding(route);
+		if (!route.expectedModel || !["chatgpt", "grok", "claude"].includes(route.provider))
 			throw new FrontendError("invalid_route", "The retained route or provider is invalid.");
 		let url: URL;
 		try {
@@ -295,28 +281,11 @@ export class FrontendService {
 		route: FrontendRoute,
 		request: Record<string, unknown>,
 	): Promise<Record<string, unknown>> {
-		const handle = route.serviceTabHandle;
-		return this.broker(
-			{
-				serviceName: "AuraCall",
-				agentName: "frontend-mcp",
-				taskName: "frontend-controls",
-				browserId: handle.browserId,
-				sessionName: handle.sessionName ?? handle.ownerSessionId,
-				targetId: handle.targetId,
-				runtimeProfile: handle.profileId,
-				serviceTabHandle: handle,
-				repairPolicy: "reject_only",
-				profileLeasePolicy: "reject",
-				jobTimeoutMs: 5000,
-				...request,
-			},
-			route.profileCapabilityEnv,
-		);
+		return this.broker(frontendRequest(route, request), route.profileCapabilityEnv);
 	}
 
 	private checkTarget(route: FrontendRoute, result: Record<string, unknown>): void {
-		if (result.targetId !== route.serviceTabHandle.targetId)
+		if (result.targetId !== frontendTargetId(route))
 			throw new FrontendError("target_mismatch", "The broker returned a different target.");
 	}
 
@@ -411,7 +380,7 @@ export class FrontendService {
 	}
 
 	private async serial<T>(route: FrontendRoute, operation: () => Promise<T>): Promise<T> {
-		const id = `${route.serviceTabHandle.browserId}:${route.serviceTabHandle.targetId}`;
+		const id = frontendTargetKey(route);
 		const previous = this.locks.get(id) ?? Promise.resolve();
 		let release!: () => void;
 		const current = new Promise<void>((resolve) => {
