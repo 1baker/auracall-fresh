@@ -1,5 +1,26 @@
 - Backend transport handoff, native cancellation and inventory observation (provider-free, issue325):
 
+## Grok Heavy model candidate (Plan0444)
+
+Run `pnpm exec vitest run tests/mcp.grokHeavyControls.test.ts --maxWorkers=1`.
+The public MCP fixture evaluates the production serialized DOM recipe and fakes
+only browser layout/native input. It checks exact Heavy selection and closed
+readback, gated/ambiguous/disabled/link choices, protected drafts/generation,
+overlay/dialog/URL/model drift, uncertain input without retry, unresolved-request
+protection, unchanged Fast controls, and two connected synthetic replies whose
+full bounded text is returned through status. Existing provider fixtures remain
+unchanged. These checks do not establish actual Grok Heavy availability or real
+ChatGPT/Claude completion. See `docs/mcp.md` for the source gap table.
+
+The complete affected set has240cases/13files:178original frontend,23Heavy,
+39HTTP. It passes in a byte-verified Linux source/dependency fixture. The mounted
+source's5s process-start test failed twice; keep those failures distinct from the
+Linux result. An exact copied dependency tree can still leak owner paths through
+pnpm .bin/NODE_PATH shims: use copied tool entry files directly with node and
+NODE_PATH unset for such a comparison. The candidate does not change the CLI
+entry or readiness deadline. This is a selected regression result, not a full
+repository or live-provider pass.
+
 ## Claude frontend candidate (Plan0444 S5)
 
 Run `pnpm exec vitest run tests/mcp.claudeFrontendWorkflow.test.ts --maxWorkers=1`.

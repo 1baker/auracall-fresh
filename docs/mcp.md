@@ -52,6 +52,54 @@ ChatGPT intelligence acceptance is pending. Durable `frontend_send` and
 Grok acceptance boundaries are documented below. The Claude recipe below is a source-only candidate until its UI grounding and
 actual frontend workflow are qualified.
 
+## Grok Heavy model controls (development)
+
+An explicit Grok route with `expectedModel: "Heavy"` opts into model controls.
+`frontend_inspect` reports the current model, even before selection.
+`frontend_configure({routeId, effort: "heavy"})` selects the **Heavy model**;
+this is different from ChatGPT's `heavy` thinking level. Other efforts on this
+route return `unknown_effort` before contacting the broker. Existing Grok routes
+for Fast or other labels retain `controls_unsupported` for inspect/configure.
+
+The candidate matches the exact `Model: Heavy` button label, without aliases or
+case folding. It opens the model picker, requires one visible, enabled Heavy
+menu choice with no link or upgrade/subscription indication, clicks it through
+Agent Browser, and verifies an unchanged URL and exact closed-menu readback.
+At most three UI steps are allowed. Drafts, generation, unresolved saved requests,
+foreign menus, dialogs and covered controls prevent further input. Failed or
+uncertain input may report `menuMayBeOpen:true`; no Escape, cleanup click or
+automatic retry follows. The reply includes `model:"Heavy"`, `effort:"heavy"`
+and `verified:true` only after this readback.
+
+Send and status still enforce the configured exact model. A Heavy route showing
+Fast cannot send. Configure does not rewrite the route or downgrade its model
+binding. The selector recipe is **unverified-grounding** and `liveVerified:false`:
+the public MCP fixtures are source evidence, not actual Heavy availability,
+subscription, UI compatibility or a provider response.
+
+The trigger is opened only after the preflight gates pass; the exact Heavy
+choice is checked before the option click. A missing or gated option after
+opening returns `effort_unavailable` with `menuMayBeOpen:true`, without cleanup.
+Inspect also refuses a draft or generation. A route bound to the root becomes
+stale for controls once a conversation URL exists; obtain a newly qualified
+exact conversation route instead of silently adopting it. A menu item whose
+text combines Heavy and a description is deliberately not an exact match.
+Upgrade badges outside the item are not detected by the candidate's local
+upsell check. These are residual native-grounding risks, not verified support.
+
+The requested ChatGPT/Claude workflow has the following source boundaries:
+
+| Provider | Model selection and effort | Linked replies and response text | Native acceptance |
+| --- | --- | --- | --- |
+| ChatGPT | Intelligence slider only, including Pro; preserves the exact configured model (`src/browser/frontends/service.ts:71`, `:359`). Arbitrary model switching is not exposed by these four tools. | Three linked fixture turns and restart recovery (`tests/mcp.frontendWorkflow.test.ts:643`). Status returns saved `output`, assigned from the complete observed assistant text (`src/browser/frontends/messages.ts:189`, `:649`). | Pro intelligence and actual linked replies remain pending. |
+| Claude | Effort Low through Max on the exact configured model; no arbitrary model switch (`src/browser/frontends/claude.ts:274`, `:303`). | Two linked fixture replies with restart readback (`tests/mcp.claudeFrontendWorkflow.test.ts:405`). Uses the same output/status implementation. | Current selectors, effort choice and actual linked replies remain pending. |
+
+Response readback is bounded, not unlimited: each observed message must fit the
+64,000-character schema and the broker response limit. Oversized or incomplete
+evidence is refused rather than published as a completed truncated reply. Saved
+completed status returns the same output without another Send. The historical
+two actual Grok replies remain separate evidence; Heavy has no native proof yet.
+
 ## Claude frontend candidate (development S5)
 
 The same four tools now include a Claude-local recipe. Administrator-provisioned
@@ -755,8 +803,9 @@ log-tail checks as one release gate before live dogfood.
 
 Routes support `provider: "grok"` as well as ChatGPT. A Grok route pins the
 visible model (currently observed as `Fast`) and an exact `https://grok.com/` or
-`https://grok.com/c/<id>` URL. Its intelligence inspect/configure operations
-return `controls_unsupported`. Message input uses a unique signed-in composer
+`https://grok.com/c/<id>` URL. Non-Heavy routes retain `controls_unsupported`
+for inspect/configure; the opt-in Heavy model recipe is described above.
+Message input uses a unique signed-in composer
 and same-form Send control; covered or offscreen controls return
 `blocked_overlay`. A failed presend may leave the owned draft for operator review.
 Cookie consent, model menus and onboarding are never clicked by this recipe.

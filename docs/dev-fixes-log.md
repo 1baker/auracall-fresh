@@ -1,3 +1,23 @@
+## 2026-10-23 — Grok Heavy selection preserves the model binding
+
+Previously all Grok controls were unsupported. A route explicitly expecting
+Heavy now selects that exact model through bounded native broker clicks and
+visible readback. It cannot silently mutate a Fast route, click an upgrade link,
+change a model under an unresolved request or weaken the send/status model
+check. Missing/unsafe choices and uncertain input stop with no replay. The public
+MCP synthetic Heavy workflow reads two connected responses through saved status;
+this is source evidence only. Native UI grounding/entitlement remain pending.
+Plan0444 and docs/mcp.md record the acceptance boundary and validation status.
+
+Verification passes240cases/13files in an exact-source/dependency Linux copy,
+with typecheck/full build/scoped lint. On the mounted drive the unchanged5s
+process fixture failed twice; bare HTTP import14.552s versus0.111s on Linux
+supports filesystem loading overhead. Preserve these environment failures;
+do not widen the test or change source entry routing to hide them. A tested
+entry-loading hypothesis failed and was reverted. Copied pnpm shims embed
+absolute NODE_PATH values: bypass them with direct node entries and unset
+NODE_PATH when making a controlled filesystem comparison.
+
 ## 2026-10-22 — Claude frontend source candidate; native browser exit held
 
 S5 adds a Claude-local semantic UI recipe to the existing four MCP tools:

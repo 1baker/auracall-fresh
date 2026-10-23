@@ -51,7 +51,7 @@ export function registerFrontendTools(server: McpServer, service: FrontendTools)
 		"frontend_inspect",
 		{
 			description:
-				"Read visible ChatGPT intelligence or Claude effort controls on one configured retained browser route. Never launches or sends.",
+				"Read visible ChatGPT intelligence, Claude effort or opt-in Grok Heavy model controls on one configured retained route. Never launches or sends.",
 			inputSchema: route,
 			annotations: { readOnlyHint: true, openWorldHint: true },
 		},
@@ -61,7 +61,7 @@ export function registerFrontendTools(server: McpServer, service: FrontendTools)
 		"frontend_configure",
 		{
 			description:
-				"Set ChatGPT intelligence or Claude effort using broker UI actions and verify visible readback. Never sends a prompt.",
+				"Set ChatGPT intelligence or Claude effort, or select the Grok Heavy model with effort heavy on an explicit Heavy route. Uses broker UI input and exact visible readback; never sends a prompt.",
 			inputSchema: effort,
 			annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
 		},

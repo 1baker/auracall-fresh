@@ -1,3 +1,34 @@
+## 2026-10-23 — Grok Heavy model source and bounded reply readback
+
+Direct human instruction adds Heavy selection and requests the working Grok
+pattern for Claude/ChatGPT with actual response text. Choice revision142 and
+peer replan128 bind this source unit; previous budgets, native counters and holds
+carry. New exact Heavy opt-in controls use broker UI only, maximum3steps, gated
+choice/draft/generation/lock checks and exact closed-menu readback. Existing
+send/status model binding and all old tests remain unchanged. Public MCP valid
+RED controls_unsupported -> GREEN1 -> expanded21PASS, fixture only. The first
+harness lacked tool registration and failed method_not_found; corrected before
+the valid RED, not counted as behavioral evidence. Typecheck currently exposes
+missing top-level jose resolution despite its pinned source dependency/cache;
+the reviewed exact-lock developer repair is complete (2attempts, no runtime
+install, package/lock unchanged). ChatGPT/Claude gap table and
+response-size boundary are in docs/mcp.md. Native Heavy/Claude/ChatGPT acceptance
+remains pending; no browser or Windows action was taken. V2 cleanup is complete
+and candidate remains inert. See Plan0444 for exact scope and later validation.
+
+Final frozen Linux validation:240PASS/13files (178original frontend+23Heavy+
+39HTTP), typecheck/full build/scoped lint4PASS. All12old test files unchanged.
+The mounted owner passed201frontend cases but its process HTTP fixture missed
+5s twice. A small CLI-entry hypothesis was tested and reverted after its8s
+diagnostic failed; no final entry change or relaxed deadline. The frozen copy
+has exact source/dependency bytes, verified35,962entries and all961baseline
+paths accounted for. Its original CLI restart fixture passes. Node startup is
+0.014s/0.012s mounted/Linux; HTTP import14.552s/0.111s, supporting filesystem
+loading overhead. Keep both mounted failures, the original copy5min STOP, the
+subsequent98.363s comparison, and the reporting parser's ANSI false STOP. The
+original successful log was reconciled read-only; tests were not rerun. Native
+Heavy/Claude/ChatGPT remain PENDING, parent3/6=50%, source checkpoint only.
+
 ## 2026-10-22 — Claude frontend source candidate; native browser exit held
 
 S5 adds a Claude-local semantic UI recipe to the existing four MCP tools:

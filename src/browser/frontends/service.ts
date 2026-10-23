@@ -6,6 +6,7 @@ import {
 } from "../actions/chatgptPowerSlider.js";
 import { chatgptInspectionExpression } from "./chatgpt.js";
 import { configureClaudeEffort, inspectClaudeControls, isClaudeFrontendUrl } from "./claude.js";
+import { GROK_HEAVY_MODEL, configureGrokHeavy, inspectGrokHeavy } from "./grokControls.js";
 import { FrontendMessages } from "./messages.js";
 import { FrontendRequestStore, frontendTargetKey } from "./requestStore.js";
 import {
@@ -42,6 +43,10 @@ export class FrontendService {
 
 	async inspect(routeId: string): Promise<Record<string, unknown>> {
 		const route = this.route(routeId);
+		if (route.provider === "grok" && route.expectedModel === GROK_HEAVY_MODEL)
+			return this.serial(route, () =>
+				inspectGrokHeavy(route, (request) => this.request(route, request)),
+			);
 		if (route.provider === "claude")
 			return this.serial(route, () =>
 				inspectClaudeControls(route, (request) => this.request(route, request)),
@@ -65,6 +70,20 @@ export class FrontendService {
 
 	async configure(routeId: string, effort: FrontendEffort): Promise<Record<string, unknown>> {
 		const route = this.route(routeId);
+		if (route.provider === "grok" && route.expectedModel === GROK_HEAVY_MODEL)
+			return this.serial(route, async () => {
+				if (await this.requestStore.unresolved(frontendTargetKey(route)))
+					throw new FrontendError(
+						"request_unresolved",
+						"Read status for the previous request before changing the model.",
+					);
+				return configureGrokHeavy(
+					route,
+					effort,
+					(request) => this.request(route, request),
+					this.maxUiSteps,
+				);
+			});
 		if (route.provider === "claude")
 			return this.serial(route, () =>
 				configureClaudeEffort(

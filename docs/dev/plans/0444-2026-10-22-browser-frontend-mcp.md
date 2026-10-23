@@ -2,6 +2,92 @@
 
 State: OPEN
 
+## Current packet: Grok Heavy model and provider readback | 2026-10-23
+
+State: OPEN; source candidate validated, native PENDING. Direct human
+instruction requests the accepted Grok frontend pattern for Claude and ChatGPT,
+adds Grok Heavy selection, and requires reading the actual response. Heavy is
+saved Implement at objective revision142; all prior11choices/6checks remain.
+Owner01a16096-da12-7753-8d44-e299c2172cef, same S5 peer task, replan128.
+Source baseline3c8e807e on feature/auracall-web-mcp-01a16096. Cumulative2M
+allowance and fixed native baseline143981 carry; combined peer/lead UNKNOWN.
+
+Bounded source scope: new frontends/grokControls.ts; service provider dispatch;
+MCP descriptions; new public MCP controls fixture; docs/mcp.md, testing.md,
+this plan, journal and fix log. No store/broker/config schema or existing test
+changes. Exact expectedModel Heavy opts in; configure(heavy) selects the model,
+not a thinking level. Other efforts refuse before broker access. Fast routes
+keep their existing controls_unsupported result. Controls share the durable
+target lock; an unresolved request blocks model changes. Maximum3UIsteps,
+exact visible Heavy and unchanged URL/closed-menu readback, no links/upsells,
+no draft/generation input, no automatic cleanup after uncertain input.
+Send/status retain their strict model binding and persisted output contract.
+
+ChatGPT/Claude gap audit (source only; citations remain in docs/mcp.md):
+
+| Provider | Model/effort | Two linked replies | Full response readback |
+| --- | --- | --- | --- |
+| ChatGPT | Slider Pro supported; configured model preserved, no arbitrary switch (`service.ts:71`, `:359`). | Existing three-turn/restart fixture (`tests/mcp.frontendWorkflow.test.ts:643`). Actual pending. | Shared status returns complete bounded assistant text in output (`messages.ts:189`, `:649`); actual pending. |
+| Claude | Effort Low..Max on configured model; no arbitrary switch (`claude.ts:274`, `:303`). | Existing linked/restart fixture (`tests/mcp.claudeFrontendWorkflow.test.ts:405`). Actual pending. | Same bounded output/status contract; actual pending. |
+
+V2 native attempt ended before client dispatch because its approved WSL interop
+socket disappeared. Human OFF restored by direct reply; scoped cleanup COMPLETE
+with final126. Candidate/registry retained inert. No replay, old-handle reuse,
+reinstall, launch, native/browser/Windows/provider action or LIVE change is in
+this source packet. A new no-launch access plan found0compatible live browsers;
+its launch recommendation was not executed. Browser setup requires a new
+concrete reviewed proposal and actual choice; source fixtures are not custody.
+
+Public MCP RED observed controls_unsupported, then minimal GREEN1 and expanded
+GREEN21. Initial harness method_not_found was corrected before the valid RED;
+that failure remains recorded. Typecheck found the pre-existing declared jose
+dependency missing from top-level node_modules. Developer dependency attempt1
+failed offline on a missing locked SDK1.32.0 tarball after partial +6/-5;
+no forced purge or handmade links. Peer132 accepted the existing S4 precedent:
+attempt2 fetched exact locked dependencies from npm, scripts disabled, source
+package/lock SHAs unchanged; jose6.1.3 and SDK1.32.0 now resolve. This is not
+an application/runtime install. Earlier greens predate that tree; revalidation
+is required. Known candidate risks include exact-label description mismatch,
+sibling upsell badges, root-route staleness, inspect refusing drafts/generation,
+and retained open menus on failure; docs/mcp.md qualifies each.
+
+Final affected validation:240PASS/13files in a frozen Linux fixture, comprising
+178 original frontend cases,23 new Heavy cases and39 HTTP cases. Original12
+provider/HTTP test files remain byte-identical to3c8e807e. Typecheck, complete
+build stages and scoped lint4files PASS. This includes the unchanged real-process
+CLI/HTTPS-JWKS/linked-receipt restart fixture; it uses a synthetic broker/issuer,
+not a provider. The new initially-open-menu diagnostic also followed observed
+RED22pass/1fail -> GREEN23. Response output/continuity are fixtures only.
+
+Mounted source:201 frontend cases passed, but the HTTP process fixture missed
+its unchanged5s readiness deadline twice (38other HTTP cases passed). An entry
+loading experiment built but still missed an8s missing-config diagnostic and
+was reverted byte-exact; bin/auracall-mcp.ts has no final change. The old Linux
+copy had different cached dependencies and was not modified. A fresh owned
+copy preserves exact source and complete developer dependencies:35,962entries
+match, all961baseline runtime/config/test paths are accounted for, and all9
+candidate paths match. Initial copy verification hit5min during a second read;
+the separately reviewed read-only comparison completed in98.363s, with durable
+progress and zero mismatches. No source/dependency install or test changes in
+the copy. Direct node entries bypass copied .bin/NODE_PATH fallback paths;
+67path-prefix hits were classified as bypassed shims or unused pnpm metadata.
+
+Same Node starts measured0.014s mounted/0.012s Linux; importing the same compiled
+HTTP module measured14.552s/0.111s. The original CLI missing-config refusal
+completed in0.619s on Linux and the full240-test gate passed in11.56s. This
+supports mounted-filesystem loading cost, not a confirmed legacy-import-graph
+defect. Mounted failures remain on record. A reporting regex initially rejected
+the colored successful summary; read-only ANSI-stripped reconciliation confirmed
+exit0/240PASS, with that false STOP preserved and no test rerun.
+
+Final peer review and source checkpoint are tracked on the ongoing Previews
+record/private issue81; no native provider acceptance is inferred.
+The current operator's inherited Windows interop endpoint is also
+absent: use a fresh human-owned Windows-launched context before a future native
+intake, preserving this exact thread, budget and all holds. The existing Chrome
+connector remains read-only; a control-capable Agent Browser route still needs
+its own reviewed scope. Parent3/6=50%, objective not complete.
+
 ## Current packet: S5 Claude frontend | 2026-10-22
 
 State: SOURCE CANDIDATE ACCEPTED; Claude ticket OPEN, native blocked/unverified-grounding. Owner
