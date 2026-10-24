@@ -5,6 +5,12 @@ import { stockHandleSchema } from "../stockChrome/protocol.js";
 import { createFrontendBroker } from "./broker.js";
 import { FrontendService } from "./service.js";
 import { FrontendError } from "./types.js";
+import {
+	NativeConsumerSession,
+	type NativeConsumerAdmission,
+	type NativeMcpClient,
+} from "./nativeConsumer.js";
+import { NativeChatgptFrontend } from "./nativeChatgpt.js";
 
 const routeSchema = z
 	.object({
@@ -35,6 +41,35 @@ const stockConfigSchema = z
 	.strict();
 
 export type FrontendTools = Pick<FrontendService, "inspect" | "configure" | "send" | "status">;
+
+/** Explicit receiving port for Browser's private handoff and SAME connected SDK client.
+ * Never invoked by JSON startup, discovery, fallback, launch or automatic recovery. */
+export async function createNativeConsumerFrontend(
+	client: NativeMcpClient,
+	admission: NativeConsumerAdmission,
+	options: { routeId: string; expectedUrl: string; expectedModel: string; ledgerDirectory: string },
+): Promise<FrontendTools> {
+	// Validate the route before the only acquisition effect.
+	if (
+		!options.routeId ||
+		!options.expectedModel ||
+		!/^https:\/\/chatgpt\.com\/c\/[A-Za-z0-9_-]+$/.test(options.expectedUrl)
+	)
+		throw new FrontendError(
+			"invalid_config",
+			"Use the qualified exact existing ChatGPT conversation.",
+		);
+	const session = new NativeConsumerSession(client, admission, options.ledgerDirectory);
+	const nativeTask = await session.acquire();
+	return new NativeChatgptFrontend(session, {
+		id: options.routeId,
+		provider: "chatgpt",
+		expectedUrl: options.expectedUrl,
+		expectedModel: options.expectedModel,
+		transport: "agent_browser_task",
+		nativeTask,
+	});
+}
 
 /** Bad opt-in configuration disables frontend calls without disabling sibling tools. */
 export async function createStartupFrontendService(

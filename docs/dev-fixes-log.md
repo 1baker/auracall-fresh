@@ -1,3 +1,18 @@
+## 2026-10-23 — Native consumer input completion is not a model answer
+
+Consume the reviewed retained-consumer wire directly on one existing MCP
+connection. Verify the public completed operation/ACK and stable task/control,
+grant, session and expiry; never adapt it into legacy evaluate/probe requests.
+Persist reservations before calls and parse completion files rather than trusting
+their filenames. Metadata replay/readback is body-free and never clears a hold.
+
+Native AX omits a value equal to its accessible name: an apparently empty
+textbox may contain exactly "Ask anything". Require exact native gettext before
+fill. Strip only actual AX ref attributes when hashing transcript structure;
+preserve bracket-like text inside quoted message content. Keep draft/URL/stable
+answer guards even when the strict read cap stops the second turn; report that
+constraint instead of claiming two completed replies or silently increasing it.
+
 ## 2026-10-23 — Relay claims are not model replies or native browser authority
 
 An OAuth MCP connection lets ChatGPT call AuraCall tools; it does not grant a

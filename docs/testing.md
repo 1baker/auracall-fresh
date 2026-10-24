@@ -1,3 +1,16 @@
+## Native retained consumer (Plan0446)
+
+Run the native consumer and MCP workflow tests together with the frontend config
+and native-task identity regressions. They use a synthetic producer on the real
+MCP SDK in-memory transport, with the exact frozen public envelope/arguments.
+The native fixture checks full Unicode reply persistence and fresh compiled
+process readback, protected drafts hidden by AX value/name equality, identity/ACK
+and queue refusals, immutable counters, torn completion, original-key metadata
+without replay, and strict20-native-read exhaustion preserving the second turn.
+No installed Browser, real capability or provider is used. The two completed
+reply/limit-unit criterion and native intelligence remain partial; see
+`docs/native-consumer.md`. Existing fixture receipts are not real acceptance.
+
 ## Frontend replies across process and HTTP boundaries (Plan0444)
 
 Run `pnpm exec vitest run tests/mcp.frontendProcessReadback.test.ts`.

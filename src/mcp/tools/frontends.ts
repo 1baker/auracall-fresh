@@ -91,7 +91,7 @@ export function registerFrontendTools(server: McpServer, service: FrontendTools)
 		"frontend_status",
 		{
 			description:
-				"Read a saved frontend request and perform at most one read-only conversation probe. Returns saved replies and message IDs; never types or sends, including after restart.",
+				"Read a saved frontend request and a bounded read-only conversation observation. Native consumer replies require two stable status observations and report derived identity. Returns complete saved replies; never types or sends, including after restart.",
 			inputSchema: route.extend({ requestId: requestIdSchema }),
 			annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: true },
 		},

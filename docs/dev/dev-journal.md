@@ -1,3 +1,33 @@
+## 2026-10-23 — Consume the reviewed native Browser v1 contract
+
+Adopted Chief9e4242b7 and byte-verified contracta4901736. Plan0446 adds only
+AuraCall's receiving native MCP adapter/factory and full-reply collector; Browser
+keeps P266/activation/custody. It accepts the same connected SDK client and exact
+private grant; no launch, native key/bootstrap or catalog fallback. The durable
+private journal verifies task/control/session/grant/expiry/key/action/completion,
+counts original reservations and holds uncertainty. Provider readback uses native
+snapshot/gettext, with exact draft checks and two stable full answer observations;
+compiled fresh-process readback works without the connection. Derived identity
+and intelligence remain explicit; native Pro selection is unsupported.
+
+An initial fixture used the wrong home-setting name; repository test setup kept
+it isolated from real state, but its two cases shared receipts. The existing
+worker-local test override now isolates each case. Initial type errors and
+failures remain in evidence. The AX name/value empty-draft edge was corrected.
+Both native review axes found the same remaining name-equal draft gap during
+completion. A failing two-status SDK regression now drives exact composer text
+checks before both observations; no draft is overwritten or hidden by AX.
+The complete strict recipe needs28 native reads for two turns; adopted cap20 is
+not changed, and the second request stays pending at the cap. Chief has the one
+`status_reads` unit question. Real runtime handoff/acceptance remains NOT_READY;
+PD attachments unsupported, no actual Sends or native browser effects. Separate
+OAuth relay deployment is not a prerequisite for the native path.
+
+Final selected110checks/15files, full production build, final TS compilation,
+typecheck and scoped lint PASS. Both independent native review axes accept R1
+fixed; Standards PASS, Spec PARTIAL. Exact source/lock/cached-dependency parity
+verified. No real browser action, provider Send or installation was performed.
+
 ## 2026-10-23 — Approved OAuth ChatGPT request/reply relay
 
 Direct human approval adds a minimal OAuth MCP relay and ChatGPT panel in this
