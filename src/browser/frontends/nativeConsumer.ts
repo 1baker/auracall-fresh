@@ -5,10 +5,6 @@ import { join } from "node:path";
 import { isAbsolute } from "node:path";
 import { z } from "zod";
 import { FrontendError, type NativeTaskBinding } from "./types.js";
-import {
-	getReviewedNativeAuthorityDecoder,
-	type NativeAuthorityDecoder,
-} from "./nativeIdentity.js";
 
 const version = "agent-browser.retained-consumer.v1";
 const id = z.string().min(1).max(1024);
@@ -53,24 +49,6 @@ export type NativeConsumerAdmission = z.infer<typeof admissionSchema>;
 export interface NativeMcpClient {
 	callTool(request: { name: string; arguments: Record<string, unknown> }): Promise<unknown>;
 }
-/** Internal normalized evidence, NOT a proposed producer JSON schema.
- * The normal factory has no decoder until Browser seals the full public identity.
- * Offline tests inject a synthetic trusted-producer decoder at this code seam. */
-const authoritySchema = z
-	.object({
-		profileId: id,
-		browserId: id,
-		tabId: id,
-		targetId: id,
-		ownerGeneration: z.number().int().min(1).max(Number.MAX_SAFE_INTEGER),
-		processDigest: z.string().regex(/^[a-f0-9]{64}$/),
-		custodyDigest: z.string().regex(/^[a-f0-9]{64}$/),
-		principalId: id,
-		capabilityId: id,
-		capabilityRevision: z.number().int().min(1).max(Number.MAX_SAFE_INTEGER),
-		provenance: z.literal("registered_capability"),
-	})
-	.strict();
 /** Exact sealed r2 fragment, CONTRACT.md70fbb8e9. No generation/auth wire guessed. */
 const targetObservationSchema = z
 	.object({
@@ -225,8 +203,7 @@ export class NativeConsumerSession {
 	#wireSession: string | null = null;
 	#controlRef: string | null = null;
 	#acquisitionId: string | null = null;
-	#authorityDigest: string | null = null;
-	#decodeAuthority: NativeAuthorityDecoder | undefined;
+	#bindingDigest: string | null = null;
 	constructor(
 		client: NativeMcpClient,
 		admission: NativeConsumerAdmission,
@@ -239,7 +216,6 @@ export class NativeConsumerSession {
 		this.#admission = parsed.data;
 		this.#ledger = new NativeLedger(directory);
 		this.#now = now;
-		this.#decodeAuthority = getReviewedNativeAuthorityDecoder();
 	}
 	get binding(): NativeTaskBinding {
 		if (!this.#binding) return fail("consumer_acquisition_required");
@@ -283,6 +259,7 @@ export class NativeConsumerSession {
 				data.consumerGrantId !== a.consumerGrantId ||
 				data.expiresAtMs !== (this.#expires ?? a.expiresAtMs) ||
 				data.expiresAtMs <= this.#now() ||
+				data.consumerAck.completedAtMs > this.#now() ||
 				data.operation.action !== action ||
 				(key !== undefined && data.operation.operationKey !== key) ||
 				data.consumerAck.kind !== kind ||
@@ -304,32 +281,19 @@ export class NativeConsumerSession {
 				observed.data.observedAtMs > this.#now()
 			)
 				fail("consumer_identity_mismatch");
-			let decoded: unknown;
-			try {
-				decoded = this.#decodeAuthority?.(envelope.data);
-			} catch {
-				fail("consumer_identity_missing");
-			}
-			const authority = authoritySchema.safeParse(decoded);
-			if (!authority.success) fail("consumer_identity_missing");
-			const normalized = authority.data;
-			if (
-				normalized.profileId !== a.profileId ||
-				normalized.browserId !== a.browserId ||
-				normalized.tabId !== a.tabId ||
-				normalized.targetId !== observed.data.targetId
-			)
-				fail("consumer_identity_mismatch");
-			const authorityDigest = digest([
+			// Private generation/custody/principal validation belongs to Browser v1.
+			// This is only a stable public-reference fingerprint, never new authority.
+			const bindingDigest = digest([
 				data.taskId,
 				data.controlRef,
 				data.consumerGrantId,
 				data.acquisitionId,
 				data.expiresAtMs,
-				normalized,
+				observed.data.targetId,
 			]);
-			if (this.#authorityDigest !== null && authorityDigest !== this.#authorityDigest)
+			if (this.#bindingDigest !== null && bindingDigest !== this.#bindingDigest)
 				fail("consumer_identity_mismatch");
+
 			if (action === "open") {
 				const identity = envelope.data as Record<string, unknown>;
 				if (
@@ -340,7 +304,12 @@ export class NativeConsumerSession {
 					fail("consumer_binding_mismatch");
 				this.#wireSession = envelope.session;
 			}
-			return { ...data, observedIdentity: normalized, authorityDigest };
+			const identity =
+				action === "open"
+					? z.object({ profileId: id, browserId: id, tabId: id }).parse(envelope.data)
+					: this.#binding;
+			if (!identity) fail("consumer_binding_mismatch");
+			return { ...data, identity, targetObservation: observed.data, bindingDigest };
 		} catch (error) {
 			this.#held = true;
 			if (
@@ -353,12 +322,6 @@ export class NativeConsumerSession {
 	}
 	async acquire(): Promise<NativeTaskBinding> {
 		if (this.#binding) return fail("consumer_acquisition_held");
-		// No reviewed generation/auth export is installed: refuse BEFORE any Open.
-		if (!this.#decodeAuthority)
-			throw new FrontendError(
-				"consumer_identity_schema_required",
-				"The reviewed native generation/auth identity schema is unavailable; no Open was sent.",
-			);
 		if (this.#held || this.#admission.expiresAtMs <= this.#now())
 			return fail("consumer_readback_required");
 		const a = this.#admission;
@@ -385,14 +348,14 @@ export class NativeConsumerSession {
 				this.#expires = data.expiresAtMs;
 				this.#controlRef = data.controlRef;
 				this.#acquisitionId = data.acquisitionId;
-				this.#authorityDigest = data.authorityDigest;
+				this.#bindingDigest = data.bindingDigest;
 				this.#binding = {
-					authorityRef: data.authorityDigest,
+					controlRef: data.controlRef,
 					taskId: data.taskId,
-					profileId: data.observedIdentity.profileId,
-					browserId: data.observedIdentity.browserId,
-					tabId: data.observedIdentity.tabId,
-					targetId: data.observedIdentity.targetId,
+					profileId: data.identity.profileId,
+					browserId: data.identity.browserId,
+					tabId: data.identity.tabId,
+					targetId: data.targetObservation.targetId,
 				};
 				return {
 					value: this.binding,
@@ -421,8 +384,16 @@ export class NativeConsumerSession {
 				!data.result ||
 				typeof data.result !== "object" ||
 				Array.isArray(data.result) ||
-				(action === "fill" && (data.result as Record<string, unknown>).filled !== true) ||
-				(action === "click" && (data.result as Record<string, unknown>).clicked !== true)
+				(action === "fill" &&
+					!z
+						.object({ filled: z.literal(true) })
+						.strict()
+						.safeParse(data.result).success) ||
+				(action === "click" &&
+					!z
+						.object({ clicked: z.literal(true) })
+						.strict()
+						.safeParse(data.result).success)
 			) {
 				this.#held = true;
 				return fail("consumer_completion_invalid");

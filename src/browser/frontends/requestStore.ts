@@ -55,7 +55,7 @@ export const frontendRouteBinding = (route: FrontendRoute): string =>
 				route.provider,
 				route.expectedUrl,
 				route.expectedModel,
-				route.nativeTask.authorityRef,
+				route.nativeTask.controlRef,
 				route.nativeTask.taskId,
 				route.nativeTask.profileId,
 				route.nativeTask.browserId,

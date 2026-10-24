@@ -1,3 +1,19 @@
+## 2026-10-23 — Adopt sealed P266r2 public identity
+
+Verified Browser result109ff0c5 and43 frozen source hashes for contract70fbb8e9.
+The contract now is sealed; earlier provisional status is historical. Removed
+AuraCall's extra public generation/auth decoder requirement and synthetic mock
+port: private authority validation is owned by Browser, while the consumer pins
+actual public task/control/grant/acquisition/session/expiry and fresh observed
+target/operation evidence. Local binding uses returned controlRef, not a minted
+authorityRef; legacy metadata fails rather than migrating into authority.
+A public acquisition regression was RED on the old gate, then GREEN. Boolean ACKs,
+identity/correlation/uncertainty guards and no-script legacy refusal are retained.
+The recipe uses five of the thirteen closed actions, with no unsupported aliases.
+Private connection/installation/actual UI/Pro/uploads and unchanged20-read unit
+remain open. Same3.6M/source3568600, original2Send/PD job and all holds; no runtime
+or Browser-owner source changes.
+
 ## 2026-10-23 — Close native dispatch on missing exported identity
 
 Chief identity finding7b8d4ff6 is accepted against2a1be6dc. Six source tests
@@ -55918,3 +55934,9 @@ linked replies each and cached readback after native host exit. Windows startup,
 ACL/launcher/registration, actual Chrome UI and provider replies remain unverified;
 all native/install/LIVE holds and original3/6=50% acceptance persist. Final checks
 and native Codex Standards/Spec reconciliation are recorded in plan0444.
+
+Sealed-r2 validation:194 affected checks/20files,78 focused, production TypeScript
+compilation, full typecheck and scoped lint PASS. Independent native Standards
+and bounded source Spec PASS; full goal remains PARTIAL. The post-freeze unused
+Vitest import removal is mechanical and covered by final validation. No Browser
+tests rerun or actual connection/Send/Windows/provider/install/LIVE effects.

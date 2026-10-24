@@ -1,3 +1,13 @@
+## 2026-10-23 — Match sealed public identity instead of inventing an auth schema
+
+P266r2 performs generation, registered capability and custody checks in Browser.
+A receiving adapter must validate its returned public task/control/acquisition
+and fresh targetObservation, not require an undocumented public tuple or mock
+an internal decoder into success. Keep logical IDs distinct from actual target
+facts; compare expectations without manufacturing observations. Returned opaque
+references are routing metadata, never client-issued authority. Source adoption
+and SDK fixtures remain separate from installed/private connection acceptance.
+
 ## 2026-10-23 — Expected target and controlRef are not observed authority
 
 Do not copy a handoff expectation into a current observed identity or relabel

@@ -1,6 +1,7 @@
 /** Local routing metadata from an authenticated Browser acquisition, not a grant. */
 export interface NativeTaskBinding {
-	readonly authorityRef: string;
+	/** Exact opaque reference returned by Browser; never a client-minted authority. */
+	readonly controlRef: string;
 	readonly taskId: string;
 	readonly profileId: string;
 	readonly browserId: string;

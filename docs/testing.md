@@ -1,25 +1,22 @@
 ## Native retained consumer (Plan0446)
 
-Identity integration finding7b8d4ff6 adds six observed RED failures then GREEN
-checks for missing target/generation/principal, target substitution, generation
-change and lost operation correlation. The real receiving factory also refuses
-before any Open when the complete reviewed generation/auth decoder is absent.
-Existing transport/reply fixtures now include exact sealed-r2 targetObservation
-and an explicitly synthetic normalized-authority decoder. That injected code
-port is fixture scaffolding, NOT a real Browser JSON schema or compatibility
-proof. The old native-through-legacy-probe success fixture is now a zero-dispatch
-refusal test; it cannot stand in for the closed native API.
+Sealed P266r2 contract70fbb8e9 and owner result109ff0c5 define the public identity
+and result envelope. Native fixtures no longer mock an internal authority decoder.
+A normal public acquisition regression failed on the old extra decoder gate, then
+passed using only actual wire fields. Browser validates private generation,
+credentials and custody; AuraCall pins returned task/control/grant/acquisition,
+session/expiry and fresh operation-bound targetObservation. Local expectations
+are comparisons, never observed evidence or a new grant. Malformed identity,
+metadata-only replay, non-Boolean input ACKs and unsupported aliases refuse.
 
-Run the native consumer and MCP workflow tests together with the frontend config
-and native-task identity regressions. They use a synthetic producer on the real
-MCP SDK in-memory transport, with the exact frozen public envelope/arguments.
-The native fixture checks full Unicode reply persistence and fresh compiled
-process readback, protected drafts hidden by AX value/name equality, identity/ACK
-and queue refusals, immutable counters, torn completion, original-key metadata
-without replay, and strict20-native-read exhaustion preserving the second turn.
-No installed Browser, real capability or provider is used. The two completed
-reply/limit-unit criterion and native intelligence remain partial; see
-`docs/native-consumer.md`. Existing fixture receipts are not real acceptance.
+Run the native consumer/identity/SDK workflow tests with native-task binding,
+request persistence and frontend configuration regressions. A synthetic producer
+on the real SDK in-memory transport exercises the sealed wire without private
+identity fixtures: full Unicode reply persistence and fresh compiled-process
+readback, protected drafts, stable text/prompt correlation and immutable counters.
+These are source tests; installed Browser/real UI/private connection are NOT_READY.
+The unchanged20-read cap holds the second turn pending; two guarded completions
+need28 reads. Native Pro configuration and uploads remain unsupported.
 
 ## Frontend replies across process and HTTP boundaries (Plan0444)
 

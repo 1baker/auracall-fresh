@@ -61,7 +61,7 @@ typecheck and scoped lint pass. R1's actual SDK regression is retained RED then
 GREEN; both native reviewers verified its resolution. Standards PASS, Spec
 PARTIAL. No installation, native runtime/browser/provider effect or real Send.
 
-## Identity integration correction (P266-IDENTITY-INTEGRATION-01)
+## Historical identity correction (superseded by sealed-r2 adoption below)
 
 Chief finding7b8d4ff69f17b9b45e9084c2a63213933c77b64d0f22211183794023fd17aff4
 is accepted. Source2a1be6dc copied target expectations into its binding and used
@@ -92,3 +92,31 @@ additional constructor-override regression also observed RED then GREEN.
 and scoped lint pass with source/lock/cached-dependency parity. Bounded independent
 native Standards and guarded Source Spec PASS for this finding. Full goal Spec
 remains PARTIAL. No real Open, browser/credential/provider/Windows effect or Send.
+
+## Sealed P266r2 public-contract adoption
+
+Chief delivers owner result109ff0c5 and seals contract70fbb8e9. The private
+generation/auth/custody checks are producer responsibilities; they are not a
+missing public export. Supersede the extra normalized-decoder gate above.
+Implement public identity exactly, keeping local expectations as comparisons:
+actual returned controlRef/task/profile/browser/tab plus observed targetId,
+operation/key/ACK/session/grant/acquisition/expiry pinned on every completion.
+Remove the non-public authority decoder and all module mocks. Retain genuine
+missing/changed public identity and operation-correlation refusal tests. Old
+client authorityRef objects are invalid; no migration/fallback is introduced.
+Closed13-action contract acknowledged; this approved recipe uses its existing
+five actions only. Boolean input ACKs are not replies. snapshot/gettext/url replace
+all legacy script/probe observation paths; unsupported focus/uploads/Pro remain
+explicit gaps. Runtime preparation remains Browser-owned and NOT_READY.
+
+Acceptance for this adaptation: normal sealed-wire acquisition passes without
+private-schema mocks; identity/correlation/uncertain metadata/Boolean ACK and
+legacy refusal regressions pass; complete first reply and compiled-process saved
+readback survive. No runtime/provider effects. Same allocation/counters/holds;
+20-read unit and two-completion/Pro/PD upload requirements remain partial.
+
+Sealed-r2 validation:194 affected checks/20files,78 focused, production TypeScript
+compilation, full typecheck and scoped lint PASS. Independent native Standards
+and bounded source Spec PASS; full goal remains PARTIAL. The post-freeze unused
+Vitest import removal is mechanical and covered by final validation. No Browser
+tests rerun or actual connection/Send/Windows/provider/install/LIVE effects.

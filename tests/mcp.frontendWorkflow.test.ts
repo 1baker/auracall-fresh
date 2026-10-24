@@ -199,7 +199,7 @@ async function messagingFixture(startUrl = "https://chatgpt.com/c/messaging-fixt
 	const broker = async (request: Record<string, unknown>) => {
 		if (request.nativeTask) {
 			expect(request.nativeTask).toEqual({
-				authorityRef: "fixture-native-authority-1",
+				controlRef: "fixture-native-authority-1",
 				taskId: "fixture-native-task",
 				profileId: handle.profileId,
 				browserId: handle.browserId,
@@ -264,9 +264,9 @@ async function messagingFixture(startUrl = "https://chatgpt.com/c/messaging-fixt
 	};
 	const servers: McpServer[] = [];
 	const clients: Client[] = [];
-	const connect = async (authorityRef?: string) => {
+	const connect = async (controlRef?: string) => {
 		const server = new McpServer({ name: "send-fixture", version: "1" });
-		const connectionRoute: FrontendRoute = authorityRef
+		const connectionRoute: FrontendRoute = controlRef
 			? {
 					id: route.id,
 					provider: route.provider,
@@ -274,7 +274,7 @@ async function messagingFixture(startUrl = "https://chatgpt.com/c/messaging-fixt
 					expectedModel: route.expectedModel,
 					transport: "agent_browser_task",
 					nativeTask: {
-						authorityRef,
+						controlRef,
 						taskId: "fixture-native-task",
 						profileId: handle.profileId,
 						browserId: handle.browserId,
@@ -341,11 +341,11 @@ describe("durable frontend messages through MCP", () => {
 	it.each([
 		undefined,
 		"fixture-native-authority-1",
-	])("reads legacy linked receipts or refuses native probe aliases (authority: %s)", async (authorityRef) => {
+	])("reads legacy linked receipts or refuses native probe aliases (authority: %s)", async (controlRef) => {
 		const f = await messagingFixture();
 		try {
-			const call = await f.connect(authorityRef);
-			if (authorityRef) {
+			const call = await f.connect(controlRef);
+			if (controlRef) {
 				expect(
 					await call("frontend_send", {
 						requestId: "native-refused",
@@ -369,7 +369,7 @@ describe("durable frontend messages through MCP", () => {
 				assistantMessageId: "assistant-1",
 				identityKind: "native",
 			});
-			const afterRestart = await f.connect(authorityRef);
+			const afterRestart = await f.connect(controlRef);
 			expect(
 				await afterRestart("frontend_send", { requestId: "request-one", text: "Return BLUE-17" }),
 			).toMatchObject({ status: "completed", output: "BLUE-17" });

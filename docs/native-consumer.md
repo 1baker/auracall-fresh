@@ -1,48 +1,50 @@
 # Native retained ChatGPT consumer
 
-**Current connection gate:** the normal receiving factory refuses before
-`browser_open` with `consumer_identity_schema_required`. The reviewed producer
-export does not yet contain the complete generation/authenticated-authority
-identity required by Chief finding P266-IDENTITY-INTEGRATION-01. Local expectations
-and returned controlRef cannot replace it. No live native connection is enabled.
+**Source compatibility:** sealed P266r2 contract70fbb8e9, owner result109ff0c5.
+**Runtime:** NOT_READY; no installed qualified private connection has been handed
+to AuraCall. Source compatibility does not activate a route or authorize an Open.
 
-AuraCall has a receiving adapter for Browser's reviewed
-`agent-browser.retained-consumer.v1` contract. It uses an **already connected**
-native MCP SDK client and a private owner-issued consumer admission. The source
-factory `createNativeConsumerFrontend` targets the existing four frontend tools
-once the identity gate is satisfied; it currently refuses acquisition.
-It never creates a browser, launches a client, guesses a task, or repairs custody.
-The native path does not need the separate OAuth relay endpoint.
+The receiving factory accepts an **already connected** MCP SDK client and private
+owner-issued admission. It never launches a client/browser, discovers a profile,
+creates a tab, guesses a task or repairs custody. JSON startup cannot enable this
+native path. The separate OAuth relay endpoint is not a prerequisite.
 
-## Exact connection and authority
+## Exact connection and identity
 
-The caller supplies the existing registered consumer capability, grant selector,
-immutable own task key, exact browser/profile/tab/target expectations and unchanged
-expiry privately. `browser_open` uses `profileMode: consumer`. Acquisition is once
-on that same connection; its returned consumer task and control reference are
-checked against the expected grant/profile/browser/tab. Internal `authorityRef`
-is a fingerprint of decoded generation/process/custody/principal/capability
-evidence and operation task/control/grant, never a relabeled control reference.
-Every operation retains the same MCP session, task/control/grant/expiry and a
-stable operation key. Native completed operation and acknowledgment must agree.
-Queued results, metadata-only replay, changed authority or incomplete completion
-are refused. Private capability values stay in memory/native MCP acquisition;
-they are absent from public frontend tools, diagnostics and durable records.
+Browser owns authentication, registered capability revision, generation, process
+and custody validation on every operation. These stay inside its sealed protocol;
+AuraCall does not require invented public generation/auth fields or supply a
+normalized-authority decoder. The former extra decoder gate and mock seam were
+removed when this complete public contract was adopted.
 
-The sealed r2 contract70fbb8e9 adds `targetObservation`: actual target/type/origin,
-operation ID, after_action stage and bounded observation time. The adapter checks
-it against acknowledged operation and expected target instead of copying local
-expectations into an observed binding. That fragment still lacks the complete
-public generation/auth tuple. No production decoder or guessed JSON field names
-are installed. Offline fixtures mock the internal normalized-decoder module;
-this is not configuration, authority or live compatibility evidence.
-Neither factory nor session constructor accepts a decoder override. A producer schema addendum and
-reviewed production decoder are required before it can acquire.
+The owner supplies the existing consumer capability, grant selector, immutable
+own task key, exact browser/profile/tab/target expectations and expiry privately.
+Acquisition calls browser_open with profileMode consumer once on the SAME client.
+The returned taskId/controlRef are consumer references, not a legacy handle or a
+new client-minted authority. Returned profileId/browserId/tabId are checked against
+admission; targetId comes from actual targetObservation, never from an expectation.
+Local route metadata retains the exact returned controlRef. Its consistency hash
+is only a local fingerprint; it grants no permission and contains no invented
+server identity. Old authorityRef route objects are rejected, not silently upgraded.
 
-The adapter has no owner-key, registration, bootstrap, launch, navigation,
-evaluate/probe alias, script, upload, download or ordinary Service catalog path.
-JSON startup remains unable to invent/enable a native task. A qualified owner
-hands the explicit receiving factory its existing connection and private binding.
+Each fresh result must have data.consumerAck, operation, targetObservation and
+result. Verify stable session/task/control/grant/acquisition/expiry, completed
+operation key/action and matching ACK. targetObservation must match operationId,
+expected target, page type, https://chatgpt.com origin, after_action stage and
+operation/completion/current timestamps. Missing/mismatched proof holds input.
+Generation/custody/authentication refusals from Browser are preserved as held
+outcomes. Queued ACKs and metadata replay never substitute for fresh observations.
+Capabilities stay in private memory and acquisition; never in public tools,
+diagnostics or durable records.
+
+The exact closed Browser action catalog has thirteen entries: snapshot, url,
+title, gettext, click, fill, type, press, wait, scroll, select, hover, screenshot.
+This bounded ChatGPT recipe needs url/snapshot/gettext/fill/click only. It does not
+advertise implementations of the other eight actions. Input ACKs are Boolean
+objects such as {filled:true}, {clicked:true} (or {pressed:true} in Browser's press
+contract); these confirm input, never a model reply. evaluate, standalone focus,
+probe, ui_action, scripts and uploads are unsupported. fill uses the supported
+composer action; it does not call a standalone focus alias.
 
 ## Replies and limits
 
@@ -88,18 +90,17 @@ acceptance constraint, not permission to increase a limit or weaken a guard.
 
 ## Current acceptance boundary
 
-The frozen v1 contract hash is
-`a490173600d56ba67a0cb330413b194d49f24dcdfc99c29adc559b6f78f1bbd1`.
-The sealed r2 observation fragment is70fbb8e9; neither has the full required
-exported generation/auth identity. Earlier positive fixture results are core
-behavior evidence and cannot prove real wire compatibility or attachment.
-Browser's source completion/199 passing checks are owner/Chief-reported evidence,
-not AuraCall reruns. Its exact candidate and private runtime binding/handoff are
-still NOT_READY. No real connection, prompt, upload or provider test is run here.
-The existing private task/Send ledger must be reconciled before activation.
+Contract SHA256:
+70fbb8e92fa82d548566a921d1bde5f2e8a57f8dc96a941e80f48cbcd1071229.
+Browser result SHA256:
+109ff0c52e7252ef7754d49e889a0cce7850e9b010af105004efb8486ab90407.
+All43 archived source hashes are verified. Browser's186 PASS/1ignored and native
+source reviews are owner/Chief evidence, not AuraCall reruns. Real private runtime
+qualification, installed candidate and connection remain NOT_READY. The existing
+private task/Send ledger must be reconciled before activation. No real provider
+Open, prompt, upload or browser test is run by this source adaptation.
 
 The standing PD review retains all eight exact files, actual Pro and original
-conditional intent. Uploads are unsupported by this native contract; never drop,
-downsample or replace that packet with a generic canary. Stock Chrome and OAuth
-relay remain separate approved options, with existing custody and holds intact.
-See Plan0446 and the one ongoing AuraCall progress page for current evidence.
+conditional intent. Native uploads are unsupported; never drop/downsample/split
+or substitute a canary for the packet. Stock Chrome and OAuth relay remain
+separate options. All budget, custody and runtime holds remain binding.

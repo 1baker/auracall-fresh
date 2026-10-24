@@ -8,7 +8,7 @@ import { FrontendService } from "../../src/browser/frontends/service.js";
 import type { FrontendRoute } from "../../src/browser/frontends/types.js";
 
 const task = {
-	authorityRef: "fixture-issuer-revision-1",
+	controlRef: "fixture-issuer-revision-1",
 	taskId: "fixture-native-task",
 	profileId: "fixture-native-profile",
 	browserId: "fixture-browser",
@@ -37,14 +37,14 @@ describe("native task frontend identity", () => {
 
 	it("changes saved-reply binding when the native authority changes while retaining one target lock", () => {
 		const first = nativeRoute();
-		const next = nativeRoute({ authorityRef: "fixture-issuer-revision-2" });
+		const next = nativeRoute({ controlRef: "fixture-issuer-revision-2" });
 		expect(frontendRouteBinding(first)).not.toBe(frontendRouteBinding(next));
 		expect(frontendTargetKey(first)).toBe(frontendTargetKey(next));
 	});
 
 	it.each([
 		{ connectionRef: "fixture-readonly-reference" },
-		{ authorityRef: "" },
+		{ controlRef: "" },
 		{ targetId: "" },
 	])("refuses malformed or legacy-reference task bindings before contacting the broker: %j", async (patch) => {
 		const broker = vi.fn();

@@ -1,6 +1,6 @@
 import { FrontendError, type FrontendRoute } from "./types.js";
 
-const taskFields = ["authorityRef", "taskId", "profileId", "browserId", "tabId", "targetId"];
+const taskFields = ["controlRef", "taskId", "profileId", "browserId", "tabId", "targetId"];
 const record = (value: unknown): value is Record<string, unknown> =>
 	Boolean(value && typeof value === "object" && !Array.isArray(value));
 

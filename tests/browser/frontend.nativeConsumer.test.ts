@@ -7,10 +7,6 @@ import {
 	type NativeMcpClient,
 	type NativeConsumerAdmission,
 } from "../../src/browser/frontends/nativeConsumer.js";
-vi.mock("../../src/browser/frontends/nativeIdentity.js", async () => {
-	const { syntheticNativeAuthority } = await import("../fixtures/frontend/nativeIdentity.js");
-	return { getReviewedNativeAuthorityDecoder: () => syntheticNativeAuthority };
-});
 const makeSession = (
 	client: NativeMcpClient,
 	input: NativeConsumerAdmission,
@@ -56,10 +52,26 @@ const data = (action = "open", key = "acquisition-key") => ({
 		operationKey: key,
 		action,
 		state: "completed",
-		ack: { kind: action === "open" ? "opened" : "observed", completedAtMs: 1000 },
+		ack: {
+			kind:
+				action === "open"
+					? "opened"
+					: ["url", "snapshot", "gettext"].includes(action)
+						? "observed"
+						: "input_acknowledged",
+			completedAtMs: 1000,
+		},
 		createdAtMs: 900,
 	},
-	consumerAck: { kind: action === "open" ? "opened" : "observed", completedAtMs: 1000 },
+	consumerAck: {
+		kind:
+			action === "open"
+				? "opened"
+				: ["url", "snapshot", "gettext"].includes(action)
+					? "observed"
+					: "input_acknowledged",
+		completedAtMs: 1000,
+	},
 	result: action === "url" ? { url: "https://chatgpt.com/c/synthetic" } : null,
 });
 const envelope = (tool: string, value: unknown) => ({
@@ -83,7 +95,7 @@ async function directory() {
 	return p;
 }
 
-describe("native transport core with synthetic authority evidence", () => {
+describe("sealed-r2 public consumer transport with synthetic producer", () => {
 	it("acquires once in consumer mode and retains the exact task/control on the same client", async () => {
 		const callTool = vi.fn(async ({ name, arguments: args }) =>
 			envelope(name, data(name === "browser_open" ? "open" : args.action, args.operationKey)),
@@ -159,6 +171,35 @@ describe("native transport core with synthetic authority evidence", () => {
 		for (const file of await readdir(dir))
 			expect(await readFile(join(dir, file), "utf8")).not.toContain(admission.profileCapability);
 	});
+	it.each([
+		"fill",
+		"click",
+	])("requires an exact Boolean %s acknowledgment, never a reply", async (action) => {
+		const callTool = vi.fn(async ({ name, arguments: args }) => {
+			const d = data(name === "browser_open" ? "open" : args.action, args.operationKey);
+			return envelope(
+				name,
+				name === "browser_open"
+					? d
+					: {
+							...d,
+							result: action === "fill" ? { filled: "true" } : { clicked: "true" },
+						},
+			);
+		});
+		const session = makeSession({ callTool }, admission, await directory(), () => 2000);
+		await session.acquire();
+		await expect(
+			action === "fill"
+				? session.fill("synthetic text", "boolean-fill-key")
+				: session.send("boolean-send-key"),
+		).rejects.toMatchObject({ code: "consumer_completion_invalid" });
+		await expect(session.read("url", {}, "after-invalid-ack")).rejects.toMatchObject({
+			code: "consumer_readback_required",
+		});
+		expect(callTool).toHaveBeenCalledTimes(2);
+	});
+
 	it("counts the original reservations across restart, refuses scripts and never renews a completed key", async () => {
 		const callTool = vi.fn(async ({ name, arguments: args }) =>
 			envelope(name, data(name === "browser_open" ? "open" : args.action, args.operationKey)),
@@ -166,9 +207,12 @@ describe("native transport core with synthetic authority evidence", () => {
 		const dir = await directory();
 		const session = makeSession({ callTool }, admission, dir, () => 2000);
 		await session.acquire();
-		await expect(session.read("evaluate" as "url", {}, "script-key")).rejects.toMatchObject({
-			code: "consumer_arguments_invalid",
-		});
+		for (const action of ["evaluate", "focus", "probe", "ui_action", "upload", "script"]) {
+			await expect(session.read(action as "url", {}, "unsupported-key")).rejects.toMatchObject({
+				code: "consumer_arguments_invalid",
+			});
+		}
+		expect(callTool).toHaveBeenCalledOnce();
 		for (let i = 0; i < 20; i++) await session.read("url", {}, `native-read-${i}`);
 		await expect(session.read("url", {}, "native-read-new")).rejects.toMatchObject({
 			code: "consumer_budget_exhausted",

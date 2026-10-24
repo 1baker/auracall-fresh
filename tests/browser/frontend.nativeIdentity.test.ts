@@ -3,17 +3,9 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { NativeConsumerSession } from "../../src/browser/frontends/nativeConsumer.js";
-import { createNativeConsumerFrontend } from "../../src/browser/frontends/config.js";
 
 const directories: string[] = [];
-const trustedTestProducer = vi.hoisted(() => ({
-	decode: undefined as undefined | ((payload: unknown) => unknown),
-}));
-vi.mock("../../src/browser/frontends/nativeIdentity.js", () => ({
-	getReviewedNativeAuthorityDecoder: () => trustedTestProducer.decode,
-}));
 afterEach(async () => {
-	trustedTestProducer.decode = undefined;
 	for (const path of directories.splice(0)) await rm(path, { recursive: true, force: true });
 });
 const expected = {
@@ -26,57 +18,19 @@ const expected = {
 	targetId: "fixture-target",
 	expiresAtMs: 10000,
 };
-// Internal normalized evidence from a synthetic trusted producer. These are NOT wire fields.
-const authority = {
-	profileId: "fixture-profile",
-	browserId: "fixture-browser",
-	tabId: "fixture-tab",
-	targetId: "fixture-target",
-	ownerGeneration: 1,
-	processDigest: "a".repeat(64),
-	custodyDigest: "b".repeat(64),
-	principalId: "fixture-principal",
-	capabilityId: "fixture-capability-id",
-	capabilityRevision: 1,
-	provenance: "registered_capability",
-};
-
 describe("native consumer observed identity integration", () => {
-	it("does not accept a caller-supplied decoder as permission to Open", async () => {
-		const callTool = vi.fn();
-		const directory = await mkdtemp(join(tmpdir(), "auracall-native-gate-"));
-		directories.push(directory);
-		const session: NativeConsumerSession = Reflect.construct(NativeConsumerSession, [
-			{ callTool },
-			expected,
-			directory,
-			() => 3000,
-			() => authority,
-		]);
-		await expect(session.acquire()).rejects.toMatchObject({
-			code: "consumer_identity_schema_required",
-		});
-		expect(callTool).not.toHaveBeenCalled();
-	});
-	it("blocks the normal factory before Open when the reviewed generation/auth decoder is absent", async () => {
-		const callTool = vi.fn();
-		await expect(
-			createNativeConsumerFrontend({ callTool }, expected, {
-				routeId: "native",
-				expectedUrl: "https://chatgpt.com/c/fixture",
-				expectedModel: "Fixture model",
-				ledgerDirectory: "/unneeded/no-dispatch",
-			}),
-		).rejects.toMatchObject({ code: "consumer_identity_schema_required" });
-		expect(callTool).not.toHaveBeenCalled();
-	});
 	it.each([
 		"missing target",
-		"missing generation",
-		"missing principal",
+		"missing profile",
+		"missing control",
 		"substituted target",
-		"changed generation",
+		"changed acquisition",
 		"lost operation correlation",
+		"wrong origin",
+		"wrong type",
+		"wrong stage",
+		"future observation",
+		"old observation",
 	])("fails closed for %s instead of promoting local expectations", async (failure) => {
 		const directory = await mkdtemp(join(tmpdir(), "auracall-native-identity-"));
 		directories.push(directory);
@@ -91,20 +45,24 @@ describe("native consumer observed identity integration", () => {
 				operationId:
 					failure === "lost operation correlation" && isAction ? "foreign-operation" : operationId,
 				targetId: failure === "substituted target" ? "foreign-target" : "fixture-target",
-				targetType: "page",
-				origin: "https://chatgpt.com",
-				stage: "after_action",
-				observedAtMs: 1500,
+				targetType: failure === "wrong type" ? "iframe" : "page",
+				origin: failure === "wrong origin" ? "https://example.invalid" : "https://chatgpt.com",
+				stage: failure === "wrong stage" ? "before_action" : "after_action",
+				observedAtMs:
+					failure === "future observation" ? 4000 : failure === "old observation" ? 500 : 1500,
 			};
 			const data = {
 				contractVersion: "agent-browser.retained-consumer.v1",
 				taskId: "fixture-consumer-task",
-				controlRef: "fixture-control",
+				controlRef: failure === "missing control" ? undefined : "fixture-control",
 				consumerGrantId: expected.consumerGrantId,
-				acquisitionId: "fixture-acquisition",
+				acquisitionId:
+					failure === "changed acquisition" && isAction
+						? "foreign-acquisition"
+						: "fixture-acquisition",
 				state: "active",
 				expiresAtMs: expected.expiresAtMs,
-				profileId: expected.profileId,
+				profileId: failure === "missing profile" ? undefined : expected.profileId,
 				browserId: expected.browserId,
 				tabId: expected.tabId,
 				operation: {
@@ -135,15 +93,8 @@ describe("native consumer observed identity integration", () => {
 				isError: false,
 			};
 		});
-		const decodeSyntheticAuthority = () => ({
-			...authority,
-			...(failure === "missing generation" ? { ownerGeneration: undefined } : {}),
-			...(failure === "missing principal" ? { principalId: undefined } : {}),
-			...(failure === "changed generation" && isAction ? { ownerGeneration: 2 } : {}),
-		});
-		trustedTestProducer.decode = decodeSyntheticAuthority;
 		const session = new NativeConsumerSession({ callTool }, expected, directory, () => 3000);
-		const actionFailure = ["changed generation", "lost operation correlation"].includes(failure);
+		const actionFailure = ["changed acquisition", "lost operation correlation"].includes(failure);
 		if (actionFailure) {
 			await session.acquire();
 			await expect(session.read("url", {}, "fixture-original-read")).rejects.toMatchObject({
@@ -151,9 +102,11 @@ describe("native consumer observed identity integration", () => {
 			});
 		} else {
 			await expect(session.acquire()).rejects.toMatchObject({
-				code: failure.startsWith("missing")
+				code: ["missing target", "wrong origin", "wrong type", "wrong stage"].includes(failure)
 					? "consumer_identity_missing"
-					: "consumer_identity_mismatch",
+					: ["substituted target", "future observation", "old observation"].includes(failure)
+						? "consumer_identity_mismatch"
+						: "consumer_readback_required",
 			});
 			await expect(async () => session.binding).rejects.toMatchObject({
 				code: "consumer_acquisition_required",
