@@ -14,6 +14,7 @@ import { NativeConsumerSession } from "../src/browser/frontends/nativeConsumer.j
 import { NativeChatgptFrontend } from "../src/browser/frontends/nativeChatgpt.js";
 import { registerFrontendTools } from "../src/mcp/tools/frontends.js";
 import { setAuracallHomeDirOverrideForTest } from "../src/auracallHome.js";
+import { withCompletedIdentity } from "./browser/nativeIdentityFixture.js";
 const cleanups: (() => Promise<unknown>)[] = [];
 afterEach(async () => {
 	for (const clean of cleanups.splice(0).reverse()) await clean();
@@ -59,36 +60,43 @@ it.each([
 					? "observed"
 					: "input_acknowledged";
 		const ack = { kind, completedAtMs: now };
-		const value = {
-			contractVersion: "agent-browser.retained-consumer.v1",
-			taskId: "synthetic-consumer-task",
-			controlRef: "synthetic-control",
-			consumerGrantId: admission.consumerGrantId,
-			acquisitionId: "synthetic-acquisition",
-			state: "active",
-			expiresAtMs: admission.expiresAtMs,
-			operation: {
-				operationId: `op-${key}`,
-				operationKey: key,
-				action,
-				state: "completed",
-				ack,
-				createdAtMs: now,
+		const value = withCompletedIdentity(
+			{
+				contractVersion: "agent-browser.retained-consumer.v1",
+				taskId: "synthetic-consumer-task",
+				controlRef: "synthetic-control",
+				consumerGrantId: admission.consumerGrantId,
+				acquisitionId: "synthetic-acquisition",
+				state: "active",
+				expiresAtMs: admission.expiresAtMs,
+				operation: {
+					operationId: `op-${key}`,
+					operationKey: key,
+					action,
+					state: "completed",
+					ack,
+					createdAtMs: now,
+				},
+				consumerAck: ack,
+				targetObservation: {
+					operationId: `op-${key}`,
+					targetId: "synthetic-target",
+					targetType: "page",
+					origin: "https://chatgpt.com",
+					stage: "after_action",
+					observedAtMs: now,
+				},
+				result,
+				...(action === "open"
+					? {
+							profileId: admission.profileId,
+							browserId: admission.browserId,
+							tabId: admission.tabId,
+						}
+					: {}),
 			},
-			consumerAck: ack,
-			targetObservation: {
-				operationId: `op-${key}`,
-				targetId: "synthetic-target",
-				targetType: "page",
-				origin: "https://chatgpt.com",
-				stage: "after_action",
-				observedAtMs: now,
-			},
-			result,
-			...(action === "open"
-				? { profileId: admission.profileId, browserId: admission.browserId, tabId: admission.tabId }
-				: {}),
-		};
+			admission,
+		);
 		return {
 			content: [
 				{

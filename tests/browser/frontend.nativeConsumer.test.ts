@@ -7,6 +7,7 @@ import {
 	type NativeMcpClient,
 	type NativeConsumerAdmission,
 } from "../../src/browser/frontends/nativeConsumer.js";
+import { withCompletedIdentity } from "./nativeIdentityFixture.js";
 const makeSession = (
 	client: NativeMcpClient,
 	input: NativeConsumerAdmission,
@@ -28,52 +29,56 @@ const admission = {
 	targetId: "synthetic-target",
 	expiresAtMs: 2000000000000,
 };
-const data = (action = "open", key = "acquisition-key") => ({
-	targetObservation: {
-		operationId: `synthetic-operation-${key}`,
-		targetId: "synthetic-target",
-		targetType: "page",
-		origin: "https://chatgpt.com",
-		stage: "after_action",
-		observedAtMs: 1000,
-	},
-	contractVersion: "agent-browser.retained-consumer.v1",
-	taskId: "synthetic-consumer-task",
-	controlRef: "synthetic-control",
-	consumerGrantId: admission.consumerGrantId,
-	acquisitionId: "synthetic-acquisition",
-	state: "active",
-	expiresAtMs: admission.expiresAtMs,
-	profileId: admission.profileId,
-	browserId: admission.browserId,
-	tabId: admission.tabId,
-	operation: {
-		operationId: `synthetic-operation-${key}`,
-		operationKey: key,
-		action,
-		state: "completed",
-		ack: {
-			kind:
-				action === "open"
-					? "opened"
-					: ["url", "snapshot", "gettext"].includes(action)
-						? "observed"
-						: "input_acknowledged",
-			completedAtMs: 1000,
+const data = (action = "open", key = "acquisition-key") =>
+	withCompletedIdentity(
+		{
+			targetObservation: {
+				operationId: `synthetic-operation-${key}`,
+				targetId: "synthetic-target",
+				targetType: "page",
+				origin: "https://chatgpt.com",
+				stage: "after_action",
+				observedAtMs: 1000,
+			},
+			contractVersion: "agent-browser.retained-consumer.v1",
+			taskId: "synthetic-consumer-task",
+			controlRef: "synthetic-control",
+			consumerGrantId: admission.consumerGrantId,
+			acquisitionId: "synthetic-acquisition",
+			state: "active",
+			expiresAtMs: admission.expiresAtMs,
+			profileId: admission.profileId,
+			browserId: admission.browserId,
+			tabId: admission.tabId,
+			operation: {
+				operationId: `synthetic-operation-${key}`,
+				operationKey: key,
+				action,
+				state: "completed",
+				ack: {
+					kind:
+						action === "open"
+							? "opened"
+							: ["url", "snapshot", "gettext"].includes(action)
+								? "observed"
+								: "input_acknowledged",
+					completedAtMs: 1000,
+				},
+				createdAtMs: 900,
+			},
+			consumerAck: {
+				kind:
+					action === "open"
+						? "opened"
+						: ["url", "snapshot", "gettext"].includes(action)
+							? "observed"
+							: "input_acknowledged",
+				completedAtMs: 1000,
+			},
+			result: action === "url" ? { url: "https://chatgpt.com/c/synthetic" } : null,
 		},
-		createdAtMs: 900,
-	},
-	consumerAck: {
-		kind:
-			action === "open"
-				? "opened"
-				: ["url", "snapshot", "gettext"].includes(action)
-					? "observed"
-					: "input_acknowledged",
-		completedAtMs: 1000,
-	},
-	result: action === "url" ? { url: "https://chatgpt.com/c/synthetic" } : null,
-});
+		admission,
+	);
 const envelope = (tool: string, value: unknown) => ({
 	isError: false,
 	content: [
@@ -249,10 +254,12 @@ describe("sealed-r2 public consumer transport with synthetic producer", () => {
 				const {
 					targetObservation: _observation,
 					result: _result,
+					consumerAck: _ack,
 					...metadata
 				} = data("url", args.operationKey);
 				return envelope(name, {
 					...metadata,
+					identityFreshness: "stored_completion",
 					requestedOperationKey: args.operationKey,
 					matchingOperation: true,
 				});

@@ -1,7 +1,16 @@
 ## Native retained consumer (Plan0446)
 
-Sealed P266r2 contract70fbb8e9 and owner result109ff0c5 define the public identity
-and result envelope. Native fixtures no longer mock an internal authority decoder.
+Reviewed producer-v2 export01de61ce and identity.v1 extend the historical sealed
+P266r2 envelope. Native fixtures do not mock an internal authority decoder.
+The typed identity must agree in all three wire copies and remain bound to the
+same principal, capability revision, process, custody, target and operation.
+Run frontend.nativeIdentityV1 with the existing native consumer/identity/factory
+and SDK workflow checks. Preserve its changed-principal RED and metadata-freshness
+RED; malformed/mismatched tuples must refuse before the factory returns a facade.
+Stored/unavailable identity readback stays metadata-only and cannot clear a hold.
+These are synthetic source checks; no actual native consumer Open or grant is performed.
+
+The earlier sealed-r2 acquisition regression remains historical evidence:
 A normal public acquisition regression failed on the old extra decoder gate, then
 passed using only actual wire fields. Browser validates private generation,
 credentials and custody; AuraCall pins returned task/control/grant/acquisition,

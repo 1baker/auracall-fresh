@@ -3,6 +3,26 @@
 State: OPEN. Owner: AuraCall01a16096-da12-7753-8d44-e299c2172cef.
 Parent: P444; private personal work-tracker81. Base:0eb4499152931efc1564c2ba4fbc19a97edab00e.
 
+## Current reviewed identity.v1 adaptation
+
+Chief's existing-source adoption907d1fdb delivers producer-v2 export01de61ce,
+extending the historical sealed public v1/r1 with a real typed identity receipt.
+Consume only this exact export: validate identity and both ACK copies, fresh
+completed_operation label and operation/target/time correlation; pin returned
+owner generation/process/custody/authenticated principal/capability tuple.
+Historical stored_completion or unavailable receipts remain metadata-only and
+cannot clear input holds. Missing identity is not reconstructed from admission.
+The factory has no injected decoder or new private authority fields. All five
+recipe actions, full-reply guards, durable counters and20-read limit remain.
+This is own consumer source only: frozen9516 OAuth deployment, Browser source,
+installed5354 and private admission remain unchanged. All85 affected checks/8files,
+production TypeScript compilation, full typecheck and scoped lint pass. Independent
+native Standards and bounded Source Spec pass with zero findings. Principal drift,
+metadata freshness and alias contradiction regressions retain observed REDs.
+An initial new-factory fixture used an expired admission and was corrected to
+reach its intended decoder check; no product guard, timeout or limit was weakened.
+No installed runtime readiness is claimed; full goal remains PARTIAL.
+
 ## Authority and bounded outcome
 
 Human/Chief SOURCE-HUB-ADOPTION9e4242b7 adopts the Browser-owned stable v1

@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { NativeConsumerSession } from "../../src/browser/frontends/nativeConsumer.js";
+import { withCompletedIdentity } from "./nativeIdentityFixture.js";
 
 const directories: string[] = [];
 afterEach(async () => {
@@ -51,32 +52,36 @@ describe("native consumer observed identity integration", () => {
 				observedAtMs:
 					failure === "future observation" ? 4000 : failure === "old observation" ? 500 : 1500,
 			};
-			const data = {
-				contractVersion: "agent-browser.retained-consumer.v1",
-				taskId: "fixture-consumer-task",
-				controlRef: failure === "missing control" ? undefined : "fixture-control",
-				consumerGrantId: expected.consumerGrantId,
-				acquisitionId:
-					failure === "changed acquisition" && isAction
-						? "foreign-acquisition"
-						: "fixture-acquisition",
-				state: "active",
-				expiresAtMs: expected.expiresAtMs,
-				profileId: failure === "missing profile" ? undefined : expected.profileId,
-				browserId: expected.browserId,
-				tabId: expected.tabId,
-				operation: {
-					operationId,
-					operationKey: key,
-					action,
-					state: "completed",
-					ack,
-					createdAtMs: 1000,
+			const data = withCompletedIdentity(
+				{
+					contractVersion: "agent-browser.retained-consumer.v1",
+					taskId: "fixture-consumer-task",
+					controlRef: failure === "missing control" ? undefined : "fixture-control",
+					consumerGrantId: expected.consumerGrantId,
+					acquisitionId:
+						failure === "changed acquisition" && isAction
+							? "foreign-acquisition"
+							: "fixture-acquisition",
+					state: "active",
+					expiresAtMs: expected.expiresAtMs,
+					profileId: failure === "missing profile" ? undefined : expected.profileId,
+					browserId: expected.browserId,
+					tabId: expected.tabId,
+					operation: {
+						operationId,
+						operationKey: key,
+						action,
+						state: "completed",
+						ack,
+						createdAtMs: 1000,
+					},
+					consumerAck: ack,
+					targetObservation,
+					result: isAction ? { url: "https://chatgpt.com/c/fixture" } : null,
 				},
-				consumerAck: ack,
-				...(failure === "missing target" ? {} : { targetObservation }),
-				result: isAction ? { url: "https://chatgpt.com/c/fixture" } : null,
-			};
+				expected,
+			);
+			if (failure === "missing target") Reflect.deleteProperty(data, "targetObservation");
 			return {
 				content: [
 					{

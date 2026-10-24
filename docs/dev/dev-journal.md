@@ -1,3 +1,21 @@
+## 2026-10-24 — Consume the reviewed native identity.v1 receipt
+
+Chief's producer-v2 export01de61ce and source907d1fdb now seal the complete
+nonsecret identity tuple. The c010 receiver stripped it; a changed-principal
+regression was RED, then GREEN after validating all three copies and pinning
+generation/process/custody/authentication with the existing target references.
+A second RED showed metadata could carry a current-completion label; readback
+now accepts only stored_completion or unavailable and never clears the hold.
+The normal factory uses this receiving guard without a decoder injection or new
+admission/registration path. All85 affected checks across8 files pass, including
+the SDK workflow and saved-reply process readback; production compilation, full
+types and scoped lint pass. Independent native Standards and bounded Source Spec
+pass with no findings. Installed owner5354/private bindings remain unqualified.
+The accepted frozen9516 OAuth
+release is untouched and is not rebuilt for this native source change. Current
+H1/session-loss and private operator holds remain with Chief; no actual
+consumer Open, grant, browser, Windows, provider or service effect occurs here.
+
 ## 2026-10-24 — Match the OAuth provider's signed permission claims
 
 The human's OAuth setup request continues P445. Public issuer discovery is not

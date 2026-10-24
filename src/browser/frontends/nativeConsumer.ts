@@ -8,9 +8,40 @@ import { FrontendError, type NativeTaskBinding } from "./types.js";
 
 const version = "agent-browser.retained-consumer.v1";
 const id = z.string().min(1).max(1024);
+const positiveInteger = z.number().int().min(1).max(Number.MAX_SAFE_INTEGER);
+/** Exact reviewed producer-v2 identity.v1; identifiers are evidence, never bearer authority. */
+const completedIdentitySchema = z
+	.object({
+		contractVersion: z.literal("agent-browser.retained-consumer.identity.v1"),
+		taskId: id,
+		acquisitionId: id,
+		profileId: id,
+		browserId: id,
+		tabId: id,
+		targetId: id,
+		ownerGeneration: positiveInteger,
+		publishedProcessDigest: z.string().regex(/^[0-9a-f]{64}$/),
+		custodyDigest: z.string().regex(/^[0-9a-f]{64}$/),
+		authentication: z
+			.object({
+				principalId: id,
+				profileId: id,
+				capabilityId: id,
+				capabilityRevision: positiveInteger,
+				provenance: z.literal("registered_capability"),
+			})
+			.strict(),
+		operationId: id,
+		operationKey: id,
+		action: id,
+		origin: z.literal("https://chatgpt.com"),
+		observedAtMs: positiveInteger,
+		completedAtMs: positiveInteger,
+	})
+	.strict();
 const ackSchema = z.object({
 	kind: z.enum(["opened", "observed", "input_acknowledged"]),
-	completedAtMs: z.number().int().nonnegative(),
+	completedAtMs: positiveInteger,
 });
 const operationSchema = z.object({
 	operationId: id,
@@ -27,7 +58,7 @@ const statusSchema = z.object({
 	consumerGrantId: id,
 	acquisitionId: id,
 	state: z.literal("active"),
-	expiresAtMs: z.number().int().positive(),
+	expiresAtMs: positiveInteger,
 	operation: operationSchema,
 	consumerAck: ackSchema,
 	result: z.unknown(),
@@ -41,7 +72,7 @@ const admissionSchema = z
 		browserId: id,
 		tabId: id,
 		targetId: id,
-		expiresAtMs: z.number().int().positive(),
+		expiresAtMs: positiveInteger,
 	})
 	.strict();
 export type NativeConsumerAdmission = z.infer<typeof admissionSchema>;
@@ -244,6 +275,49 @@ export class NativeConsumerSession {
 			fail("consumer_connection_mismatch");
 		return envelope;
 	}
+	private identityBinding(
+		identity: z.infer<typeof completedIdentitySchema>,
+		data: Pick<
+			z.infer<typeof statusSchema>,
+			"taskId" | "controlRef" | "consumerGrantId" | "acquisitionId" | "expiresAtMs" | "operation"
+		>,
+	) {
+		const a = this.#admission;
+		if (
+			identity.taskId !== data.taskId ||
+			identity.acquisitionId !== data.acquisitionId ||
+			identity.profileId !== a.profileId ||
+			identity.browserId !== a.browserId ||
+			identity.tabId !== a.tabId ||
+			identity.targetId !== a.targetId ||
+			identity.authentication.profileId !== identity.profileId ||
+			identity.operationId !== data.operation.operationId ||
+			identity.operationKey !== data.operation.operationKey ||
+			identity.action !== data.operation.action ||
+			identity.completedAtMs !== data.operation.ack.completedAtMs ||
+			identity.observedAtMs < data.operation.createdAtMs ||
+			identity.observedAtMs > identity.completedAtMs ||
+			identity.completedAtMs >= data.expiresAtMs ||
+			identity.completedAtMs > this.#now()
+		)
+			fail("consumer_identity_mismatch");
+		// Pin only receipt facts from this authenticated connection, never local substitutes.
+		return digest([
+			data.taskId,
+			data.controlRef,
+			data.consumerGrantId,
+			data.acquisitionId,
+			data.expiresAtMs,
+			identity.profileId,
+			identity.browserId,
+			identity.tabId,
+			identity.targetId,
+			identity.ownerGeneration,
+			identity.publishedProcessDigest,
+			identity.custodyDigest,
+			identity.authentication,
+		]);
+	}
 	private async invoke(tool: string, args: Record<string, unknown>, action: string, key?: string) {
 		try {
 			const envelope = await this.payload(tool, args);
@@ -281,16 +355,27 @@ export class NativeConsumerSession {
 				observed.data.observedAtMs > this.#now()
 			)
 				fail("consumer_identity_mismatch");
-			// Private generation/custody/principal validation belongs to Browser v1.
-			// This is only a stable public-reference fingerprint, never new authority.
-			const bindingDigest = digest([
-				data.taskId,
-				data.controlRef,
-				data.consumerGrantId,
-				data.acquisitionId,
-				data.expiresAtMs,
-				observed.data.targetId,
-			]);
+			const receipt = z
+				.object({
+					identityFreshness: z.literal("completed_operation"),
+					identity: completedIdentitySchema,
+					consumerAck: z.object({ identity: completedIdentitySchema }),
+					operation: z.object({ ack: z.object({ identity: completedIdentitySchema }) }),
+				})
+				.safeParse(envelope.data);
+			if (!receipt.success) fail("consumer_identity_missing");
+			const identity = receipt.data.identity;
+			for (const name of ["profileId", "browserId", "tabId", "targetId"] as const) {
+				const alias = (envelope.data as Record<string, unknown>)[name];
+				if (alias !== undefined && alias !== identity[name]) fail("consumer_identity_mismatch");
+			}
+			if (
+				digest(identity) !== digest(receipt.data.consumerAck.identity) ||
+				digest(identity) !== digest(receipt.data.operation.ack.identity) ||
+				identity.observedAtMs !== observed.data.observedAtMs
+			)
+				fail("consumer_identity_mismatch");
+			const bindingDigest = this.identityBinding(identity, data);
 			if (this.#bindingDigest !== null && bindingDigest !== this.#bindingDigest)
 				fail("consumer_identity_mismatch");
 
@@ -304,11 +389,6 @@ export class NativeConsumerSession {
 					fail("consumer_binding_mismatch");
 				this.#wireSession = envelope.session;
 			}
-			const identity =
-				action === "open"
-					? z.object({ profileId: id, browserId: id, tabId: id }).parse(envelope.data)
-					: this.#binding;
-			if (!identity) fail("consumer_binding_mismatch");
 			return { ...data, identity, targetObservation: observed.data, bindingDigest };
 		} catch (error) {
 			this.#held = true;
@@ -454,6 +534,7 @@ export class NativeConsumerSession {
 							controlRef: z.literal(controlRef),
 							acquisitionId: z.literal(acquisitionId),
 							consumerGrantId: z.literal(this.#admission.consumerGrantId),
+							expiresAtMs: z.literal(this.#expires ?? this.#admission.expiresAtMs),
 							requestedOperationKey: z.literal(key),
 							matchingOperation: z.literal(true),
 							state: z.enum(["active", "unknown", "released", "expired", "revoked"]),
@@ -469,6 +550,38 @@ export class NativeConsumerSession {
 						("targetObservation" in envelope.data || "result" in envelope.data)
 					)
 						fail("consumer_readback_required");
+					const receipt = z
+						.object({
+							identityFreshness: z.enum(["stored_completion", "unavailable"]),
+							identity: completedIdentitySchema.nullable(),
+						})
+						.parse(envelope.data);
+					if (receipt.identityFreshness === "stored_completion") {
+						const stored = z
+							.object({
+								operation: operationSchema.extend({
+									ack: ackSchema.extend({ identity: completedIdentitySchema }),
+								}),
+							})
+							.parse(envelope.data);
+						if (
+							!receipt.identity ||
+							digest(receipt.identity) !== digest(stored.operation.ack.identity) ||
+							this.identityBinding(receipt.identity, { ...d, operation: stored.operation }) !==
+								this.#bindingDigest
+						)
+							fail("consumer_readback_required");
+					} else {
+						const unavailable = z
+							.object({
+								operation: z.object({
+									ack: z.object({ identity: z.unknown().optional() }).nullable().optional(),
+								}),
+							})
+							.parse(envelope.data);
+						if (receipt.identity !== null || unavailable.operation.ack?.identity != null)
+							fail("consumer_readback_required");
+					}
 					const metadata = {
 						taskId: d.taskId,
 						controlRef: d.controlRef,
@@ -477,6 +590,7 @@ export class NativeConsumerSession {
 						operationState: d.operation.state,
 						readbackOnly: true,
 						pageObserved: false,
+						identityFreshness: receipt.identityFreshness,
 					};
 					return { value: metadata, metadata };
 				} catch {

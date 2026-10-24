@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { afterEach, expect, it, vi } from "vitest";
 import { createNativeConsumerFrontend } from "../../src/browser/frontends/config.js";
 import { NativeConsumerSession } from "../../src/browser/frontends/nativeConsumer.js";
+import { withCompletedIdentity } from "./nativeIdentityFixture.js";
 
 const directories: string[] = [];
 afterEach(async () => {
@@ -23,7 +24,7 @@ const admission = {
 it.each([
 	"session",
 	"factory",
-])("%s consumes sealed r2 public identity without invented private fields", async (mode) => {
+])("%s consumes reviewed producer-v2 identity.v1 without an injected decoder", async (mode) => {
 	const path = await mkdtemp(join(tmpdir(), "auracall-sealed-r2-"));
 	directories.push(path);
 	const now = Date.now();
@@ -37,37 +38,40 @@ it.each([
 					tool: "browser_open",
 					session: "sealed-fixture-connection",
 					success: true,
-					data: {
-						contractVersion: "agent-browser.retained-consumer.v1",
-						taskId: "sealed-fixture-consumer-task",
-						controlRef: "sealed-fixture-control",
-						consumerGrantId: admission.consumerGrantId,
-						acquisitionId: "sealed-fixture-acquisition",
-						state: "active",
-						expiresAtMs: ownerAdmission.expiresAtMs,
-						browserDisposition: "retained",
-						profileId: admission.profileId,
-						browserId: admission.browserId,
-						tabId: admission.tabId,
-						operation: {
-							operationId: "sealed-fixture-operation",
-							operationKey: "sealed-fixture-open-key",
-							action: "open",
-							state: "completed",
-							ack,
-							createdAtMs: now - 2000,
+					data: withCompletedIdentity(
+						{
+							contractVersion: "agent-browser.retained-consumer.v1",
+							taskId: "sealed-fixture-consumer-task",
+							controlRef: "sealed-fixture-control",
+							consumerGrantId: admission.consumerGrantId,
+							acquisitionId: "sealed-fixture-acquisition",
+							state: "active",
+							expiresAtMs: ownerAdmission.expiresAtMs,
+							browserDisposition: "retained",
+							profileId: admission.profileId,
+							browserId: admission.browserId,
+							tabId: admission.tabId,
+							operation: {
+								operationId: "sealed-fixture-operation",
+								operationKey: "sealed-fixture-open-key",
+								action: "open",
+								state: "completed",
+								ack,
+								createdAtMs: now - 2000,
+							},
+							consumerAck: ack,
+							result: null,
+							targetObservation: {
+								operationId: "sealed-fixture-operation",
+								targetId: admission.targetId,
+								targetType: "page",
+								origin: "https://chatgpt.com",
+								stage: "after_action",
+								observedAtMs: now - 1000,
+							},
 						},
-						consumerAck: ack,
-						result: null,
-						targetObservation: {
-							operationId: "sealed-fixture-operation",
-							targetId: admission.targetId,
-							targetType: "page",
-							origin: "https://chatgpt.com",
-							stage: "after_action",
-							observedAtMs: now - 1000,
-						},
-					},
+						ownerAdmission,
+					),
 					error: null,
 				}),
 			},

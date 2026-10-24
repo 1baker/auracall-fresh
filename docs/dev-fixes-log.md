@@ -1,3 +1,14 @@
+## 2026-10-24 — Pin real identity exports without treating stored receipts as current
+
+When a reviewed producer adds an identity receipt, consume its exact typed wire
+instead of stripping it or reviving an invented decoder seam. Compare the receipt
+in the public data, consumer ACK and operation ACK; pin its nonsecret generation,
+process/custody and principal/capability tuple across operations. Identity and
+native target observation must agree on operation and timestamps. Safe-integer
+bounds prevent rounded revisions. Stored/unavailable receipts remain metadata;
+they cannot qualify new input, clear uncertainty or prove a full model reply.
+Keep already frozen deployment artifacts pinned when adapting another transport.
+
 ## 2026-10-24 — Qualify OAuth token shape and public discovery separately
 
 An issuer's signed permissions can use a `scope` string or an `scp` list. Validate

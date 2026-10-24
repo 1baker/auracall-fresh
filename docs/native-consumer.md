@@ -1,6 +1,8 @@
 # Native retained ChatGPT consumer
 
-**Source compatibility:** sealed P266r2 contract70fbb8e9, owner result109ff0c5.
+**Source compatibility:** reviewed producer-v2 export01de61ce, identity.v1;
+Chief adoption907d1fdb retains incoming56c90d7a. Earlier70f/891f and c010 remain
+the historical producer-v1/r1 and consumer foundation.
 **Runtime:** NOT_READY; no installed qualified private connection has been handed
 to AuraCall. Source compatibility does not activate a route or authorize an Open.
 
@@ -12,10 +14,9 @@ native path. The separate OAuth relay endpoint is not a prerequisite.
 ## Exact connection and identity
 
 Browser owns authentication, registered capability revision, generation, process
-and custody validation on every operation. These stay inside its sealed protocol;
-AuraCall does not require invented public generation/auth fields or supply a
-normalized-authority decoder. The former extra decoder gate and mock seam were
-removed when this complete public contract was adopted.
+and custody validation on every operation. Its reviewed identity.v1 now exports
+the revalidated nonsecret tuple. AuraCall decodes that exact schema; it supplies
+no normalized-authority decoder, local substitute or credential-registration path.
 
 The owner supplies the existing consumer capability, grant selector, immutable
 own task key, exact browser/profile/tab/target expectations and expiry privately.
@@ -27,9 +28,14 @@ Local route metadata retains the exact returned controlRef. Its consistency hash
 is only a local fingerprint; it grants no permission and contains no invented
 server identity. Old authorityRef route objects are rejected, not silently upgraded.
 
-Each fresh result must have data.consumerAck, operation, targetObservation and
-result. Verify stable session/task/control/grant/acquisition/expiry, completed
-operation key/action and matching ACK. targetObservation must match operationId,
+Each fresh result must have data.consumerAck, operation, targetObservation,
+result, identity and identityFreshness=completed_operation. The identity must
+equal consumerAck.identity and operation.ack.identity, match the admitted target
+and task/acquisition/operation/key/action/timestamps, and use safe positive JSON
+integers. Pin owner generation, process/custody digests and the authenticated
+principal/capability ID/revision/provenance across calls, together with the existing
+session/task/control/grant/acquisition/expiry. These public identifiers confer no
+authority. TargetObservation must match operationId,
 expected target, page type, https://chatgpt.com origin, after_action stage and
 operation/completion/current timestamps. Missing/mismatched proof holds input.
 Generation/custody/authentication refusals from Browser are preserved as held
@@ -74,7 +80,11 @@ new-key replay or replacement grant clears a hold. Original-key `browser_continu
 returns only checked metadata; even a completed native ACK does not clear input
 uncertainty or become a saved model answer.
 
-Metadata/readback-only results must omit fresh targetObservation and page result;
+Metadata/readback-only results must omit fresh targetObservation and page result.
+stored_completion must carry a consistent original receipt and pinned tuple.
+unavailable must carry null identity, including historical completed rows that
+lack a receipt. Neither can qualify fresh input, restore a connection or clear a
+hold. A completed_operation label in metadata readback refuses;
 the client explicitly reports `pageObserved: false`. Historical completion is
 separate from fresh current identity. The legacy service rejects native-task
 routes before building any evaluate/probe request; there is no script fallback.
@@ -90,11 +100,11 @@ acceptance constraint, not permission to increase a limit or weaken a guard.
 
 ## Current acceptance boundary
 
-Contract SHA256:
-70fbb8e92fa82d548566a921d1bde5f2e8a57f8dc96a941e80f48cbcd1071229.
-Browser result SHA256:
-109ff0c52e7252ef7754d49e889a0cce7850e9b010af105004efb8486ab90407.
-All43 archived source hashes are verified. Browser's186 PASS/1ignored and native
+Current producer export SHA256:
+01de61ce84bed5ad18b0b8efa4f86d60fb658981a1fbd8907887f96aafe4afbb.
+Browser current result SHA256:
+907d1fdb1bbcb9677a4dc3fcb605ec2d92286781c536efa429a014824d83c384.
+Chief verified15 source/16 archive entries; Browser's191 PASS/1ignored and native
 source reviews are owner/Chief evidence, not AuraCall reruns. Real private runtime
 qualification, installed candidate and connection remain NOT_READY. The existing
 private task/Send ledger must be reconciled before activation. No real provider
@@ -104,3 +114,5 @@ The standing PD review retains all eight exact files, actual Pro and original
 conditional intent. Native uploads are unsupported; never drop/downsample/split
 or substitute a canary for the packet. Stock Chrome and OAuth relay remain
 separate options. All budget, custody and runtime holds remain binding.
+The frozen9516 OAuth deployment stays pinned; this native decoder change does
+not rebuild, repoint or activate that separate relay.
