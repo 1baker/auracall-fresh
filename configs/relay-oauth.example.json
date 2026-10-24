@@ -1,0 +1,10 @@
+{
+  "mode": "relay",
+  "resource": "https://auracall.example.test/mcp",
+  "issuer": "https://auth.example.test",
+  "jwksUri": "https://auth.example.test/jwks.json",
+  "subject": "REPLACE_WITH_REGISTERED_OWNER_SUBJECT",
+  "relayDirectory": "/home/you/.local/state/auracall-relay",
+  "origins": [],
+  "port": 3100
+}

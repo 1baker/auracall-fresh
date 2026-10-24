@@ -1,3 +1,22 @@
+## 2026-10-23 — Relay claims are not model replies or native browser authority
+
+An OAuth MCP connection lets ChatGPT call AuraCall tools; it does not grant a
+browser handle or attest the selected Pro intelligence. The new relay-only mode
+stores an exclusive immutable claim before the panel's single message request,
+then separately stores the entire returned answer and digest. Repeat claims never
+renew dispatch; uncertainty retains the original readback path. Full replies and
+linked context survive a new local process. Keep native provider IDs/live proof
+unverified and refuse unsupported attachments rather than drop frozen files.
+Legacy frontend scopes, body limits and services remain separate. See Plan0445
+and docs/chatgpt-relay.md for the explicit configuration/acceptance boundary.
+
+Native Spec review reproduced a panel request-identity race across overlapping
+loads. Serialize loads, invalidate edited selections and capture one immutable
+request for claim/message/uncertainty handling; the two race regressions now pass.
+The panel also needs explicit app visibility/widget-access permission on its MCP
+tools; retained descriptor RED/GREEN proves that correction. These fixes do not
+establish a real ChatGPT component connection or native provider response ID.
+
 ## 2026-10-23 — Native tasks cannot be disguised as legacy handles
 
 Frontend request/reply logic previously assumed every route contained a legacy

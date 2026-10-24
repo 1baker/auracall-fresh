@@ -1,3 +1,29 @@
+## 2026-10-23 — Approved OAuth ChatGPT request/reply relay
+
+Direct human approval adds a minimal OAuth MCP relay and ChatGPT panel in this
+owned checkout, preserving P266 Browser ownership and the newer stock Chrome
+human setup task. Plan0445 reuses the existing HTTP OAuth resource server and
+installed dependencies. Relay mode never constructs frontend/browser services.
+Private immutable request/claim/reply records preserve exact full text and linked
+context; the panel claims before one message and refuses repeated/unknown sends.
+The CLI stages explicit local requests and reads saved replies after restart.
+Attachments explicitly refuse; no frozen PD packet is silently simplified.
+
+Initial tests observed the absent store, then a real exact-whitespace failure;
+both were corrected. The existing server initially rejected relay configuration;
+the opt-in mode now passes real loopback signed-token MCP delivery. First45
+affected tests passed; expanded CLI/panel/store/MCP8 also passed. One SDK generic
+type error was corrected. Native review then found an overlapping-load request
+race; two failing cases now pass. Explicit panel tool-access metadata also has a
+retained RED/GREEN check. Standards/source Spec PASS; full live Spec PARTIAL.
+Production build, typecheck and scoped lint pass. All94 affected checks pass in
+an exact-source Linux validation copy using the identical lockfile/cached
+dependencies, with no install. On the mounted checkout93/94 pass: the unchanged
+CLI fixture times out at5s while direct server import takes13.611s. Its original
+timeout passes on Linux storage; no timeout increase or ordinary CLI change.
+These are source/fixture results, not OAuth consent or live ChatGPT acceptance.
+No actual job, provider Send, browser change, install, registration or deployment.
+
 ## 2026-10-23 — Preserve native task identity for frontend integration
 
 The human approved Agent Browser-first implementation for the retained signed-in

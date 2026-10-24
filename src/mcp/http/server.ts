@@ -13,7 +13,9 @@ import { registerFrontendTools } from "../tools/frontends.js";
 import {
 	createFrontendTokenVerifier,
 	type FrontendScope,
+	type OAuthScope,
 	frontendScopes,
+	relayScopes,
 	HttpRefusal,
 } from "./auth.js";
 import {
@@ -22,6 +24,8 @@ import {
 	validateFrontendHttpConfig,
 } from "./config.js";
 import { scopedFrontendTools } from "./scopedFrontend.js";
+import { RelayStore } from "../relay/store.js";
+import { registerRelayTools, relayToolScopes } from "../relay/tools.js";
 
 const bodyLimit = 65536;
 const operationScopes = new Map<string, FrontendScope>([
@@ -40,7 +44,11 @@ function json(res: ServerResponse, status: number, value: unknown): void {
 }
 
 /** Bounded ingress before SDK validation, including for correctly authenticated callers. */
-async function readBody(req: IncomingMessage, res: ServerResponse): Promise<unknown> {
+async function readBody(
+	req: IncomingMessage,
+	res: ServerResponse,
+	limit = bodyLimit,
+): Promise<unknown> {
 	const chunks: Buffer[] = [];
 	let size = 0;
 	const bytes = await new Promise<Buffer>((resolve, reject) => {
@@ -61,7 +69,7 @@ async function readBody(req: IncomingMessage, res: ServerResponse): Promise<unkn
 		const aborted = () => fail(new HttpRefusal(400, "invalid_request"));
 		const data = (chunk: Buffer) => {
 			size += chunk.length;
-			if (size > bodyLimit) {
+			if (size > limit) {
 				res.setHeader("connection", "close");
 				res.once("finish", () => req.destroy());
 				fail(new HttpRefusal(413, "request_too_large"));
@@ -104,7 +112,7 @@ async function readBody(req: IncomingMessage, res: ServerResponse): Promise<unkn
 
 export interface FrontendHttpOptions {
 	config: FrontendHttpConfig;
-	service: FrontendTools;
+	service?: FrontendTools;
 	keyResolver?: JWTVerifyGetKey;
 	createMcpServer?: () => McpServer;
 }
@@ -112,16 +120,23 @@ export interface FrontendHttpOptions {
 /** Factory does not listen, discover an issuer, launch a browser or create legacy MCP services. */
 export function createFrontendHttpServer(options: FrontendHttpOptions) {
 	const config = validateFrontendHttpConfig(options.config);
+	const isRelay = config.mode === "relay";
+	if (!isRelay && !options.service) throw new Error("Frontend service is required.");
+	const relay = isRelay ? new RelayStore(config.relayDirectory ?? "", config.subject) : null;
+	const scopes = isRelay ? relayScopes : frontendScopes;
+	const requiredScopes: ReadonlyMap<string, OAuthScope> = isRelay
+		? relayToolScopes
+		: operationScopes;
 	const resource = new URL(config.resource);
 	const metadataPath = `/.well-known/oauth-protected-resource${resource.pathname === "/" ? "" : resource.pathname}`;
 	const metadataUrl = resource.origin + metadataPath;
-	const authenticate = createFrontendTokenVerifier(config, options.keyResolver);
+	const authenticate = createFrontendTokenVerifier(config, options.keyResolver, scopes);
 	const origins = new Set([resource.origin, ...config.origins]);
 	const makeMcp =
 		options.createMcpServer ??
 		(() =>
 			new McpServer({
-				name: "auracall-frontend-mcp",
+				name: isRelay ? "auracall-relay-mcp" : "auracall-frontend-mcp",
 				version: getCliVersion(),
 			}));
 	const handle = async (req: IncomingMessage, res: ServerResponse): Promise<void> => {
@@ -147,7 +162,7 @@ export function createFrontendHttpServer(options: FrontendHttpOptions) {
 				json(res, 200, {
 					resource: config.resource,
 					authorization_servers: [config.issuer],
-					scopes_supported: frontendScopes,
+					scopes_supported: scopes,
 					bearer_methods_supported: ["header"],
 				});
 				return;
@@ -160,14 +175,14 @@ export function createFrontendHttpServer(options: FrontendHttpOptions) {
 			const principal = await authenticate(req);
 			if (!/^application\/json(?:\s*;\s*charset=utf-8)?$/i.test(req.headers["content-type"] ?? ""))
 				throw new HttpRefusal(415, "unsupported_media_type");
-			const body = await readBody(req, res);
+			const body = await readBody(req, res, isRelay ? 2097152 : bodyLimit);
 			if (
 				record(body) &&
 				body.method === "tools/call" &&
 				record(body.params) &&
 				typeof body.params.name === "string"
 			) {
-				const scope = operationScopes.get(body.params.name);
+				const scope = requiredScopes.get(body.params.name);
 				if (scope && !principal.scopes.has(scope))
 					throw new HttpRefusal(403, "insufficient_scope", scope);
 			}
@@ -177,10 +192,12 @@ export function createFrontendHttpServer(options: FrontendHttpOptions) {
 				enableJsonResponse: true,
 			});
 			try {
-				registerFrontendTools(
-					mcp,
-					scopedFrontendTools(options.service, principal, config.routeIds),
-				);
+				if (relay) registerRelayTools(mcp, relay, principal);
+				else if (options.service)
+					registerFrontendTools(
+						mcp,
+						scopedFrontendTools(options.service, principal, config.routeIds),
+					);
 				await mcp.connect(transport);
 				await transport.handleRequest(req, res, body);
 			} finally {
@@ -197,7 +214,7 @@ export function createFrontendHttpServer(options: FrontendHttpOptions) {
 					'Bearer resource_metadata="' +
 						metadataUrl +
 						'", scope="' +
-						(refusal.scope ?? "frontend:read") +
+						(refusal.scope ?? scopes[0]) +
 						'", error="' +
 						refusal.code +
 						'"',
@@ -224,7 +241,7 @@ export function createFrontendHttpServer(options: FrontendHttpOptions) {
 
 export async function startFrontendHttpServer(env: NodeJS.ProcessEnv = process.env) {
 	const config = await readFrontendHttpConfig(env);
-	const service = await createStartupFrontendService(env);
+	const service = config.mode === "relay" ? undefined : await createStartupFrontendService(env);
 	const server = createFrontendHttpServer({ config, service });
 	server.listen(config.port, "127.0.0.1");
 	await once(server, "listening");

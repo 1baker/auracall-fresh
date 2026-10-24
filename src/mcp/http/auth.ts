@@ -9,7 +9,10 @@ import {
 import type { ValidatedFrontendHttpConfig } from "./config.js";
 
 export const frontendScopes = ["frontend:read", "frontend:send", "frontend:configure"] as const;
+export const relayScopes = ["relay:read", "relay:dispatch", "relay:reply"] as const;
 export type FrontendScope = (typeof frontendScopes)[number];
+export type RelayScope = (typeof relayScopes)[number];
+export type OAuthScope = FrontendScope | RelayScope;
 export interface FrontendPrincipal {
 	scopes: ReadonlySet<string>;
 }
@@ -18,7 +21,7 @@ export class HttpRefusal extends Error {
 	constructor(
 		readonly status: number,
 		readonly code: string,
-		readonly scope?: FrontendScope,
+		readonly scope?: OAuthScope,
 	) {
 		super(code);
 	}
@@ -27,6 +30,7 @@ export class HttpRefusal extends Error {
 export function createFrontendTokenVerifier(
 	config: ValidatedFrontendHttpConfig,
 	injectedResolver?: JWTVerifyGetKey,
+	acceptedScopes: readonly OAuthScope[] = frontendScopes,
 ): (req: IncomingMessage) => Promise<FrontendPrincipal> {
 	const key =
 		injectedResolver ??
@@ -70,8 +74,8 @@ export function createFrontendTokenVerifier(
 		const scope = typeof payload.scope === "string" ? payload.scope : "";
 		if (scope.length > 4096) throw new HttpRefusal(401, "invalid_token");
 		const scopes = new Set<string>(scope.split(/\s+/).filter(Boolean));
-		if (!frontendScopes.some((item) => scopes.has(item)))
-			throw new HttpRefusal(403, "insufficient_scope", "frontend:read");
+		if (!acceptedScopes.some((item) => scopes.has(item)))
+			throw new HttpRefusal(403, "insufficient_scope", acceptedScopes[0]);
 		// Only grants leave this module. The bearer token and claims never enter an adapter.
 		return { scopes };
 	};

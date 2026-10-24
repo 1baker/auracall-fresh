@@ -31,6 +31,10 @@ The verified premium choice takes precedence over ordinary thinking-time setting
 `--browser-model-strategy current` continues to preserve the current model.
 If Pro cannot be verified, AuraCall fails before prompt submission.
 
+## ChatGPT OAuth relay
+
+For an OAuth-connected ChatGPT request/reply panel, see [the relay setup guide](docs/chatgpt-relay.md). It reuses the HTTP MCP resource server, preserves complete replies and request identity, and does not launch a browser. Source/fixture readiness is separate from actual OAuth and Pro acceptance.
+
 ## Quick start
 
 Primary local install: `pnpm run install:user-runtime` builds the current

@@ -6,7 +6,8 @@
   "main": "dist/bin/auracall.js",
   "bin": {
     "auracall": "dist/bin/auracall.js",
-    "auracall-mcp": "dist/bin/auracall-mcp.js"
+    "auracall-mcp": "dist/bin/auracall-mcp.js",
+    "auracall-relay": "dist/bin/auracall-relay.js"
   },
   "scripts": {
     "docs:list": "tsx scripts/docs-list.ts",

@@ -1,5 +1,6 @@
 import { constants } from "node:fs";
 import { open } from "node:fs/promises";
+import { isAbsolute } from "node:path";
 import { z } from "zod";
 
 const httpsUrl = z
@@ -23,15 +24,17 @@ const httpsUrl = z
 
 const schema = z
 	.object({
+		mode: z.enum(["frontend", "relay"]).optional(),
 		resource: httpsUrl,
 		issuer: httpsUrl,
 		jwksUri: httpsUrl,
 		subject: z.string().min(1).max(256),
 		routeIds: z
 			.array(z.string().min(1).max(128))
-			.min(1)
 			.max(32)
-			.refine((ids) => new Set(ids).size === ids.length, "Route IDs must be unique."),
+			.refine((ids) => new Set(ids).size === ids.length, "Route IDs must be unique.")
+			.default([]),
+		relayDirectory: z.string().max(4096).refine(isAbsolute).optional(),
 		origins: z
 			.array(
 				z
@@ -49,7 +52,18 @@ const schema = z
 			.default([]),
 		port: z.number().int().min(1).max(65535).default(3100),
 	})
-	.strict();
+	.strict()
+	.superRefine((config, ctx) => {
+		if (
+			config.mode === "relay"
+				? !config.relayDirectory || config.routeIds.length !== 0
+				: !config.routeIds.length || config.relayDirectory !== undefined
+		)
+			ctx.addIssue({
+				code: "custom",
+				message: "Choose explicit relay storage or authorized frontend routes.",
+			});
+	});
 
 export type FrontendHttpConfig = z.input<typeof schema>;
 export type ValidatedFrontendHttpConfig = z.output<typeof schema>;
