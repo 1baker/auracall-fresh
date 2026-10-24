@@ -1,9 +1,16 @@
 # Native retained ChatGPT consumer
 
+**Current connection gate:** the normal receiving factory refuses before
+`browser_open` with `consumer_identity_schema_required`. The reviewed producer
+export does not yet contain the complete generation/authenticated-authority
+identity required by Chief finding P266-IDENTITY-INTEGRATION-01. Local expectations
+and returned controlRef cannot replace it. No live native connection is enabled.
+
 AuraCall has a receiving adapter for Browser's reviewed
 `agent-browser.retained-consumer.v1` contract. It uses an **already connected**
 native MCP SDK client and a private owner-issued consumer admission. The source
-factory `createNativeConsumerFrontend` returns the existing four frontend tools.
+factory `createNativeConsumerFrontend` targets the existing four frontend tools
+once the identity gate is satisfied; it currently refuses acquisition.
 It never creates a browser, launches a client, guesses a task, or repairs custody.
 The native path does not need the separate OAuth relay endpoint.
 
@@ -14,12 +21,23 @@ immutable own task key, exact browser/profile/tab/target expectations and unchan
 expiry privately. `browser_open` uses `profileMode: consumer`. Acquisition is once
 on that same connection; its returned consumer task and control reference are
 checked against the expected grant/profile/browser/tab. Internal `authorityRef`
-stores that returned control reference as identity, never as a ServiceTabHandle.
+is a fingerprint of decoded generation/process/custody/principal/capability
+evidence and operation task/control/grant, never a relabeled control reference.
 Every operation retains the same MCP session, task/control/grant/expiry and a
 stable operation key. Native completed operation and acknowledgment must agree.
 Queued results, metadata-only replay, changed authority or incomplete completion
 are refused. Private capability values stay in memory/native MCP acquisition;
 they are absent from public frontend tools, diagnostics and durable records.
+
+The sealed r2 contract70fbb8e9 adds `targetObservation`: actual target/type/origin,
+operation ID, after_action stage and bounded observation time. The adapter checks
+it against acknowledged operation and expected target instead of copying local
+expectations into an observed binding. That fragment still lacks the complete
+public generation/auth tuple. No production decoder or guessed JSON field names
+are installed. Offline fixtures mock the internal normalized-decoder module;
+this is not configuration, authority or live compatibility evidence.
+Neither factory nor session constructor accepts a decoder override. A producer schema addendum and
+reviewed production decoder are required before it can acquire.
 
 The adapter has no owner-key, registration, bootstrap, launch, navigation,
 evaluate/probe alias, script, upload, download or ordinary Service catalog path.
@@ -54,6 +72,11 @@ new-key replay or replacement grant clears a hold. Original-key `browser_continu
 returns only checked metadata; even a completed native ACK does not clear input
 uncertainty or become a saved model answer.
 
+Metadata/readback-only results must omit fresh targetObservation and page result;
+the client explicitly reports `pageObserved: false`. Historical completion is
+separate from fresh current identity. The legacy service rejects native-task
+routes before building any evaluate/probe request; there is no script fallback.
+
 The source conservatively enforces **2 Sends, 2 draft fills, 6 reserved model
 controls and20 underlying native reads** across the same journal. Native
 intelligence changes currently refuse; no model controls are spent. The adopted
@@ -67,6 +90,9 @@ acceptance constraint, not permission to increase a limit or weaken a guard.
 
 The frozen v1 contract hash is
 `a490173600d56ba67a0cb330413b194d49f24dcdfc99c29adc559b6f78f1bbd1`.
+The sealed r2 observation fragment is70fbb8e9; neither has the full required
+exported generation/auth identity. Earlier positive fixture results are core
+behavior evidence and cannot prove real wire compatibility or attachment.
 Browser's source completion/199 passing checks are owner/Chief-reported evidence,
 not AuraCall reruns. Its exact candidate and private runtime binding/handoff are
 still NOT_READY. No real connection, prompt, upload or provider test is run here.

@@ -8,12 +8,16 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { build } from "esbuild";
-import { afterEach, expect, it } from "vitest";
+import { afterEach, expect, it, vi } from "vitest";
 import { z } from "zod";
 import { NativeConsumerSession } from "../src/browser/frontends/nativeConsumer.js";
 import { NativeChatgptFrontend } from "../src/browser/frontends/nativeChatgpt.js";
 import { registerFrontendTools } from "../src/mcp/tools/frontends.js";
 import { setAuracallHomeDirOverrideForTest } from "../src/auracallHome.js";
+vi.mock("../src/browser/frontends/nativeIdentity.js", async () => {
+	const { syntheticNativeAuthority } = await import("./fixtures/frontend/nativeIdentity.js");
+	return { getReviewedNativeAuthorityDecoder: () => syntheticNativeAuthority };
+});
 const cleanups: (() => Promise<unknown>)[] = [];
 afterEach(async () => {
 	for (const clean of cleanups.splice(0).reverse()) await clean();
@@ -23,7 +27,7 @@ it.each([
 	"normal",
 	"draft",
 	"completion-draft",
-])("native MCP complete reply and strict evidence/cap guards: %s", async (mode) => {
+])("native reply core with synthetic authority, not deployed wire: %s", async (mode) => {
 	const directory = await mkdtemp(join(tmpdir(), "auracall-native-mcp-"));
 	setAuracallHomeDirOverrideForTest(directory);
 	cleanups.push(async () => {
@@ -76,6 +80,14 @@ it.each([
 				createdAtMs: now,
 			},
 			consumerAck: ack,
+			targetObservation: {
+				operationId: `op-${key}`,
+				targetId: "synthetic-target",
+				targetType: "page",
+				origin: "https://chatgpt.com",
+				stage: "after_action",
+				observedAtMs: now,
+			},
 			result,
 			...(action === "open"
 				? { profileId: admission.profileId, browserId: admission.browserId, tabId: admission.tabId }

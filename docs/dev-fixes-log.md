@@ -1,3 +1,15 @@
+## 2026-10-23 — Expected target and controlRef are not observed authority
+
+Do not copy a handoff expectation into a current observed identity or relabel
+controlRef as generation/auth authority. Validate exact producer targetObservation
+against its acknowledged operation and bounded after_action timestamp. Require
+complete decoded generation/process/custody/principal/capability evidence on
+each action and pin its fingerprint. Until its reviewed public wire exists,
+refuse factory acquisition before any Open. Internal normalized fixture decoders
+are neither production wire definitions nor permission to manufacture live proof.
+Keep native routes out of the legacy evaluate/probe service. Metadata-only replay
+must have no fresh page result/observation and must not clear uncertain input.
+
 ## 2026-10-23 — Native consumer input completion is not a model answer
 
 Consume the reviewed retained-consumer wire directly on one existing MCP

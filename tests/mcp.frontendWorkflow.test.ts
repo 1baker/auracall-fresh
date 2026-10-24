@@ -341,10 +341,24 @@ describe("durable frontend messages through MCP", () => {
 	it.each([
 		undefined,
 		"fixture-native-authority-1",
-	])("reads two connected replies and reopens the same saved receipt after restart (authority: %s)", async (authorityRef) => {
+	])("reads legacy linked receipts or refuses native probe aliases (authority: %s)", async (authorityRef) => {
 		const f = await messagingFixture();
 		try {
 			const call = await f.connect(authorityRef);
+			if (authorityRef) {
+				expect(
+					await call("frontend_send", {
+						requestId: "native-refused",
+						text: "Do not dispatch a script.",
+					}),
+				).toMatchObject({ code: "native_transport_required" });
+				const changed = await f.connect("fixture-native-authority-2");
+				expect(await changed("frontend_inspect", {})).toMatchObject({
+					code: "native_transport_required",
+				});
+				expect(f.stats()).toEqual({ clicks: 0, probes: 0 });
+				return;
+			}
 			expect(
 				await call("frontend_send", { requestId: "request-one", text: "Return BLUE-17" }),
 			).toMatchObject({ requestId: "request-one", status: "sent", liveVerified: false });
@@ -373,17 +387,6 @@ describe("durable frontend messages through MCP", () => {
 				previousRequestId: "request-one",
 			});
 			expect(f.stats().clicks).toBe(2);
-			if (authorityRef) {
-				const before = f.stats();
-				const changedAuthority = await f.connect("fixture-native-authority-2");
-				expect(
-					await changedAuthority("frontend_status", { requestId: "request-two" }),
-				).toMatchObject({
-					ok: false,
-					code: "request_binding_mismatch",
-				});
-				expect(f.stats()).toEqual(before);
-			}
 		} finally {
 			await f.cleanup();
 		}

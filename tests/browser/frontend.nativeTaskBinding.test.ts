@@ -26,43 +26,13 @@ const nativeRoute = (patch = {}): FrontendRoute =>
 	}) as unknown as FrontendRoute;
 
 describe("native task frontend identity", () => {
-	it("inspects through a distinct native task binding without manufacturing a service handle", async () => {
-		const broker = vi.fn(async (request: Record<string, unknown>, authority?: string) => {
-			expect(authority).toBeUndefined();
-			expect(request.nativeTask).toEqual(task);
-			expect(request).not.toHaveProperty("serviceTabHandle");
-			expect(request).not.toHaveProperty("runtimeProfile");
-			return {
-				ok: true,
-				targetId: task.targetId,
-				url: "https://chatgpt.com/c/fixture",
-				detectors: [
-					{
-						id: "frontend",
-						ok: true,
-						result: {
-							url: "https://chatgpt.com/c/fixture",
-							model: "Fixture Pro",
-							value: 4,
-							label: "Pro",
-							minimum: 0,
-							maximum: 4,
-							disabled: false,
-							openSelector: null,
-							sliderSelector: null,
-							sliderFocused: false,
-							controls: [],
-						},
-					},
-				],
-			};
-		});
+	it("refuses native tasks at the legacy probe service before any script dispatch", async () => {
+		const broker = vi.fn();
 		const service = new FrontendService([nativeRoute()], broker);
-		expect(await service.inspect("native-chatgpt")).toMatchObject({
-			ok: true,
-			provider: "chatgpt",
+		await expect(service.inspect("native-chatgpt")).rejects.toMatchObject({
+			code: "native_transport_required",
 		});
-		expect(broker).toHaveBeenCalledOnce();
+		expect(broker).not.toHaveBeenCalled();
 	});
 
 	it("changes saved-reply binding when the native authority changes while retaining one target lock", () => {

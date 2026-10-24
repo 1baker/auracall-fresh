@@ -249,6 +249,11 @@ export class FrontendService {
 				"Configure an explicit retained frontend route first.",
 			);
 		validateFrontendBinding(route);
+		if (route.transport === "agent_browser_task")
+			throw new FrontendError(
+				"native_transport_required",
+				"Native consumer routes require the closed native adapter; legacy probes are unavailable.",
+			);
 		if (!route.expectedModel || !["chatgpt", "grok", "claude"].includes(route.provider))
 			throw new FrontendError("invalid_route", "The retained route or provider is invalid.");
 		let url: URL;

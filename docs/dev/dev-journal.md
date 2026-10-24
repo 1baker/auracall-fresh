@@ -1,3 +1,29 @@
+## 2026-10-23 — Close native dispatch on missing exported identity
+
+Chief identity finding7b8d4ff6 is accepted against2a1be6dc. Six source tests
+observed acceptance of missing target/generation/principal, substituted target,
+changed generation and lost operation correlation; all six now reject. Frozen
+producer r2 CONTRACT.md70fbb8e9 and its manifest/review hashes were verified;
+the mutable contract891f5929 differs and was not adopted. Its exact targetObservation
+fragment is checked against operation/type/origin/stage/time and configured
+expectation. Expectations never supply the observed binding.
+
+The full public generation/auth tuple is still missing. No production decoder is
+invented: the normal factory refuses before any Open; only offline tests inject
+a synthetic normalized-authority source. Full evidence fingerprints replace
+controlRef-as-authority; protocol controlRef remains separate. Native routes
+also refuse at the legacy service before script/probe construction. Metadata
+readback rejects purported fresh page bodies/observations and labels pageObserved
+false. No native acquisition, credential/runtime/provider action is dispatched by this work;
+same selected tickets,3.6M/source3568600,2Send/6control/20read holds remain.
+
+The temporary decoder constructor parameter was also removed after a separate
+RED regression: only test-runner module mocks supply synthetic evidence. Factory,
+session arguments, config and environment cannot enable the missing decoder.
+Final118checks/16files, production TS compilation, typecheck and scoped lint PASS;
+both native review axes accept the bounded finding corrected. Full goal remains
+PARTIAL and real browser/provider counters remain unchanged.
+
 ## 2026-10-23 — Consume the reviewed native Browser v1 contract
 
 Adopted Chief9e4242b7 and byte-verified contracta4901736. Plan0446 adds only

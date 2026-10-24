@@ -60,3 +60,35 @@ Full production build, final TypeScript compilation on both filesystems, full
 typecheck and scoped lint pass. R1's actual SDK regression is retained RED then
 GREEN; both native reviewers verified its resolution. Standards PASS, Spec
 PARTIAL. No installation, native runtime/browser/provider effect or real Send.
+
+## Identity integration correction (P266-IDENTITY-INTEGRATION-01)
+
+Chief finding7b8d4ff69f17b9b45e9084c2a63213933c77b64d0f22211183794023fd17aff4
+is accepted. Source2a1be6dc copied target expectations into its binding and used
+controlRef as authority identity. Neither is observed generation/auth evidence.
+Six real regression failures showed missing target/generation/principal,
+substituted target, changed generation and lost operation correlation accepted.
+
+Browser's sealed continuation CONTRACT.md70fbb8e92fa82d548566a921d1bde5f2e8a57f8dc96a941e80f48cbcd1071229
+defines exact operation-bound targetObservation. Its reviewed source is retained;
+the mutable producer document has changed and is not silently adopted. Consume
+that fragment only. No public generation/auth decoder is available: normal
+factory acquisition now refuses before any Open. Existing native metadata also
+refuses at the legacy script/probe service.
+
+The core has an internal normalized authority-decoder port, not invented wire
+fields. Only offline fixtures mock its module with synthetic producer authority.
+No constructor, configuration or environment override enables a decoder.
+Its complete generation/process/custody/principal/capability evidence must match
+actual target observation and stay unchanged per operation. Binding fingerprints
+use that evidence, while protocol controlRef stays separate. Missing evidence
+holds; no config/labels/capability string can enable the normal factory. Native
+metadata-only readback has no fresh page proof. Exact generation/auth wire names
+and production decoder remain Browser/Chief dependencies, not client guesses.
+
+Identity correction validation: six failures observed then six passes; an
+additional constructor-override regression also observed RED then GREEN.
+118 affected checks/16files, production TypeScript compilation, full typecheck
+and scoped lint pass with source/lock/cached-dependency parity. Bounded independent
+native Standards and guarded Source Spec PASS for this finding. Full goal Spec
+remains PARTIAL. No real Open, browser/credential/provider/Windows effect or Send.

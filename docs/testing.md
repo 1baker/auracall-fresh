@@ -1,5 +1,15 @@
 ## Native retained consumer (Plan0446)
 
+Identity integration finding7b8d4ff6 adds six observed RED failures then GREEN
+checks for missing target/generation/principal, target substitution, generation
+change and lost operation correlation. The real receiving factory also refuses
+before any Open when the complete reviewed generation/auth decoder is absent.
+Existing transport/reply fixtures now include exact sealed-r2 targetObservation
+and an explicitly synthetic normalized-authority decoder. That injected code
+port is fixture scaffolding, NOT a real Browser JSON schema or compatibility
+proof. The old native-through-legacy-probe success fixture is now a zero-dispatch
+refusal test; it cannot stand in for the closed native API.
+
 Run the native consumer and MCP workflow tests together with the frontend config
 and native-task identity regressions. They use a synthetic producer on the real
 MCP SDK in-memory transport, with the exact frozen public envelope/arguments.

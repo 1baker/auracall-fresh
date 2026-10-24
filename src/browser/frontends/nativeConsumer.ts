@@ -5,6 +5,10 @@ import { join } from "node:path";
 import { isAbsolute } from "node:path";
 import { z } from "zod";
 import { FrontendError, type NativeTaskBinding } from "./types.js";
+import {
+	getReviewedNativeAuthorityDecoder,
+	type NativeAuthorityDecoder,
+} from "./nativeIdentity.js";
 
 const version = "agent-browser.retained-consumer.v1";
 const id = z.string().min(1).max(1024);
@@ -49,6 +53,35 @@ export type NativeConsumerAdmission = z.infer<typeof admissionSchema>;
 export interface NativeMcpClient {
 	callTool(request: { name: string; arguments: Record<string, unknown> }): Promise<unknown>;
 }
+/** Internal normalized evidence, NOT a proposed producer JSON schema.
+ * The normal factory has no decoder until Browser seals the full public identity.
+ * Offline tests inject a synthetic trusted-producer decoder at this code seam. */
+const authoritySchema = z
+	.object({
+		profileId: id,
+		browserId: id,
+		tabId: id,
+		targetId: id,
+		ownerGeneration: z.number().int().min(1).max(Number.MAX_SAFE_INTEGER),
+		processDigest: z.string().regex(/^[a-f0-9]{64}$/),
+		custodyDigest: z.string().regex(/^[a-f0-9]{64}$/),
+		principalId: id,
+		capabilityId: id,
+		capabilityRevision: z.number().int().min(1).max(Number.MAX_SAFE_INTEGER),
+		provenance: z.literal("registered_capability"),
+	})
+	.strict();
+/** Exact sealed r2 fragment, CONTRACT.md70fbb8e9. No generation/auth wire guessed. */
+const targetObservationSchema = z
+	.object({
+		operationId: id,
+		targetId: id,
+		targetType: z.literal("page"),
+		origin: z.literal("https://chatgpt.com"),
+		stage: z.literal("after_action"),
+		observedAtMs: z.number().int().nonnegative(),
+	})
+	.strict();
 const digest = (value: unknown) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
 type Bucket = "acquisition" | "read" | "control" | "draft" | "send";
 const limits: Record<Bucket, number> = { acquisition: 1, read: 20, control: 6, draft: 2, send: 2 };
@@ -190,6 +223,10 @@ export class NativeConsumerSession {
 	#held = false;
 	#expires: number | null = null;
 	#wireSession: string | null = null;
+	#controlRef: string | null = null;
+	#acquisitionId: string | null = null;
+	#authorityDigest: string | null = null;
+	#decodeAuthority: NativeAuthorityDecoder | undefined;
 	constructor(
 		client: NativeMcpClient,
 		admission: NativeConsumerAdmission,
@@ -202,6 +239,7 @@ export class NativeConsumerSession {
 		this.#admission = parsed.data;
 		this.#ledger = new NativeLedger(directory);
 		this.#now = now;
+		this.#decodeAuthority = getReviewedNativeAuthorityDecoder();
 	}
 	get binding(): NativeTaskBinding {
 		if (!this.#binding) return fail("consumer_acquisition_required");
@@ -250,11 +288,48 @@ export class NativeConsumerSession {
 				data.consumerAck.kind !== kind ||
 				JSON.stringify(data.operation.ack) !== JSON.stringify(data.consumerAck) ||
 				(this.#binding &&
-					(data.taskId !== this.#binding.taskId ||
-						data.controlRef !== this.#binding.authorityRef)) ||
+					(data.taskId !== this.#binding.taskId || data.controlRef !== this.#controlRef)) ||
 				(envelope.data as Record<string, unknown>).readbackOnly === true
 			)
 				fail("consumer_completion_invalid");
+			const observed = targetObservationSchema.safeParse(
+				(envelope.data as Record<string, unknown>).targetObservation,
+			);
+			if (!observed.success) fail("consumer_identity_missing");
+			if (
+				observed.data.operationId !== data.operation.operationId ||
+				observed.data.targetId !== a.targetId ||
+				observed.data.observedAtMs < data.operation.createdAtMs ||
+				observed.data.observedAtMs > data.consumerAck.completedAtMs ||
+				observed.data.observedAtMs > this.#now()
+			)
+				fail("consumer_identity_mismatch");
+			let decoded: unknown;
+			try {
+				decoded = this.#decodeAuthority?.(envelope.data);
+			} catch {
+				fail("consumer_identity_missing");
+			}
+			const authority = authoritySchema.safeParse(decoded);
+			if (!authority.success) fail("consumer_identity_missing");
+			const normalized = authority.data;
+			if (
+				normalized.profileId !== a.profileId ||
+				normalized.browserId !== a.browserId ||
+				normalized.tabId !== a.tabId ||
+				normalized.targetId !== observed.data.targetId
+			)
+				fail("consumer_identity_mismatch");
+			const authorityDigest = digest([
+				data.taskId,
+				data.controlRef,
+				data.consumerGrantId,
+				data.acquisitionId,
+				data.expiresAtMs,
+				normalized,
+			]);
+			if (this.#authorityDigest !== null && authorityDigest !== this.#authorityDigest)
+				fail("consumer_identity_mismatch");
 			if (action === "open") {
 				const identity = envelope.data as Record<string, unknown>;
 				if (
@@ -265,14 +340,25 @@ export class NativeConsumerSession {
 					fail("consumer_binding_mismatch");
 				this.#wireSession = envelope.session;
 			}
-			return data;
-		} catch {
+			return { ...data, observedIdentity: normalized, authorityDigest };
+		} catch (error) {
 			this.#held = true;
+			if (
+				error instanceof FrontendError &&
+				["consumer_identity_missing", "consumer_identity_mismatch"].includes(error.code)
+			)
+				throw error;
 			return fail("consumer_readback_required");
 		}
 	}
 	async acquire(): Promise<NativeTaskBinding> {
 		if (this.#binding) return fail("consumer_acquisition_held");
+		// No reviewed generation/auth export is installed: refuse BEFORE any Open.
+		if (!this.#decodeAuthority)
+			throw new FrontendError(
+				"consumer_identity_schema_required",
+				"The reviewed native generation/auth identity schema is unavailable; no Open was sent.",
+			);
 		if (this.#held || this.#admission.expiresAtMs <= this.#now())
 			return fail("consumer_readback_required");
 		const a = this.#admission;
@@ -297,13 +383,16 @@ export class NativeConsumerSession {
 					"open",
 				);
 				this.#expires = data.expiresAtMs;
+				this.#controlRef = data.controlRef;
+				this.#acquisitionId = data.acquisitionId;
+				this.#authorityDigest = data.authorityDigest;
 				this.#binding = {
-					authorityRef: data.controlRef,
+					authorityRef: data.authorityDigest,
 					taskId: data.taskId,
-					profileId: a.profileId,
-					browserId: a.browserId,
-					tabId: a.tabId,
-					targetId: a.targetId,
+					profileId: data.observedIdentity.profileId,
+					browserId: data.observedIdentity.browserId,
+					tabId: data.observedIdentity.tabId,
+					targetId: data.observedIdentity.targetId,
 				};
 				return {
 					value: this.binding,
@@ -373,6 +462,9 @@ export class NativeConsumerSession {
 	async originalReadback(key: string): Promise<Record<string, unknown>> {
 		if (!/^[a-zA-Z0-9_-]{8,128}$/.test(key)) return fail("consumer_operation_key_invalid");
 		const b = this.binding;
+		const controlRef = this.#controlRef;
+		const acquisitionId = this.#acquisitionId;
+		if (!controlRef || !acquisitionId) return fail("consumer_acquisition_required");
 		this.#held = true;
 		return this.#ledger.run(
 			`metadata_${digest(key)}`,
@@ -388,7 +480,8 @@ export class NativeConsumerSession {
 						.object({
 							contractVersion: z.literal(version),
 							taskId: z.literal(b.taskId),
-							controlRef: z.literal(b.authorityRef),
+							controlRef: z.literal(controlRef),
+							acquisitionId: z.literal(acquisitionId),
 							consumerGrantId: z.literal(this.#admission.consumerGrantId),
 							requestedOperationKey: z.literal(key),
 							matchingOperation: z.literal(true),
@@ -399,6 +492,12 @@ export class NativeConsumerSession {
 							}),
 						})
 						.parse(envelope.data);
+					if (
+						envelope.data &&
+						typeof envelope.data === "object" &&
+						("targetObservation" in envelope.data || "result" in envelope.data)
+					)
+						fail("consumer_readback_required");
 					const metadata = {
 						taskId: d.taskId,
 						controlRef: d.controlRef,
@@ -406,6 +505,7 @@ export class NativeConsumerSession {
 						state: d.state,
 						operationState: d.operation.state,
 						readbackOnly: true,
+						pageObserved: false,
 					};
 					return { value: metadata, metadata };
 				} catch {

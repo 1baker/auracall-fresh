@@ -2,7 +2,21 @@ import { mkdtemp, rm, readFile, readdir, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { NativeConsumerSession } from "../../src/browser/frontends/nativeConsumer.js";
+import {
+	NativeConsumerSession,
+	type NativeMcpClient,
+	type NativeConsumerAdmission,
+} from "../../src/browser/frontends/nativeConsumer.js";
+vi.mock("../../src/browser/frontends/nativeIdentity.js", async () => {
+	const { syntheticNativeAuthority } = await import("../fixtures/frontend/nativeIdentity.js");
+	return { getReviewedNativeAuthorityDecoder: () => syntheticNativeAuthority };
+});
+const makeSession = (
+	client: NativeMcpClient,
+	input: NativeConsumerAdmission,
+	path: string,
+	now = Date.now,
+) => new NativeConsumerSession(client, input, path, now);
 
 const dirs: string[] = [];
 afterEach(async () => {
@@ -19,6 +33,14 @@ const admission = {
 	expiresAtMs: 2000000000000,
 };
 const data = (action = "open", key = "acquisition-key") => ({
+	targetObservation: {
+		operationId: `synthetic-operation-${key}`,
+		targetId: "synthetic-target",
+		targetType: "page",
+		origin: "https://chatgpt.com",
+		stage: "after_action",
+		observedAtMs: 1000,
+	},
 	contractVersion: "agent-browser.retained-consumer.v1",
 	taskId: "synthetic-consumer-task",
 	controlRef: "synthetic-control",
@@ -61,17 +83,12 @@ async function directory() {
 	return p;
 }
 
-describe("reviewed retained consumer wire", () => {
+describe("native transport core with synthetic authority evidence", () => {
 	it("acquires once in consumer mode and retains the exact task/control on the same client", async () => {
 		const callTool = vi.fn(async ({ name, arguments: args }) =>
 			envelope(name, data(name === "browser_open" ? "open" : args.action, args.operationKey)),
 		);
-		const session = new NativeConsumerSession(
-			{ callTool },
-			admission,
-			await directory(),
-			() => 2000,
-		);
+		const session = makeSession({ callTool }, admission, await directory(), () => 2000);
 		await session.acquire();
 		expect(await session.read("url", {}, "synthetic-url-key")).toEqual({
 			url: "https://chatgpt.com/c/synthetic",
@@ -129,7 +146,7 @@ describe("reviewed retained consumer wire", () => {
 			return envelope(name, d);
 		});
 		const dir = await directory();
-		const session = new NativeConsumerSession({ callTool }, admission, dir, () => 2000);
+		const session = makeSession({ callTool }, admission, dir, () => 2000);
 		await session.acquire();
 		await expect(session.read("url", {}, "original-url-key")).rejects.toMatchObject({
 			code: "consumer_readback_required",
@@ -147,7 +164,7 @@ describe("reviewed retained consumer wire", () => {
 			envelope(name, data(name === "browser_open" ? "open" : args.action, args.operationKey)),
 		);
 		const dir = await directory();
-		const session = new NativeConsumerSession({ callTool }, admission, dir, () => 2000);
+		const session = makeSession({ callTool }, admission, dir, () => 2000);
 		await session.acquire();
 		await expect(session.read("evaluate" as "url", {}, "script-key")).rejects.toMatchObject({
 			code: "consumer_arguments_invalid",
@@ -159,7 +176,7 @@ describe("reviewed retained consumer wire", () => {
 		await expect(session.read("url", {}, "native-read-0")).rejects.toMatchObject({
 			code: "consumer_operation_held",
 		});
-		const replacement = new NativeConsumerSession({ callTool }, admission, dir, () => 2000);
+		const replacement = makeSession({ callTool }, admission, dir, () => 2000);
 		await expect(replacement.acquire()).rejects.toMatchObject({
 			code: "consumer_acquisition_held",
 		});
@@ -170,7 +187,7 @@ describe("reviewed retained consumer wire", () => {
 			envelope(name, data(name === "browser_open" ? "open" : args.action, args.operationKey)),
 		);
 		const dir = await directory();
-		const session = new NativeConsumerSession({ callTool }, admission, dir, () => 2000);
+		const session = makeSession({ callTool }, admission, dir, () => 2000);
 		await session.acquire();
 		const complete = (await readdir(dir)).find((n) => n.startsWith("completed-"));
 		expect(complete).toBeDefined();
@@ -184,20 +201,21 @@ describe("reviewed retained consumer wire", () => {
 	it("reads only the original operation metadata after uncertainty, never promoting its ACK to a reply or unholding input", async () => {
 		const callTool = vi.fn(async ({ name, arguments: args }) => {
 			if (name === "browser_open") return envelope(name, data());
-			if (name === "browser_continue")
+			if (name === "browser_continue") {
+				const {
+					targetObservation: _observation,
+					result: _result,
+					...metadata
+				} = data("url", args.operationKey);
 				return envelope(name, {
-					...data("url", args.operationKey),
+					...metadata,
 					requestedOperationKey: args.operationKey,
 					matchingOperation: true,
 				});
+			}
 			throw new Error(admission.profileCapability);
 		});
-		const session = new NativeConsumerSession(
-			{ callTool },
-			admission,
-			await directory(),
-			() => 2000,
-		);
+		const session = makeSession({ callTool }, admission, await directory(), () => 2000);
 		await session.acquire();
 		await expect(session.read("url", {}, "original-unknown")).rejects.toMatchObject({
 			code: "consumer_readback_required",
