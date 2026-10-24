@@ -1,3 +1,21 @@
+## 2026-10-24 — Match the OAuth provider's signed permission claims
+
+The human's OAuth setup request continues P445. Public issuer discovery is not
+exposed at either standard auth-host path; ingress/provider setup remains with
+Chief. Source qualification found Authelia's signed `scp` list was denied by our
+string-only scope reader. The actual HTTP relay regression failed403, then passed
+after accepting the signed list. Malformed/conflicting claim regressions were
+also observed RED. The receiver now validates either bounded representation,
+requires matching sets when both are supplied, and retains all JOSE/owner checks.
+All46 affected HTTP checks pass on a source/lock/version-matched Linux copy,
+including the normal compiled-process fixture. Production TS compilation,
+full typecheck and scoped lint pass. The mounted copy's existing startup timeout
+and the first Linux bundle omission remain recorded; no test timeout was changed.
+Native Standards and bounded source Spec pass after the malformed-character
+finding was fixed and verified. No issuer, client, service, ingress, browser or
+provider operation is activated by this source work. Native P266 and
+stock custody, shared counters/deadlines and the3.6M/source3568600 allowance remain.
+
 ## 2026-10-23 — Adopt sealed P266r2 public identity
 
 Verified Browser result109ff0c5 and43 frozen source hashes for contract70fbb8e9.

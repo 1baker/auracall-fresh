@@ -9,7 +9,10 @@ import { createFrontendHttpServer } from "../src/mcp/http/server.js";
 import { RelayStore } from "../src/mcp/relay/store.js";
 
 describe("relay over the existing OAuth HTTP MCP transport", () => {
-	it("discovers relay-only tools and returns an exact full linked reply through actual HTTP", async () => {
+	it.each([
+		"scope",
+		"scp",
+	] as const)("discovers relay-only tools and returns an exact full linked reply through actual HTTP (%s claim)", async (scopeClaim) => {
 		const root = await mkdtemp(join(tmpdir(), "auracall-relay-http-"));
 		const issuer = "https://issuer.example.test",
 			resource = "https://relay.example.test/mcp";
@@ -32,7 +35,7 @@ describe("relay over the existing OAuth HTTP MCP transport", () => {
 		const address = server.address();
 		if (!address || typeof address === "string") throw Error("No loopback listener");
 		const makeToken = (scope: string) =>
-			new SignJWT({ scope })
+			new SignJWT(scopeClaim === "scope" ? { scope } : { scp: scope.split(" ") })
 				.setProtectedHeader({ alg: "RS256", kid: "fixture", typ: "at+jwt" })
 				.setIssuer(issuer)
 				.setAudience(resource)

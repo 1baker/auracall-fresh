@@ -4,6 +4,25 @@ State: OPEN — reviewed source delivered; real setup/acceptance pending.
 Owner: AuraCall, thread01a16096-da12-7753-8d44-e299c2172cef.
 Parent: P444 / private personal work-tracker81.
 
+### 2026-10-24 OAuth setup continuation
+
+The human requests completing OAuth/routing and capturing the verified process in
+the existing reusable skill. Chief retains infrastructure/identity ownership.
+Own receiver scope: support Authelia's signed `scp` permission list as well as the
+existing string claim, with matching dual claims and unchanged trust validation.
+Observe actual HTTP RED/GREEN and affected security checks; no parent-suite rerun.
+The supplied client-specific callback is held in the internal operator packet,
+not copied into this source plan. Actual issuer/client binding, edge routing and
+real ChatGPT consent/tool acceptance remain prerequisites to live readiness.
+
+Source qualification:46 affected checks across four OAuth HTTP files pass, with
+production TS compilation, full typecheck and scoped lint. Native Standards and
+bounded source Spec pass after the malformed-character finding and regression.
+The Windows-mounted startup timeout and initial validation-copy bundle omission
+are preserved in prep/auracall/validation/evidence/oauth-provider-scope-20261024.
+No timeout, dependency version or install changed. Actual issuer and ingress
+configuration still belong to Chief; this result is not a live URL or login.
+
 ## Authority and outcome
 
 Direct human approval: "sounds like a plan. implement that and also i have

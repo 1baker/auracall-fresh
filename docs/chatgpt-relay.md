@@ -32,6 +32,12 @@ server and registered owner. Access tokens require `at+jwt`, RS256/ES256, expiry
 and the exact resource audience. The authorization server owns consent, PKCE,
 client registration, token issuance and refresh; AuraCall does not create these.
 
+Permissions may use a space-separated `scope` string or an `scp` string list,
+as used by Authelia JWT access tokens. When both claims are present they must
+grant the same set. Malformed, oversized or conflicting claims refuse before
+MCP tools are constructed. Signature, issuer, exact audience and owner checks
+apply before either claim is read.
+
 Grant only the needed `relay:read`, `relay:dispatch` and `relay:reply` scopes.
 The server binds loopback; approved HTTPS ingress must preserve the canonical
 Host. It rejects foreign Host/Origin, URL/body tokens, wrong audience/subject,
@@ -43,6 +49,23 @@ The relay store is an explicit private POSIX directory (Linux/WSL). Config and
 request files must be regular owner-private files; store files/directories must
 also belong to the executing user. Do not place live private state in a shared
 checkout or modify another owner's configuration, service or registration.
+
+### Verify the public OAuth route
+
+Qualify the real issuer discovery and JWKS before preparing client fields. A
+working browser login page does not establish an OAuth issuer. For a registered
+public client, use the exact callback displayed by ChatGPT, PKCE `S256` and token
+endpoint authentication `none`; the client identifier must actually be registered.
+Authelia must issue signed JWT access tokens for the exact MCP resource audience,
+including the allowed relay scopes. Qualify the deployed version and token shape.
+
+The public edge must route both protected-resource metadata paths to the relay
+without requiring a prior browser login. Their GET/HEAD responses must be 200 JSON.
+An unauthenticated POST to `/mcp` must return 401 with a Bearer `resource_metadata`
+challenge. GET `/mcp` returns 405 in this server; it is not the authentication test.
+Preserve dashboard SSO and the relay's Bearer checks. Validate the actual upstream
+and durable port source rather than copying the example port into live routing.
+Discovery and source tests are separate from real client consent and tool use.
 
 ## Stage and read one request
 

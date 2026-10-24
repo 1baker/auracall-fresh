@@ -27,6 +27,32 @@ export class HttpRefusal extends Error {
 	}
 }
 
+function grantedScopes(payload: JWTPayload): Set<string> {
+	const scopeToken = /^[\x21\x23-\x5B\x5D-\x7E]+$/;
+	let scopes: Set<string> | undefined;
+	if (payload.scope !== undefined) {
+		if (typeof payload.scope !== "string" || payload.scope.length > 4096)
+			throw new HttpRefusal(401, "invalid_token");
+		const listed = payload.scope.split(" ").filter(Boolean);
+		if (listed.some((item) => !scopeToken.test(item))) throw new HttpRefusal(401, "invalid_token");
+		scopes = new Set(listed);
+	}
+	if (payload.scp !== undefined) {
+		if (
+			!Array.isArray(payload.scp) ||
+			payload.scp.length > 128 ||
+			payload.scp.some((item) => typeof item !== "string" || !scopeToken.test(item)) ||
+			payload.scp.join(" ").length > 4096
+		)
+			throw new HttpRefusal(401, "invalid_token");
+		const listed = new Set<string>(payload.scp);
+		if (scopes && (scopes.size !== listed.size || [...scopes].some((item) => !listed.has(item))))
+			throw new HttpRefusal(401, "invalid_token");
+		scopes ??= listed;
+	}
+	return scopes ?? new Set();
+}
+
 export function createFrontendTokenVerifier(
 	config: ValidatedFrontendHttpConfig,
 	injectedResolver?: JWTVerifyGetKey,
@@ -71,9 +97,7 @@ export function createFrontendTokenVerifier(
 			throw new HttpRefusal(401, "invalid_token");
 		}
 		if (payload.sub !== config.subject) throw new HttpRefusal(403, "access_denied");
-		const scope = typeof payload.scope === "string" ? payload.scope : "";
-		if (scope.length > 4096) throw new HttpRefusal(401, "invalid_token");
-		const scopes = new Set<string>(scope.split(/\s+/).filter(Boolean));
+		const scopes = grantedScopes(payload);
 		if (!acceptedScopes.some((item) => scopes.has(item)))
 			throw new HttpRefusal(403, "insufficient_scope", acceptedScopes[0]);
 		// Only grants leave this module. The bearer token and claims never enter an adapter.

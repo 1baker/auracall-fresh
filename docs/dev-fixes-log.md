@@ -1,3 +1,13 @@
+## 2026-10-24 — Qualify OAuth token shape and public discovery separately
+
+An issuer's signed permissions can use a `scope` string or an `scp` list. Validate
+their type/bounds after signature, issuer, resource and owner checks, and reject
+contradictory representations rather than unioning them. Actual HTTP regressions
+must cover allowed and denied tools with the provider's representation.
+Keep the public discovery path outside interactive browser-login middleware;
+test metadata with GET/HEAD and the Bearer challenge with unauthenticated POST.
+GET MCP405 and a working dashboard do not establish OAuth readiness.
+
 ## 2026-10-23 — Match sealed public identity instead of inventing an auth schema
 
 P266r2 performs generation, registered capability and custody checks in Browser.

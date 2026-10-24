@@ -315,6 +315,57 @@ const call = async (client: Client, name: string, args: Record<string, unknown>)
 	client.callTool({ name, arguments: { routeId: "public", ...args } });
 
 describe("real frontend service behind OAuth HTTP", () => {
+	it.each([
+		"\u0000",
+		'"',
+		"\\",
+		"é",
+	])("rejects invalid OAuth scope-token characters (%j)", async (invalid) => {
+		const f = await fixture();
+		for (const claims of [
+			{ scope: undefined, scp: ["frontend:read", invalid] },
+			{ scope: `frontend:read ${invalid}` },
+		]) {
+			const response = await f.post(await f.token(claims));
+			expect(response.status).toBe(401);
+			expect(await response.json()).toEqual({ error: "invalid_token" });
+			expect(f.serverConstructions).toBe(0);
+			expect(f.stats()).toEqual([
+				{ clicks: 0, probes: 0, ui: 0 },
+				{ clicks: 0, probes: 0, ui: 0 },
+			]);
+		}
+	});
+
+	it("accepts equivalent scope and scp grants regardless of order", async () => {
+		const f = await fixture();
+		const client = await f.connect(
+			await f.token({
+				scope: "frontend:read frontend:send",
+				scp: ["frontend:send", "frontend:read"],
+			}),
+		);
+		const result = await call(client, "frontend_status", { requestId: "unknown-scope-pair" });
+		expect(result.structuredContent).toMatchObject({ code: "request_missing" });
+	});
+
+	it.each<[string, JWTPayload]>([
+		["conflicting permissions", { scope: "frontend:read", scp: ["frontend:send"] }],
+		["non-list scp", { scope: undefined, scp: "frontend:read" }],
+		["non-string scope", { scope: ["frontend:read"], scp: ["frontend:read"] }],
+		["combined scp item", { scope: undefined, scp: ["frontend:read frontend:send"] }],
+	])("rejects malformed or ambiguous scope claims (%s)", async (_, claims) => {
+		const f = await fixture();
+		const response = await f.post(await f.token(claims));
+		expect(response.status).toBe(401);
+		expect(await response.json()).toEqual({ error: "invalid_token" });
+		expect(f.serverConstructions).toBe(0);
+		expect(f.stats()).toEqual([
+			{ clicks: 0, probes: 0, ui: 0 },
+			{ clicks: 0, probes: 0, ui: 0 },
+		]);
+	});
+
 	it("accepts the application/at+jwt access-token type", async () => {
 		const f = await fixture();
 		const client = await f.connect(await f.token({}, "RS256", "application/at+jwt"));
