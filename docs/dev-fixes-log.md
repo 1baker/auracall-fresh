@@ -1,3 +1,18 @@
+## 2026-10-24 — A relay connection needs a separate frontend sender
+
+OAuth discovery and model-visible MCP tools let a client fetch requests and save
+replies; they do not submit a prompt into a retained provider conversation. Keep
+that sender explicit. The foreground relay dispatcher reuses the existing
+frontend facade, validates observed URL/model/Pro before a route-bound claim,
+and calls Send only for that fresh claim. Later calls read the original status.
+Preserve complete answers and refuse changed or foreign claims even on cached
+readback. Before a linked claim, reconcile the entire preceding answer between
+frontend and relay storage; a shared request ID does not prove the same answer.
+A frontend continuity refusal is a held request with its safe code, not ordinary
+pending generation. A compiled CLI/real frontend/synthetic Chrome
+boundary proves the source wiring; actual runtime custody and live acceptance
+remain separate from those fixtures and from OAuth connectivity.
+
 ## 2026-10-24 — Pin real identity exports without treating stored receipts as current
 
 When a reviewed producer adds an identity receipt, consume its exact typed wire

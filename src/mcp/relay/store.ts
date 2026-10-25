@@ -1,6 +1,6 @@
+import { createHash, randomUUID } from "node:crypto";
 import { constants } from "node:fs";
 import { link, lstat, mkdir, open, unlink } from "node:fs/promises";
-import { createHash, randomUUID } from "node:crypto";
 import { isAbsolute, join } from "node:path";
 import { z } from "zod";
 
@@ -29,6 +29,20 @@ const jobSchema = relayRequestSchema
 	})
 	.strict();
 const claimSchema = z.object({ claimId: z.string().uuid(), fingerprint: hash }).strict();
+const frontendBindingSchema = z
+	.object({
+		routeId: z.string().min(1).max(128),
+		expectedUrl: z.string().regex(/^https:\/\/chatgpt\.com\/c\/[A-Za-z0-9_-]+$/),
+		expectedModel: z.string().min(1).max(256),
+	})
+	.strict();
+export type RelayFrontendBinding = z.infer<typeof frontendBindingSchema>;
+const frontendClaimSchema = frontendBindingSchema
+	.extend({
+		claimId: z.string().uuid(),
+		fingerprint: hash,
+	})
+	.strict();
 const replySchema = z
 	.object({
 		claimId: z.string().uuid(),
@@ -219,6 +233,36 @@ export class RelayStore {
 			if (old) return { ...old, fresh: false };
 			const claim = { claimId: randomUUID(), fingerprint };
 			await this.publish(dir, "claim.json", claim);
+			return { ...claim, fresh: true };
+		});
+	}
+	/** Route comparison metadata, never browser authority. Partial writes refuse recovery. */
+	async frontendClaim(id: string, fingerprint: string, value: RelayFrontendBinding) {
+		const binding = frontendBindingSchema.safeParse(value);
+		if (!binding.success) throw new RelayError("relay_sender_binding_invalid");
+		return this.locked(id, async (dir) => {
+			const job = await this.job(id);
+			if (job.fingerprint !== fingerprint) throw new RelayError("request_conflict");
+			await this.status(id);
+			const old = await this.read(dir, "claim.json", claimSchema);
+			const sender = await this.read(dir, "sender.json", frontendClaimSchema);
+			if (sender) {
+				if (
+					!old ||
+					sender.claimId !== old.claimId ||
+					sender.fingerprint !== fingerprint ||
+					Object.entries(binding.data).some(
+						([key, val]) => sender[key as keyof RelayFrontendBinding] !== val,
+					)
+				)
+					throw new RelayError("relay_sender_binding_mismatch");
+				return { ...old, fresh: false };
+			}
+			if (old) throw new RelayError("relay_sender_claim_not_owned");
+			const claim = { claimId: randomUUID(), fingerprint };
+			// A crash before the binding write leaves a non-adoptable claim, never a new Send.
+			await this.publish(dir, "claim.json", claim);
+			await this.publish(dir, "sender.json", { ...binding.data, ...claim });
 			return { ...claim, fresh: true };
 		});
 	}

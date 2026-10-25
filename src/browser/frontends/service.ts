@@ -6,7 +6,7 @@ import {
 } from "../actions/chatgptPowerSlider.js";
 import { chatgptInspectionExpression } from "./chatgpt.js";
 import { configureClaudeEffort, inspectClaudeControls, isClaudeFrontendUrl } from "./claude.js";
-import { GROK_HEAVY_MODEL, configureGrokHeavy, inspectGrokHeavy } from "./grokControls.js";
+import { configureGrokHeavy, GROK_HEAVY_MODEL, inspectGrokHeavy } from "./grokControls.js";
 import { FrontendMessages } from "./messages.js";
 import { FrontendRequestStore, frontendTargetKey } from "./requestStore.js";
 import { frontendRequest, frontendTargetId, validateFrontendBinding } from "./route.js";
@@ -368,6 +368,7 @@ export class FrontendService {
 			routeId: route.id,
 			provider: route.provider,
 			model: observation.model,
+			url: observation.url,
 			effort: interpretChatgptPowerSlider(observation.value, observation.label),
 			label: observation.label,
 			availableValues:

@@ -1,3 +1,16 @@
+## Foreground relay sender (Plan0447)
+
+Run the focused relay dispatch, dispatchProcess, CLI, store, panel and MCP relay
+checks. The new dispatchProcess component-integration case has a45s budget:
+compiled production CLI -> authenticated synthetic stock-Chrome HTTP boundary ->
+actual frontend/controller/DOM recipes -> two linked complete saved replies,
+then fresh-process cached readback with the bridge closed. Only the physical
+Chrome API/DOM and response generation are synthetic; no provider is contacted.
+The core seam checks claim-before-Send, route/Pro refusal, concurrent dispatch,
+old claims, uncertainty/status-only restart recovery and full reply persistence.
+Retain affected frontend inspect/config/message guards when changing observations.
+These tests are not real browser custody, private routing or Pro acceptance.
+
 ## Native retained consumer (Plan0446)
 
 Reviewed producer-v2 export01de61ce and identity.v1 extend the historical sealed

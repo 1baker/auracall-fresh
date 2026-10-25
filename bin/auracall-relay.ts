@@ -4,11 +4,17 @@ import { constants } from "node:fs";
 import { open } from "node:fs/promises";
 import { readFrontendHttpConfig } from "../src/mcp/http/config.js";
 import { RelayError, relayRequestSchema, RelayStore } from "../src/mcp/relay/store.js";
+import { FrontendError } from "../src/browser/frontends/types.js";
 
 try {
-	const [command, value, extra] = process.argv.slice(2);
-	if (extra || !["serve", "enqueue", "status"].includes(command ?? "") || (command === "serve" ? value !== undefined : !value))
-		throw new RelayError("usage: auracall-relay serve | enqueue PRIVATE_REQUEST_JSON | status REQUEST_ID");
+	const args = process.argv.slice(2);
+	const [command, value, routeId] = args;
+	if (
+		!["serve", "enqueue", "status", "dispatch"].includes(command ?? "") ||
+		args.length !== (command === "serve" ? 1 : command === "dispatch" ? 3 : 2) ||
+		(command !== "serve" && !value) || (command === "dispatch" && !routeId)
+	)
+		throw new RelayError("usage: auracall-relay serve | enqueue PRIVATE_REQUEST_JSON | status REQUEST_ID | dispatch REQUEST_ID ROUTE_ID");
 	const path = process.env.AURACALL_RELAY_OAUTH_CONFIG;
 	if (!path) throw new RelayError("set_AURACALL_RELAY_OAUTH_CONFIG");
 	const env = { ...process.env, AURACALL_FRONTEND_OAUTH_CONFIG: path };
@@ -20,7 +26,17 @@ try {
 		process.stderr.write(`AuraCall relay listening on loopback port ${config.port}.\n`);
 	} else {
 		const store = new RelayStore(config.relayDirectory, config.subject);
-		if (command === "enqueue") {
+		if (command === "dispatch") {
+			const { createConfiguredFrontendService } = await import("../src/browser/frontends/config.js");
+			const { dispatchRelayRequest } = await import("../src/mcp/relay/dispatch.js");
+			const frontend = await createConfiguredFrontendService(process.env);
+			const route = frontend.routes.find((item) => item.id === routeId && item.provider === "chatgpt");
+			if (!route) throw new RelayError("relay_sender_route_missing");
+			process.stdout.write(`${JSON.stringify(await dispatchRelayRequest({
+				store, frontend, requestId: value, routeId: route.id,
+				expectedUrl: route.expectedUrl, expectedModel: route.expectedModel,
+			}))}\n`);
+		} else if (command === "enqueue") {
 			const fd = await open(value, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
 			let data: unknown;
 			try {
@@ -36,6 +52,6 @@ try {
 		} else process.stdout.write(`${JSON.stringify(await store.status(value))}\n`);
 	}
 } catch (error) {
-	process.stderr.write(`${error instanceof RelayError ? error.code : "relay_failed_check_private_configuration_and_original_request"}\n`);
+	process.stderr.write(`${error instanceof RelayError || error instanceof FrontendError ? error.code : "relay_failed_check_private_configuration_and_original_request"}\n`);
 	process.exitCode = 1;
 }

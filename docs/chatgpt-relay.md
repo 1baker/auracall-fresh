@@ -101,6 +101,56 @@ In plain English: read the original request and complete saved answer locally,
 including after a server/client restart. This never sends or retries a message.
 The output may contain private task material; keep it in the authorized workflow.
 
+## Automatic foreground frontend sender (P447)
+
+The source also supplies an explicit foreground sender. It reads the original
+queued request and uses an already configured retained ChatGPT frontend to type
+and Send once, then saves the entire completed answer back to this relay store.
+It does not require a second human message or the panel's **Ask ChatGPT** bridge.
+Its operator must have both the existing private relay store and a qualified
+frontend transport available in the same execution context. The deployed OAuth
+endpoint alone does not provide that frontend binding.
+
+```sh
+export AURACALL_RELAY_OAUTH_CONFIG=/absolute/private/relay-oauth.json
+export AURACALL_FRONTEND_CONFIG=/absolute/private/qualified-frontend.json
+node dist/bin/auracall-relay.js dispatch YOUR_REQUEST_ID YOUR_ROUTE_ID
+```
+In plain English: send one already-approved queued request through the explicitly
+configured signed-in browser route and save its complete answer. This may submit
+one real model message and permanently records its claim before input. The
+existing Send, read, expiry and custody limits must qualify before this command;
+the command does not grant or renew them.
+
+The sender checks the currently observed conversation URL, model and Pro effort
+before its first claim. It preserves the configured model rather than changing
+it. Native intelligence reported as unverified refuses. A durable `sender.json`
+binds this claim to its route/conversation/model comparisons; it is not a browser
+grant. A preexisting panel/manual claim or an incomplete sender write is never
+adopted as a new Send. Changed routes refuse even on cached automatic readback;
+ordinary `status` still reads saved replies independently of frontend access.
+
+`dispatch` performs bounded foreground status checks. An `awaiting_reply` result
+means the original request is still pending. Repeating the same command and
+binding only reads the original frontend status, including after process restart;
+it never repeats Send. Uncertain input and frontend refusals preserve the claim.
+A complete late original answer may still be saved. A follow-up must be enqueued
+with the original `previousRequestId` only after the real preceding reply exists;
+the existing frontend verifies the same conversation and original message order.
+Before claiming a follow-up, the dispatcher also compares the frontend's completed
+preceding answer with the entire saved preceding relay answer. Different answers
+or an unavailable predecessor refuse before the child claim or Send.
+The frontend's8192-character prompt and full-answer limits remain unchanged;
+the sender neither splits nor truncates content or relaxes prompt correlation.
+
+CLI configuration uses the existing service/stock-Chrome frontend factory. An
+already-admitted native SDK caller may pass its current `FrontendTools` facade to
+`dispatchRelayRequest`; JSON startup does not acquire or invent native authority.
+The HTTP relay mode remains relay-only and the public six-tool catalog is
+unchanged. Existing OAuth/service releases remain pinned until an independently
+reviewed runtime admission selects the new sender. Source checks do not prove
+actual private frontend readiness, provider/model identity or live replies.
+
 ## Completion, uncertainty and limits
 
 A successful panel message call is only message submission, not a model reply.

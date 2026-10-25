@@ -35,6 +35,11 @@ If Pro cannot be verified, AuraCall fails before prompt submission.
 
 For an OAuth-connected ChatGPT request/reply panel, see [the relay setup guide](docs/chatgpt-relay.md). It reuses the HTTP MCP resource server, preserves complete replies and request identity, and does not launch a browser. Source/fixture readiness is separate from actual OAuth and Pro acceptance.
 
+The same guide covers `auracall-relay dispatch REQUEST_ID ROUTE_ID`, a foreground
+sender for an explicitly configured retained ChatGPT frontend. It claims before
+Send and stores the complete answer; repeat calls recover status without
+resending. The OAuth endpoint and a qualified frontend binding are separate.
+
 ## Quick start
 
 Primary local install: `pnpm run install:user-runtime` builds the current

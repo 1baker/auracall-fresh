@@ -1,3 +1,35 @@
+## 2026-10-24 — Connect queued relay requests to the retained frontend sender
+
+P447 implements the human-directed automatic foreground sender on the existing
+feature branch. The additional500000 is carried once into the same5.1M objective
+and source5068600 ceiling, preserving all spending, custody and live bounds.
+The new dispatch command consumes the original relay request, qualifies the
+observed conversation/model/Pro, records a route-bound exclusive claim before
+input, and saves the entire correlated frontend answer. Repeated invocations
+only reconcile status; panel/manual claims and changed bindings are refused.
+
+Observed REDs cover the missing command, changed route, wrong observed target,
+cached route mismatch and hidden continuity refusal. The focused24-case relay
+set passes, including two linked synthetic turns through the compiled production
+CLI, real frontend/controller/DOM recipes and fresh-process readback after bridge
+closure. Initial process-fixture failures used the wrong transport and an outer-
+whitespace prompt that the existing UI recipe normalizes; their diagnostics are
+retained. Original task prompts are unchanged and no correlation guard weakened.
+Final181 affected checks across17 files, production compilation, full types,
+scoped lint and formatting pass on the byte-verified Linux copy with existing
+cached dependencies. Native Standards and bounded Source Spec pass. Live
+OAuth9516 is unchanged; current real FIRST is queued
+but unclaimed. Actual frontend binding/automatic two-reply acceptance remains
+unverified; no real Browser, Windows, provider, install or service effect occurs.
+
+Native Standards review passes. The independent source Spec review found one
+blocking cross-store continuity gap: a relay predecessor and frontend predecessor
+could share an ID but contain different complete answers. Its public-interface
+regression was RED; the sender now reconciles completed predecessor identity,
+conversation and entire answer before the child claim/Send. Closed-world review
+and all11 core checks close this finding without a new discovery cycle or change
+to the original live authority. Full goal Spec remains PARTIAL.
+
 ## 2026-10-24 — Consume the reviewed native identity.v1 receipt
 
 Chief's producer-v2 export01de61ce and source907d1fdb now seal the complete
