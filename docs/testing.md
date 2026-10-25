@@ -1,3 +1,15 @@
+## Pro-only preparation (existing Plan0448 continuation)
+
+Run relay.proPreparation with existing relay/store/CLI/dispatch and HTTP/MCP
+regressions. Public behavior must prove no model job/claim/Send, independent Pro
+readback, immutable owner/route/target/operation binding, held crash/refusal,
+concurrent target fencing and cached historical metadata without another page
+call. The compiled CLI fixture's prepare-only variant moves synthetic Chrome
+from Instant to Pro with fills/Sends0, then repeats with the bridge closed and
+requires cached receipt with no new transport calls. Retain the dispatch variant.
+These fixtures do not qualify a current real browser, page-read allowance or
+installed actuator; no live Pro call is part of this source continuation.
+
 ## Owner-bound relay discovery (Plan0449)
 
 Run relay.store and mcp.relay with relay CLI/panel/dispatch and HTTP auth/security

@@ -49,6 +49,16 @@ const frontendClaimSchema = frontendBindingSchema
 		fingerprint: hash,
 	})
 	.strict();
+const proBindingSchema = frontendBindingSchema.extend({ targetKey: hash, binding: hash }).strict();
+export type RelayProPreparationBinding = z.infer<typeof proBindingSchema>;
+const proIntentSchema = proBindingSchema
+	.extend({
+		operationId: relayId,
+		owner: z.string().min(1).max(256),
+	})
+	.strict();
+type ProPreparationIntent = z.infer<typeof proIntentSchema>;
+const proVerifiedSchema = proIntentSchema.extend({ verifiedAt: z.string().datetime() }).strict();
 const configurationSchema = frontendBindingSchema
 	.extend({ fingerprint: hash, effort: z.literal("pro") })
 	.strict();
@@ -286,6 +296,64 @@ export class RelayStore {
 			await this.publish(dir, "claim.json", claim);
 			return { ...claim, fresh: true };
 		});
+	}
+	/** A route-control journal, never a model request or a Send claim. */
+	async prepareProOnly(
+		operationId: string,
+		value: RelayProPreparationBinding,
+		prepare: () => Promise<void>,
+	) {
+		const expected = proIntentSchema.safeParse({ ...value, operationId, owner: this.owner });
+		if (!expected.success) throw new RelayError("relay_pro_preparation_invalid");
+		await this.privateDir(this.directory, true);
+		if (await this.read(this.dir(operationId), "request.json", jobSchema))
+			throw new RelayError("relay_pro_preparation_id_is_request");
+		const namespace = join(this.directory, ".frontend-preparations");
+		await this.privateDir(namespace, true);
+		const targets = new RelayStore(join(namespace, "targets"), this.owner);
+		const operations = new RelayStore(join(namespace, "operations"), this.owner);
+		return targets.locked(
+			value.targetKey,
+			(targetDir) =>
+				operations.locked(
+					operationId,
+					async (dir) => {
+						const intent = await operations.read(dir, "intent.json", proIntentSchema);
+						const target = await targets.read(targetDir, "intent.json", proIntentSchema);
+						const verified = await operations.read(dir, "verified.json", proVerifiedSchema);
+						const same = (row: ProPreparationIntent) =>
+							Object.entries(expected.data).every(
+								([k, v]) => row[k as keyof ProPreparationIntent] === v,
+							);
+						if ((intent && !same(intent)) || (target && !same(target)))
+							throw new RelayError("relay_pro_preparation_binding_mismatch");
+						if (verified && (!intent || !target || !same(verified)))
+							throw new RelayError("relay_storage_invalid");
+						const receipt = (at: string, cached: boolean) => ({
+							ok: true,
+							operationId,
+							routeId: value.routeId,
+							state: "verified" as const,
+							preparationOnly: true,
+							effort: "pro" as const,
+							verifiedAt: at,
+							currentPageObserved: !cached,
+							cached,
+							liveVerified: false as const,
+						});
+						if (verified) return receipt(verified.verifiedAt, true);
+						if (intent || target) throw new RelayError("relay_pro_preparation_held");
+						await targets.publish(targetDir, "intent.json", expected.data);
+						await operations.publish(dir, "intent.json", expected.data);
+						await prepare();
+						const verifiedAt = new Date().toISOString();
+						await operations.publish(dir, "verified.json", { ...expected.data, verifiedAt });
+						return receipt(verifiedAt, false);
+					},
+					true,
+				),
+			true,
+		);
 	}
 	/** Reserve before changing controls; an interrupted/failed attempt never retries itself. */
 	async configureFrontend(

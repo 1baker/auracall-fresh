@@ -9,12 +9,13 @@ import { FrontendError } from "../src/browser/frontends/types.js";
 try {
 	const args = process.argv.slice(2);
 	const [command, value, routeId] = args;
+	const routedCommand = command === "dispatch" || command === "prepare-pro";
 	if (
-		!["serve", "enqueue", "status", "dispatch"].includes(command ?? "") ||
-		args.length !== (command === "serve" ? 1 : command === "dispatch" ? 3 : 2) ||
-		(command !== "serve" && !value) || (command === "dispatch" && !routeId)
+		!["serve", "enqueue", "status", "dispatch", "prepare-pro"].includes(command ?? "") ||
+		args.length !== (command === "serve" ? 1 : routedCommand ? 3 : 2) ||
+		(command !== "serve" && !value) || (routedCommand && !routeId)
 	)
-		throw new RelayError("usage: auracall-relay serve | enqueue PRIVATE_REQUEST_JSON | status REQUEST_ID | dispatch REQUEST_ID ROUTE_ID");
+		throw new RelayError("usage: auracall-relay serve | enqueue PRIVATE_REQUEST_JSON | status REQUEST_ID | dispatch REQUEST_ID ROUTE_ID | prepare-pro OPERATION_ID ROUTE_ID");
 	const path = process.env.AURACALL_RELAY_OAUTH_CONFIG;
 	if (!path) throw new RelayError("set_AURACALL_RELAY_OAUTH_CONFIG");
 	const env = { ...process.env, AURACALL_FRONTEND_OAUTH_CONFIG: path };
@@ -26,13 +27,16 @@ try {
 		process.stderr.write(`AuraCall relay listening on loopback port ${config.port}.\n`);
 	} else {
 		const store = new RelayStore(config.relayDirectory, config.subject);
-		if (command === "dispatch") {
+		if (routedCommand) {
 			const { createConfiguredFrontendService } = await import("../src/browser/frontends/config.js");
 			const { dispatchRelayRequest } = await import("../src/mcp/relay/dispatch.js");
 			const frontend = await createConfiguredFrontendService(process.env);
 			const route = frontend.routes.find((item) => item.id === routeId && item.provider === "chatgpt");
 			if (!route) throw new RelayError("relay_sender_route_missing");
-			process.stdout.write(`${JSON.stringify(await dispatchRelayRequest({
+			if (command === "prepare-pro") {
+				const { prepareRelayProOnly } = await import("../src/mcp/relay/proPreparation.js");
+				process.stdout.write(`${JSON.stringify(await prepareRelayProOnly({ store, frontend, route, operationId: value }))}\n`);
+			} else process.stdout.write(`${JSON.stringify(await dispatchRelayRequest({
 				store, frontend, requestId: value, routeId: route.id,
 				expectedUrl: route.expectedUrl, expectedModel: route.expectedModel,
 			}))}\n`);

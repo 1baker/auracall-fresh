@@ -1,3 +1,12 @@
+## 2026-10-25 — Preparing a browser setting must not fall through to Send
+
+A dispatch command is unsafe as a substitute for Pro-only preparation because
+successful controls proceed toward a model claim/Send. Expose a separate control
+operation with a distinct private journal. Do not fabricate a model request or
+reuse terminal IDs. Pin the configured target across callbacks, require independent
+Pro readback, and fence failed operations across changed IDs/restarts. Cached
+success is historical evidence, never current-page verification or new capacity.
+
 ## 2026-10-25 — Discovery is metadata, not dispatch authority
 
 An OAuth relay requiring a known request ID leaves a manual copy/paste step.

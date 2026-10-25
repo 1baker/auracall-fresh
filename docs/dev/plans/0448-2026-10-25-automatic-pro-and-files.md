@@ -12,9 +12,10 @@ reply test passed; its controlled model Sends are2/2 consumed. This plan does no
 replay those requests, infer new test capacity or activate a runtime. Same5.1M
 objective/source5068600/native baseline143981; all spending/holds carried.
 
-Dispatch currently refuses an observed non-Pro effort even when the configured
-frontend already supports bounded Pro selection. The native consumer facade
-cannot yet observe/configure intelligence. Relay9516 on Bastion remains active
+Dispatch now supports bounded Pro selection with independent readback at d9f0fcec,
+but the dispatch command continues toward a model claim/Send. The existing-writer
+continuation below adds a distinct no-Send control operation. The native consumer
+facade still cannot observe/configure intelligence. Relay9516 on Bastion remains active
 and rejects attachments; its OAuth route is not a browser control grant.
 
 ## Scope and acceptance
@@ -63,3 +64,47 @@ The Browser file/control dependency remains routed through Chief under
 01a17409-ce36/01a17410-ca5c. No current owned effort/file handoff was returned during
 this checkpoint. File transport is not implemented by this source slice. Source
 validation performed no provider Send, browser attach, install or activation.
+
+## Existing-writer continuation: durable Pro only
+
+Chief's current_Pro_only_source_continuation follows the latest direct human
+priority. Expose `prepare-pro OPERATION_ID ROUTE_ID` on the existing relay CLI
+and a callable prepare-only module using the already configured frontend. It
+must return before frontendClaim/Send. No new public relay tool/scope is added.
+
+Use a distinct private route-control namespace: no fake model request, no reuse
+of terminal FIRST/SECOND, no task/reply/claim mutation. Journal the operation,
+owner and exact route/target binding before controls; require successful genuine
+configuration and independent same-target/model/Pro inspection. Cache successful
+receipts as historical metadata, with no new observation; interrupted or refused
+preparation stays held across restart, changed IDs and changed bindings. One
+owned target/session receives one preparation transaction until explicit operator
+reconciliation; no automatic clear or stale-lock recovery.
+
+The CLI remains POSIX and requires an explicit qualified frontend in the same
+execution context. SDK callers may pass an already-authorized facade; no native
+admission/transport acquisition, forged identity or Windows connection is added.
+
+TDD covers prepare with no model request/claim/Send, immutable binding and
+crash/refusal holds, target/operation concurrency, changed-ID bypass prevention,
+terminal request-ID refusal, independent Pro readback and process recovery.
+A compiled CLI synthetic Chrome case must move to Pro and leave message count0.
+
+The current +60-read question is pending, not granted. No live Pro/page/control
+operation occurs; old18/20 reads,0/6 controls, exhausted2Sends/PD, setup STOPs and
+all other custody/activation limits remain. Actual launcher provenance was
+returned from native records only; the cause of foreground drift is unproven.
+
+
+### Pro-only source verification
+
+92 affected checks across11 files pass, including both original dispatch and
+new prepare-only compiled CLI variants. The latter moves synthetic Chrome to
+Pro with zero fills/Sends and performs cached recovery after bridge shutdown.
+Six public preparation checks cover immutable binding, target/operation/owner
+fencing, terminal request refusal, independent readback and uncertain recovery.
+Final narrow8 checks, production compile, full types and scoped style pass after
+routine type/style fixes; initial diagnostics and both RED observations retained.
+Native Standards and bounded Source Spec PASS on10 owned files. Actual browser
+Pro/full goal remain PARTIAL; no read allowance, runtime activation or live call
+is implied. The earlier P449 package remains a separate immutable checkpoint.

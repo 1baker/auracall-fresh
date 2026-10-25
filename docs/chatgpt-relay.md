@@ -194,6 +194,40 @@ it does not expose public browser-control tools. Existing OAuth/service releases
 reviewed runtime admission selects the new sender. Source checks do not prove
 actual private frontend readiness, provider/model identity or live replies.
 
+## Durable Pro preparation without a model request
+
+`prepare-pro OPERATION_ID ROUTE_ID` uses the existing explicit frontend and owner
+config, but returns before any model claim or Send. `OPERATION_ID` names a real
+route-control operation, not a queued model request. It refuses existing model
+request IDs, including completed FIRST/SECOND; do not stage a fake request to
+use it. The exported `prepareRelayProOnly` accepts only inspect/configure methods.
+
+```sh
+node dist/bin/auracall-relay.js prepare-pro YOUR_CONTROL_OPERATION YOUR_ROUTE_ID
+```
+In plain English: select and independently verify Pro on one already-authorized
+browser route without sending a chat message. This changes a visible browser
+setting and writes a private control journal; it still requires the current
+browser binding, sufficient page-read allowance and remaining control authority.
+It does not grant them or bypass an existing setup refusal.
+
+The owner-bound `.frontend-preparations` namespace stores operation and target
+fences before controls. Interrupted/refused attempts and changed IDs or bindings
+cannot replay. Successful repeats return a historical receipt with
+`cached:true,currentPageObserved:false`; this does not prove current Pro or grant
+further input. No automatic cleanup/stale-lock recovery is supplied. Operator
+reconciliation is required before another transaction for that owned target.
+The CLI/store are POSIX; an already-authorized SDK facade may be supplied to the
+callable module. No Windows/native connection or broker grant is manufactured.
+
+Configuration must return genuine verified Pro, followed by independent
+inspection of the same pinned route/target/model. This includes all actual
+underlying page evaluations. The documented18/20 read charge cannot cover even
+one3-read stock inspection; the proposed additional60 remains pending until the
+human explicitly grants it. Source fixtures do not authorize a live call. The
+original2Send allowance remains exhausted, and `dispatch` must not be used for
+Pro-only work because it proceeds toward a model claim/Send.
+
 ## Completion, uncertainty and limits
 
 A successful panel message call is only message submission, not a model reply.

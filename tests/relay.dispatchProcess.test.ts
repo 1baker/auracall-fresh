@@ -15,7 +15,10 @@ const homeEnv = "AURACALL_HOME_DIR",
 	relayEnv = "AURACALL_RELAY_OAUTH_CONFIG",
 	frontendEnv = "AURACALL_FRONTEND_CONFIG";
 
-it("selects Pro then automatically sends two linked queued requests through the compiled CLI and real frontend, with cached recovery", async () => {
+it.each([
+	"dispatch",
+	"prepare-only",
+] as const)("compiled CLI %s uses real frontend Pro controls and durable recovery", async (mode) => {
 	const repo = dirname(dirname(fileURLToPath(import.meta.url)));
 	const home = await mkdtemp(join(tmpdir(), "auracall-dispatch-process-"));
 	const cache = join(repo, "node_modules/.cache");
@@ -147,6 +150,32 @@ it("selects Pro then automatically sends two linked queued requests through the 
 				throw new Error(`${String(error)}; synthetic transport failures: ${failures.join(", ")}`);
 			}
 		};
+		if (mode === "prepare-only") {
+			const prepared = await run("prepare-pro", "process_control_only", "fixture");
+			expect(prepared).toMatchObject({
+				state: "verified",
+				preparationOnly: true,
+				currentPageObserved: true,
+				cached: false,
+			});
+			expect(slider?.getAttribute("aria-valuetext")).toBe("Pro");
+			expect(browser.counts()).toMatchObject({ fills: 0, sends: 0 });
+			const before = requests;
+			await new Promise<void>((resolve) => {
+				http.closeAllConnections();
+				http.close(() => resolve());
+			});
+			await controller.close();
+			expect(await run("prepare-pro", "process_control_only", "fixture")).toMatchObject({
+				state: "verified",
+				preparationOnly: true,
+				currentPageObserved: false,
+				cached: true,
+			});
+			expect(requests).toBe(before);
+			expect(browser.counts()).toMatchObject({ fills: 0, sends: 0 });
+			return;
+		}
 		const first = "process_sender_first",
 			second = "process_sender_second";
 		const firstInput = join(home, "first.json"),

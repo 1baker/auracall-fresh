@@ -1,3 +1,15 @@
+## 2026-10-25 — Durable Pro-only control operation, no model dispatch
+
+Existing P448 continuation separates a route-control operation from queued model
+requests. The prepare-pro command and exported helper journal exact owner,
+operation and route/target comparisons, configure and independently inspect Pro,
+then return before any model claim or Send. Refusal/uncertainty stays fenced;
+successful recovery is explicitly historical without a fresh observation.
+P449 db5/0601 remains preserved. Real setup's two foreground refusals are already
+consumed; no retry/new Ready question. Launcher source has no window-hiding flags,
+but the cause of focus change remains unestablished. The single +60 page-read
+decision is pending; no current runtime/Pro/page/provider effect is performed.
+
 ## 2026-10-25 — Find approved relay work without a pasted ID
 
 P449 adds metadata-only relay_pending on existing relay:read. A client can locate
