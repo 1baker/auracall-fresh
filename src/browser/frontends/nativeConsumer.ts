@@ -1,8 +1,7 @@
 import { createHash } from "node:crypto";
 import { constants } from "node:fs";
 import { lstat, mkdir, open, readdir, unlink } from "node:fs/promises";
-import { join } from "node:path";
-import { isAbsolute } from "node:path";
+import { isAbsolute, join } from "node:path";
 import { z } from "zod";
 import { FrontendError, type NativeTaskBinding } from "./types.js";
 
@@ -76,6 +75,11 @@ const admissionSchema = z
 	})
 	.strict();
 export type NativeConsumerAdmission = z.infer<typeof admissionSchema>;
+export function parseNativeConsumerAdmission(value: unknown): NativeConsumerAdmission {
+	const parsed = admissionSchema.safeParse(value);
+	if (!parsed.success) fail("consumer_admission_invalid");
+	return parsed.data;
+}
 /** The existing SDK Client satisfies this port. No launcher, reconnect or discovery. */
 export interface NativeMcpClient {
 	callTool(request: { name: string; arguments: Record<string, unknown> }): Promise<unknown>;
@@ -241,10 +245,8 @@ export class NativeConsumerSession {
 		directory: string,
 		now = Date.now,
 	) {
-		const parsed = admissionSchema.safeParse(admission);
-		if (!parsed.success) fail("consumer_admission_invalid");
 		this.#client = client;
-		this.#admission = parsed.data;
+		this.#admission = parseNativeConsumerAdmission(admission);
 		this.#ledger = new NativeLedger(directory);
 		this.#now = now;
 	}

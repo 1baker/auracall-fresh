@@ -3938,3 +3938,13 @@ provider markup/entitlement or live replies. Those require native acceptance.
 
 `pnpm run build:stock-chrome` prepares the extension and standalone local Node
 entries. `docs/stock-chrome.md` describes the separately held setup/rollback scope.
+
+### Own native SDK source caller
+
+`tests/browser/frontend.nativeRuntime.test.ts` uses private temporary synthetic
+files and an injected own-client/lifetime fixture. It checks final grant/binding
+consistency, pins/expiry/privacy, opaque serialization, one acquisition/public
+route, concurrent/changed-ID and uncertainty fences, no invented release, and
+unsupported Pro with zero Sends. Default foreground entry stays closed before
+private-file reads when the lifetime contract is unresolved. This is source
+evidence, never a real SDK/process/producer/browser acceptance claim.

@@ -228,6 +228,75 @@ human explicitly grants it. Source fixtures do not authorize a live call. The
 original2Send allowance remains exhausted, and `dispatch` must not be used for
 Pro-only work because it proceeds toward a model claim/Send.
 
+## Own native SDK receiver and guarded foreground caller
+
+The source continuation adds `prepare-native-pro PRIVATE_RUNTIME_INPUT` and the
+`nativeRuntime` module. This is an explicit local receiving format, **not** a
+`native` mode in `AURACALL_FRONTEND_CONFIG`, the HTTP relay or ordinary startup.
+It does not enroll a producer, initialize keys, issue a grant or repair a browser.
+
+```sh
+node dist/bin/auracall-relay.js prepare-native-pro /absolute/private/runtime-input.json
+```
+In plain English: request the separate native Pro-only workflow. The shipped CLI
+currently refuses with `native_runtime_lifetime_contract_required` **before it
+reads the private file or starts an SDK process**. Cleanup/lifetime is unresolved;
+no input-file flag can enable it. A future reviewed compiled integration must
+supply the actual producer lifetime and shared-limit policy before acquisition.
+
+The owner-private POSIX input has version `auracall.own-sdk-runtime.v1` and exactly
+these top-level fields: `version`, `bindingOut`, `grant`, `admission`, `options`.
+`bindingOut` is the path to the immutable private ProducerBinding receipt;
+`grant` is the separately admitted final OwnerGrant, not that receipt. `admission`
+is the existing strict eight-field NativeConsumerAdmission. It contains the
+**consumer** capability, never the owner capability or key. Parsing only validates
+private storage and field consistency; the producer still authenticates the
+current distinct owner/caller and finite grant under its authority fence.
+Owner-profile-capability, enrollment, cleanup-enable and unrelated fields refuse.
+
+`options` names `producerExecutable`, `producerManifest`, `producerHome`,
+`producerSocketDirectory`, `consumerLedgerDirectory`, `preparationDirectory`,
+`routeId`, `expectedUrl`, `expectedModel`, and `operationId`. All files/paths must
+be explicit, owner-controlled and bounded. The two pre-existing private ledger
+roots must be distinct and not nested. Producer bytes/manifest must match the
+trusted source pin e43ca62a/6814c8cc; JSON cannot choose a replacement pin. The
+source fixture seam supplies its own synthetic pin without changing that default.
+No ordinary broker/stock JSON semantics or public OAuth scopes change.
+
+`startOwnNativeRuntime` retains one caller-owned SDK1.32 client, using only the
+pinned producer `mcp serve` transport and explicitly selected child DEV realm.
+Parent HOME is unchanged. The production connector verifies its child executable
+and process UID/start identity before sending the consumer capability; backend
+peer/generation/owner preservation remain separately enforced by the producer.
+`NativeConsumerSession.acquire()` runs once; its **public** `session.binding`
+supplies the returned native route. No hidden facade lookup, borrowed task,
+serviceTabHandle projection or second Open is used. The returned interface offers
+only the immutable route, state, journaled `prepareProOnly` and an explicit hold;
+it does not expose Send, claim, browser_close or release.
+
+A fixed `.sdk-runtime/intent.json` in the original consumer ledger is fsynced
+before the SDK attempt. Uncertainty leaves it held, including changed operation
+IDs or process restart; no fresh client, stale-lock cleanup or retry is supplied.
+Private capabilities are not serialized in runtime objects or receipts. Held
+clients stay retained, and the compiled lifetime receiver retains that exact
+client privately for original readback before Open; its typed client port has no
+close method. Neither SDK.close nor browser_close is treated as release.
+SDK handshake failure can internally close its bridge: that is not proof of task
+release, and must be covered by the separately reviewed lifetime policy. No such
+production policy is provided by this candidate. `qualify`/`retain`/`uncertain` are trusted
+compiled integration callbacks, not consumer JSON authority or a quota grant.
+
+The native adapter still reports intelligence unverified and refuses configure
+with `native_intelligence_unsupported`; the caller preserves that refusal and
+cannot manufacture Pro. The existing protected helper reserves a distinct
+route-only operation and independently verifies genuine Pro if/when a supported
+adapter is delivered. Frozen191/c8 remains separate history; this source candidate
+is not installed or activated. Bastion's canonical relay store is not a WSL local
+store; the explicitly admitted local preparation journal does not create model
+requests or replace canonical dispatch/readback. Existing 18 documented reads,
+unknown full trace, pending extra60 decision, six-control bound and exhausted two
+Sends/PD hold all carry. A fresh directory or SDK session is not fresh capacity.
+
 ## Completion, uncertainty and limits
 
 A successful panel message call is only message submission, not a model reply.

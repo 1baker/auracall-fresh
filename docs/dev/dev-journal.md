@@ -1,3 +1,14 @@
+## 2026-10-25 — Own SDK receiver and source-only guarded caller
+
+Existing P448 lane now receives final private producer binding/grant/admission,
+pins one own SDK client and derives the native preparation route from public
+session.binding after one acquisition. Private state is opaque to JSON. Fixed
+connection/preparation journals fence uncertainty across IDs/restarts. The new
+foreground command refuses before private reads/SDK startup without a reviewed
+lifetime policy; no cleanup/release is invented. Fixtures only: native Pro still
+refuses and full goal stays PARTIAL/66%. No browser/private/provider effect,
+producer install or allocation/counter reset; 2/2Sends used/+60pending/PDheld.
+
 ## 2026-10-25 — Durable Pro-only control operation, no model dispatch
 
 Existing P448 continuation separates a route-control operation from queued model

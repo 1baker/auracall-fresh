@@ -9,53 +9,94 @@ import { FrontendError } from "../src/browser/frontends/types.js";
 try {
 	const args = process.argv.slice(2);
 	const [command, value, routeId] = args;
-	const routedCommand = command === "dispatch" || command === "prepare-pro";
-	if (
-		!["serve", "enqueue", "status", "dispatch", "prepare-pro"].includes(command ?? "") ||
-		args.length !== (command === "serve" ? 1 : routedCommand ? 3 : 2) ||
-		(command !== "serve" && !value) || (routedCommand && !routeId)
-	)
-		throw new RelayError("usage: auracall-relay serve | enqueue PRIVATE_REQUEST_JSON | status REQUEST_ID | dispatch REQUEST_ID ROUTE_ID | prepare-pro OPERATION_ID ROUTE_ID");
-	const path = process.env.AURACALL_RELAY_OAUTH_CONFIG;
-	if (!path) throw new RelayError("set_AURACALL_RELAY_OAUTH_CONFIG");
-	const env = { ...process.env, AURACALL_FRONTEND_OAUTH_CONFIG: path };
-	const config = await readFrontendHttpConfig(env);
-	if (config.mode !== "relay" || !config.relayDirectory) throw new RelayError("relay_mode_required");
-	if (command === "serve") {
-		const { startFrontendHttpServer } = await import("../src/mcp/http/server.js");
-		await startFrontendHttpServer(env);
-		process.stderr.write(`AuraCall relay listening on loopback port ${config.port}.\n`);
+	if (command === "prepare-native-pro") {
+		if (args.length !== 2 || !value)
+			throw new RelayError("usage: auracall-relay prepare-native-pro PRIVATE_RUNTIME_INPUT");
+		const { prepareOwnNativeProFromFile } = await import(
+			"../src/browser/frontends/nativeRuntime.js"
+		);
+		process.stdout.write(`${JSON.stringify(await prepareOwnNativeProFromFile(value))}\n`);
 	} else {
-		const store = new RelayStore(config.relayDirectory, config.subject);
-		if (routedCommand) {
-			const { createConfiguredFrontendService } = await import("../src/browser/frontends/config.js");
-			const { dispatchRelayRequest } = await import("../src/mcp/relay/dispatch.js");
-			const frontend = await createConfiguredFrontendService(process.env);
-			const route = frontend.routes.find((item) => item.id === routeId && item.provider === "chatgpt");
-			if (!route) throw new RelayError("relay_sender_route_missing");
-			if (command === "prepare-pro") {
-				const { prepareRelayProOnly } = await import("../src/mcp/relay/proPreparation.js");
-				process.stdout.write(`${JSON.stringify(await prepareRelayProOnly({ store, frontend, route, operationId: value }))}\n`);
-			} else process.stdout.write(`${JSON.stringify(await dispatchRelayRequest({
-				store, frontend, requestId: value, routeId: route.id,
-				expectedUrl: route.expectedUrl, expectedModel: route.expectedModel,
-			}))}\n`);
-		} else if (command === "enqueue") {
-			const fd = await open(value, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
-			let data: unknown;
-			try {
-				const info = await fd.stat();
-				if (!info.isFile() || info.size > 2097152 || (info.mode & 0o077) || info.uid !== process.getuid?.()) throw new RelayError("private_request_file_required");
-				const bytes = await fd.readFile();
-				if (bytes.length > 2097152) throw new RelayError("request_too_large");
-				data = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
-			} finally { await fd.close(); }
-			const parsed = relayRequestSchema.safeParse(data);
-			if (!parsed.success) throw new RelayError("invalid_or_unsupported_relay_request");
-			process.stdout.write(`${JSON.stringify(await store.enqueue(parsed.data))}\n`);
-		} else process.stdout.write(`${JSON.stringify(await store.status(value))}\n`);
+		const routedCommand = command === "dispatch" || command === "prepare-pro";
+		if (
+			!["serve", "enqueue", "status", "dispatch", "prepare-pro"].includes(command ?? "") ||
+			args.length !== (command === "serve" ? 1 : routedCommand ? 3 : 2) ||
+			(command !== "serve" && !value) ||
+			(routedCommand && !routeId)
+		)
+			throw new RelayError(
+				"usage: auracall-relay serve | enqueue PRIVATE_REQUEST_JSON | status REQUEST_ID | dispatch REQUEST_ID ROUTE_ID | prepare-pro OPERATION_ID ROUTE_ID",
+			);
+		const path = process.env.AURACALL_RELAY_OAUTH_CONFIG;
+		if (!path) throw new RelayError("set_AURACALL_RELAY_OAUTH_CONFIG");
+		const env = { ...process.env, AURACALL_FRONTEND_OAUTH_CONFIG: path };
+		const config = await readFrontendHttpConfig(env);
+		if (config.mode !== "relay" || !config.relayDirectory)
+			throw new RelayError("relay_mode_required");
+		if (command === "serve") {
+			const { startFrontendHttpServer } = await import("../src/mcp/http/server.js");
+			await startFrontendHttpServer(env);
+			process.stderr.write(`AuraCall relay listening on loopback port ${config.port}.\n`);
+		} else {
+			const store = new RelayStore(config.relayDirectory, config.subject);
+			if (routedCommand) {
+				const { createConfiguredFrontendService } = await import(
+					"../src/browser/frontends/config.js"
+				);
+				const { dispatchRelayRequest } = await import("../src/mcp/relay/dispatch.js");
+				const frontend = await createConfiguredFrontendService(process.env);
+				const route = frontend.routes.find(
+					(item) => item.id === routeId && item.provider === "chatgpt",
+				);
+				if (!route) throw new RelayError("relay_sender_route_missing");
+				if (command === "prepare-pro") {
+					const { prepareRelayProOnly } = await import("../src/mcp/relay/proPreparation.js");
+					process.stdout.write(
+						`${JSON.stringify(await prepareRelayProOnly({ store, frontend, route, operationId: value }))}\n`,
+					);
+				} else
+					process.stdout.write(
+						`${JSON.stringify(
+							await dispatchRelayRequest({
+								store,
+								frontend,
+								requestId: value,
+								routeId: route.id,
+								expectedUrl: route.expectedUrl,
+								expectedModel: route.expectedModel,
+							}),
+						)}\n`,
+					);
+			} else if (command === "enqueue") {
+				const fd = await open(
+					value,
+					constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK,
+				);
+				let data: unknown;
+				try {
+					const info = await fd.stat();
+					if (
+						!info.isFile() ||
+						info.size > 2097152 ||
+						info.mode & 0o077 ||
+						info.uid !== process.getuid?.()
+					)
+						throw new RelayError("private_request_file_required");
+					const bytes = await fd.readFile();
+					if (bytes.length > 2097152) throw new RelayError("request_too_large");
+					data = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+				} finally {
+					await fd.close();
+				}
+				const parsed = relayRequestSchema.safeParse(data);
+				if (!parsed.success) throw new RelayError("invalid_or_unsupported_relay_request");
+				process.stdout.write(`${JSON.stringify(await store.enqueue(parsed.data))}\n`);
+			} else process.stdout.write(`${JSON.stringify(await store.status(value))}\n`);
+		}
 	}
 } catch (error) {
-	process.stderr.write(`${error instanceof RelayError || error instanceof FrontendError ? error.code : "relay_failed_check_private_configuration_and_original_request"}\n`);
+	process.stderr.write(
+		`${error instanceof RelayError || error instanceof FrontendError ? error.code : "relay_failed_check_private_configuration_and_original_request"}\n`,
+	);
 	process.exitCode = 1;
 }

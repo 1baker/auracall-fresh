@@ -1,3 +1,14 @@
+## 2026-10-25 — An exported native factory needs an owned caller and lifetime
+
+A source factory is not a startup path. Compose the public acquired session
+binding with the guarded preparation helper; never inspect hidden facade fields
+or acquire twice. Private input parsing is consistency, not authority: the
+producer still enforces scoped current owner/caller capability and finite grant.
+Use JavaScript private fields for runtime secrets; TypeScript private parameter
+properties serialize. Fence SDK connection attempts durably, retain uncertainty
+and refuse before starting a process when lifecycle is unqualified. Closing an
+SDK bridge is not proof that a producer task was released.
+
 ## 2026-10-25 — Preparing a browser setting must not fall through to Send
 
 A dispatch command is unsafe as a substitute for Pro-only preparation because

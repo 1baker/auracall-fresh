@@ -5,7 +5,18 @@ Owner: AuraCall thread01a16096-da12-7753-8d44-e299c2172cef.
 Parent: P447, existing selected ChatGPT/linked-replies/controlled-frontend tickets,
 private personal work-tracker81; direct human2026-10-25 automatic Pro/files request.
 
-## Current State
+## Current state
+
+P449db5/0601 is live. The immutable191/c8 protected Pro-only checkpoint remains
+source-only. This existing-lane continuation adds the own SDK private receiver and
+pinned caller; no producer/runtime installation or private/browser effect occurs.
+Its live foreground entry stays closed while the lifetime contract is unresolved;
+native Pro still refuses. Actual acceptance remains4/6=66%,2/2Sends used/PDheld.
+Current allowance6.1M/source6068600/B143981 carries all spending; Browser3M is
+separate. The proposed extra60 page reads remain pending, with18 documented and
+complete trace UNKNOWN. The following initial checkpoint is historical.
+
+## Initial source checkpoint (historical)
 
 P447 foreground dispatch exists at b5c3297e. The actual manual human-MCP linked
 reply test passed; its controlled model Sends are2/2 consumed. This plan does not
@@ -108,3 +119,49 @@ routine type/style fixes; initial diagnostics and both RED observations retained
 Native Standards and bounded Source Spec PASS on10 owned files. Actual browser
 Pro/full goal remain PARTIAL; no read allowance, runtime activation or live call
 is implied. The earlier P449 package remains a separate immutable checkpoint.
+
+## Same-lane own SDK caller and private receiver
+
+Human-selected continuation after final Browser63d0fb6d/e43 producer contract and
+source composition81b50917. Preserve191/c8 as the prior immutable source/package;
+P449db5/0601 is actually live, while this new candidate remains source only.
+Current allowance6.1M/source6068600/B143981 carries all actual spending; Browser3M
+is separate. No new source writer/job or runtime/private effect is granted.
+
+Implement one strict owner-private local input receiver, matching final
+ProducerBinding/OwnerGrant and exact eight-field consumer admission. Do not treat
+bindingOut as authority or accept owner capability/auto-enrollment/native JSON
+mode. Pin one own SDK caller to reviewed producer bytes/realm, acquire once and
+construct the preparation route from public session.binding. Preserve client and
+immutable connection/preparation ledgers; uncertainty must not reconnect/release
+or reset shared limits.
+
+The explicit prepare-native-pro foreground command and exported caller remain
+closed before private reads/process startup while the producer lifetime/cleanup
+contract is unresolved. No JSON enable flag, SDK.close or browser_close release
+is introduced. Hermetic source fixtures may supply the trusted lifetime/IO seam;
+those callbacks are not runtime admission or producer readiness. Native semantic
+Pro controls remain a separate unsupported gap; full Spec stays PARTIAL.
+
+Validation: receiver privacy/scope/pin/expiry, opaque runtime serialization, one
+SDK/acquisition/public-binding route, concurrent/changed-ID fences, input drift,
+uncertain acquisition and preserved Pro refusal with zero messages. Run affected
+native/frontend/relay regressions, production/type/style gates and separate native
+Standards/Spec review. No live SDKconnect/Open, private values, install/key/grant,
+model/Browser effects or file transfer is part of this continuation.
+
+### Own SDK source verification
+
+131 affected tests across12 files pass, including22 new private receiver/runtime
+fixtures and the existing native identity, consumer, protected preparation,
+dispatch, relay CLI/store and MCP regressions. Production compilation, full types
+and scoped style pass. A separate compiled CLI check returns the exact missing
+lifetime-contract refusal before reading its nonexistent fixture input or starting
+an SDK process. Initial RED/type/style diagnostics are retained in the local
+evidence; no live producer process or browser was exercised.
+
+Independent native Standards and bounded Source Spec reviews both PASS with no
+material findings on the nine-file frozen candidate. The verification paragraph
+is a lead-checked documentation-only addition after that review. No production
+lifetime policy is supplied, and native semantic Pro remains unsupported. Full
+Spec stays PARTIAL, real acceptance4/6=66%, and all runtime/read/Send/PD holds carry.
