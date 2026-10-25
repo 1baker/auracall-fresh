@@ -1,3 +1,15 @@
+## 2026-10-25 — Automatic Pro preparation, file transport pending
+
+P448 continues the selected ChatGPT/controlled-frontend source scope. P447 can
+now use the existing bounded configure operation for Pro, then independently
+inspect the same target/model/effort before claim/Send. A durable preparation
+reservation holds failed/uncertain control across restart without replay or a
+manual-claim bypass. The prior manual real two-linked-reply test is complete;
+2/2 controlled Sends consumed and4/6=66% remains the real acceptance state.
+File upload/commit and generated-file retrieval still require a qualified owned
+producer contract through Chief; no fabricated native capability/Pro field.
+No live relay/browser/private binding/deployment or provider action changed.
+
 ## 2026-10-24 — Connect queued relay requests to the retained frontend sender
 
 P447 implements the human-directed automatic foreground sender on the existing

@@ -358,3 +358,174 @@ it("refuses a different preceding frontend answer before the linked request clai
 		await f.close();
 	}
 });
+
+it("selects Pro through the existing control and independently verifies it before claim and Send", async () => {
+	const f = await senderFixture();
+	try {
+		f.observed.effort = "standard";
+		let configured = false;
+		const frontend = {
+			...f.options.frontend,
+			configure: async (routeId: string, effort: string) => {
+				expect([routeId, effort]).toEqual(["guard-route", "pro"]);
+				expect(await f.store.status(f.requestId)).toMatchObject({
+					state: "held_unknown",
+					claimId: null,
+				});
+				f.observed.effort = "pro";
+				configured = true;
+				return { ok: true };
+			},
+		};
+		expect(await dispatchRelayRequest({ ...f.options, frontend })).toMatchObject({
+			state: "replied",
+		});
+		expect(configured).toBe(true);
+		expect(f.control.sends).toBe(1);
+	} finally {
+		await f.close();
+	}
+});
+
+it("does not trust a Pro configure acknowledgement without fresh observed Pro", async () => {
+	const f = await senderFixture();
+	try {
+		f.observed.effort = "standard";
+		let changes = 0;
+		const frontend = {
+			...f.options.frontend,
+			configure: async () => {
+				changes++;
+				return { ok: true, effort: "pro", verified: true };
+			},
+		};
+		await expect(dispatchRelayRequest({ ...f.options, frontend })).rejects.toMatchObject({
+			code: "relay_frontend_model_unqualified",
+		});
+		expect(await f.store.status(f.requestId)).toMatchObject({
+			state: "held_unknown",
+			claimId: null,
+		});
+		f.observed.effort = "pro";
+		await expect(
+			dispatchRelayRequest({
+				...f.options,
+				frontend,
+				store: new RelayStore(f.root, "synthetic-owner"),
+			}),
+		).rejects.toMatchObject({ code: "relay_frontend_configuration_held" });
+		const request = await f.store.request(f.requestId);
+		await expect(f.store.claim(f.requestId, request.fingerprint)).rejects.toMatchObject({
+			code: "relay_frontend_configuration_held",
+		});
+		expect([changes, f.control.sends]).toEqual([1, 0]);
+	} finally {
+		await f.close();
+	}
+});
+
+it("never retries uncertain effort input or sends after it across process-style recovery", async () => {
+	const f = await senderFixture();
+	try {
+		f.observed.effort = "standard";
+		let changes = 0;
+		const frontend = {
+			...f.options.frontend,
+			configure: async () => {
+				changes++;
+				throw Error("Control may have changed, readback lost");
+			},
+		};
+		await expect(dispatchRelayRequest({ ...f.options, frontend })).rejects.toThrow(
+			"Control may have changed",
+		);
+		await expect(
+			dispatchRelayRequest({
+				...f.options,
+				frontend,
+				store: new RelayStore(f.root, "synthetic-owner"),
+			}),
+		).rejects.toMatchObject({ code: "relay_frontend_configuration_held" });
+		expect([changes, f.control.sends]).toEqual([1, 0]);
+	} finally {
+		await f.close();
+	}
+});
+
+it.each([
+	"target",
+	"model",
+])("refuses %s drift before changing any effort controls", async (drift) => {
+	const f = await senderFixture();
+	try {
+		f.observed.effort = "standard";
+		if (drift === "target") f.observed.url = "https://chatgpt.com/c/another-chat";
+		else f.observed.model = "Different model";
+		let changes = 0;
+		const frontend = {
+			...f.options.frontend,
+			configure: async () => {
+				changes++;
+				return {};
+			},
+		};
+		await expect(dispatchRelayRequest({ ...f.options, frontend })).rejects.toMatchObject({
+			code:
+				drift === "target"
+					? "relay_frontend_target_unqualified"
+					: "relay_frontend_model_unqualified",
+		});
+		expect([changes, f.control.sends]).toEqual([0, 0]);
+	} finally {
+		await f.close();
+	}
+});
+
+it("refuses target drift during Pro selection and retains its original preparation binding", async () => {
+	const f = await senderFixture();
+	try {
+		f.observed.effort = "standard";
+		const frontend = {
+			...f.options.frontend,
+			configure: async () => {
+				f.observed.url = "https://chatgpt.com/c/another-chat";
+				f.observed.effort = "pro";
+				return { ok: true };
+			},
+		};
+		await expect(dispatchRelayRequest({ ...f.options, frontend })).rejects.toMatchObject({
+			code: "relay_frontend_target_unqualified",
+		});
+		await expect(
+			dispatchRelayRequest({
+				...f.options,
+				frontend,
+				routeId: "another-route",
+				expectedUrl: String(f.observed.url),
+			}),
+		).rejects.toMatchObject({ code: "relay_sender_binding_mismatch" });
+		expect(f.control.sends).toBe(0);
+	} finally {
+		await f.close();
+	}
+});
+
+it("holds an explicit configuration refusal even when a later page could show Pro", async () => {
+	const f = await senderFixture();
+	try {
+		f.observed.effort = "standard";
+		const frontend = {
+			...f.options.frontend,
+			configure: async () => {
+				f.observed.effort = "pro";
+				return { ok: false, code: "control_unconfirmed" };
+			},
+		};
+		await expect(dispatchRelayRequest({ ...f.options, frontend })).rejects.toMatchObject({
+			code: "relay_frontend_configuration_unconfirmed",
+		});
+		expect(f.control.sends).toBe(0);
+	} finally {
+		await f.close();
+	}
+});

@@ -43,6 +43,9 @@ const frontendClaimSchema = frontendBindingSchema
 		fingerprint: hash,
 	})
 	.strict();
+const configurationSchema = frontendBindingSchema
+	.extend({ fingerprint: hash, effort: z.literal("pro") })
+	.strict();
 const replySchema = z
 	.object({
 		claimId: z.string().uuid(),
@@ -231,9 +234,34 @@ export class RelayStore {
 			await this.status(id);
 			const old = await this.read(dir, "claim.json", claimSchema);
 			if (old) return { ...old, fresh: false };
+			if ((await this.status(id)).state === "held_unknown")
+				throw new RelayError("relay_frontend_configuration_held");
 			const claim = { claimId: randomUUID(), fingerprint };
 			await this.publish(dir, "claim.json", claim);
 			return { ...claim, fresh: true };
+		});
+	}
+	/** Reserve before changing controls; an interrupted/failed attempt never retries itself. */
+	async configureFrontend(
+		id: string,
+		fingerprint: string,
+		value: RelayFrontendBinding,
+		configureAndObserve: () => Promise<void>,
+	) {
+		const binding = frontendBindingSchema.safeParse(value);
+		if (!binding.success) throw new RelayError("relay_sender_binding_invalid");
+		return this.locked(id, async (dir) => {
+			const job = await this.job(id);
+			if (job.fingerprint !== fingerprint) throw new RelayError("request_conflict");
+			await this.status(id);
+			if (await this.read(dir, "claim.json", claimSchema))
+				throw new RelayError("relay_sender_claim_not_owned");
+			if (await this.read(dir, "configuration.json", configurationSchema))
+				throw new RelayError("relay_frontend_configuration_held");
+			const intent = { ...binding.data, fingerprint, effort: "pro" as const };
+			await this.publish(dir, "configuration.json", intent);
+			await configureAndObserve();
+			await this.publish(dir, "configuration-verified.json", intent);
 		});
 	}
 	/** Route comparison metadata, never browser authority. Partial writes refuse recovery. */
@@ -246,6 +274,18 @@ export class RelayStore {
 			await this.status(id);
 			const old = await this.read(dir, "claim.json", claimSchema);
 			const sender = await this.read(dir, "sender.json", frontendClaimSchema);
+			const preparation = await this.read(dir, "configuration.json", configurationSchema);
+			if (preparation) {
+				if (
+					Object.entries(binding.data).some(
+						([key, val]) => preparation[key as keyof RelayFrontendBinding] !== val,
+					)
+				)
+					throw new RelayError("relay_sender_binding_mismatch");
+				if ((await this.status(id)).state === "held_unknown" && !old)
+					throw new RelayError("relay_frontend_configuration_held");
+			}
+
 			if (sender) {
 				if (
 					!old ||
@@ -306,7 +346,11 @@ export class RelayStore {
 		const claim = await this.read(dir, "claim.json", claimSchema);
 		const reply = await this.read(dir, "reply.json", replySchema);
 		const hold = await this.read(dir, "hold.json", holdSchema);
+		const preparation = await this.read(dir, "configuration.json", configurationSchema);
+		const verified = await this.read(dir, "configuration-verified.json", configurationSchema);
 		if (
+			(preparation && preparation.fingerprint !== job.fingerprint) ||
+			(verified && JSON.stringify(verified) !== JSON.stringify(preparation)) ||
 			(claim && claim.fingerprint !== job.fingerprint) ||
 			(reply &&
 				(!claim || reply.claimId !== claim.claimId || reply.sha256 !== digest(reply.text))) ||
@@ -316,7 +360,13 @@ export class RelayStore {
 		return {
 			requestId: id,
 			fingerprint: job.fingerprint,
-			state: reply ? "replied" : hold ? "held_unknown" : claim ? "awaiting_reply" : "ready",
+			state: reply
+				? "replied"
+				: hold || (preparation && !verified)
+					? "held_unknown"
+					: claim
+						? "awaiting_reply"
+						: "ready",
 			claimId: claim?.claimId ?? null,
 			reply,
 			liveVerified: false as const,

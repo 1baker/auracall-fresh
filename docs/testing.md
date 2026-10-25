@@ -1,3 +1,15 @@
+## Automatic Pro preparation (Plan0448)
+
+The foreground sender's compiled CLI fixture starts at Instant and must move the
+actual synthetic slider to Pro using the production frontend/control recipe,
+then preserve the two linked complete answers and cached process recovery.
+The physical Chrome API/DOM and response generation remain synthetic.
+Focused dispatch/store/MCP relay checks cover independent Pro readback, explicit
+control refusal, URL/model drift, durable uncertain preparation across a fresh
+store instance and prevention of a manual-claim bypass. Preparation never grants
+another Send or frontend capability. This does not prove an installed browser
+route, real Pro selection, file transfer or live automatic provider acceptance.
+
 ## Foreground relay sender (Plan0447)
 
 Run the focused relay dispatch, dispatchProcess, CLI, store, panel and MCP relay

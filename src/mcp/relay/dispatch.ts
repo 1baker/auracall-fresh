@@ -15,7 +15,8 @@ const optionsSchema = z.object({
 
 export type RelayDispatchOptions = z.input<typeof optionsSchema> & {
 	store: RelayStore;
-	frontend: Pick<FrontendTools, "inspect" | "send" | "status">;
+	frontend: Pick<FrontendTools, "inspect" | "send" | "status"> &
+		Partial<Pick<FrontendTools, "configure">>;
 };
 
 function refusalCode(value: unknown, fallback: string): string {
@@ -59,16 +60,41 @@ export async function dispatchRelayRequest(input: RelayDispatchOptions) {
 			throw new RelayError("relay_sender_previous_reply_mismatch");
 	}
 	if (saved.state === "ready") {
-		const observed = await frontend.inspect(routeId);
-		if (
-			observed.ok !== true ||
-			observed.provider !== "chatgpt" ||
-			observed.url !== expectedUrl ||
-			(observed.routeId !== undefined && observed.routeId !== routeId)
-		)
-			throw new RelayError("relay_frontend_target_unqualified");
-		if (observed.model !== expectedModel || observed.effort !== "pro")
-			throw new RelayError("relay_frontend_model_unqualified");
+		const qualifyTarget = (observed: Record<string, unknown>) => {
+			if (
+				observed.ok !== true ||
+				observed.provider !== "chatgpt" ||
+				observed.url !== expectedUrl ||
+				(observed.routeId !== undefined && observed.routeId !== routeId)
+			)
+				throw new RelayError("relay_frontend_target_unqualified");
+			if (observed.model !== expectedModel)
+				throw new RelayError("relay_frontend_model_unqualified");
+		};
+		let observed = await frontend.inspect(routeId);
+		qualifyTarget(observed);
+		const configure = frontend.configure?.bind(frontend);
+		if (observed.effort !== "pro" && configure) {
+			await store.configureFrontend(
+				requestId,
+				request.fingerprint,
+				{
+					routeId,
+					expectedUrl,
+					expectedModel,
+				},
+				async () => {
+					const configured = await configure(routeId, "pro");
+					if (configured.ok !== true)
+						throw new RelayError("relay_frontend_configuration_unconfirmed");
+					// A control acknowledgement is not an observation of the current UI.
+					observed = await frontend.inspect(routeId);
+					qualifyTarget(observed);
+					if (observed.effort !== "pro") throw new RelayError("relay_frontend_model_unqualified");
+				},
+			);
+		}
+		if (observed.effort !== "pro") throw new RelayError("relay_frontend_model_unqualified");
 	}
 	const claim = await store.frontendClaim(requestId, request.fingerprint, {
 		routeId,

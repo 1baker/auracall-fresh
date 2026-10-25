@@ -1,3 +1,14 @@
+## 2026-10-25 — Automatic effort control needs acknowledgement and fresh readback
+
+Use an existing bounded frontend configure operation to select Pro, then inspect
+the page independently. A returned effort label is not enough, and explicit
+refusal stays a refusal even if another observation might later show Pro.
+Persist preparation before the control effect, separately from the Send claim;
+an uncertain preparation cannot become a fresh control/Send after restart or
+through a manual claim. Retain exact target/model checks and all existing limits.
+A compiled synthetic frontend verifies source wiring only, not live custody,
+provider acceptance or file upload/download support.
+
 ## 2026-10-24 — A relay connection needs a separate frontend sender
 
 OAuth discovery and model-visible MCP tools let a client fetch requests and save

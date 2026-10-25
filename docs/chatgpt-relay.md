@@ -122,9 +122,24 @@ one real model message and permanently records its claim before input. The
 existing Send, read, expiry and custody limits must qualify before this command;
 the command does not grant or renew them.
 
-The sender checks the currently observed conversation URL, model and Pro effort
-before its first claim. It preserves the configured model rather than changing
-it. Native intelligence reported as unverified refuses. A durable `sender.json`
+The sender checks the currently observed conversation URL and configured model
+before its first claim. If effort is not Pro and the frontend supports bounded
+configuration, it selects Pro once and independently inspects the page again.
+A successful control acknowledgement alone is insufficient: the target/model and
+visible Pro must still match. The configured model is preserved. A frontend
+without effort controls or qualified effort observation still refuses.
+
+Before changing effort, an immutable private `configuration.json` reserves that
+attempt under the request lock. `configuration-verified.json` is published only
+after successful control acknowledgement and independent Pro readback. Failure,
+interruption or uncertainty leaves `held_unknown` with no Send claim; neither
+automatic dispatch nor a panel/manual claim can bypass it, including after
+restart. It needs explicit operator reconciliation, never a new automatic try.
+A request with verified preparation does not change effort a second time.
+Configuration, reads and Send still consume their existing authorized bounds;
+this source capability does not renew those limits or activate a browser route.
+Native consumer Pro controls and file upload/download remain unsupported until
+an owned producer contract and runtime binding qualify those capabilities. A durable `sender.json`
 binds this claim to its route/conversation/model comparisons; it is not a browser
 grant. A preexisting panel/manual claim or an incomplete sender write is never
 adopted as a new Send. Changed routes refuse even on cached automatic readback;

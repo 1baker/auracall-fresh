@@ -15,7 +15,7 @@ const homeEnv = "AURACALL_HOME_DIR",
 	relayEnv = "AURACALL_RELAY_OAUTH_CONFIG",
 	frontendEnv = "AURACALL_FRONTEND_CONFIG";
 
-it("automatically sends two linked queued requests through the compiled CLI and real frontend, then reads back with the bridge gone", async () => {
+it("selects Pro then automatically sends two linked queued requests through the compiled CLI and real frontend, with cached recovery", async () => {
 	const repo = dirname(dirname(fileURLToPath(import.meta.url)));
 	const home = await mkdtemp(join(tmpdir(), "auracall-dispatch-process-"));
 	const cache = join(repo, "node_modules/.cache");
@@ -28,8 +28,7 @@ it("automatically sends two linked queued requests through the compiled CLI and 
 	];
 	const browser = syntheticChrome({ url, replies: answers });
 	const slider = browser.document.querySelector('[role="slider"]');
-	slider?.setAttribute("aria-valuenow", "4");
-	slider?.setAttribute("aria-valuetext", "Pro");
+	expect(slider?.getAttribute("aria-valuetext")).toBe("Instant");
 	const controller = new StockChromeController(browser.api, "00000000-0000-4000-8000-000000000001");
 	const handle = await controller.share(1);
 	const token = "f".repeat(64);
@@ -161,6 +160,8 @@ it("automatically sends two linked queued requests through the compiled CLI and 
 		const firstReply = await run("dispatch", first, "fixture");
 		expect(firstReply.state).toBe("replied");
 		expect(firstReply.reply.text).toBe(answers[0]);
+		expect(slider?.getAttribute("aria-valuetext")).toBe("Pro");
+		expect(slider?.getAttribute("aria-valuenow")).toBe("4");
 		await writeFile(
 			secondInput,
 			JSON.stringify({
