@@ -34,12 +34,12 @@ describe("relay over the existing OAuth HTTP MCP transport", () => {
 		await once(server, "listening");
 		const address = server.address();
 		if (!address || typeof address === "string") throw Error("No loopback listener");
-		const makeToken = (scope: string) =>
+		const makeToken = (scope: string, subject = "fixture-owner") =>
 			new SignJWT(scopeClaim === "scope" ? { scope } : { scp: scope.split(" ") })
 				.setProtectedHeader({ alg: "RS256", kid: "fixture", typ: "at+jwt" })
 				.setIssuer(issuer)
 				.setAudience(resource)
-				.setSubject("fixture-owner")
+				.setSubject(subject)
 				.setExpirationTime("5m")
 				.sign(keys.privateKey);
 		const token = await makeToken("relay:read relay:dispatch relay:reply");
@@ -99,11 +99,18 @@ describe("relay over the existing OAuth HTTP MCP transport", () => {
 				"relay_claim",
 				"relay_hold",
 				"relay_open",
+				"relay_pending",
 				"relay_reply",
 				"relay_request",
 				"relay_status",
 			]);
-			for (const name of ["relay_request", "relay_status", "relay_claim", "relay_hold"]) {
+			for (const name of [
+				"relay_pending",
+				"relay_request",
+				"relay_status",
+				"relay_claim",
+				"relay_hold",
+			]) {
 				const metadata = tools.find((tool) => tool.name === name)?._meta as Record<string, unknown>;
 				expect(metadata["openai/widgetAccessible"]).toBe(true);
 			}
@@ -111,6 +118,29 @@ describe("relay over the existing OAuth HTTP MCP transport", () => {
 				requestId: "http_request_01",
 				prompt: "Return a complete useful answer",
 			});
+			expect(await call("relay_pending", {})).toEqual({
+				ok: true,
+				requests: [{ requestId: "http_request_01", state: "ready", previousRequestId: null }],
+				nextCursor: null,
+			});
+			for (const bearer of [
+				await makeToken("relay:reply"),
+				await makeToken("relay:read", "another-owner"),
+			]) {
+				expect(
+					(
+						await post(
+							{
+								jsonrpc: "2.0",
+								id: 9,
+								method: "tools/call",
+								params: { name: "relay_pending", arguments: {} },
+							},
+							bearer,
+						)
+					).status,
+				).toBe(403);
+			}
 			const denied = await post(
 				{
 					jsonrpc: "2.0",

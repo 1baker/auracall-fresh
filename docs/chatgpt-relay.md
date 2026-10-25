@@ -67,6 +67,34 @@ Preserve dashboard SSO and the relay's Bearer checks. Validate the actual upstre
 and durable port source rather than copying the example port into live routing.
 Discovery and source tests are separate from real client consent and tool use.
 
+## Discover already-approved work (P449)
+
+The source includes `relay_pending` under the existing `relay:read` scope. It
+finds this authenticated owner's unfinished approved requests without a known
+request ID. Use `limit` (1–20, default10) and optional `after` from `nextCursor`.
+The response contains only request IDs, ready/awaiting-reply/held states and
+predecessor IDs. It contains no prompt, answer, claim credential or other owner's
+metadata. Replied work is excluded; use its original ID to read a saved answer.
+Results are an advisory snapshot. Read the exact request/status before acting.
+
+Discovery never creates or claims a request. Claimed/held entries remain the
+original operation's readback path; their presence does not authorize another
+message. Existing human intent, claim ownership, read/Send bounds and custody
+remain controlling. The scan refuses beyond512 directory entries or on unsafe,
+symlinked or corrupt request storage; it does not auto-clean or reset anything.
+
+Once the exact reviewed runtime is selected and the actual client catalog exposes
+`relay_pending`, ChatGPT can find approved work, read `relay_request`, process it
+under the existing workflow and return the whole answer through `relay_reply`.
+The deployed six-tool relay is not modified by a source-only validation. This
+feature neither enumerates native Codex sessions nor opens unrelated browser
+conversations; the relay's approved request is the communication address.
+
+The actual manual FIRST/SECOND exchange already included complete reply readback
+in Codex. `liveVerified:false` deliberately preserves the distinct browser/model
+verification boundary; it is not evidence that the saved reply failed to reach
+Codex. Automatic Pro controls and file transport retain their own acceptance.
+
 ## Stage and read one request
 
 Use an opaque request ID of8–128 letters, digits, underscores or hyphens. A private
@@ -161,8 +189,8 @@ the sender neither splits nor truncates content or relaxes prompt correlation.
 CLI configuration uses the existing service/stock-Chrome frontend factory. An
 already-admitted native SDK caller may pass its current `FrontendTools` facade to
 `dispatchRelayRequest`; JSON startup does not acquire or invent native authority.
-The HTTP relay mode remains relay-only and the public six-tool catalog is
-unchanged. Existing OAuth/service releases remain pinned until an independently
+The HTTP relay mode remains relay-only. P449 adds read-only pending discovery;
+it does not expose public browser-control tools. Existing OAuth/service releases remain pinned until an independently
 reviewed runtime admission selects the new sender. Source checks do not prove
 actual private frontend readiness, provider/model identity or live replies.
 

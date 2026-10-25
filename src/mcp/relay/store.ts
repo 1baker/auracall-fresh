@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import { constants } from "node:fs";
-import { link, lstat, mkdir, open, unlink } from "node:fs/promises";
+import { link, lstat, mkdir, open, opendir, unlink } from "node:fs/promises";
 import { isAbsolute, join } from "node:path";
 import { z } from "zod";
 
@@ -20,6 +20,12 @@ export const relayRequestSchema = z
 type Input = z.input<typeof relayRequestSchema>;
 const digest = (text: string) => createHash("sha256").update(text, "utf8").digest("hex");
 const hash = z.string().regex(/^[a-f0-9]{64}$/);
+export const relayPendingQuerySchema = z
+	.object({
+		limit: z.number().int().min(1).max(20).default(10),
+		after: relayId.optional(),
+	})
+	.strict();
 const jobSchema = relayRequestSchema
 	.extend({
 		version: z.literal(1),
@@ -212,6 +218,46 @@ export class RelayStore {
 			},
 			true,
 		);
+	}
+	/** Advisory owner-only discovery; never claims, sends or returns task payloads. */
+	async pending(query: z.input<typeof relayPendingQuerySchema> = {}) {
+		const parsed = relayPendingQuerySchema.safeParse(query);
+		if (!parsed.success) throw new RelayError("invalid_pending_query");
+		try {
+			await this.privateDir(this.directory);
+		} catch (error) {
+			if (missing(error)) return { requests: [], nextCursor: null };
+			throw error;
+		}
+		const ids: string[] = [];
+		const directory = await opendir(this.directory);
+		let scanned = 0;
+		for await (const entry of directory) {
+			if (++scanned > 512) throw new RelayError("relay_pending_scan_limit");
+			if (!relayId.safeParse(entry.name).success) continue;
+			if (!entry.isDirectory() || entry.isSymbolicLink())
+				throw new RelayError("relay_storage_invalid");
+			ids.push(entry.name);
+		}
+		const requests: { requestId: string; state: string; previousRequestId: string | null }[] = [];
+		for (const id of ids.sort()) {
+			if (parsed.data.after && id <= parsed.data.after) continue;
+			const job = await this.read(this.dir(id), "request.json", jobSchema);
+			if (!job || job.owner !== this.owner) continue;
+			const status = await this.status(id);
+			if (status.state === "replied") continue;
+			requests.push({
+				requestId: id,
+				state: status.state,
+				previousRequestId: job.previousRequestId ?? null,
+			});
+			if (requests.length > parsed.data.limit) break;
+		}
+		return {
+			requests: requests.slice(0, parsed.data.limit),
+			nextCursor:
+				requests.length > parsed.data.limit ? requests[parsed.data.limit - 1].requestId : null,
+		};
 	}
 	async request(id: string) {
 		const job = await this.job(id);

@@ -1,3 +1,13 @@
+## Owner-bound relay discovery (Plan0449)
+
+Run relay.store and mcp.relay with relay CLI/panel/dispatch and HTTP auth/security
+regressions. Public store cases cover private owner isolation, metadata-only
+listing, completed exclusion, stable pagination/restart, unchanged held claims,
+invalid queries and unsafe/corrupt/symlinked storage, plus the512-entry scan bound.
+Actual signed-token loopback HTTP MCP tests the seventh tool, both scope/scp
+permissions, wrong subject/scope refusal and the unchanged full linked reply path.
+These are hermetic source checks, not a live deployment or new model Send.
+
 ## Automatic Pro preparation (Plan0448)
 
 The foreground sender's compiled CLI fixture starts at Instant and must move the

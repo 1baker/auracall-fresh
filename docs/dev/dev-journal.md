@@ -1,3 +1,14 @@
+## 2026-10-25 — Find approved relay work without a pasted ID
+
+P449 adds metadata-only relay_pending on existing relay:read. A client can locate
+its own approved ready/claimed/held requests; private task bodies/claim IDs and
+other owners stay outside discovery. Stable pagination and a bounded scan reuse
+the private POSIX store; listing never mutates a claim or grants another Send.
+The actual Codex readback of the manual two-way test remains PASS/66%; native
+browser/model proof is still separate. This source work does not activate the
+new catalog or resume the Browser owner. Stock extension setup stopped before
+UI again after human Ready because WindowsTerminal was foreground; no retry.
+
 ## 2026-10-25 — Automatic Pro preparation, file transport pending
 
 P448 continues the selected ChatGPT/controlled-frontend source scope. P447 can

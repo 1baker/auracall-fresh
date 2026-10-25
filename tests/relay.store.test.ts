@@ -1,4 +1,4 @@
-import { mkdtemp, rm } from "node:fs/promises";
+import { chmod, mkdir, mkdtemp, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -88,4 +88,120 @@ describe("durable OAuth relay requests", () => {
 			await rm(root, { recursive: true, force: true });
 		}
 	});
+});
+
+it("discovers only this owner's unfinished requests without exposing payload or claim credentials", async () => {
+	const root = await mkdtemp(join(tmpdir(), "auracall-relay-pending-"));
+	try {
+		const store = new RelayStore(root, "owner-a");
+		await store.enqueue({ requestId: "request_ready_01", prompt: "Private original prompt" });
+		await new RelayStore(root, "owner-b").enqueue({
+			requestId: "foreign_request_01",
+			prompt: "Other owner's private prompt",
+		});
+		const completed = await store.enqueue({
+			requestId: "completed_request",
+			prompt: "Already answered",
+		});
+		const claim = await store.claim(completed.requestId, completed.fingerprint);
+		await store.submit(completed.requestId, claim.claimId, "Private completed answer");
+		expect(await store.pending()).toEqual({
+			requests: [{ requestId: "request_ready_01", state: "ready", previousRequestId: null }],
+			nextCursor: null,
+		});
+		expect(await store.status("request_ready_01")).toMatchObject({ state: "ready", claimId: null });
+	} finally {
+		await rm(root, { recursive: true, force: true });
+	}
+});
+
+it("pages ready, claimed and held work deterministically across restart while excluding completed work", async () => {
+	const root = await mkdtemp(join(tmpdir(), "auracall-relay-pages-"));
+	try {
+		let store = new RelayStore(root, "owner-a");
+		const parent = await store.enqueue({ requestId: "pending_parent", prompt: "Prior request" });
+		const parentClaim = await store.claim(parent.requestId, parent.fingerprint);
+		await store.submit(parent.requestId, parentClaim.claimId, "Previous complete reply");
+		const held = await store.enqueue({
+			requestId: "pending_bbbb",
+			prompt: "Follow-up",
+			previousRequestId: parent.requestId,
+		});
+		const heldClaim = await store.claim(held.requestId, held.fingerprint);
+		await store.hold(held.requestId, heldClaim.claimId);
+		await store.enqueue({ requestId: "pending_aaaa", prompt: "Ready" });
+		const claimed = await store.enqueue({ requestId: "pending_cccc", prompt: "Processing" });
+		await store.claim(claimed.requestId, claimed.fingerprint);
+		await new RelayStore(root, "owner-b").enqueue({
+			requestId: "pending_abbb",
+			prompt: "Private other owner",
+		});
+		store = new RelayStore(root, "owner-a");
+		expect(await store.pending({ limit: 2 })).toEqual({
+			requests: [
+				{ requestId: "pending_aaaa", state: "ready", previousRequestId: null },
+				{ requestId: "pending_bbbb", state: "held_unknown", previousRequestId: "pending_parent" },
+			],
+			nextCursor: "pending_bbbb",
+		});
+		expect(await store.pending({ limit: 2, after: "pending_bbbb" })).toEqual({
+			requests: [{ requestId: "pending_cccc", state: "awaiting_reply", previousRequestId: null }],
+			nextCursor: null,
+		});
+		expect(await store.claim(held.requestId, held.fingerprint)).toMatchObject({
+			fresh: false,
+			claimId: heldClaim.claimId,
+		});
+	} finally {
+		await rm(root, { recursive: true, force: true });
+	}
+});
+
+it("returns an empty missing inbox and rejects invalid discovery bounds or cursors", async () => {
+	const root = await mkdtemp(join(tmpdir(), "auracall-relay-query-"));
+	try {
+		const store = new RelayStore(join(root, "not-created"), "owner-a");
+		expect(await store.pending()).toEqual({ requests: [], nextCursor: null });
+		for (const query of [{ limit: 0 }, { limit: 21 }, { limit: 1.5 }, { after: "../outside" }]) {
+			await expect(store.pending(query)).rejects.toMatchObject({ code: "invalid_pending_query" });
+		}
+	} finally {
+		await rm(root, { recursive: true, force: true });
+	}
+});
+
+it("refuses unsafe or corrupt inbox state and never follows a request-directory symlink", async () => {
+	const root = await mkdtemp(join(tmpdir(), "auracall-relay-unsafe-"));
+	try {
+		const store = new RelayStore(root, "owner-a");
+		await store.enqueue({ requestId: "private_request", prompt: "Secret task" });
+		await chmod(root, 0o755);
+		await expect(store.pending()).rejects.toMatchObject({ code: "relay_storage_invalid" });
+		await chmod(root, 0o700);
+		await symlink(join(root, "private_request"), join(root, "symlink_request"));
+		await expect(store.pending()).rejects.toMatchObject({ code: "relay_storage_invalid" });
+		await rm(join(root, "symlink_request"));
+		await writeFile(join(root, "private_request", "request.json"), "not valid JSON", {
+			mode: 0o600,
+		});
+		await expect(store.pending()).rejects.toMatchObject({ code: "relay_storage_invalid" });
+	} finally {
+		await rm(root, { recursive: true, force: true });
+	}
+});
+
+it("refuses a discovery scan beyond its fixed bound without modifying or claiming requests", async () => {
+	const root = await mkdtemp(join(tmpdir(), "auracall-relay-scan-"));
+	try {
+		await Promise.all(
+			Array.from({ length: 513 }, (_, i) =>
+				mkdir(join(root, `fixture_${String(i).padStart(4, "0")}`), { mode: 0o700 }),
+			),
+		);
+		await expect(new RelayStore(root, "owner-a").pending()).rejects.toMatchObject({
+			code: "relay_pending_scan_limit",
+		});
+	} finally {
+		await rm(root, { recursive: true, force: true });
+	}
 });

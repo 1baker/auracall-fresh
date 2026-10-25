@@ -2,9 +2,10 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { FrontendPrincipal, RelayScope } from "../http/auth.js";
 import { relayPanelHtml } from "./panel.js";
-import { RelayError, relayId, type RelayStore } from "./store.js";
+import { RelayError, type RelayStore, relayId, relayPendingQuerySchema } from "./store.js";
 
 export const relayToolScopes = new Map<string, RelayScope>([
+	["relay_pending", "relay:read"],
 	["relay_open", "relay:read"],
 	["relay_request", "relay:read"],
 	["relay_status", "relay:read"],
@@ -93,6 +94,13 @@ export function registerRelayTools(
 			(args) => respond(name, () => action(args as z.infer<z.ZodObject<T>>)),
 		);
 	};
+	register(
+		"relay_pending",
+		"Discover this authenticated owner's approved unfinished requests without a request ID. Returns bounded request IDs/states only, not prompts or credentials. Claimed/held work is readback-only; listing never authorizes a new Send. Use relay_request/relay_status for the exact original record.",
+		relayPendingQuerySchema.shape,
+		true,
+		(query) => store.pending(query),
+	);
 	register(
 		"relay_open",
 		"Open the AuraCall request panel for an explicit already-approved request ID. Does not send or claim.",

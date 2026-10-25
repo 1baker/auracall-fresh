@@ -1,3 +1,12 @@
+## 2026-10-25 — Discovery is metadata, not dispatch authority
+
+An OAuth relay requiring a known request ID leaves a manual copy/paste step.
+Expose bounded owner-only unfinished-request metadata through the existing read
+scope, then use the existing exact request/status/claim/reply workflow. Exclude
+completed entries and payload/claim credentials; retain held operations instead
+of treating them as new work. Listing must not broaden issuer/subject/scopes or
+change the meaning of Send, native browser proof or actual Codex reply readback.
+
 ## 2026-10-25 — Automatic effort control needs acknowledgement and fresh readback
 
 Use an existing bounded frontend configure operation to select Pro, then inspect
