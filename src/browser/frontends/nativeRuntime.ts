@@ -269,7 +269,7 @@ export interface NativeRuntimeLifetimeContext {
 /** Trusted compiled integration, NOT a JSON switch or proof of authority.
  * qualify must cover the actual producer lifetime, SDK handshake failure behavior,
  * original shared limits and operator admission. No implementation is shipped
- * until the Browser lifetime contract qualifies. Absent policy blocks startup.
+ * until producer lifetime and runtime admission qualify. Absent policy blocks startup.
  * uncertain preserves the original connection/task; it must not invent release.
  */
 export interface NativeRuntimeLifetime {
@@ -287,6 +287,7 @@ export interface OwnNativeProRuntime {
 	readonly route: NativeTaskFrontendRoute;
 	readonly state: "active" | "held";
 	prepareProOnly(): Promise<Record<string, unknown>>;
+	originalReadback(originalKey: string): Promise<Record<string, unknown>>;
 	hold(): Promise<void>;
 }
 
@@ -401,6 +402,7 @@ class NativeProRuntime implements OwnNativeProRuntime {
 	#lifetime: NativeRuntimeLifetime;
 	#context: NativeRuntimeLifetimeContext;
 	#directory: string;
+	#session: NativeConsumerSession;
 	constructor(
 		data: ReceivedInput,
 		lifetime: NativeRuntimeLifetime,
@@ -412,6 +414,7 @@ class NativeProRuntime implements OwnNativeProRuntime {
 		this.#lifetime = lifetime;
 		this.#context = context;
 		this.#directory = directory;
+		this.#session = session;
 		// Only the public validated acquired binding supplies taskId/controlRef.
 		const binding = Object.freeze(session.binding);
 		this.#route = Object.freeze({
@@ -439,6 +442,11 @@ class NativeProRuntime implements OwnNativeProRuntime {
 			this.#context,
 			"native_runtime_operator_hold",
 		);
+	}
+	/** Same-session metadata only. Reading never clears the preparation hold. */
+	async originalReadback(originalKey: string): Promise<Record<string, unknown>> {
+		await this.hold();
+		return this.#session.originalReadback(originalKey);
 	}
 	async prepareProOnly(): Promise<Record<string, unknown>> {
 		if (this.#state !== "active") return refuse("native_runtime_readback_required");

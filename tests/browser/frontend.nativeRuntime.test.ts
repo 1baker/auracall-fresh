@@ -159,7 +159,7 @@ it("does not connect or reserve a new connection when the lifetime contract is u
 	expect(await readdir(f.dirs.consumer)).toEqual([]);
 });
 
-function opened(f: Awaited<ReturnType<typeof fixture>>) {
+function opened(f: Awaited<ReturnType<typeof fixture>>, operationKey = "fixture-open-key") {
 	const ack = { kind: "opened", completedAtMs: f.now };
 	return {
 		content: [
@@ -184,7 +184,7 @@ function opened(f: Awaited<ReturnType<typeof fixture>>) {
 							tabId: f.input.admission.tabId,
 							operation: {
 								operationId: "fixture-open-operation",
-								operationKey: "fixture-open-key",
+								operationKey,
 								action: "open",
 								state: "completed",
 								ack,
@@ -376,4 +376,106 @@ it("the foreground file caller fails closed before reading private inputs when l
 	).rejects.toMatchObject({
 		code: "native_runtime_lifetime_contract_required",
 	});
+});
+
+it("reads original metadata on the retained session and keeps preparation permanently held", async () => {
+	const f = await fixture(),
+		lifetime = fixtureLifetime();
+	const input = await readNativeRuntimeInput(f.path, fixturePin, () => f.now);
+	const wire = JSON.parse(opened(f, "consumer_acquisition").content[0].text);
+	const { targetObservation: _target, result: _result, consumerAck: _ack, ...metadata } = wire.data;
+	const readback = {
+		content: [
+			{
+				type: "text",
+				text: JSON.stringify({
+					...wire,
+					tool: "browser_continue",
+					data: {
+						...metadata,
+						requestedOperationKey: "consumer_acquisition",
+						matchingOperation: true,
+						identityFreshness: "stored_completion",
+					},
+				}),
+			},
+		],
+	};
+	const client = {
+		callTool: vi
+			.fn()
+			.mockResolvedValueOnce(opened(f, "consumer_acquisition"))
+			.mockResolvedValue(readback),
+		close: vi.fn(),
+	};
+	const connect = vi.fn(async () => client);
+	const runtime = await startOwnNativeRuntime(input, { connect, lifetime });
+	expect(await runtime.originalReadback("consumer_acquisition")).toMatchObject({
+		operationKey: "consumer_acquisition",
+		operationState: "completed",
+		readbackOnly: true,
+		pageObserved: false,
+		identityFreshness: "stored_completion",
+	});
+	expect(runtime.state).toBe("held");
+	await expect(runtime.prepareProOnly()).rejects.toMatchObject({
+		code: "native_runtime_readback_required",
+	});
+	await expect(runtime.originalReadback("consumer_acquisition")).rejects.toMatchObject({
+		code: "consumer_operation_held",
+	});
+	expect(client.callTool.mock.calls).toEqual([
+		[expect.objectContaining({ name: "browser_open" })],
+		[
+			{
+				name: "browser_continue",
+				arguments: { taskId: "fixture-OWN-consumer-task", operationKey: "consumer_acquisition" },
+			},
+		],
+	]);
+	expect(connect).toHaveBeenCalledOnce();
+	expect(client.close).not.toHaveBeenCalled();
+});
+
+it("preserves the original readback validator and hold when the producer reports a different latest operation", async () => {
+	const f = await fixture();
+	const input = await readNativeRuntimeInput(f.path, fixturePin, () => f.now);
+	const wire = JSON.parse(opened(f).content[0].text);
+	const { targetObservation: _target, result: _result, consumerAck: _ack, ...metadata } = wire.data;
+	const client = {
+		callTool: vi
+			.fn()
+			.mockResolvedValueOnce(opened(f))
+			.mockResolvedValue({
+				content: [
+					{
+						type: "text",
+						text: JSON.stringify({
+							...wire,
+							tool: "browser_continue",
+							data: {
+								...metadata,
+								requestedOperationKey: "consumer_acquisition",
+								matchingOperation: false,
+								identityFreshness: "stored_completion",
+							},
+						}),
+					},
+				],
+			}),
+		close: vi.fn(),
+	};
+	const runtime = await startOwnNativeRuntime(input, {
+		connect: async () => client,
+		lifetime: fixtureLifetime(),
+	});
+	await expect(runtime.originalReadback("consumer_acquisition")).rejects.toMatchObject({
+		code: "consumer_readback_required",
+	});
+	expect(runtime.state).toBe("held");
+	await expect(runtime.prepareProOnly()).rejects.toMatchObject({
+		code: "native_runtime_readback_required",
+	});
+	expect(client.callTool).toHaveBeenCalledTimes(2);
+	expect(client.close).not.toHaveBeenCalled();
 });

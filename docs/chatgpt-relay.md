@@ -235,6 +235,13 @@ The source continuation adds `prepare-native-pro PRIVATE_RUNTIME_INPUT` and the
 `native` mode in `AURACALL_FRONTEND_CONFIG`, the HTTP relay or ordinary startup.
 It does not enroll a producer, initialize keys, issue a grant or repair a browser.
 
+The acquired `OwnNativeProRuntime.originalReadback(originalKey)` port holds
+preparation before delegating to the same session's existing validated metadata
+reader. It requires an original locally reserved key and a matching stored
+operation; it returns no page observation or model reply, clears no hold and does
+not replay an already attempted readback. Missing acquisition binding still
+requires owner reconciliation. No consumer release or reconnect is added.
+
 ```sh
 node dist/bin/auracall-relay.js prepare-native-pro /absolute/private/runtime-input.json
 ```

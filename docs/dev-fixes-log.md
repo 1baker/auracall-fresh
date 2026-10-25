@@ -1,3 +1,11 @@
+## 2026-10-25 — Retaining a client must retain the validated readback port
+
+The owned runtime must expose its acquired session's originalReadback rather than
+forcing callers to reconstruct raw tool calls. Hold preparation before delegation;
+keep original-key/identity/operation matching and ledger fences in the existing
+session. Metadata success never clears uncertainty or proves page/model output.
+Do not add automatic release or recovery when acquisition binding is unavailable.
+
 ## 2026-10-25 — An exported native factory needs an owned caller and lifetime
 
 A source factory is not a startup path. Compose the public acquired session

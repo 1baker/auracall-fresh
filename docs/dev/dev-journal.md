@@ -1,3 +1,14 @@
+## 2026-10-25 — Same-session original readback from the owned runtime
+
+Browser's returned lifecycle source contract6b47f455 confirms original metadata
+readback on the same acquired connection; that clarification is already received.
+The owned runtime now retains its session and exposes the existing validated
+originalReadback port, marking preparation held first. No second acquisition,
+release, reconnect or counter reset. Producer cache/Chrome-preserving transition,
+installed/private admission and the compiled runtime lifetime policy remain held;
+the foreground entry stays closed and native Pro is unsupported. Synthetic checks
+only; existing2/2Sends used/+60pending/PDheld/66% and all spending carry.
+
 ## 2026-10-25 — Own SDK receiver and source-only guarded caller
 
 Existing P448 lane now receives final private producer binding/grant/admission,

@@ -1,3 +1,12 @@
+## Same-session runtime readback (existing Plan0448 continuation)
+
+Run frontend.nativeRuntime with native consumer/identity and protected preparation
+regressions. Through the public runtime, metadata readback must use the retained
+acquired session, preserve original-key/matching-operation validation and hold
+preparation permanently. A mismatched latest operation refuses. Repeating an
+attempt must not call the producer again; no reacquisition, close, release or Send.
+The default foreground lifetime gate remains closed before private reads/startup.
+
 ## Pro-only preparation (existing Plan0448 continuation)
 
 Run relay.proPreparation with existing relay/store/CLI/dispatch and HTTP/MCP

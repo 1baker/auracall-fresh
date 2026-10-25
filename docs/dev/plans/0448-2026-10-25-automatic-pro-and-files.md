@@ -165,3 +165,21 @@ material findings on the nine-file frozen candidate. The verification paragraph
 is a lead-checked documentation-only addition after that review. No production
 lifetime policy is supplied, and native semantic Pro remains unsupported. Full
 Spec stays PARTIAL, real acceptance4/6=66%, and all runtime/read/Send/PD holds carry.
+
+### Same-session lifetime readback continuation
+
+Current human direction is to obtain the lifetime/activation handoff and implement
+the remaining blocker. Browser contract6b47f455 already supplies the source
+lifecycle semantics; a repeated clarification is unnecessary. Closed-world native
+review identified one Aura-owned gap: the retained runtime hid the existing
+validated session readback. Expose originalReadback(originalKey), retain the same
+session privately and hold preparation before delegation. Preserve local original
+reservation/matching-operation/identity checks and single-attempt readback fences;
+metadata never establishes a page/model result or clears uncertainty.
+
+Add only synthetic public-runtime success/hold and mismatched-operation checks.
+No consumer release, reconnect, SDK startup enablement or new quota. Browser's
+exact old-host shutdown/cache-preserving transition and private runtime admission
+remain the coalesced producer dependency through Chief; this source change cannot
+activate the candidate or supply a producer host/cache handoff. Existing2/2Sends,
+pending60reads,PDheld and both owners' allowances/spending remain unchanged.
