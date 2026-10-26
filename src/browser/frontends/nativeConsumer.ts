@@ -4,6 +4,7 @@ import { lstat, mkdir, open, readdir, unlink } from "node:fs/promises";
 import { isAbsolute, join } from "node:path";
 import { z } from "zod";
 import {
+	assertNativeFiniteLedgerCurrent,
 	assertNativeFiniteSend,
 	checkFiniteInput,
 	finiteLedgerPolicy,
@@ -14,11 +15,18 @@ import {
 	recordFiniteReservation,
 } from "./nativeFiniteSend.js";
 import {
+	type NativeLedgerCheck,
+	type NativeLedgerOperation,
+	type NativeLedgerWriter,
+	requireNativeLedgerWriter,
+} from "./nativeLedgerWriter.js";
+import {
 	matchNativeReadReservations,
 	type NativeReadBudget,
 	nativeReadBudgetData,
 	recordNativeReadReservation,
 } from "./nativeReadBudget.js";
+import { type NativeRuntimeLifetimeContext, runNativeOperation } from "./nativeRuntime.js";
 import { FrontendError, type NativeTaskBinding } from "./types.js";
 
 const version = "agent-browser.retained-consumer.v1";
@@ -123,6 +131,55 @@ function fail(code: string): never {
 
 /** Immutable reservations count even on failure. No private UI text or credentials. */
 class NativeLedger {
+	private writer?: NativeLedgerWriter;
+	private active?: NativeLedgerOperation;
+	private activeEpoch = 0;
+	private holdEpoch = 0;
+	private held = false;
+	hold() {
+		this.held = true;
+		this.holdEpoch++;
+	}
+	protects(key: string, intent: unknown) {
+		return Boolean(
+			this.active &&
+				this.activeEpoch === this.holdEpoch &&
+				(!this.held || this.active.originalKeys.length) &&
+				this.now() < this.active.expiresAtMs &&
+				this.active.key === key &&
+				this.active.intentDigest === digest(intent),
+		);
+	}
+	private localCurrent(stage: NativeLedgerCheck, epoch: number) {
+		if (this.finite) {
+			assertNativeFiniteSend(this.finite);
+			return;
+		}
+		if (!this.writer) return;
+		const op = this.active,
+			time = this.now();
+		if (
+			!op ||
+			this.holdEpoch !== epoch ||
+			(stage !== "cleanup" && this.held && !op.originalKeys.length) ||
+			!Number.isSafeInteger(time) ||
+			time < 0 ||
+			time >= op.expiresAtMs
+		)
+			fail("native_ledger_writer_held");
+	}
+	private async current(stage: NativeLedgerCheck = "mutation") {
+		const epoch = stage === "cleanup" ? this.holdEpoch : this.activeEpoch;
+		this.localCurrent(stage, epoch);
+		if (this.finite) await assertNativeFiniteLedgerCurrent(this.finite, stage);
+		else if (this.writer) {
+			if (!this.active) fail("native_ledger_writer_held");
+			await this.writer.assertCurrent(this.active, stage);
+		}
+		this.localCurrent(stage, epoch);
+		return epoch;
+	}
+
 	private finite?: NativeFinitePermit;
 	bindFinite(permit: NativeFinitePermit) {
 		if (this.finite || !this.budget) fail("native_finite_send_unqualified");
@@ -137,7 +194,13 @@ class NativeLedger {
 			expiresAtMs: number;
 		},
 		private readonly now: () => number = Date.now,
+		writer?: NativeLedgerWriter,
+		private readonly writerContext?: () => NativeRuntimeLifetimeContext,
 	) {
+		if (writer) {
+			this.writer = requireNativeLedgerWriter(writer);
+			if (!writerContext || !expectedBudget) fail("native_ledger_writer_required");
+		}
 		if (!isAbsolute(directory) || process.platform === "win32")
 			fail("consumer_ledger_private_required");
 	}
@@ -244,19 +307,23 @@ class NativeLedger {
 			fail("consumer_ledger_private_required");
 	}
 	private async write(name: string, value: unknown) {
+		this.localCurrent("mutation", await this.current());
 		const fd = await open(
 			join(this.directory, name),
 			constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW,
 			0o600,
 		);
 		try {
+			this.localCurrent("mutation", await this.current());
 			await fd.writeFile(JSON.stringify(value));
+			this.localCurrent("mutation", await this.current());
 			await fd.sync();
 		} finally {
 			await fd.close();
 		}
 		const parent = await open(this.directory, "r");
 		try {
+			this.localCurrent("mutation", await this.current());
 			await parent.sync();
 		} finally {
 			await parent.close();
@@ -271,7 +338,61 @@ class NativeLedger {
 		readReserve = 0,
 	): Promise<T> {
 		const run = () => this.runLocked(key, intent, bucket, effect, originalKey, readReserve);
-		return this.finite ? protectFiniteLedger(this.finite, key, bucket, intent, run) : run();
+		if (this.finite)
+			return protectFiniteLedger(
+				this.finite,
+				key,
+				bucket,
+				intent,
+				run,
+				readReserve,
+				originalKey === undefined ? [] : Array.isArray(originalKey) ? originalKey : [originalKey],
+			);
+		const writer = this.writer;
+		if (!writer) return run();
+		if (this.active || !this.expectedBudget || !this.writerContext)
+			fail("native_ledger_writer_held");
+		const originalKeys = Object.freeze(
+			originalKey === undefined
+				? []
+				: Array.isArray(originalKey)
+					? [...originalKey]
+					: [originalKey],
+		);
+		const original = this.writerContext();
+		const op: NativeLedgerOperation = Object.freeze({
+			original: Object.freeze({
+				...original,
+				...(original.nativeTask ? { nativeTask: Object.freeze({ ...original.nativeTask }) } : {}),
+			}),
+			...this.expectedBudget,
+			key,
+			bucket,
+			intentDigest: digest(intent),
+			originalKeys,
+			readReserve,
+		});
+		this.active = op;
+		this.activeEpoch = this.holdEpoch;
+		try {
+			const value = await runNativeOperation(
+				(invoke) => writer.protect(op, invoke),
+				async () => {
+					this.localCurrent("mutation", await this.current());
+					const value = await run();
+					this.localCurrent("mutation", await this.current());
+					return value;
+				},
+			);
+			this.localCurrent("mutation", this.activeEpoch);
+			return value;
+		} catch (error) {
+			this.hold();
+			if (error instanceof FrontendError) throw error;
+			return fail("consumer_readback_required");
+		} finally {
+			this.active = undefined;
+		}
 	}
 	private async runLocked<T>(
 		key: string,
@@ -282,11 +403,16 @@ class NativeLedger {
 		readReserve = 0,
 	): Promise<T> {
 		if (!/^[a-zA-Z0-9_-]{8,128}$/.test(key)) fail("consumer_operation_key_invalid");
+		this.localCurrent("mutation", await this.current());
 		await mkdir(this.directory, { recursive: true, mode: 0o700 });
 		await this.privatePath(this.directory, true);
 		const lock = join(this.directory, "operation.lock");
+		this.localCurrent("mutation", await this.current());
 		const fd = await open(lock, "wx", 0o600).catch(() => fail("consumer_operation_held"));
+		let ownedLock: Awaited<ReturnType<typeof fd.stat>> | undefined;
 		try {
+			ownedLock = await fd.stat();
+			this.localCurrent("mutation", await this.current());
 			const entries = await readdir(this.directory);
 			if (!this.finite && entries.includes("finite-send-policy.json"))
 				fail("native_finite_send_unqualified");
@@ -418,6 +544,7 @@ class NativeLedger {
 					.concat([[`reservation-${token}.json`, digest(reservation)]])
 					.sort(([a], [b]) => a.localeCompare(b)),
 			);
+			this.localCurrent("mutation", await this.current());
 			if (this.budget) {
 				const previous = [...rows].map(([name, row]): [string, string] => [name, row.hash]);
 				const next = [
@@ -434,7 +561,9 @@ class NativeLedger {
 			if (this.budget && this.expectedBudget)
 				nativeReadBudgetData(this.budget, this.expectedBudget, this.now);
 			if (this.finite) assertNativeFiniteSend(this.finite);
+			this.localCurrent("effect", await this.current("effect"));
 			const result = await effect();
+			this.localCurrent("mutation", await this.current());
 			if (this.finite) assertNativeFiniteSend(this.finite);
 			await this.write(`completed-${token}.json`, {
 				bucket,
@@ -449,6 +578,16 @@ class NativeLedger {
 			return fail("consumer_ledger_invalid");
 		} finally {
 			await fd.close();
+			const cleanupEpoch = await this.current("cleanup");
+			const actual = await lstat(lock);
+			this.localCurrent("cleanup", cleanupEpoch);
+			if (
+				!ownedLock ||
+				actual.isSymbolicLink() ||
+				actual.dev !== ownedLock.dev ||
+				actual.ino !== ownedLock.ino
+			)
+				fail("native_ledger_lock_ownership_lost");
 			await unlink(lock);
 		}
 	}
@@ -477,6 +616,8 @@ export class NativeConsumerSession {
 		directory: string,
 		now = Date.now,
 		readBudget?: NativeReadBudget,
+		writer?: NativeLedgerWriter,
+		writerContext?: () => NativeRuntimeLifetimeContext,
 	) {
 		this.#directory = directory;
 		this.#client = client;
@@ -487,7 +628,14 @@ export class NativeConsumerSession {
 			expiresAtMs: this.#admission.expiresAtMs,
 		};
 		if (readBudget) nativeReadBudgetData(readBudget, expectedBudget, now);
-		this.#ledger = new NativeLedger(directory, readBudget, expectedBudget, now);
+		this.#ledger = new NativeLedger(
+			directory,
+			readBudget,
+			expectedBudget,
+			now,
+			writer,
+			writerContext,
+		);
 		this.#now = now;
 	}
 	get binding(): NativeTaskBinding {
@@ -511,7 +659,58 @@ export class NativeConsumerSession {
 	/** Sticky semantic uncertainty; original metadata may still be read. */
 	hold() {
 		this.#held = true;
+		this.#ledger.hold();
 		if (this.#finite) holdNativeFiniteSend(this.#finite);
+	}
+	private acquisitionArguments() {
+		const a = this.#admission;
+		return {
+			profileMode: "consumer",
+			consumerGrantId: a.consumerGrantId,
+			profileCapability: a.profileCapability,
+			taskKey: a.taskKey,
+			profile: a.profileId,
+			url: "https://chatgpt.com/",
+			serviceName: "AuraCall",
+			agentName: "frontend-mcp",
+			taskName: "auracall-e2e-20261021",
+		};
+	}
+	protectsRequest(request: { name: string; arguments: Record<string, unknown> }) {
+		const a = this.#admission,
+			args = request.arguments;
+		if (request.name === "browser_open")
+			return (
+				digest(args) === digest(this.acquisitionArguments()) &&
+				this.#ledger.protects("consumer_acquisition", [
+					a.consumerGrantId,
+					a.taskKey,
+					a.profileId,
+					a.browserId,
+					a.tabId,
+					a.targetId,
+					a.expiresAtMs,
+				])
+			);
+		if (!this.#binding || args.taskId !== this.#binding.taskId) return false;
+		if (request.name === "browser_command")
+			return this.#ledger.protects(String(args.operationKey), [
+				this.binding,
+				args.action,
+				args.params,
+			]);
+		if (request.name === "browser_close")
+			return this.#ledger.protects("consumer_reference_release", [
+				this.binding,
+				args.operationKey,
+				"release",
+			]);
+		if (request.name === "browser_continue")
+			return this.#ledger.protects(
+				`${this.#releaseKey === null ? "metadata" : "release_metadata"}_${digest(args.operationKey)}`,
+				[this.binding, args.operationKey],
+			);
+		return false;
 	}
 	private async payload(tool: string, args: Record<string, unknown>) {
 		const raw = await this.#client.callTool({ name: tool, arguments: args });
@@ -673,21 +872,7 @@ export class NativeConsumerSession {
 			[a.consumerGrantId, a.taskKey, a.profileId, a.browserId, a.tabId, a.targetId, a.expiresAtMs],
 			"acquisition",
 			async () => {
-				const data = await this.invoke(
-					"browser_open",
-					{
-						profileMode: "consumer",
-						consumerGrantId: a.consumerGrantId,
-						profileCapability: a.profileCapability,
-						taskKey: a.taskKey,
-						profile: a.profileId,
-						url: "https://chatgpt.com/",
-						serviceName: "AuraCall",
-						agentName: "frontend-mcp",
-						taskName: "auracall-e2e-20261021",
-					},
-					"open",
-				);
+				const data = await this.invoke("browser_open", this.acquisitionArguments(), "open");
 				this.#expires = data.expiresAtMs;
 				this.#controlRef = data.controlRef;
 				this.#acquisitionId = data.acquisitionId;

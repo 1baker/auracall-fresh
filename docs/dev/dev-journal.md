@@ -56196,3 +56196,14 @@ request without resend. Current2used/0remaining,80UNKNOWN/6 and PD holds stay.
 Runtime/operator providers and actual Bastion/WSL transport remain unbound; no
 source test is live acceptance. Independent reviews and immutable receipts are
 kept with native-finite-send-20261026 in the owner preparation evidence.
+
+
+## 2026-10-26 — Cover the ledger outside SDK calls
+
+Same194d continuation:10133340 already covered finite transactions, while ordinary
+owned acquisition/preparation still needed whole-ledger participation. Added the
+required typed writer port, exact operation descriptor and pre-mutation/current
+checks; one active transaction replaces the inner SDK wrapper. Known lock identity
+and holds survive cleanup; failed work is not refunded. No source/caller/decoder
+redo, live operator or quota change. Runtime journals and external writers remain
+explicit production-mapping requirements, separate from this ledger hook.

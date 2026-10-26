@@ -401,3 +401,23 @@ ACK loss; sticky holds after native ACK/authority loss, callback refusal, change
 intent/carry or expiry. Refuse draft/Send without minimum reply-read capacity.
 Return the typed interface and explicitly absent production suppliers. Live
 activation, grants, provider actions, files and PD remain outside this slice.
+
+
+## Original ledger writer span (194d, same continuation)
+
+Preserve c28/110 ordering closure and10133340 finite sender.194d identifies the
+separate pre-SDK and post-SDK ledger write span. Require an original writer
+participant in owned startup, move whole-operation protection around NativeLedger
+before its first mutation, and retain it through completion/known cleanup. Keep
+one phase driver and exact active operation identity for skipping the redundant
+inner SDK wrapper. Recheck holds after awaits, preserve charged/unknown work, and
+never unlink a replaced lock. Finite policy uses its same protector with an added
+current-participation assertion; no new Send authority.
+
+Prove missing participation refuses before startup; authority refusal prevents
+baseline/reservation/Open; acquisition remains protected through cleanup; awaited
+hold cannot revive work; failed-effect reservation stays charged; foreign lock
+survives. Preserve exact full-v2/acquired identity and original readback rules.
+Runtime journals, two-read observer supplier, manual/external writers and canonical
+Bastion store require explicit separate classification. No source hook is proof
+of actual complete carry or global exclusion. Actual operator bindings remain held.

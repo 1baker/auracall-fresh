@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { validateNativeAdmissionObservation } from "./nativeAdmission.js";
+import { type NativeLedgerWriter, requireNativeLedgerWriter } from "./nativeLedgerWriter.js";
 import { createRetainedNativeLifetime } from "./nativeLifetime.js";
 import { type NativeReadBudgetContext, qualifyNativeReadBudget } from "./nativeReadBudget.js";
 import {
@@ -51,6 +52,7 @@ export interface NativeAdmissionSupplier {
 	): Promise<void>;
 }
 export interface NativeOperatorOptions {
+	writer: NativeLedgerWriter;
 	guard: NativeOriginalGuard;
 	dispatchJoin: NativeOperatorDispatchJoin;
 	supplier: NativeAdmissionSupplier;
@@ -101,6 +103,7 @@ function refuse(): never {
  * Existing f874 accounting and daa lifetime checks remain mandatory.
  */
 export function createNativeOperatorIntegration(options: NativeOperatorOptions) {
+	const writer = requireNativeLedgerWriter(options.writer);
 	const guard = options.guard,
 		supplier = options.supplier,
 		join = options.dispatchJoin,
@@ -303,6 +306,7 @@ export function createNativeOperatorIntegration(options: NativeOperatorOptions) 
 	return Object.freeze({
 		lifetime,
 		execution,
+		writer,
 		readBudget: (context: NativeReadBudgetContext) =>
 			run(async () => {
 				const origin = original(context);

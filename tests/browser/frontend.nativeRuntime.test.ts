@@ -1,5 +1,15 @@
 import { createHash, randomUUID } from "node:crypto";
-import { chmod, mkdir, mkdtemp, readdir, readFile, rm, symlink, writeFile } from "node:fs/promises";
+import {
+	chmod,
+	mkdir,
+	mkdtemp,
+	readdir,
+	readFile,
+	rename,
+	rm,
+	symlink,
+	writeFile,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, expect, it, vi } from "vitest";
@@ -29,13 +39,20 @@ import {
 } from "../../src/browser/frontends/nativeRuntime.js";
 import { dispatchRelayRequest } from "../../src/mcp/relay/dispatch.js";
 import { RelayStore } from "../../src/mcp/relay/store.js";
-import { fixtureDispatchJoin } from "./nativeDispatchFixture.js";
+import { fixtureDispatchJoin, fixtureLedgerWriter } from "./nativeDispatchFixture.js";
 
 // Synthetic wrappers for existing runtime fixtures; production has no default.
 const startOwnNativeRuntime = (
 	input: NativeRuntimeInput,
 	dependencies: NativeRuntimeDependencies = {},
-) => actualStartOwnNativeRuntime(input, { execution: fixtureDispatchJoin(), ...dependencies });
+) => {
+	const execution = dependencies.execution ?? fixtureDispatchJoin();
+	return actualStartOwnNativeRuntime(input, {
+		execution,
+		writer: fixtureLedgerWriter(execution),
+		...dependencies,
+	});
+};
 
 import observationV2 from "./fixtures/native-admission-observation-v2.json";
 import { withCompletedIdentity } from "./nativeIdentityFixture.js";
@@ -320,6 +337,7 @@ it("holds the original acquisition when the operator refuses its completion", as
 			lifetime,
 			readBudget: fixtureBudget(f),
 			execution,
+			writer: fixtureLedgerWriter(execution),
 			connect: async () => client,
 		}),
 	).rejects.toMatchObject({ code: "consumer_readback_required" });
@@ -343,6 +361,7 @@ it.each([
 		lifetime: fixtureLifetime(),
 		readBudget: fixtureBudget(f),
 		execution,
+		writer: fixtureLedgerWriter(execution),
 		connect: async () => client,
 	});
 	await expect(runtime[method]("consumer_acquisition")).rejects.toBeDefined();
@@ -397,8 +416,10 @@ it("binds v2 observation and the phase-aware operator to the actual private rece
 	);
 	const authority = vi.fn(async () => {});
 	const joinEvents: string[] = [];
+	const dispatchJoin = fixtureDispatchJoin(joinEvents);
 	const operator = await bindNativeOperatorIntegration(input, {
-		dispatchJoin: fixtureDispatchJoin(joinEvents),
+		dispatchJoin,
+		writer: fixtureLedgerWriter(dispatchJoin),
 		ownerAuthority: owner,
 		producerTaskId: "synthetic-producer-task",
 		guard: {
@@ -1164,7 +1185,7 @@ it("keeps a retained runtime closed to automatic Send without a finite authority
 	expect(runtime.state).toBe("active");
 });
 
-async function finiteFixture(reads = 18, drafts = 0) {
+async function finiteFixture(reads = 18, drafts = 0, writerFactory = fixtureLedgerWriter) {
 	const f = await fixture();
 	setAuracallHomeDirOverrideForTest(join(f.root, "frontend-home"));
 	const input = await readNativeRuntimeInput(f.path, fixturePin, () => f.now);
@@ -1295,9 +1316,20 @@ async function finiteFixture(reads = 18, drafts = 0) {
 		protectedDispatch();
 		return originalDispatch(run);
 	};
+	const writer = writerFactory(execution),
+		writerProtect = writer.protect;
+	writer.protect = async (op, run) => {
+		protectedNow = true;
+		try {
+			return await writerProtect(op, run);
+		} finally {
+			protectedNow = false;
+		}
+	};
 	const runtime = await actualStartOwnNativeRuntime(input, {
 		lifetime,
 		execution,
+		writer,
 		readBudget: fixtureBudget(f, reads, drafts),
 		connect: async () => client,
 	});
@@ -1324,6 +1356,7 @@ async function finiteFixture(reads = 18, drafts = 0) {
 		};
 	};
 	const authority: NativeFiniteAuthority = {
+		assertCurrent: vi.fn(async () => {}),
 		verify: vi.fn(evidence),
 		assertClaim: vi.fn(async (c) => {
 			expect(await canonical.status(c.intent.requestId)).toMatchObject({ state: "awaiting_reply" });
@@ -1632,4 +1665,245 @@ it("carries two original drafts and Sends without resetting them", async () => {
 	);
 	expect(reservations.filter((r) => r.bucket === "send")).toHaveLength(1);
 	expect(reservations.filter((r) => r.bucket === "draft")).toHaveLength(1);
+});
+
+it("refuses missing original writer participation before any owned startup mutation", async () => {
+	const f = await fixture();
+	const input = await readNativeRuntimeInput(f.path, fixturePin, () => f.now);
+	const lifetime = fixtureLifetime(),
+		connect = vi.fn(async () => ({ callTool: vi.fn(async () => opened(f)) }));
+	await expect(
+		actualStartOwnNativeRuntime(input, {
+			lifetime,
+			execution: fixtureDispatchJoin(),
+			readBudget: fixtureBudget(f),
+			connect,
+		}),
+	).rejects.toMatchObject({ code: "native_ledger_writer_required" });
+	expect(await readdir(f.dirs.consumer)).toEqual([]);
+	expect(lifetime.qualify).not.toHaveBeenCalled();
+	expect(connect).not.toHaveBeenCalled();
+});
+
+it("holds acquisition writer participation from before baseline through owned cleanup", async () => {
+	const f = await fixture(),
+		input = await readNativeRuntimeInput(f.path, fixturePin, () => f.now);
+	const execution = fixtureDispatchJoin();
+	let participating = false;
+	const client = {
+		callTool: vi.fn(async () => {
+			expect(participating).toBe(true);
+			expect(await readdir(f.dirs.consumer)).toContain("operation.lock");
+			return opened(f);
+		}),
+	};
+	const writer = fixtureLedgerWriter(execution),
+		protect = writer.protect;
+	writer.protect = async (op, run) => {
+		expect(op.original.nativeTask).toBeUndefined();
+		expect(op.original.receiptDigest).toMatch(/^[a-f0-9]{64}$/);
+		expect(op.original.producerSha256).toBe(fixturePin.binarySha256);
+		expect(op.ledgerDirectory).toBe(f.dirs.consumer);
+		expect(op.originalKeys).toEqual([]);
+		expect(op.readReserve).toBe(0);
+		expect(await readdir(f.dirs.consumer)).toEqual([".sdk-runtime"]);
+		participating = true;
+		try {
+			const value = await protect(op, run);
+			const entries = await readdir(f.dirs.consumer);
+			expect(entries).not.toContain("operation.lock");
+			expect(entries).toContain("read-budget.json");
+			expect(entries.filter((n) => n.startsWith("completed-"))).toHaveLength(1);
+			return value;
+		} finally {
+			participating = false;
+		}
+	};
+	const runtime = await actualStartOwnNativeRuntime(input, {
+		execution,
+		writer,
+		lifetime: fixtureLifetime(),
+		readBudget: fixtureBudget(f),
+		connect: async () => client,
+	});
+	expect(runtime.state).toBe("active");
+	expect(client.callTool).toHaveBeenCalledOnce();
+});
+
+it.each([
+	"protect",
+	"before_baseline",
+])("refuses %s writer authority before acquisition accounting or Open", async (when) => {
+	const f = await fixture(),
+		input = await readNativeRuntimeInput(f.path, fixturePin, () => f.now);
+	const execution = fixtureDispatchJoin(),
+		writer = fixtureLedgerWriter(execution),
+		client = { callTool: vi.fn(async () => opened(f)) };
+	if (when === "protect")
+		writer.protect = async () => {
+			throw new Error("no original participation");
+		};
+	else
+		writer.assertCurrent = async (_op, stage) => {
+			if (stage === "mutation" && (await readdir(f.dirs.consumer)).includes("operation.lock"))
+				throw new Error("original authority revoked");
+		};
+	await expect(
+		actualStartOwnNativeRuntime(input, {
+			execution,
+			writer,
+			lifetime: fixtureLifetime(),
+			readBudget: fixtureBudget(f),
+			connect: async () => client,
+		}),
+	).rejects.toBeDefined();
+	expect(client.callTool).not.toHaveBeenCalled();
+	const entries = await readdir(f.dirs.consumer);
+	expect(entries).not.toContain("read-budget.json");
+	expect(entries.filter((n) => n.startsWith("reservation-"))).toEqual([]);
+});
+
+it("does not revive a preparation hold while the original writer assertion is awaited", async () => {
+	const f = await fixture(),
+		input = await readNativeRuntimeInput(f.path, fixturePin, () => f.now);
+	const execution = fixtureDispatchJoin(),
+		writer = fixtureLedgerWriter(execution),
+		client = { callTool: vi.fn(async () => opened(f)) };
+	let entered!: () => void, finish!: () => void;
+	const waiting = new Promise<void>((r) => {
+		entered = r;
+	});
+	writer.assertCurrent = async (op, stage) => {
+		if (op.bucket === "read" && stage === "mutation") {
+			entered();
+			await new Promise<void>((r) => {
+				finish = r;
+			});
+		}
+	};
+	const runtime = await actualStartOwnNativeRuntime(input, {
+		execution,
+		writer,
+		lifetime: fixtureLifetime(),
+		readBudget: fixtureBudget(f),
+		connect: async () => client,
+	});
+	const before = await readdir(f.dirs.consumer),
+		preparing = runtime.prepareProOnly();
+	await waiting;
+	const holding = runtime.hold();
+	finish();
+	await Promise.allSettled([preparing, holding]);
+	expect(runtime.state).toBe("held");
+	expect(client.callTool).toHaveBeenCalledOnce();
+	expect(await readdir(f.dirs.consumer)).toEqual(before);
+});
+
+it("retains a replaced lock instead of unlinking another writer's pathname", async () => {
+	const f = await fixture(),
+		input = await readNativeRuntimeInput(f.path, fixturePin, () => f.now);
+	const execution = fixtureDispatchJoin(),
+		writer = fixtureLedgerWriter(execution),
+		client = { callTool: vi.fn(async () => opened(f)) };
+	let replaced = false;
+	writer.assertCurrent = async (_op, stage) => {
+		if (stage === "cleanup" && !replaced) {
+			replaced = true;
+			await rename(
+				join(f.dirs.consumer, "operation.lock"),
+				join(f.dirs.consumer, "original-owned-lock"),
+			);
+			await writeFile(join(f.dirs.consumer, "operation.lock"), "foreign-writer", { mode: 0o600 });
+		}
+	};
+	await expect(
+		actualStartOwnNativeRuntime(input, {
+			execution,
+			writer,
+			lifetime: fixtureLifetime(),
+			readBudget: fixtureBudget(f),
+			connect: async () => client,
+		}),
+	).rejects.toMatchObject({ code: "native_ledger_lock_ownership_lost" });
+	expect(await readFile(join(f.dirs.consumer, "operation.lock"), "utf8")).toBe("foreign-writer");
+	expect(client.callTool).toHaveBeenCalledOnce();
+});
+
+it("keeps a finite reservation charged without completion after a post-effect hold", async () => {
+	const h = await finiteFixture();
+	let held = false;
+	h.authority.assertCurrent = async (_op, stage) => {
+		if (stage === "mutation" && !held && h.events.includes("native:url")) {
+			held = true;
+			await h.runtime.hold();
+		}
+	};
+	const api = await bindOwnNativeSendFrontend(h.runtime, h.intent, h.authority);
+	await expect(api.inspect(h.f.input.options.routeId)).rejects.toBeDefined();
+	const entries = await readdir(h.f.dirs.consumer),
+		reservations = entries.filter((n) => n.startsWith("reservation-"));
+	expect(reservations).toHaveLength(2);
+	expect(entries.filter((n) => n.startsWith("completed-"))).toHaveLength(1);
+	expect(entries).toContain("operation.lock");
+	expect(h.runtime.state).toBe("held");
+	expect(h.sends).toBe(0);
+});
+
+it("rejects a hold after the final ordinary writer protector returns", async () => {
+	let reads = 0;
+	const baseline = await finiteFixture(18, 0, (execution) => {
+		const writer = fixtureLedgerWriter(execution),
+			protect = writer.protect;
+		writer.protect = async (op, run) => {
+			if (op.bucket === "read") reads++;
+			return protect(op, run);
+		};
+		return writer;
+	});
+	await baseline.runtime.prepareProOnly();
+	expect(reads).toBeGreaterThan(0);
+	let count = 0;
+	let runtime: Awaited<ReturnType<typeof finiteFixture>>["runtime"];
+	const h = await finiteFixture(18, 0, (execution) => {
+		const writer = fixtureLedgerWriter(execution),
+			protect = writer.protect;
+		writer.protect = async (op, run) => {
+			const value = await protect(op, run);
+			if (op.bucket === "read" && ++count === reads) await runtime.hold();
+			return value;
+		};
+		return writer;
+	});
+	runtime = h.runtime;
+	await expect(runtime.prepareProOnly()).rejects.toBeDefined();
+	expect(runtime.state).toBe("held");
+	expect(h.sends).toBe(0);
+});
+
+it("does not create a reservation when a hold lands between assertion and caller resume", async () => {
+	let runtime: Awaited<ReturnType<typeof finiteFixture>>["runtime"];
+	let assertion = 0,
+		holding: Promise<void> | undefined;
+	const h = await finiteFixture(18, 0, (execution) => {
+		const writer = fixtureLedgerWriter(execution);
+		writer.assertCurrent = async (op, stage) => {
+			if (op.bucket === "read" && stage === "mutation" && ++assertion === 5) {
+				queueMicrotask(() =>
+					queueMicrotask(() => {
+						holding = runtime.hold();
+					}),
+				);
+			}
+		};
+		return writer;
+	});
+	runtime = h.runtime;
+	const before = (await readdir(h.f.dirs.consumer)).filter((n) => n.startsWith("reservation-"));
+	await expect(runtime.prepareProOnly()).rejects.toBeDefined();
+	await holding;
+	expect(assertion).toBeGreaterThanOrEqual(5);
+	expect((await readdir(h.f.dirs.consumer)).filter((n) => n.startsWith("reservation-"))).toEqual(
+		before,
+	);
+	expect(h.client.callTool).toHaveBeenCalledOnce();
 });

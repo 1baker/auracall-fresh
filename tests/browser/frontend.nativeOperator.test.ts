@@ -5,7 +5,7 @@ import { afterEach, expect, it, vi } from "vitest";
 import { createNativeOperatorIntegration } from "../../src/browser/frontends/nativeOperator.js";
 import { nativeBudgetDigest } from "../../src/browser/frontends/nativeReadBudget.js";
 import fixture from "./fixtures/native-admission-observation-v2.json";
-import { fixtureDispatchJoin } from "./nativeDispatchFixture.js";
+import { fixtureDispatchJoin, fixtureLedgerWriter } from "./nativeDispatchFixture.js";
 
 const dirs: string[] = [];
 afterEach(async () => {
@@ -60,8 +60,10 @@ async function harness() {
 		assertCurrent: vi.fn(async (_ctx: unknown, _dispatch: unknown) => {}),
 	};
 	const joinEvents: string[] = [];
+	const dispatchJoin = fixtureDispatchJoin(joinEvents);
 	const integration = createNativeOperatorIntegration({
-		dispatchJoin: fixtureDispatchJoin(joinEvents),
+		dispatchJoin,
+		writer: fixtureLedgerWriter(dispatchJoin),
 		guard,
 		supplier,
 		grant: fixture.request.expectedGrant,

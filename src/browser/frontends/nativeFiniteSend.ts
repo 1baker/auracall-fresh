@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
+import type { NativeLedgerCheck } from "./nativeLedgerWriter.js";
 import { nativeBudgetDigest } from "./nativeReadBudget.js";
 import { runNativeOperation } from "./nativeRuntime.js";
 import { requestIdSchema } from "./requestStore.js";
@@ -70,8 +71,10 @@ export interface NativeFiniteOperation {
 	readonly key: string;
 	readonly bucket: NativeBucket;
 	readonly intentDigest: string;
+	readonly originalKeys: readonly string[];
+	readonly readReserve: number;
 }
-/** Compiled operator supplies all three ports. Neither JSON nor an MCP scope creates
+/** Compiled operator supplies all four ports. Neither JSON nor an MCP scope creates
  * authority. protect holds ORIGINAL cooperating-writer exclusion across every
  * ledger mutation, SDK effect, completion and lock cleanup; one phase driver. Bind the same canonical request
  * and current P447 phase throughout: preclaim reads/controls use its ready or
@@ -81,6 +84,7 @@ export interface NativeFiniteAuthority {
 	verify(context: NativeFiniteContext): Promise<unknown>;
 	/** Actual canonical P447 claim/fingerprint/route, not a manual relay claim. */
 	assertClaim(context: NativeFiniteContext): Promise<void>;
+	assertCurrent(operation: NativeFiniteOperation, stage: NativeLedgerCheck): Promise<void>;
 	protect<T>(operation: NativeFiniteOperation, run: () => Promise<T>): Promise<T>;
 }
 export interface NativeFinitePermit {
@@ -92,6 +96,7 @@ interface State {
 	evidence: NativeFiniteEvidence;
 	protect: NativeFiniteAuthority["protect"];
 	assertClaim: NativeFiniteAuthority["assertClaim"];
+	assertCurrent: NativeFiniteAuthority["assertCurrent"];
 	now: () => number;
 	lastNow: number;
 	held: boolean;
@@ -138,7 +143,8 @@ export async function qualifyNativeFiniteSend(
 		!authority ||
 		typeof authority.verify !== "function" ||
 		typeof authority.protect !== "function" ||
-		typeof authority.assertClaim !== "function"
+		typeof authority.assertClaim !== "function" ||
+		typeof authority.assertCurrent !== "function"
 	)
 		throw new FrontendError(
 			"native_finite_authority_required",
@@ -151,7 +157,8 @@ export async function qualifyNativeFiniteSend(
 		Object.freeze(c);
 		const verify = authority.verify.bind(authority),
 			protect = authority.protect.bind(authority),
-			assertClaim = authority.assertClaim.bind(authority);
+			assertClaim = authority.assertClaim.bind(authority),
+			assertCurrent = authority.assertCurrent.bind(authority);
 		const started = now();
 		if (!Number.isSafeInteger(started) || started < 0 || started >= c.expiresAtMs) refuse();
 		const e = evidenceSchema.parse(await verify(c));
@@ -173,6 +180,7 @@ export async function qualifyNativeFiniteSend(
 			evidence: e,
 			protect,
 			assertClaim,
+			assertCurrent,
 			now,
 			lastNow: finished,
 			held: false,
@@ -258,6 +266,8 @@ export async function protectFiniteLedger<T>(
 	bucket: NativeBucket,
 	intent: unknown,
 	operation: () => Promise<T>,
+	readReserve = 0,
+	originalKeys: readonly string[] = [],
 ): Promise<T> {
 	const s = current(permit);
 	if (s.busy || bucket === "acquisition") {
@@ -270,6 +280,8 @@ export async function protectFiniteLedger<T>(
 		key,
 		bucket,
 		intentDigest: nativeBudgetDigest(intent),
+		originalKeys: Object.freeze([...originalKeys]),
+		readReserve,
 	});
 	try {
 		return await runNativeOperation(
@@ -339,4 +351,21 @@ export function checkFiniteInput(
 			: action !== "click" || params.selector !== 'button[data-testid="send-button"]')
 	)
 		refuse();
+}
+
+/** Revalidate SAME participation after awaits and before each ledger mutation. */
+export async function assertNativeFiniteLedgerCurrent(
+	permit: NativeFinitePermit,
+	stage: NativeLedgerCheck,
+) {
+	const s = current(permit),
+		op = s.active;
+	if (!op) return refuse();
+	try {
+		await s.assertCurrent(op, stage);
+		current(permit);
+	} catch {
+		s.held = true;
+		return refuse();
+	}
 }

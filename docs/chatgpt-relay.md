@@ -626,3 +626,47 @@ with the real canonical claim verifier. No new endpoint, native JSON startup,
 store alias, credential or runtime activation is supplied. Current two Sends are
 exhausted. Files/PD remain held, and `liveVerified: false` is retained. Synthetic
 success is not automatic live ChatGPT acceptance.
+
+
+### Original writer participation around the native ledger (194d)
+
+The owned runtime now requires `writer: NativeLedgerWriter` alongside lifetime,
+readBudget and execution, before private startup. `bindNativeOperatorIntegration`
+accepts and returns that same compiled participant; it does not create production
+authority. Low-level legacy session callers remain outside this owned-runtime
+admission contract. No JSON field supplies a participant.
+
+`NativeLedgerWriter.protect(operation, run)` is the single whole-transaction phase
+driver for acquisition, preparation, original metadata and consumer-ref release.
+It begins before NativeLedger directory/lock creation and encloses accounting
+baseline, reservation, opaque counter advancement, SDK effect, completion and
+known owned cleanup. The descriptor carries immutable original base3, acquired
+nativeTask6 only after acquisition, full budget context, key/bucket/intent digest,
+normalized originalKeys and readReserve. The operator supplies real all-writer
+participation and maps this to the current bridge; the old SDK-only wrappers must
+not be nested inside it. Before-SDK lifetime/task checks remain mandatory.
+
+`assertCurrent(operation, stage)` revalidates the SAME held participant at mutation,
+effect and cleanup boundaries. It does not advance a second driver or reserve
+quota again. Local hold epochs are checked synchronously in the caller after awaited assertions
+and after the outer protector returns; expired or
+unknown authority cannot revive the operation. File creation is already a write,
+so checks occur before open and again before content/sync/accounting/completion.
+Cleanup verifies that the pathname still identifies the exact owned lock. A
+cleanup refusal or ownership mismatch retains evidence instead of deleting another
+writer's lock. Separately admitted original-key readback/release never clears the
+hold; lack of authority still refuses.
+
+The finite facade selects its existing finite protector instead of nesting the
+ordinary participant. Its authority now also requires `assertCurrent` for the
+same transaction, and its descriptor carries originalKeys/readReserve. Exact
+request/claim, consumed Sends, read capacity and uncertainty behavior stay intact.
+
+**Writer classification:** this hook covers NativeLedger's files and quota updates.
+Runtime `.sdk-runtime` attempt/hold journals are separate owner continuity writes,
+not quota receipts; the lifetime admission/operator must explicitly govern them.
+Observer reservations belong to the existing supplier and must charge both reads
+before helper execution. External/manual writers and the Bastion canonical store
+retain their own original-authority enforcement. Supplying this interface does
+not prove those actors participate. A refused hold-journal write remains uncertain;
+no cleanup/retry/usage reset follows. All production suppliers remain unbound.

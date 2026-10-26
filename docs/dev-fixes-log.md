@@ -26215,3 +26215,14 @@ nesting another SDK guard or using a global bypass flag. Preserve holds after
 callbacks and distinguish outer transport ACK loss from actual native uncertainty.
 Reserve minimum complete-reply read capacity before drafting/sending; refusing
 only after Send consumes budget without a possible successful readback.
+
+
+## 2026-10-26 — A guarded SDK call does not protect its surrounding ledger
+
+Wrap the complete NativeLedger transaction before directory/lock creation, rather
+than protecting only client.callTool. Require original writer participation in
+owned startup; recheck the same authority and local hold state after awaits before
+writes and accounting. Skip only the redundant SDK wrapper for that exact active
+transaction. Verify lock identity after the last awaited authority check before
+unlink; uncertain cleanup retains the lock/reservations. Actual cooperating-writer
+coverage and original usage must still come from the operator, never a marker.

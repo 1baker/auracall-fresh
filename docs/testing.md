@@ -4065,3 +4065,19 @@ prepare-only policy still forbids draft/Send. A red regression demonstrated a Se
 with insufficient complete-readback capacity; finite draft/Send now preserve the
 minimum eleven/nine remaining reads without adding quota. No browser, private
 operator, production transport or real Send is exercised by these suites.
+
+
+### Original ledger participant source checks
+
+The affected six-suite selection from the finite sender is reused after the194d
+repair. New runtime tests exercise a required participant before startup, original
+authority before accounting/Open, whole acquisition through owned cleanup,
+callback-held preparation, replacement-lock retention and charged incomplete
+finite work. Legacy low-level session fixtures remain synthetic; owned runtime
+fixtures explicitly supply a fake participant tied to their single fixture driver.
+No fake participant is installed or used for actual SDK/browser operations.
+
+Independent review reproduced two additional races: a final protector returning
+success after hold, and a queued hold landing between an assertion helper and
+its caller. Both public runtime regressions were observed RED before repair and
+GREEN after synchronous caller-side fences; no provider effects were used.

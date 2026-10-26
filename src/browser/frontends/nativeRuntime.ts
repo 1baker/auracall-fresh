@@ -25,6 +25,7 @@ import {
 	nativeSendIntentSchema,
 	qualifyNativeFiniteSend,
 } from "./nativeFiniteSend.js";
+import { type NativeLedgerWriter, requireNativeLedgerWriter } from "./nativeLedgerWriter.js";
 import {
 	matchNativeReadBudget,
 	type NativeReadBudget,
@@ -323,6 +324,8 @@ export interface NativeRuntimeLifetime {
 	uncertain(context: NativeRuntimeLifetimeContext, reason: string): Promise<void>;
 }
 export interface NativeRuntimeDependencies {
+	/** Mandatory original-authority writer participant. A local lock is not this authority. */
+	writer?: NativeLedgerWriter;
 	lifetime?: NativeRuntimeLifetime;
 	/** Whole-call ports from ONE actual operator NativeDispatchJoin. A check-before
 	 * callback or JSON guard receipt cannot replace its before/after protection.
@@ -352,7 +355,7 @@ export async function bindNativeOperatorIntegration(
 	input: NativeRuntimeInput,
 	operator: Pick<
 		import("./nativeOperator.js").NativeOperatorOptions,
-		"guard" | "supplier" | "dispatchJoin" | "ownerAuthority" | "producerTaskId"
+		"guard" | "supplier" | "dispatchJoin" | "writer" | "ownerAuthority" | "producerTaskId"
 	>,
 ) {
 	const data = inputs.get(input);
@@ -603,6 +606,7 @@ class NativeProRuntime implements OwnNativeProRuntime {
 	}
 	async hold() {
 		this.#state = "held";
+		this.#session.hold();
 		if (this.#finite) holdNativeFiniteSend(this.#finite);
 		await holdOriginal(
 			this.#directory,
@@ -660,7 +664,8 @@ class NativeProRuntime implements OwnNativeProRuntime {
 			!authority ||
 			typeof authority.verify !== "function" ||
 			typeof authority.protect !== "function" ||
-			typeof authority.assertClaim !== "function"
+			typeof authority.assertClaim !== "function" ||
+			typeof authority.assertCurrent !== "function"
 		)
 			return refuse("native_finite_authority_required");
 		if (this.#state !== "active" || this.#busy || this.#finiteBound)
@@ -775,6 +780,7 @@ export async function startOwnNativeRuntime(
 	const lifetime = lifetimeRequired(dependencies);
 	const qualifyBudget = readBudgetRequired(dependencies);
 	const execution = executionRequired(dependencies);
+	const writer = requireNativeLedgerWriter(dependencies.writer);
 	const data = inputs.get(input);
 	if (!data) return refuse("native_runtime_private_input_invalid");
 	try {
@@ -828,6 +834,7 @@ export async function startOwnNativeRuntime(
 	}
 	let acquiredContext = context;
 	let runtime: NativeProRuntime | undefined;
+	let session: NativeConsumerSession | undefined;
 	try {
 		const descriptor: NativeSdkDescriptor = Object.freeze({
 			command: data.options.producerExecutable,
@@ -858,7 +865,8 @@ export async function startOwnNativeRuntime(
 			async callTool(request: Parameters<NativeMcpClient["callTool"]>[0]) {
 				const finite = runtime?.finiteProtects(request) ?? false;
 				const dispatch = protectedDispatch(request, finite);
-				const wrap = dispatch.kind === "acquire" ? execution.acquire : execution.protected_dispatch;
+				const ledgerProtected = session?.protectsRequest(request) ?? false;
+				if (!finite && !ledgerProtected) return refuse("native_ledger_writer_held");
 				const invoke = async () => {
 					await lifetime.assertCurrent(acquiredContext, dispatch);
 					// A hold is synchronous even if its lifetime hook or durable write fails.
@@ -869,19 +877,23 @@ export async function startOwnNativeRuntime(
 					)
 						refuse("native_runtime_readback_required");
 					if (finite && !runtime?.finiteProtects(request)) refuse("native_finite_send_unqualified");
+					if (ledgerProtected && !session?.protectsRequest(request))
+						refuse("native_ledger_writer_held");
 					return client.callTool(request);
 				};
 				// The finite authority encloses the WHOLE ledger transaction; never
 				// reenter the same Python phase driver at its inner SDK effect.
-				return finite ? invoke() : runNativeOperation(wrap, invoke);
+				return invoke();
 			},
 		});
-		const session = new NativeConsumerSession(
+		session = new NativeConsumerSession(
 			protectedClient,
 			data.admission,
 			data.options.consumerLedgerDirectory,
 			data.now,
 			readBudget,
+			writer,
+			() => acquiredContext,
 		);
 		await session.acquire();
 		acquiredContext = Object.freeze({ ...context, nativeTask: Object.freeze(session.binding) });
@@ -910,6 +922,7 @@ export async function prepareOwnNativeProFromFile(
 	lifetimeRequired(dependencies);
 	readBudgetRequired(dependencies);
 	executionRequired(dependencies);
+	requireNativeLedgerWriter(dependencies.writer);
 	const input = await readNativeRuntimeInput(path, dependencies.producerPin, dependencies.now);
 	const runtime = await startOwnNativeRuntime(input, dependencies);
 	return runtime.prepareProOnly();
