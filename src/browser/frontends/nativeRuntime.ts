@@ -280,6 +280,15 @@ export interface NativeRuntimeLifetimeContext {
 	readonly expiresAtMs: number;
 	readonly nativeTask?: Readonly<NativeTaskBinding>;
 }
+/** Public operation metadata only; no private capability, selector or prompt. */
+export type NativeRuntimeDispatch =
+	| { readonly kind: "sdk_connect" | "acquire" }
+	| {
+			readonly kind: "command";
+			readonly action: "url" | "snapshot" | "gettext" | "click" | "press";
+			readonly operationKey: string;
+	  }
+	| { readonly kind: "original_readback" | "release"; readonly operationKey: string };
 /** Trusted compiled integration, NOT a JSON switch or proof of authority.
  * qualify must cover the actual producer lifetime, SDK handshake failure behavior,
  * original shared limits and operator admission. The compiled retention policy
@@ -288,6 +297,13 @@ export interface NativeRuntimeLifetimeContext {
  */
 export interface NativeRuntimeLifetime {
 	qualify(context: NativeRuntimeLifetimeContext): Promise<void>;
+	/** Actual held guard/current authority, immediately before each dispatch. Never re-observe. */
+	assertCurrent(
+		context: NativeRuntimeLifetimeContext,
+		dispatch: NativeRuntimeDispatch,
+	): Promise<void>;
+	/** Confirm initial admission freshness after validated acquisition, before use. */
+	acquired(context: NativeRuntimeLifetimeContext): Promise<void>;
 	/** Retain this SAME client privately for original readback. No close/release port. */
 	retain(context: NativeRuntimeLifetimeContext, client: NativeMcpClient): Promise<void>;
 	uncertain(context: NativeRuntimeLifetimeContext, reason: string): Promise<void>;
@@ -318,6 +334,8 @@ function lifetimeRequired(dependencies: NativeRuntimeDependencies): NativeRuntim
 	if (
 		!policy ||
 		typeof policy.qualify !== "function" ||
+		typeof policy.assertCurrent !== "function" ||
+		typeof policy.acquired !== "function" ||
 		typeof policy.retain !== "function" ||
 		typeof policy.uncertain !== "function"
 	)
@@ -363,14 +381,16 @@ async function holdOriginal(
 	reason: string,
 ) {
 	try {
-		await metadataFile(directory, "held.json", { version: 1, state: "held", context, reason });
-	} catch {
-		/* An existing or unavailable receipt never permits another connection. */
-	}
-	try {
+		// Fence in-memory pending dispatch before waiting on any filesystem work.
+		// The original intent already prevents a fresh attempt after a crash.
 		await lifetime.uncertain(context, reason);
 	} catch {
 		/* Preserve the original failure and retained connection, never clean up. */
+	}
+	try {
+		await metadataFile(directory, "held.json", { version: 1, state: "held", context, reason });
+	} catch {
+		/* An existing or unavailable receipt never permits another connection. */
 	}
 }
 
@@ -414,6 +434,26 @@ async function connectPinnedSdk(descriptor: NativeSdkDescriptor): Promise<Native
 	// The producer separately verifies its exact connected backend peer/generation.
 	await verifySdkProcess(transport.pid, descriptor.binarySha256);
 	return client;
+}
+
+function protectedDispatch(
+	request: Parameters<NativeMcpClient["callTool"]>[0],
+): NativeRuntimeDispatch {
+	if (request.name === "browser_open") return Object.freeze({ kind: "acquire" });
+	const operationKey = request.arguments.operationKey;
+	if (typeof operationKey !== "string" || !/^[a-zA-Z0-9_-]{8,128}$/.test(operationKey))
+		return refuse("native_runtime_dispatch_unqualified");
+	if (request.name === "browser_continue" || request.name === "browser_close")
+		return Object.freeze({
+			kind: request.name === "browser_continue" ? "original_readback" : "release",
+			operationKey,
+		});
+	const action = z
+		.enum(["url", "snapshot", "gettext", "click", "press"])
+		.safeParse(request.arguments.action);
+	if (request.name !== "browser_command" || !action.success)
+		return refuse("native_runtime_dispatch_unqualified");
+	return Object.freeze({ kind: "command", action: action.data, operationKey });
 }
 
 class NativeProRuntime implements OwnNativeProRuntime {
@@ -556,6 +596,7 @@ export async function startOwnNativeRuntime(
 		return refuse("native_runtime_readback_required");
 	}
 	let acquiredContext = context;
+	let runtime: NativeProRuntime | undefined;
 	try {
 		const descriptor: NativeSdkDescriptor = Object.freeze({
 			command: data.options.producerExecutable,
@@ -573,12 +614,27 @@ export async function startOwnNativeRuntime(
 			),
 		});
 		await revalidateNativeReadBudget(readBudget, data.now);
+		await lifetime.assertCurrent(context, Object.freeze({ kind: "sdk_connect" }));
 		const client = await (dependencies.connect ?? connectPinnedSdk)(descriptor);
 		retainedClients.add(client);
 		await lifetime.retain(context, client);
 		if (data.grant.expiresAtMs <= data.now()) refuse("native_runtime_admission_expired");
+		const protectedClient: NativeMcpClient = Object.freeze({
+			async callTool(request: Parameters<NativeMcpClient["callTool"]>[0]) {
+				const dispatch = protectedDispatch(request);
+				await lifetime.assertCurrent(acquiredContext, dispatch);
+				// A hold is synchronous even if its lifetime hook or durable write fails.
+				if (
+					runtime?.state === "held" &&
+					dispatch.kind !== "original_readback" &&
+					dispatch.kind !== "release"
+				)
+					refuse("native_runtime_readback_required");
+				return client.callTool(request);
+			},
+		});
 		const session = new NativeConsumerSession(
-			client,
+			protectedClient,
 			data.admission,
 			data.options.consumerLedgerDirectory,
 			data.now,
@@ -586,7 +642,9 @@ export async function startOwnNativeRuntime(
 		);
 		await session.acquire();
 		acquiredContext = Object.freeze({ ...context, nativeTask: Object.freeze(session.binding) });
-		return new NativeProRuntime(data, lifetime, acquiredContext, directory, session);
+		await lifetime.acquired(acquiredContext);
+		runtime = new NativeProRuntime(data, lifetime, acquiredContext, directory, session);
+		return runtime;
 	} catch (error) {
 		const failure = publicError(error);
 		await holdOriginal(directory, lifetime, acquiredContext, failure.code);

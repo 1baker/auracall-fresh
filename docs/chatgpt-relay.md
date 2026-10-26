@@ -439,3 +439,45 @@ shutdown safe. The remaining operator/native integration must hold current guard
 and complete original accounting across observation, SDK acquisition and use.
 The early observer's30-second validity cannot be replaced by the longer grant
 expiry or a one-time READY boolean. No such production guard is supplied here.
+
+### Final observer and current-protection integration
+
+The compiled `createRetainedNativeLifetime` options now require two callbacks:
+
+- `admit(context, requestNonce)` runs once before acquisition. The policy creates
+  the fresh32-byte nonce. The actual trusted callback must reserve original
+  accounting, hold the operator guard, invoke the exact pinned owner-private
+  helper, verify its qualified completion and directly consume the fresh0600
+  result. It validates the FULL final1727 grant/owner/generation/private binding
+  before returning only `receiptDigest`, `producerSha256`, `requestNonce`,
+  `observedAtMs` and `validUntilMs` to the policy. This projection is not a new
+  producer wire format and never supplies authority from caller-loaded JSON.
+- `assertCurrent(context, dispatch)` verifies the actual held operator guard
+  and current authority immediately before the requested protected dispatch.
+  It uses the original admission provenance and original accounting lineage;
+  it must not invoke admission/observation again or renew task/grant/expiry.
+
+The policy checks exact nonce/digests, timestamp order, clock reversal and the
+at-most30-second initial deadline bounded by the original grant. Freshness is
+checked before connection/acquisition and after validated acquisition completion.
+Later use can outlive that observation only under the finite original grant and
+real current protection. Successful prior input/completion identity is not a
+substitute for the guard. No lock across CDP is inferred from the observer's
+before/after native snapshots; platform protection is a separate integration.
+
+`NativeRuntimeLifetime` now requires `assertCurrent(context, dispatch)` and
+`acquired(context)` alongside its existing methods. Dispatch metadata is closed:
+`sdk_connect`, `acquire`, `command` with action/key, `original_readback` or `release`
+with original operation key. It contains no capability, selector or prompt.
+The own SDK caller guards every native call on the retained connection; the
+consumer still independently validates correlated completed-operation identity.
+A denied/expired assertion leaves the original journal and client held. Runtime
+hold fences pending calls before durable I/O and independently checks held state
+after the guard wait, including when the lifetime hold hook refuses. Original
+metadata readback/ref-only release also require current protection and do not
+restore preparation or close the SDK/producer.
+
+The ordinary startup still supplies no trusted callbacks. The matching platform
+helper executor, full grant/output validation, continuous exclusion and complete
+original accounting must be connected before runtime use. No successor binary
+is selected by this source update, and no intermediate7d/e43 repin/build occurs.

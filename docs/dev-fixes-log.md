@@ -1,3 +1,23 @@
+## 2026-10-26 — Initial admission was being used without a current dispatch guard
+
+- Symptom: the lifetime callback ran once, and later browser calls proceeded
+  without consulting current operator protection. Grant expiry alone also
+  allowed an initial native observation to outlive its30-second validity during
+  acquisition. Both cases were reproduced through public runtime/policy seams.
+- Fix: require current protection immediately before each protected call and
+  enforce initial nonce/correlation/deadline through acquisition completion.
+  After acquisition, require the held guard and finite grant without issuing
+  another admission observation. Keep independent native completion validation.
+- Review repair: fence the in-memory lifetime before waiting for held.json, and
+  independently check runtime held state immediately before dispatch. A refused
+  hold hook cannot reopen a pending call. Both races have RED/GREEN regressions.
+- Refusal preserves the original attempt/client/ledger, including a completed
+  Open whose admission expired during the wait. Same-session original readback
+  and explicit ref-only release remain guarded and never clear held preparation.
+- Boundary: a compiled callback is still required to execute/verify the actual
+  private observer and enforce platform exclusion/accounting. Metadata projection
+  and source tests do not establish runtime authority or fresh read capacity.
+
 ## 2026-10-26 — Isolated namespace missing from own SDK descriptor
 
 - Symptom: a compiled isolated producer selection lost AGENT_BROWSER_DEV_NAMESPACE

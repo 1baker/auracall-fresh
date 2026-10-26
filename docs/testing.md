@@ -1,3 +1,15 @@
+## Native admission/current-guard integration (2026-10-26)
+
+The runtime regression first demonstrates a second native call after operator
+protection was revoked. The lifetime regression first demonstrates retention
+past the initial observation deadline while the longer grant is still valid.
+Both fail before the repairs and pass afterward. Targeted regressions also
+cover nonce/receipt/producer/time mismatch, async hold and clock reversal,
+Open completion after expiry, synchronous runtime hold during a pending guard
+(including a failed lifetime hold hook), guarded original readback/ref-only release and
+no automatic second admission or connection. All callbacks/SDK responses are
+synthetic; no helper, browser, namespace or private authority is executed.
+
 ## Isolated native SDK namespace (same P266 direction, 2026-10-26)
 
 The nativeRuntime public fixture records the supplied SDK connector descriptor.

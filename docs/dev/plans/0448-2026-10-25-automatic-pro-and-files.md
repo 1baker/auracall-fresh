@@ -284,3 +284,31 @@ No SDK/activation effect. Actual compiled admit, continuous guard/current native
 observation and original accounting reservation across realms still require the
 final source-connected counterpart. Do not invent an actor, proof JSON or source
 wire to bypass that missing production join.
+
+## Final native observer lifetime join (2026-10-26)
+
+Continue the selected own source slice from09b165e5 against final1727/fixture1d82
+and Chief8ff82. The existing compiled admission callback runs once, before
+acquisition. Its trusted implementation must itself invoke the pinned private
+helper, consume its nonce-bound fresh output, match exact grant/receiver/pins,
+and hold the real operator original-accounting guard. No JSON receipt is authority.
+
+The lifetime policy must retain the initial observation correlation and deadline,
+check its at-most30-second validity through SDK startup and acquisition completion,
+and never re-observe after acquisition. Add a required current-authority assertion
+immediately before each own SDK connect/Open/command/original-readback/ref-release
+dispatch. After acquisition, use the actual held guard/current authority and original
+provenance, not the expired initial observation as renewed permission. Guard refusal
+or acquisition-time expiry preserves the original journal/client and forbids replay.
+Native completed-operation identity validation remains a separate required check.
+
+Acceptance: loss of guard after acquisition blocks the next native call; async
+guard loss/clock reversal/initial observation expiry cannot pass acquisition;
+post-acquisition operations may outlive the initial30seconds only with current
+actual guard assertion and finite original grant; no second admit/observe or
+SDK reconnect/release occurs implicitly. Unknown original accounting still refuses.
+
+This slice implements the owned call sites and compiled policy contract. The
+actual platform-held guard and private helper executor remain platform/own
+production integration dependencies until delivered; no mock verifier is used
+for live work. No successor repin/build/runtime/private effect is part of source QA.

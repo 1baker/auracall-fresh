@@ -219,6 +219,8 @@ function opened(f: Awaited<ReturnType<typeof fixture>>, operationKey = "fixture-
 function fixtureLifetime() {
 	return {
 		qualify: vi.fn(async () => {}),
+		assertCurrent: vi.fn(async (_context: unknown, _dispatch: unknown) => {}),
+		acquired: vi.fn(async (_context: unknown) => {}),
 		retain: vi.fn(async (_context: unknown, _client: unknown) => {}),
 		uncertain: vi.fn(async () => {}),
 	};
@@ -594,7 +596,14 @@ it.each([
 			mode === "fixture"
 				? fixtureLifetime()
 				: createRetainedNativeLifetime({
-						admit: async () => {},
+						admit: async (ctx, requestNonce) => ({
+							receiptDigest: ctx.receiptDigest,
+							producerSha256: ctx.producerSha256,
+							requestNonce,
+							observedAtMs: f.now,
+							validUntilMs: Math.min(ctx.expiresAtMs, f.now + 30000),
+						}),
+						assertCurrent: async () => {},
 						producerSha256: fixturePin.binarySha256,
 						now: () => f.now,
 					});
@@ -751,7 +760,14 @@ it.each([
 			mode === "fixture"
 				? fixtureLifetime()
 				: createRetainedNativeLifetime({
-						admit: async () => {},
+						admit: async (ctx, requestNonce) => ({
+							receiptDigest: ctx.receiptDigest,
+							producerSha256: ctx.producerSha256,
+							requestNonce,
+							observedAtMs: f.now,
+							validUntilMs: Math.min(ctx.expiresAtMs, f.now + 30000),
+						}),
+						assertCurrent: async () => {},
 						producerSha256: fixturePin.binarySha256,
 						now: () => f.now,
 					}),
@@ -764,5 +780,172 @@ it.each([
 		code: "native_runtime_readback_required",
 	});
 	expect(client.callTool).toHaveBeenCalledTimes(2);
+	expect(client.close).not.toHaveBeenCalled();
+});
+
+it("blocks the next page dispatch when operator authority is lost after acquisition", async () => {
+	const f = await fixture(),
+		lifetime = fixtureLifetime();
+	const input = await readNativeRuntimeInput(f.path, fixturePin, () => f.now);
+	const client = { callTool: vi.fn(async () => opened(f)), close: vi.fn() };
+	const runtime = await startOwnNativeRuntime(input, {
+		connect: async () => client,
+		lifetime,
+		readBudget: fixtureBudget(f),
+	});
+	lifetime.assertCurrent.mockRejectedValue(new Error("fixture-private-authority-revoked"));
+	await expect(runtime.prepareProOnly()).rejects.toBeDefined();
+	expect(client.callTool).toHaveBeenCalledOnce();
+	expect(runtime.state).toBe("held");
+	expect(client.close).not.toHaveBeenCalled();
+	expect(lifetime.qualify).toHaveBeenCalledOnce();
+});
+
+it.each([
+	"sdk_connect",
+	"acquire",
+])("stops at refused %s protection before any native Open", async (kind) => {
+	const f = await fixture(),
+		lifetime = fixtureLifetime();
+	const input = await readNativeRuntimeInput(f.path, fixturePin, () => f.now);
+	lifetime.assertCurrent.mockImplementation(async (_context, dispatch) => {
+		if ((dispatch as { kind: string }).kind === kind)
+			throw new Error("fixture-private-guard-denial");
+	});
+	const client = { callTool: vi.fn(), close: vi.fn() },
+		connect = vi.fn(async () => client);
+	await expect(
+		startOwnNativeRuntime(input, { connect, lifetime, readBudget: fixtureBudget(f) }),
+	).rejects.toBeDefined();
+	expect(connect).toHaveBeenCalledTimes(kind === "sdk_connect" ? 0 : 1);
+	expect(client.callTool).not.toHaveBeenCalled();
+	expect(client.close).not.toHaveBeenCalled();
+	const held = JSON.parse(
+		await readFile(join(f.dirs.consumer, ".sdk-runtime", "held.json"), "utf8"),
+	);
+	expect(JSON.stringify(held)).not.toContain("fixture-private-guard-denial");
+	await expect(
+		startOwnNativeRuntime(input, { connect, lifetime, readBudget: fixtureBudget(f) }),
+	).rejects.toMatchObject({ code: "native_runtime_readback_required" });
+});
+
+it("holds the actual completed acquisition when the initial observation expires during Open", async () => {
+	const f = await fixture();
+	const input = await readNativeRuntimeInput(f.path, fixturePin, () => f.now);
+	const observedAtMs = f.now;
+	const admit = vi.fn(
+		async (
+			ctx: import("../../src/browser/frontends/nativeRuntime.js").NativeRuntimeLifetimeContext,
+			requestNonce: string,
+		) => ({
+			receiptDigest: ctx.receiptDigest,
+			producerSha256: ctx.producerSha256,
+			requestNonce,
+			observedAtMs,
+			validUntilMs: observedAtMs + 30000,
+		}),
+	);
+	const lifetime = createRetainedNativeLifetime({
+		admit,
+		assertCurrent: async () => {},
+		producerSha256: fixturePin.binarySha256,
+		now: () => f.now,
+	});
+	const client = {
+		callTool: vi.fn(async () => {
+			const response = opened(f);
+			f.now += 30000;
+			return response;
+		}),
+		close: vi.fn(),
+	};
+	const connect = vi.fn(async () => client);
+	await expect(
+		startOwnNativeRuntime(input, { connect, lifetime, readBudget: fixtureBudget(f) }),
+	).rejects.toMatchObject({ code: "native_lifetime_held" });
+	const held = JSON.parse(
+		await readFile(join(f.dirs.consumer, ".sdk-runtime", "held.json"), "utf8"),
+	);
+	expect(held.context.nativeTask.taskId).toBe("fixture-OWN-consumer-task");
+	expect(client.callTool).toHaveBeenCalledOnce();
+	expect(client.close).not.toHaveBeenCalled();
+	expect(admit).toHaveBeenCalledOnce();
+	await expect(
+		startOwnNativeRuntime(input, { connect, lifetime, readBudget: fixtureBudget(f) }),
+	).rejects.toMatchObject({ code: "native_runtime_readback_required" });
+	expect(connect).toHaveBeenCalledOnce();
+});
+
+it("fences a pending browser dispatch immediately when the runtime is held", async () => {
+	const f = await fixture();
+	const input = await readNativeRuntimeInput(f.path, fixturePin, () => f.now);
+	let entered!: () => void, finish!: () => void;
+	const inGuard = new Promise<void>((resolve) => {
+		entered = resolve;
+	});
+	const lifetime = createRetainedNativeLifetime({
+		admit: async (ctx, requestNonce) => ({
+			receiptDigest: ctx.receiptDigest,
+			producerSha256: ctx.producerSha256,
+			requestNonce,
+			observedAtMs: f.now,
+			validUntilMs: f.now + 30000,
+		}),
+		assertCurrent: async (_ctx, dispatch) => {
+			if (dispatch.kind === "command") {
+				entered();
+				await new Promise<void>((resolve) => {
+					finish = resolve;
+				});
+			}
+		},
+		producerSha256: fixturePin.binarySha256,
+		now: () => f.now,
+	});
+	const client = { callTool: vi.fn(async () => opened(f)), close: vi.fn() };
+	const runtime = await startOwnNativeRuntime(input, {
+		connect: async () => client,
+		lifetime,
+		readBudget: fixtureBudget(f),
+	});
+	const preparing = runtime.prepareProOnly();
+	await inGuard;
+	const holding = runtime.hold();
+	expect(runtime.state).toBe("held");
+	finish();
+	const [result] = await Promise.allSettled([preparing, holding]);
+	expect(result.status).toBe("rejected");
+	expect(client.callTool).toHaveBeenCalledOnce();
+	expect(client.close).not.toHaveBeenCalled();
+});
+
+it("keeps the runtime dispatch fence even if the lifetime hold hook refuses", async () => {
+	const f = await fixture(),
+		lifetime = fixtureLifetime();
+	const input = await readNativeRuntimeInput(f.path, fixturePin, () => f.now);
+	let entered!: () => void, finish!: () => void;
+	const inGuard = new Promise<void>((resolve) => {
+		entered = resolve;
+	});
+	const client = { callTool: vi.fn(async () => opened(f)), close: vi.fn() };
+	const runtime = await startOwnNativeRuntime(input, {
+		connect: async () => client,
+		lifetime,
+		readBudget: fixtureBudget(f),
+	});
+	lifetime.assertCurrent.mockImplementation(async () => {
+		entered();
+		await new Promise<void>((resolve) => {
+			finish = resolve;
+		});
+	});
+	lifetime.uncertain.mockRejectedValue(new Error("fixture-private-hold-refusal"));
+	const preparing = runtime.prepareProOnly();
+	await inGuard;
+	const holding = runtime.hold();
+	finish();
+	await Promise.allSettled([preparing, holding]);
+	expect(client.callTool).toHaveBeenCalledOnce();
+	expect(runtime.state).toBe("held");
 	expect(client.close).not.toHaveBeenCalled();
 });

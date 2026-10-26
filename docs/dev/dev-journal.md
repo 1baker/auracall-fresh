@@ -1,3 +1,22 @@
+## 2026-10-26 — Native admission lifetime and per-dispatch guard join
+
+Final native observer1727/fixture1d82 supersedes early91. The own runtime now
+requires a compiled current-authority assertion for SDK connect and every
+Open/command/original-readback/ref-release call. It checks acquired initial
+freshness after native completion as well as before dispatch; no fresh observe
+is issued after acquisition. The retained policy generates one nonce, freezes
+matched initial observation timing/correlation, bounds it to30seconds/grant
+expiry and carries original provenance while later current guard checks govern
+use. Refusal/clock reversal/expiry retains original journals and sticky holds.
+Native completed-identity validation remains separate and unchanged.
+
+This is the owned call-site/policy integration, not a live verifier. The actual
+platform admission callback still must execute the selected pinned private
+helper itself and validate full grant/authority/output before returning the
+correlation projection. Its separate assertCurrent must hold real original
+accounting exclusion/current authority. No such production callback, successor
+pin/build, private effect or provider test is supplied by source fixtures.
+
 ## 2026-10-26 — Isolated SDK namespace propagation
 
 Same P266 direction5efee selects source integration for a disjoint p266new realm.
