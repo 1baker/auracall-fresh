@@ -268,8 +268,8 @@ export interface NativeRuntimeLifetimeContext {
 }
 /** Trusted compiled integration, NOT a JSON switch or proof of authority.
  * qualify must cover the actual producer lifetime, SDK handshake failure behavior,
- * original shared limits and operator admission. No implementation is shipped
- * until producer lifetime and runtime admission qualify. Absent policy blocks startup.
+ * original shared limits and operator admission. The compiled retention policy
+ * still requires a trusted admission verifier; none is supplied by ordinary startup.
  * uncertain preserves the original connection/task; it must not invent release.
  */
 export interface NativeRuntimeLifetime {
@@ -292,7 +292,7 @@ export interface OwnNativeProRuntime {
 }
 
 // Strong references preserve uncertain connections. No release/clear API or
-// automatic SDK.close/browser_close exists while that contract is unresolved.
+// automatic SDK.close/browser_close exists; release needs separate reconciliation.
 const retainedClients = new Set<NativeMcpClient>();
 function lifetimeRequired(dependencies: NativeRuntimeDependencies): NativeRuntimeLifetime {
 	const policy = dependencies.lifetime;
@@ -542,7 +542,7 @@ export async function startOwnNativeRuntime(
 }
 
 /** Explicit private foreground caller. No ordinary startup, enrollment or JSON mode.
- * The CLI supplies no unresolved lifetime policy: it refuses before private reads,
+ * The CLI supplies no admitted lifetime policy: it refuses before private reads,
  * SDK process startup or Open. Only a separately reviewed compiled integration may
  * provide that policy; the input file has no lifetime/enable/cleanup flags.
  */

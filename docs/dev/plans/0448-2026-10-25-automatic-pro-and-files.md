@@ -183,3 +183,21 @@ exact old-host shutdown/cache-preserving transition and private runtime admissio
 remain the coalesced producer dependency through Chief; this source change cannot
 activate the candidate or supply a producer host/cache handoff. Existing2/2Sends,
 pending60reads,PDheld and both owners' allowances/spending remain unchanged.
+
+### Compiled lifetime policy continuation
+
+The received6b47 source contract closes the original clarification. Implement a
+concrete retention policy in this same owner slice: strict immutable context,
+one qualified attempt and retained client, fixed producer pin/expiry and sticky
+uncertainty. Preserve the existing runtime journal, acquired-route composition
+and originalReadback. No SDK close, automatic consumer release, reconnect or new
+quota. A distinct consumer-reference release would retain producer/history and
+cannot erase unknown operations; this policy does not invoke it.
+
+Keep a required trusted operator admission verifier separate from these source
+semantics. Actual host/cache preservation, private admission, SDK failure behavior
+and shared limits still need qualification; ordinary CLI startup remains closed.
+Synthetic public-policy and runtime fixtures must prove exact bindings, late
+admission hold/expiry, client replacement refusal and stored/mismatched readback
+not clearing holds. Run affected checks and native Standards/Spec review. Native
+Pro's matched AX contract and activation remain independent unqualified gates.

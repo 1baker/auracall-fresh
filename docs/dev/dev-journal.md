@@ -1,3 +1,13 @@
+## 2026-10-25 — Compiled retained-client lifetime policy
+
+Continue the same P448/P266 source lane against received lifecycle6b47. Add a
+concrete one-attempt retention policy with exact receipt/producer/expiry binding,
+one private client and permanent uncertainty. Late admission cannot revive held
+or expired attempts. Reuse the existing runtime journal and original readback;
+no release/reconnect or new startup path. The ordinary CLI still has no trusted
+live admission verifier and stays closed. Source fixtures only; host/cache
+activation and native Pro remain separate, all shared limits/custody preserved.
+
 ## 2026-10-25 — Same-session original readback from the owned runtime
 
 Browser's returned lifecycle source contract6b47f455 confirms original metadata

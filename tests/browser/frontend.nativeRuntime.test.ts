@@ -2,6 +2,7 @@ import { chmod, mkdir, mkdtemp, readdir, readFile, rm, symlink, writeFile } from
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, expect, it, vi } from "vitest";
+import { createRetainedNativeLifetime } from "../../src/browser/frontends/nativeLifetime.js";
 import {
 	type NativeSdkDescriptor,
 	prepareOwnNativeProFromFile,
@@ -378,9 +379,19 @@ it("the foreground file caller fails closed before reading private inputs when l
 	});
 });
 
-it("reads original metadata on the retained session and keeps preparation permanently held", async () => {
+it.each([
+	"fixture",
+	"compiled",
+])("%s policy reads original metadata on the retained session and keeps preparation permanently held", async (mode) => {
 	const f = await fixture(),
-		lifetime = fixtureLifetime();
+		lifetime =
+			mode === "fixture"
+				? fixtureLifetime()
+				: createRetainedNativeLifetime({
+						admit: async () => {},
+						producerSha256: fixturePin.binarySha256,
+						now: () => f.now,
+					});
 	const input = await readNativeRuntimeInput(f.path, fixturePin, () => f.now);
 	const wire = JSON.parse(opened(f, "consumer_acquisition").content[0].text);
 	const { targetObservation: _target, result: _result, consumerAck: _ack, ...metadata } = wire.data;
@@ -437,7 +448,10 @@ it("reads original metadata on the retained session and keeps preparation perman
 	expect(client.close).not.toHaveBeenCalled();
 });
 
-it("preserves the original readback validator and hold when the producer reports a different latest operation", async () => {
+it.each([
+	"fixture",
+	"compiled",
+])("%s policy preserves the original readback validator and hold when the producer reports a different latest operation", async (mode) => {
 	const f = await fixture();
 	const input = await readNativeRuntimeInput(f.path, fixturePin, () => f.now);
 	const wire = JSON.parse(opened(f).content[0].text);
@@ -467,7 +481,14 @@ it("preserves the original readback validator and hold when the producer reports
 	};
 	const runtime = await startOwnNativeRuntime(input, {
 		connect: async () => client,
-		lifetime: fixtureLifetime(),
+		lifetime:
+			mode === "fixture"
+				? fixtureLifetime()
+				: createRetainedNativeLifetime({
+						admit: async () => {},
+						producerSha256: fixturePin.binarySha256,
+						now: () => f.now,
+					}),
 	});
 	await expect(runtime.originalReadback("consumer_acquisition")).rejects.toMatchObject({
 		code: "consumer_readback_required",

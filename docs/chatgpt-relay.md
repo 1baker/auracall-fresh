@@ -247,7 +247,7 @@ node dist/bin/auracall-relay.js prepare-native-pro /absolute/private/runtime-inp
 ```
 In plain English: request the separate native Pro-only workflow. The shipped CLI
 currently refuses with `native_runtime_lifetime_contract_required` **before it
-reads the private file or starts an SDK process**. Cleanup/lifetime is unresolved;
+reads the private file or starts an SDK process**. Runtime admission is unresolved;
 no input-file flag can enable it. A future reviewed compiled integration must
 supply the actual producer lifetime and shared-limit policy before acquisition.
 
@@ -278,7 +278,8 @@ peer/generation/owner preservation remain separately enforced by the producer.
 `NativeConsumerSession.acquire()` runs once; its **public** `session.binding`
 supplies the returned native route. No hidden facade lookup, borrowed task,
 serviceTabHandle projection or second Open is used. The returned interface offers
-only the immutable route, state, journaled `prepareProOnly` and an explicit hold;
+only the immutable route, state, journaled `prepareProOnly`, original metadata
+readback and an explicit hold;
 it does not expose Send, claim, browser_close or release.
 
 A fixed `.sdk-runtime/intent.json` in the original consumer ledger is fsynced
@@ -287,11 +288,23 @@ IDs or process restart; no fresh client, stale-lock cleanup or retry is supplied
 Private capabilities are not serialized in runtime objects or receipts. Held
 clients stay retained, and the compiled lifetime receiver retains that exact
 client privately for original readback before Open; its typed client port has no
-close method. Neither SDK.close nor browser_close is treated as release.
-SDK handshake failure can internally close its bridge: that is not proof of task
-release, and must be covered by the separately reviewed lifetime policy. No such
-production policy is provided by this candidate. `qualify`/`retain`/`uncertain` are trusted
-compiled integration callbacks, not consumer JSON authority or a quota grant.
+close method. SDK.close disconnects transport; it is not consumer release.
+Browser contract6b47 defines browser_close as consumer-reference release only,
+retaining producer/history. This caller does not invoke it automatically.
+
+`createRetainedNativeLifetime` supplies the compiled retention policy for the
+existing `qualify`/`retain`/`uncertain` interface. It binds one exact receipt,
+producer pin and expiry; retains one client; rejects replacement clients and
+requalification; and never clears a hold from stored or mismatched metadata.
+Admission completing after a hold or expiry cannot revive the attempt. The
+existing runtime journal separately fences attempts across processes and IDs.
+
+The compiled policy requires a trusted `admit(context)` verifier supplied by an
+operator integration, covering actual host preservation, private admission,
+shared limits and SDK handshake-failure behavior. No production verifier is
+implemented or selected here, and a no-op fixture is not live qualification.
+JSON cannot supply it or enable the CLI. Review of this retention policy alone
+does not authorize startup, consumer release, reconnect or browser activity.
 
 The native adapter still reports intelligence unverified and refuses configure
 with `native_intelligence_unsupported`; the caller preserves that refusal and

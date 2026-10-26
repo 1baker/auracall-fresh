@@ -1,3 +1,12 @@
+## 2026-10-25 — Late admission must not revive a held connection attempt
+
+Pin lifetime qualification to one immutable receipt/producer/expiry and retain
+one exact client. After any awaited admission, recheck both phase and expiry;
+another hold or expiry during that wait must prevail. Store uncertainty before
+validating later metadata and never use it to clear the hold. The existing
+durable SDK intent still governs restarts; an in-memory policy is not fresh
+admission or new capacity. A disconnected SDK is not a released consumer.
+
 ## 2026-10-25 — Retaining a client must retain the validated readback port
 
 The owned runtime must expose its acquired session's originalReadback rather than

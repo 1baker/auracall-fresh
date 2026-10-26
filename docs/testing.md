@@ -1,3 +1,13 @@
+## Compiled native lifetime policy (existing Plan0448 continuation)
+
+Run frontend.nativeLifetime and frontend.nativeRuntime with native consumer,
+identity and protected preparation regressions. Cover one exact attempt/client,
+strict context and expiry, late admission after hold/expiry, rejected admission,
+client/context drift, and permanently held acquired-task history. The public
+runtime must preserve stored/mismatched original metadata semantics under the
+compiled policy, with no close/release/reconnect. Default startup remains closed
+before private reads; an injected fixture admission is not production authority.
+
 ## Same-session runtime readback (existing Plan0448 continuation)
 
 Run frontend.nativeRuntime with native consumer/identity and protected preparation
