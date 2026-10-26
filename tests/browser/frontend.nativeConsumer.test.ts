@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -7,6 +8,11 @@ import {
 	NativeConsumerSession,
 	type NativeMcpClient,
 } from "../../src/browser/frontends/nativeConsumer.js";
+import {
+	nativeBudgetDigest,
+	nativeReadAmendment,
+	qualifyNativeReadBudget,
+} from "../../src/browser/frontends/nativeReadBudget.js";
 import { withCompletedIdentity } from "./nativeIdentityFixture.js";
 
 const makeSession = (
@@ -100,8 +106,253 @@ async function directory() {
 	dirs.push(p);
 	return p;
 }
+async function carriedBudget(
+	consumed: Partial<{ read: number; control: number; acquisition: number }> = {},
+	baselineRead = false,
+) {
+	const path = await directory();
+	let reservationDigest = "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945";
+	const baselineName = `reservation-${nativeBudgetDigest("prior-read")}.json`;
+	if (baselineRead) {
+		const row = { bucket: "read", key: "prior-read", intentDigest: "c".repeat(64) };
+		const raw = JSON.stringify(row);
+		await writeFile(join(path, baselineName), raw, { mode: 0o600 });
+		await writeFile(
+			join(path, baselineName.replace("reservation-", "completed-")),
+			JSON.stringify({ ...row, completed: true }),
+			{ mode: 0o600 },
+		);
+		reservationDigest = nativeBudgetDigest([
+			[baselineName, createHash("sha256").update(raw).digest("hex")],
+		]);
+	}
+	const proof = {
+		amendment: nativeReadAmendment,
+		contextDigest: "",
+		reservationDigest,
+		consumed: { acquisition: 0, read: 18, control: 0, draft: 0, send: 2, ...consumed },
+	};
+	const context = {
+		receiptDigest: "a".repeat(64),
+		producerSha256: "b".repeat(64),
+		admissionDigest: nativeBudgetDigest(admission),
+		expiresAtMs: admission.expiresAtMs,
+		ledgerDirectory: path,
+	};
+	const budget = await qualifyNativeReadBudget(
+		context,
+		async (ctx) => {
+			proof.contextDigest = nativeBudgetDigest(ctx);
+			return proof;
+		},
+		() => 2000,
+	);
+	const callTool = vi.fn(async ({ name, arguments: args }) => {
+		const action = name === "browser_open" ? "open" : args.action;
+		const result = data(action, args.operationKey);
+		if (action === "press") result.result = { pressed: true } as never;
+		return envelope(name, result);
+	});
+	const session = new NativeConsumerSession({ callTool }, admission, path, () => 2000, budget);
+	return { session, budget, proof, context, callTool, path, baselineName };
+}
+
+describe("carried Pro-only read allowance", () => {
+	it.each([
+		"amendment",
+		"send-reset",
+		"under-count",
+		"snapshot",
+		"unknown",
+		"incomplete",
+		"expired",
+		"unresolved-lock",
+	])("refuses %s qualification without creating policy or contacting a producer", async (change) => {
+		const f = await carriedBudget({}, true);
+		const proof: {
+			amendment: string;
+			contextDigest: string;
+			reservationDigest: string;
+			consumed: {
+				acquisition: number;
+				read: number | null;
+				control: number;
+				draft: number;
+				send: number;
+			};
+		} = structuredClone(f.proof);
+		let now = 2000;
+		if (change === "amendment") proof.amendment = "arbitrary-refill";
+		if (change === "send-reset") proof.consumed.send = 0;
+		if (change === "under-count") proof.consumed.read = 0;
+		if (change === "snapshot") proof.reservationDigest = nativeBudgetDigest([]);
+		if (change === "unknown") proof.consumed.read = null;
+		if (change === "incomplete")
+			await rm(join(f.path, f.baselineName.replace("reservation-", "completed-")));
+		if (change === "unresolved-lock")
+			await writeFile(join(f.path, "operation.lock"), "", { mode: 0o600 });
+		await expect(
+			qualifyNativeReadBudget(
+				f.context,
+				async () => {
+					if (change === "expired") now = admission.expiresAtMs;
+					return proof;
+				},
+				() => now,
+			),
+		).rejects.toMatchObject({ code: "native_read_budget_unqualified" });
+		expect(f.callTool).not.toHaveBeenCalled();
+		expect(await readdir(f.path)).not.toContain("read-budget.json");
+	});
+
+	it("never restores consumed capacity when a later reservation disappears", async () => {
+		const f = await carriedBudget({ read: 79 });
+		await f.session.acquire();
+		await f.session.read("url", {}, "last-admitted-read");
+		await rm(join(f.path, `reservation-${nativeBudgetDigest("last-admitted-read")}.json`));
+		await expect(f.session.read("url", {}, "reused-capacity-read")).rejects.toMatchObject({
+			code: "native_read_budget_unqualified",
+		});
+		expect(f.callTool).toHaveBeenCalledTimes(2);
+	});
+	it("charges the preexisting baseline exactly once and stops at cumulative80", async () => {
+		const f = await carriedBudget({ read: 79 }, true);
+		await f.session.acquire();
+		await f.session.read("url", {}, "last-admitted-read");
+		await expect(f.session.read("url", {}, "over-cap-read")).rejects.toMatchObject({
+			code: "consumer_budget_exhausted",
+		});
+		expect(f.callTool).toHaveBeenCalledTimes(2);
+	});
+	it("carries controls and prohibits drafts and Sends under this Pro-only policy", async () => {
+		const f = await carriedBudget({ control: 5 });
+		await f.session.acquire();
+		await f.session.control("press", "e1", "last-control-key");
+		await expect(f.session.control("press", "e2", "over-control-key")).rejects.toMatchObject({
+			code: "consumer_budget_exhausted",
+		});
+		await expect(f.session.fill("not authorized", "forbidden-draft")).rejects.toMatchObject({
+			code: "consumer_budget_exhausted",
+		});
+		await expect(f.session.send("forbidden-send")).rejects.toMatchObject({
+			code: "consumer_budget_exhausted",
+		});
+		expect(f.callTool).toHaveBeenCalledTimes(2);
+	});
+	it("reserves independent readback headroom using carried counts before control", async () => {
+		const f = await carriedBudget({ read: 75 });
+		await f.session.acquire();
+		await expect(f.session.control("press", "e1", "unsafe-control")).rejects.toMatchObject({
+			code: "consumer_budget_exhausted",
+		});
+		expect(f.callTool).toHaveBeenCalledOnce();
+	});
+	it("does not admit a fresh acquisition when original counted acquisition is already used", async () => {
+		const f = await carriedBudget({ acquisition: 1 });
+		await expect(f.session.acquire()).rejects.toMatchObject({ code: "consumer_budget_exhausted" });
+		expect(f.callTool).not.toHaveBeenCalled();
+	});
+	it.each([
+		"directory",
+		"target",
+		"grant",
+		"expiry",
+		"serialized",
+	])("rejects %s policy substitution before a producer call", async (change) => {
+		const f = await carriedBudget();
+		const changed = { ...admission };
+		if (change === "target") changed.targetId = "other-target";
+		if (change === "grant") changed.consumerGrantId = "other-grant";
+		if (change === "expiry") changed.expiresAtMs++;
+		const path = change === "directory" ? await directory() : f.path;
+		expect(
+			() =>
+				new NativeConsumerSession(
+					{ callTool: f.callTool },
+					changed,
+					path,
+					() => 2000,
+					change === "serialized" ? JSON.parse(JSON.stringify(f.budget)) : f.budget,
+				),
+		).toThrow();
+		expect(f.callTool).not.toHaveBeenCalled();
+	});
+	it("copies verifier evidence so later caller mutation cannot restore capacity", async () => {
+		const f = await carriedBudget({ read: 80 });
+		f.proof.consumed.read = 0;
+		await f.session.acquire();
+		await expect(f.session.read("url", {}, "already-exhausted")).rejects.toMatchObject({
+			code: "consumer_budget_exhausted",
+		});
+		expect(f.callTool).toHaveBeenCalledOnce();
+	});
+	it.each([
+		"drop-policy",
+		"replace-policy",
+		"omit-baseline",
+	])("refuses %s rather than regenerating a fresh allowance", async (change) => {
+		const f = await carriedBudget({}, true);
+		await f.session.acquire();
+		if (change === "drop-policy") await rm(join(f.path, "read-budget.json"));
+		if (change === "replace-policy") {
+			const record = JSON.parse(await readFile(join(f.path, "read-budget.json"), "utf8"));
+			record.policyId = "e".repeat(64);
+			await writeFile(join(f.path, "read-budget.json"), JSON.stringify(record));
+		}
+		if (change === "omit-baseline") await rm(join(f.path, f.baselineName));
+		await expect(f.session.read("url", {}, "no-new-allowance")).rejects.toMatchObject({
+			code: "native_read_budget_unqualified",
+		});
+		expect(f.callTool).toHaveBeenCalledOnce();
+	});
+	it("preserves failed reservations and denies restart without the original policy", async () => {
+		const f = await carriedBudget();
+		await f.session.acquire();
+		f.callTool.mockRejectedValueOnce(new Error("uncertain observed read"));
+		await expect(f.session.read("url", {}, "failed-original-read")).rejects.toBeDefined();
+		await expect(
+			new NativeConsumerSession({ callTool: f.callTool }, admission, f.path, () => 2000).acquire(),
+		).rejects.toBeDefined();
+		await expect(
+			new NativeConsumerSession(
+				{ callTool: f.callTool },
+				admission,
+				f.path,
+				() => 2000,
+				f.budget,
+			).acquire(),
+		).rejects.toBeDefined();
+		expect(f.callTool).toHaveBeenCalledTimes(2);
+	});
+});
 
 describe("sealed-r2 public consumer transport with synthetic producer", () => {
+	it("allows the twenty-first read only under the exact carried80 Pro policy", async () => {
+		const path = await directory();
+		const budget = await qualifyNativeReadBudget(
+			{
+				receiptDigest: "a".repeat(64),
+				producerSha256: "b".repeat(64),
+				admissionDigest: nativeBudgetDigest(admission),
+				expiresAtMs: admission.expiresAtMs,
+				ledgerDirectory: path,
+			},
+			async (context) => ({
+				amendment: nativeReadAmendment,
+				contextDigest: nativeBudgetDigest(context),
+				reservationDigest: "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+				consumed: { acquisition: 0, read: 18, control: 0, draft: 0, send: 2 },
+			}),
+			() => 2000,
+		);
+		const callTool = vi.fn(async ({ name, arguments: args }) =>
+			envelope(name, data(name === "browser_open" ? "open" : "url", args.operationKey)),
+		);
+		const session = new NativeConsumerSession({ callTool }, admission, path, () => 2000, budget);
+		await session.acquire();
+		for (let i = 0; i < 21; i++) await session.read("url", {}, `approved-read-${i}`);
+		expect(callTool).toHaveBeenCalledTimes(22);
+	});
 	it("does not reuse an old completed operation identity as an independent observation", async () => {
 		const callTool = vi.fn(async ({ name, arguments: args }) => {
 			const d = data(name === "browser_open" ? "open" : "url", args.operationKey);

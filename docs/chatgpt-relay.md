@@ -379,3 +379,40 @@ future cache-preserving host. Actual operator admission, compatible installed
 producer, cache transition/old-host preservation and browser Pro acceptance stay
 unqualified. Default startup is closed. Shared Sends remain2/2 used, +60 page
 reads pending, PD held; source tests grant no live capacity.
+
+### Carried native Pro accounting (source-only Plan0448 repair)
+
+`startOwnNativeRuntime` also requires `readBudget(context)` from a reviewed
+compiled operator integration. `qualifyNativeReadBudget(context, verify, now)`
+accepts only the exact `same-p266-pro-only-063a5c60-additional60` amendment:80
+cumulative reads, six carried controls and already-used two Sends. The context
+binds receipt/producer/admission digests, the canonical private ledger directory
+and admission expiry. The verifier must independently establish COMPLETE original
+counts plus the byte-digest of the sorted original reservation snapshot. Null,
+unknown, omitted, conflicting or expired evidence refuses before SDK startup.
+Neither this callback nor the qualifier is supplied by JSON or OAuth metadata.
+
+The opaque qualified token is matched again by the runtime and ledger. An
+immutable private `read-budget.json` binds original rows to the policy; totals
+are carried usage plus new reservations, without charging original rows twice.
+Failures remain charged, and a changed policy, omitted original row, fresh target
+or changed directory cannot reuse the token. Draft and Send are forbidden even
+if a caller attempts to use this Pro-only session outside preparation. The
+ordinary unamended consumer retains its20-read guard, but cannot consume a
+budgeted ledger without its original policy. A new owned runtime always requires
+qualified accounting; it cannot obtain fresh capacity by omitting the callback.
+
+Chief4aa approves the numerical amendment only. Current18 documented is a floor,
+not a complete total or62 reads remaining. Production complete-history verifier,
+old-host preservation and real finite private admission remain missing. The
+compiled producer pin remains e43; the later7d candidate is not selected here.
+The default CLI still refuses before private inputs or SDK startup. This repair
+performs no browser/provider calls and does not activate the route.
+
+Review correction: bind the entire post-amendment reservation snapshot to the
+retained opaque policy, not only its initial baseline. Missing or changed later
+rows cannot restore capacity. Revalidate original reservation/completion metadata
+immediately before the first SDK connector call after asynchronous qualification.
+A refused or lost attempt retains its journal; restarting cannot issue a new
+policy over an already-budgeted ledger. This source check still requires actual
+operator-held writer exclusion and does not manufacture preservation proof.

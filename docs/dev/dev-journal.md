@@ -1,3 +1,17 @@
+## 2026-10-26 — Carried native read allowance repair
+
+The direct human FIX instruction continues Plan0448 in the same owner lane.
+Chief4aa has approved80 cumulative reads;18 documented remains only a floor.
+The old fixed20 ledger had no amendment receiver. The owned Pro runtime now
+requires a compiled trusted accounting qualifier, bound to the exact private
+receipt/producer/admission/ledger/expiry, before any SDK attempt. Complete usage
+and original reservation digests carry into durable policy; unknown history,
+changed bindings and attempts to drop the policy refuse. Draft/Send remain
+forbidden and all six controls carry. A full synthetic closed-picker Pro recipe
+uses21 reads/five controls, then independently observes the same target.
+This is source only. Real complete history, preservation and trusted admission
+remain unsupplied; no candidate repin, installation, SDK, browser or model effect.
+
 ## 2026-10-26: Matched privacy-r2 native Pro source
 
 Existing Plan0448 continuation adopts d082/8434 AX facts and6b47 reference-release

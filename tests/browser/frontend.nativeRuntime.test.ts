@@ -4,6 +4,11 @@ import { join } from "node:path";
 import { afterEach, expect, it, vi } from "vitest";
 import { createRetainedNativeLifetime } from "../../src/browser/frontends/nativeLifetime.js";
 import {
+	nativeBudgetDigest,
+	nativeReadAmendment,
+	qualifyNativeReadBudget,
+} from "../../src/browser/frontends/nativeReadBudget.js";
+import {
 	type NativeSdkDescriptor,
 	prepareOwnNativeProFromFile,
 	readNativeRuntimeInput,
@@ -216,6 +221,151 @@ function fixtureLifetime() {
 		uncertain: vi.fn(async () => {}),
 	};
 }
+function fixtureBudget(f: Awaited<ReturnType<typeof fixture>>) {
+	return (
+		context: import("../../src/browser/frontends/nativeReadBudget.js").NativeReadBudgetContext,
+	) =>
+		qualifyNativeReadBudget(
+			context,
+			async (ctx) => ({
+				amendment: nativeReadAmendment,
+				contextDigest: nativeBudgetDigest(ctx),
+				reservationDigest: nativeBudgetDigest([]),
+				consumed: { acquisition: 0, read: 18, control: 0, draft: 0, send: 2 },
+			}),
+			() => f.now,
+		);
+}
+it("requires carried accounting even when lifetime admission succeeds", async () => {
+	const f = await fixture();
+	const input = await readNativeRuntimeInput(f.path, fixturePin, () => f.now);
+	const connect = vi.fn(async () => ({ callTool: vi.fn(async () => opened(f)) }));
+	await expect(
+		startOwnNativeRuntime(input, { lifetime: fixtureLifetime(), connect }),
+	).rejects.toMatchObject({ code: "native_read_budget_required" });
+	expect(connect).not.toHaveBeenCalled();
+	expect(await readdir(f.dirs.consumer)).toEqual([]);
+	await expect(
+		prepareOwnNativeProFromFile("/must-not-read-private-input", { lifetime: fixtureLifetime() }),
+	).rejects.toMatchObject({ code: "native_read_budget_required" });
+});
+it("refuses unknown carried reads before starting an SDK even when lifetime is admitted", async () => {
+	const f = await fixture();
+	const input = await readNativeRuntimeInput(f.path, fixturePin, () => f.now);
+	const connect = vi.fn(async () => ({ callTool: vi.fn(async () => opened(f)) }));
+	await expect(
+		startOwnNativeRuntime(input, {
+			connect,
+			lifetime: fixtureLifetime(),
+			readBudget: async (context) =>
+				qualifyNativeReadBudget(
+					context,
+					async (ctx) => ({
+						amendment: nativeReadAmendment,
+						contextDigest: nativeBudgetDigest(ctx),
+						reservationDigest: "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+						consumed: { acquisition: 0, read: null, control: 0, draft: 0, send: 2 },
+					}),
+					() => f.now,
+				),
+		}),
+	).rejects.toMatchObject({ code: "native_read_budget_unqualified" });
+	expect(connect).not.toHaveBeenCalled();
+	expect(await readdir(f.dirs.consumer)).toEqual([]);
+});
+it.each([
+	"serialized",
+	"receipt",
+	"producer",
+	"admission",
+	"expired",
+])("refuses %s allowance before SDK connection", async (change) => {
+	const f = await fixture();
+	const input = await readNativeRuntimeInput(f.path, fixturePin, () => f.now);
+	const connect = vi.fn();
+	await expect(
+		startOwnNativeRuntime(input, {
+			connect,
+			lifetime: fixtureLifetime(),
+			readBudget: async (context) => {
+				const changed = { ...context };
+				if (change === "receipt") changed.receiptDigest = "e".repeat(64);
+				if (change === "producer") changed.producerSha256 = "e".repeat(64);
+				if (change === "admission") changed.admissionDigest = "e".repeat(64);
+				if (change === "expired") changed.expiresAtMs = f.now;
+				const budget = await qualifyNativeReadBudget(
+					changed,
+					async (ctx) => ({
+						amendment: nativeReadAmendment,
+						contextDigest: nativeBudgetDigest(ctx),
+						reservationDigest: "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+						consumed: { acquisition: 0, read: 18, control: 0, draft: 0, send: 2 },
+					}),
+					() => f.now,
+				);
+				return change === "serialized" ? JSON.parse(JSON.stringify(budget)) : budget;
+			},
+		}),
+	).rejects.toMatchObject({ code: "native_read_budget_unqualified" });
+	expect(connect).not.toHaveBeenCalled();
+	expect(await readdir(f.dirs.consumer)).toEqual([]);
+});
+it("rechecks original history after asynchronous qualification before starting an SDK", async () => {
+	const f = await fixture();
+	const input = await readNativeRuntimeInput(f.path, fixturePin, () => f.now);
+	const row = { bucket: "read", key: "original-read-key", intentDigest: "c".repeat(64) };
+	const name = `reservation-${nativeBudgetDigest(row.key)}.json`;
+	const completion = join(f.dirs.consumer, name.replace("reservation-", "completed-"));
+	await writeFile(join(f.dirs.consumer, name), JSON.stringify(row), { mode: 0o600 });
+	await writeFile(completion, JSON.stringify({ ...row, completed: true }), { mode: 0o600 });
+	const connect = vi.fn(async () => ({ callTool: vi.fn(async () => opened(f)) }));
+	await expect(
+		startOwnNativeRuntime(input, {
+			lifetime: fixtureLifetime(),
+			connect,
+			readBudget: async (context) => {
+				const budget = await qualifyNativeReadBudget(
+					context,
+					async (ctx) => ({
+						amendment: nativeReadAmendment,
+						contextDigest: nativeBudgetDigest(ctx),
+						reservationDigest: nativeBudgetDigest([[name, nativeBudgetDigest(row)]]),
+						consumed: { acquisition: 0, read: 18, control: 0, draft: 0, send: 2 },
+					}),
+					() => f.now,
+				);
+				await rm(completion);
+				return budget;
+			},
+		}),
+	).rejects.toMatchObject({ code: "native_read_budget_unqualified" });
+	expect(connect).not.toHaveBeenCalled();
+});
+it("uses carried read accounting in the real owned runtime preparation", async () => {
+	const f = await fixture();
+	const input = await readNativeRuntimeInput(f.path, fixturePin, () => f.now);
+	const callTool = vi.fn(async () => opened(f));
+	const runtime = await startOwnNativeRuntime(input, {
+		connect: async () => ({ callTool }),
+		lifetime: fixtureLifetime(),
+		readBudget: (context) =>
+			qualifyNativeReadBudget(
+				context,
+				async (ctx) => ({
+					amendment: nativeReadAmendment,
+					contextDigest: nativeBudgetDigest(ctx),
+					reservationDigest: "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+					consumed: { acquisition: 0, read: 80, control: 0, draft: 0, send: 2 },
+				}),
+				() => f.now,
+			),
+	});
+	await expect(runtime.prepareProOnly()).rejects.toMatchObject({
+		code: "consumer_budget_exhausted",
+	});
+	expect(runtime.state).toBe("held");
+	expect(callTool).toHaveBeenCalledOnce();
+});
 it("connects one own client and obtains the preparation route from public acquired binding, never a borrowed task", async () => {
 	const f = await fixture(),
 		parentHome = process.env.HOME;
@@ -223,7 +373,11 @@ it("connects one own client and obtains the preparation route from public acquir
 	const client = { callTool: vi.fn(async (_request: unknown) => opened(f)), close: vi.fn() };
 	const connect = vi.fn(async (_descriptor: NativeSdkDescriptor) => client),
 		lifetime = fixtureLifetime();
-	const runtime = await startOwnNativeRuntime(input, { connect, lifetime });
+	const runtime = await startOwnNativeRuntime(input, {
+		connect,
+		lifetime,
+		readBudget: fixtureBudget(f),
+	});
 	expect(connect).toHaveBeenCalledOnce();
 	expect(connect.mock.calls[0][0]).toMatchObject({
 		command: f.input.options.producerExecutable,
@@ -274,10 +428,14 @@ it("holds the original connection on uncertain acquisition and never reconnects 
 		close: vi.fn(),
 	};
 	const connect = vi.fn(async () => client);
-	await expect(startOwnNativeRuntime(input, { connect, lifetime })).rejects.toMatchObject({
+	await expect(
+		startOwnNativeRuntime(input, { connect, lifetime, readBudget: fixtureBudget(f) }),
+	).rejects.toMatchObject({
 		code: "consumer_readback_required",
 	});
-	await expect(startOwnNativeRuntime(input, { connect, lifetime })).rejects.toMatchObject({
+	await expect(
+		startOwnNativeRuntime(input, { connect, lifetime, readBudget: fixtureBudget(f) }),
+	).rejects.toMatchObject({
 		code: "native_runtime_readback_required",
 	});
 	expect(connect).toHaveBeenCalledOnce();
@@ -292,7 +450,11 @@ it("holds journaled preparation when the producer has no correlated page evidenc
 		lifetime = fixtureLifetime();
 	const input = await readNativeRuntimeInput(f.path, fixturePin, () => f.now);
 	const client = { callTool: vi.fn(async () => opened(f)), close: vi.fn() };
-	const runtime = await startOwnNativeRuntime(input, { connect: async () => client, lifetime });
+	const runtime = await startOwnNativeRuntime(input, {
+		connect: async () => client,
+		lifetime,
+		readBudget: fixtureBudget(f),
+	});
 	await expect(runtime.prepareProOnly()).rejects.toMatchObject({
 		code: "consumer_readback_required",
 	});
@@ -312,15 +474,17 @@ it("permits only one SDK attempt across concurrent starts and changed operation 
 	const client = { callTool: vi.fn(async () => opened(f)) },
 		connect = vi.fn(async () => client);
 	const results = await Promise.allSettled([
-		startOwnNativeRuntime(input, { connect, lifetime }),
-		startOwnNativeRuntime(input, { connect, lifetime }),
+		startOwnNativeRuntime(input, { connect, lifetime, readBudget: fixtureBudget(f) }),
+		startOwnNativeRuntime(input, { connect, lifetime, readBudget: fixtureBudget(f) }),
 	]);
 	expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
 	expect(connect).toHaveBeenCalledOnce();
 	f.input.options.operationId = "fixture-changed-operation";
 	await writeFile(f.path, JSON.stringify(f.input));
 	const changed = await readNativeRuntimeInput(f.path, fixturePin, () => f.now);
-	await expect(startOwnNativeRuntime(changed, { connect, lifetime })).rejects.toMatchObject({
+	await expect(
+		startOwnNativeRuntime(changed, { connect, lifetime, readBudget: fixtureBudget(f) }),
+	).rejects.toMatchObject({
 		code: "native_runtime_readback_required",
 	});
 	expect(connect).toHaveBeenCalledOnce();
@@ -333,6 +497,7 @@ it("holds a connection that outlives its finite admission before sending the cap
 	const client = { callTool: vi.fn(), close: vi.fn() };
 	await expect(
 		startOwnNativeRuntime(input, {
+			readBudget: fixtureBudget(f),
 			lifetime,
 			connect: async () => {
 				f.now = f.input.admission.expiresAtMs + 1;
@@ -351,7 +516,9 @@ it("refuses drift after private reception before any connector call", async () =
 	const input = await readNativeRuntimeInput(f.path, fixturePin, () => f.now);
 	await writeFile(f.bindingOut, "changed-private-binding");
 	const connect = vi.fn();
-	await expect(startOwnNativeRuntime(input, { connect, lifetime })).rejects.toMatchObject({
+	await expect(
+		startOwnNativeRuntime(input, { connect, lifetime, readBudget: fixtureBudget(f) }),
+	).rejects.toMatchObject({
 		code: "native_runtime_input_changed",
 	});
 	expect(connect).not.toHaveBeenCalled();
@@ -365,8 +532,10 @@ it("revalidates input and directory privacy after lifetime qualification before 
 		await chmod(f.dirs.consumer, 0o755);
 	});
 	const connect = vi.fn();
-	await expect(startOwnNativeRuntime(input, { connect, lifetime })).rejects.toMatchObject({
-		code: "native_runtime_private_input_invalid",
+	await expect(
+		startOwnNativeRuntime(input, { connect, lifetime, readBudget: fixtureBudget(f) }),
+	).rejects.toMatchObject({
+		code: "native_read_budget_unqualified",
 	});
 	expect(connect).not.toHaveBeenCalled();
 });
@@ -420,7 +589,11 @@ it.each([
 		close: vi.fn(),
 	};
 	const connect = vi.fn(async () => client);
-	const runtime = await startOwnNativeRuntime(input, { connect, lifetime });
+	const runtime = await startOwnNativeRuntime(input, {
+		connect,
+		lifetime,
+		readBudget: fixtureBudget(f),
+	});
 	expect(await runtime.originalReadback("consumer_acquisition")).toMatchObject({
 		operationKey: "consumer_acquisition",
 		operationState: "completed",
@@ -481,7 +654,11 @@ it("exposes explicit consumer-ref release while retaining the SDK and permanentl
 		close: vi.fn(),
 	};
 	const connect = vi.fn(async () => client);
-	const runtime = await startOwnNativeRuntime(input, { connect, lifetime });
+	const runtime = await startOwnNativeRuntime(input, {
+		connect,
+		lifetime,
+		readBudget: fixtureBudget(f),
+	});
 	expect(await runtime.releaseConsumerReference("consumer_acquisition")).toMatchObject({
 		state: "released",
 		browserDisposition: "retained",
@@ -531,6 +708,7 @@ it.each([
 		close: vi.fn(),
 	};
 	const runtime = await startOwnNativeRuntime(input, {
+		readBudget: fixtureBudget(f),
 		connect: async () => client,
 		lifetime:
 			mode === "fixture"

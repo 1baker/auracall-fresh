@@ -14,8 +14,9 @@ Its live foreground entry stays closed until actual operator admission and host
 preservation qualify. The lifetime contract and compiled policy are implemented;
 matched AX semantic Pro source is now covered below, without runtime activation. Actual acceptance remains4/6=66%,2/2Sends used/PDheld.
 Current allowance6.1M/source6068600/B143981 carries all spending; Browser3M is
-separate. The proposed extra60 page reads remain pending, with18 documented and
-complete trace UNKNOWN. The following initial checkpoint is historical.
+separate. The extra60 page reads were reconciled once under human063a/Chief4aa to80
+cumulative. All prior actuals and the UNKNOWN complete trace carry. Production
+accounting and admission remain unbound; the following initial checkpoint is historical.
 
 ## Initial source checkpoint (historical)
 
@@ -235,3 +236,31 @@ future cache-preserving host. Actual operator admission, compatible installed
 producer, cache transition/old-host preservation and browser Pro acceptance stay
 unqualified. Default startup is closed. Shared Sends remain2/2 used, +60 page
 reads pending, PD held; source tests grant no live capacity.
+
+## Current repair: carried read allowance (2026-10-26)
+
+Direct human "FIX THIS" authorizes this same-owner source repair after interface
+return e498. Add one compiled, opaque allowance receiver to the existing native
+ledger/runtime. It must bind the exact amendment, original input/admission,
+producer, finite expiry and original ledger. The trusted operator verifier must
+supply complete counted usage and the exact pre-amendment reservation snapshot;
+unknown usage refuses. Count carried usage plus subsequent durable reservations,
+including failed calls, without double counting the baseline. Persist the bound
+policy once and reject replacement, omissions, changed ledger/target, expired
+admission and restart attempts that omit it. Pro-only policy grants no draft/Send.
+
+Use the public NativeConsumerSession and owned runtime fixture seams. Demonstrate
+the fixed20 failure with a valid synthetic carried80 policy, then cover exhausted
+capacity, wrong bindings, unknown usage, mutable/replaced policy and restart.
+Default private JSON and CLI stay closed; no production proof is invented. No
+producer repin, Browser source edit, private read, SDK/browser execution or deploy.
+Browser/platform preservation and actual verifier providers stay with their owners
+through Chief. The selected build43ea/7d83 is not activated by this repair.
+
+Review correction: bind the entire post-amendment reservation snapshot to the
+retained opaque policy, not only its initial baseline. Missing or changed later
+rows cannot restore capacity. Revalidate original reservation/completion metadata
+immediately before the first SDK connector call after asynchronous qualification.
+A refused or lost attempt retains its journal; restarting cannot issue a new
+policy over an already-budgeted ledger. This source check still requires actual
+operator-held writer exclusion and does not manufacture preservation proof.

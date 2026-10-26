@@ -5,6 +5,11 @@ import { afterEach, expect, it, vi } from "vitest";
 import { nativeSnapshotSchema } from "../../src/browser/frontends/nativeAx.js";
 import { NativeChatgptFrontend } from "../../src/browser/frontends/nativeChatgpt.js";
 import { NativeConsumerSession } from "../../src/browser/frontends/nativeConsumer.js";
+import {
+	nativeBudgetDigest,
+	nativeReadAmendment,
+	qualifyNativeReadBudget,
+} from "../../src/browser/frontends/nativeReadBudget.js";
 import { prepareRelayProOnly } from "../../src/mcp/relay/proPreparation.js";
 import { RelayStore } from "../../src/mcp/relay/store.js";
 import shared from "./fixtures/native-ax-control-privacy-r2.json";
@@ -68,6 +73,7 @@ type MutableFixture = {
 async function fixture(
 	value = 4,
 	modify?: (data: MutableFixture, args: Record<string, unknown>) => void,
+	carriedAllowance = false,
 ) {
 	const directory = await mkdtemp(join(tmpdir(), "auracall-native-pro-"));
 	dirs.push(directory);
@@ -143,7 +149,25 @@ async function fixture(
 			],
 		};
 	});
-	const session = new NativeConsumerSession({ callTool }, admission, directory, () => 2000);
+	const budget = carriedAllowance
+		? await qualifyNativeReadBudget(
+				{
+					receiptDigest: "a".repeat(64),
+					producerSha256: "b".repeat(64),
+					admissionDigest: nativeBudgetDigest(admission),
+					ledgerDirectory: directory,
+					expiresAtMs: admission.expiresAtMs,
+				},
+				async (ctx) => ({
+					amendment: nativeReadAmendment,
+					contextDigest: nativeBudgetDigest(ctx),
+					reservationDigest: "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+					consumed: { acquisition: 0, read: 18, control: 0, draft: 0, send: 2 },
+				}),
+				() => 2000,
+			)
+		: undefined;
+	const session = new NativeConsumerSession({ callTool }, admission, directory, () => 2000, budget);
 	await session.acquire();
 	const route = {
 		id: "fixture-route",
@@ -378,4 +402,38 @@ it("composes with the durable Pro-only journal and its extra independent inspect
 		"url",
 	]);
 	expect(f.callTool.mock.calls.some(([r]) => ["fill"].includes(r.arguments.action))).toBe(false);
+});
+
+it("prepares closed-picker Instant through Pro with carried80 and no draft or Send", async () => {
+	let opened = false;
+	const f = await fixture(
+		0,
+		(d, a) => {
+			if (a.action === "click") opened = true;
+			if (a.action === "snapshot" && !opened) {
+				delete d.result.refs.e4;
+				d.result.snapshot = d.result.snapshot.split("\n").slice(0, 3).join("\n");
+			}
+		},
+		true,
+	);
+	const input = {
+		store: new RelayStore(join(f.directory, "preparation"), "fixture-owner"),
+		operationId: "fixture-full-pro-operation",
+		route: f.route,
+		frontend: f.frontend,
+	};
+	expect(await prepareRelayProOnly(input)).toMatchObject({
+		state: "verified",
+		preparationOnly: true,
+	});
+	const actions = f.callTool.mock.calls.slice(1).map(([r]) => r.arguments.action);
+	expect(actions.filter((a) => ["url", "snapshot"].includes(a))).toHaveLength(21);
+	expect(actions.filter((a) => a === "press")).toHaveLength(4);
+	expect(actions.filter((a) => a === "click")).toHaveLength(1);
+	expect(actions.slice(-3)).toEqual(["url", "snapshot", "url"]);
+	expect(actions).not.toContain("fill");
+	const calls = f.callTool.mock.calls.length;
+	await prepareRelayProOnly(input);
+	expect(f.callTool).toHaveBeenCalledTimes(calls);
 });

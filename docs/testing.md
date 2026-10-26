@@ -1,3 +1,17 @@
+## Carried native Pro read allowance (Plan0448, 2026-10-26)
+
+Run frontend.nativeConsumer/nativeRuntime/nativePro with the existing identity,
+lifetime and Pro-preparation suites. New behavioral regressions first reproduce
+fixed20 exhaustion at read21 and SDK startup despite unknown/missing carried
+usage. Fixtures then qualify the exact80 cumulative amendment with18 synthetic
+prior reads, including independent same-target final Pro readback. This is not
+18 actual complete usage: real history remains UNKNOWN until a trusted operator
+proves it. Test baseline de-duplication, full cap, failed reservations, six-control
+carry and reserve, exhausted Sends, changed receipt/producer/target/expiry,
+policy omission/replacement, and one SDK attempt across restarts/concurrency.
+Synthetic verifier callbacks are not production admission. No tests connect a
+real SDK, touch retained browser state, or authorize installation or model sends.
+
 ## Matched native AX Pro source and reference release (Plan0448)
 
 Use frontend.nativePro plus nativeConsumer/nativeRuntime/identity/lifetime and

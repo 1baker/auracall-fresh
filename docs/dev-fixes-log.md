@@ -1,3 +1,20 @@
+## 2026-10-26 — Approved read amendment was not connected to the native ledger
+
+- Symptom: the approved cumulative80-read Pro allowance could not reach the
+  fixed20 ledger; the full closed-picker recipe needs21 reads. A lifetime-only
+  runtime could also ignore carried history and start with a fresh default.
+- Fix: an opaque compiled qualification port binds complete carried usage and
+  original reservation digest to the exact receipt/producer/admission/ledger and
+  expiry. Own runtime requires it before SDK startup. Durable baseline accounting
+  adds new reservations without double-counting prior rows; failed operations
+  stay charged. Missing/changed policy and unknown counts refuse; draft/Send are
+  forbidden for this transaction. No private JSON enable or altered producer pin.
+- Checks: behavioral RED/GREEN regressions plus actual ledger/runtime/Pro fixtures
+  exercise cumulative limits, six-control carry/reserve, restarts, uncertainty,
+  exact target binding and an independently observed21-read Pro preparation.
+- Boundary: operator verifier and old-host preservation are not supplied by this
+  source change. No live page reads, controls, Open or Send performed.
+
 ## 2026-10-26: Native control ACKs are not observed Pro or released-browser proof
 
 Existing Plan0448 continuation adopts d082/8434 AX facts and6b47 reference-release

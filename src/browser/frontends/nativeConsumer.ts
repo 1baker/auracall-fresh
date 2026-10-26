@@ -3,6 +3,12 @@ import { constants } from "node:fs";
 import { lstat, mkdir, open, readdir, unlink } from "node:fs/promises";
 import { isAbsolute, join } from "node:path";
 import { z } from "zod";
+import {
+	matchNativeReadReservations,
+	type NativeReadBudget,
+	nativeReadBudgetData,
+	recordNativeReadReservation,
+} from "./nativeReadBudget.js";
 import { FrontendError, type NativeTaskBinding } from "./types.js";
 
 const version = "agent-browser.retained-consumer.v1";
@@ -107,9 +113,110 @@ function fail(code: string): never {
 
 /** Immutable reservations count even on failure. No private UI text or credentials. */
 class NativeLedger {
-	constructor(private readonly directory: string) {
+	constructor(
+		private readonly directory: string,
+		private readonly budget?: NativeReadBudget,
+		private readonly expectedBudget?: {
+			ledgerDirectory: string;
+			admissionDigest: string;
+			expiresAtMs: number;
+		},
+		private readonly now: () => number = Date.now,
+	) {
 		if (!isAbsolute(directory) || process.platform === "win32")
 			fail("consumer_ledger_private_required");
+	}
+	private async accounting(
+		entries: string[],
+		rows: Map<string, { hash: string; bucket: Bucket; budgetId?: string }>,
+	) {
+		const totals: Record<Bucket, number> = {
+			acquisition: 0,
+			read: 0,
+			control: 0,
+			draft: 0,
+			send: 0,
+		};
+		for (const row of rows.values()) totals[row.bucket]++;
+		const fileName = "read-budget.json";
+		if (!this.budget) {
+			if (
+				entries.includes(fileName) ||
+				[...rows.values()].some((row) => row.budgetId !== undefined)
+			)
+				fail("native_read_budget_unqualified");
+			return { totals, readLimit: limits.read, policyId: undefined };
+		}
+		if (!this.expectedBudget) fail("native_read_budget_unqualified");
+		const bound = nativeReadBudgetData(this.budget, this.expectedBudget, this.now);
+		const snapshot = [...rows]
+			.map(([name, row]): [string, string] => [name, row.hash])
+			.sort(([a], [b]) => a.localeCompare(b));
+		matchNativeReadReservations(this.budget, digest(snapshot));
+		const policyId = digest(bound);
+		let baseline: [string, string][];
+		if (entries.includes(fileName)) {
+			const path = join(this.directory, fileName);
+			await this.privatePath(path);
+			const f = await open(path, constants.O_RDONLY | constants.O_NOFOLLOW);
+			try {
+				if ((await f.stat()).size > 262144) fail("consumer_ledger_invalid");
+				const saved = z
+					.object({
+						version: z.literal(1),
+						policyId: z.string().regex(/^[a-f0-9]{64}$/),
+						baseline: z
+							.array(
+								z.tuple([
+									z.string().regex(/^reservation-[a-f0-9]{64}\.json$/),
+									z.string().regex(/^[a-f0-9]{64}$/),
+								]),
+							)
+							.max(128),
+					})
+					.strict()
+					.parse(JSON.parse(await f.readFile("utf8")));
+				if (saved.policyId !== policyId) fail("native_read_budget_unqualified");
+				baseline = saved.baseline;
+			} finally {
+				await f.close();
+			}
+		} else {
+			if ([...rows.values()].some((row) => row.budgetId !== undefined))
+				fail("native_read_budget_unqualified");
+			baseline = [...rows]
+				.map(([name, row]): [string, string] => [name, row.hash])
+				.sort(([a], [b]) => a.localeCompare(b));
+		}
+		if (
+			digest(baseline) !== bound.evidence.reservationDigest ||
+			new Set(baseline.map(([name]) => name)).size !== baseline.length
+		)
+			fail("native_read_budget_unqualified");
+		const baseCounts: Record<Bucket, number> = {
+			acquisition: 0,
+			read: 0,
+			control: 0,
+			draft: 0,
+			send: 0,
+		};
+		const names = new Set<string>();
+		for (const [name, hash] of baseline) {
+			const row = rows.get(name);
+			if (!row || row.hash !== hash) fail("native_read_budget_unqualified");
+			names.add(name);
+			baseCounts[row.bucket]++;
+		}
+		for (const [name, row] of rows) {
+			if (!names.has(name) && row.budgetId !== policyId) fail("native_read_budget_unqualified");
+		}
+		for (const bucket of Object.keys(totals) as Bucket[]) {
+			if (bound.evidence.consumed[bucket] < baseCounts[bucket])
+				fail("native_read_budget_unqualified");
+			totals[bucket] += bound.evidence.consumed[bucket] - baseCounts[bucket];
+		}
+		if (!entries.includes(fileName)) await this.write(fileName, { version: 1, policyId, baseline });
+		return { totals, readLimit: 80, policyId };
 	}
 	private async privatePath(path: string, directory = false) {
 		const s = await lstat(path);
@@ -158,22 +265,31 @@ class NativeLedger {
 			const originals =
 				originalKey === undefined ? [] : Array.isArray(originalKey) ? originalKey : [originalKey];
 			const found = new Set<string>();
-			let used = 0,
-				readsUsed = 0;
+			const rows = new Map<string, { hash: string; bucket: Bucket; budgetId?: string }>();
 			for (const name of entries.filter((n) => /^reservation-[a-f0-9]{64}\.json$/.test(n))) {
 				await this.privatePath(join(this.directory, name));
 				const f = await open(join(this.directory, name), constants.O_RDONLY | constants.O_NOFOLLOW);
-				let record: { bucket: Bucket; key: string; intentDigest: string };
+				let record: { bucket: Bucket; key: string; intentDigest: string; budgetId?: string };
 				try {
 					if ((await f.stat()).size > 16384) fail("consumer_ledger_invalid");
+					const raw = await f.readFile("utf8");
 					record = z
 						.object({
 							bucket: z.enum(["acquisition", "read", "control", "draft", "send"]),
 							key: id,
 							intentDigest: z.string().regex(/^[a-f0-9]{64}$/),
+							budgetId: z
+								.string()
+								.regex(/^[a-f0-9]{64}$/)
+								.optional(),
 						})
 						.strict()
-						.parse(JSON.parse(await f.readFile("utf8")));
+						.parse(JSON.parse(raw));
+					rows.set(name, {
+						hash: createHash("sha256").update(raw).digest("hex"),
+						bucket: record.bucket,
+						budgetId: record.budgetId,
+					});
 				} finally {
 					await f.close();
 				}
@@ -203,17 +319,42 @@ class NativeLedger {
 						await complete.close();
 					}
 				}
-				if (record.bucket === bucket) used++;
-				if (record.bucket === "read") readsUsed++;
 			}
+			const accounting = await this.accounting(entries, rows);
 			const token = digest(key);
 			if (found.size !== originals.length) fail("consumer_operation_key_invalid");
 			if (entries.includes(`reservation-${token}.json`))
 				fail(bucket === "acquisition" ? "consumer_acquisition_held" : "consumer_operation_held");
-			if (used >= limits[bucket]) fail("consumer_budget_exhausted");
+			if (accounting.policyId && (bucket === "draft" || bucket === "send"))
+				fail("consumer_budget_exhausted");
+			if (accounting.totals[bucket] >= (bucket === "read" ? accounting.readLimit : limits[bucket]))
+				fail("consumer_budget_exhausted");
 			// Leave capacity for the post-input URL/snapshot/URL and independent prepare check.
-			if (limits.read - readsUsed < readReserve) fail("consumer_budget_exhausted");
-			await this.write(`reservation-${token}.json`, { bucket, key, intentDigest: digest(intent) });
+			if (accounting.readLimit - accounting.totals.read < readReserve)
+				fail("consumer_budget_exhausted");
+			if (this.budget && this.expectedBudget)
+				nativeReadBudgetData(this.budget, this.expectedBudget, this.now);
+			const reservation = {
+				bucket,
+				key,
+				intentDigest: digest(intent),
+				...(accounting.policyId ? { budgetId: accounting.policyId } : {}),
+			};
+			await this.write(`reservation-${token}.json`, reservation);
+			if (this.budget) {
+				const previous = [...rows].map(([name, row]): [string, string] => [name, row.hash]);
+				const next = [
+					...previous,
+					[`reservation-${token}.json`, digest(reservation)] as [string, string],
+				];
+				recordNativeReadReservation(
+					this.budget,
+					digest(previous.sort(([a], [b]) => a.localeCompare(b))),
+					digest(next.sort(([a], [b]) => a.localeCompare(b))),
+				);
+			}
+			if (this.budget && this.expectedBudget)
+				nativeReadBudgetData(this.budget, this.expectedBudget, this.now);
 			const result = await effect();
 			await this.write(`completed-${token}.json`, {
 				bucket,
@@ -253,10 +394,17 @@ export class NativeConsumerSession {
 		admission: NativeConsumerAdmission,
 		directory: string,
 		now = Date.now,
+		readBudget?: NativeReadBudget,
 	) {
 		this.#client = client;
 		this.#admission = parseNativeConsumerAdmission(admission);
-		this.#ledger = new NativeLedger(directory);
+		const expectedBudget = {
+			ledgerDirectory: directory,
+			admissionDigest: digest(this.#admission),
+			expiresAtMs: this.#admission.expiresAtMs,
+		};
+		if (readBudget) nativeReadBudgetData(readBudget, expectedBudget, now);
+		this.#ledger = new NativeLedger(directory, readBudget, expectedBudget, now);
 		this.#now = now;
 	}
 	get binding(): NativeTaskBinding {

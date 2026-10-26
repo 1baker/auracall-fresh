@@ -12,6 +12,12 @@ import {
 	type NativeMcpClient,
 	parseNativeConsumerAdmission,
 } from "./nativeConsumer.js";
+import {
+	matchNativeReadBudget,
+	type NativeReadBudget,
+	type NativeReadBudgetContext,
+	revalidateNativeReadBudget,
+} from "./nativeReadBudget.js";
 import { FrontendError, type NativeTaskBinding, type NativeTaskFrontendRoute } from "./types.js";
 
 /** Trusted source policy, never an authority or pin supplied by the private JSON. */
@@ -280,6 +286,10 @@ export interface NativeRuntimeLifetime {
 }
 export interface NativeRuntimeDependencies {
 	lifetime?: NativeRuntimeLifetime;
+	/** Trusted compiled operator qualifier. Never read from the private input JSON.
+	 * Required for this Pro-only runtime; missing or unknown carried accounting refuses.
+	 */
+	readBudget?: (context: NativeReadBudgetContext) => Promise<NativeReadBudget>;
 	/** Source fixture seam; production defaults to the pinned SDK stdio connector. */
 	connect?: (descriptor: NativeSdkDescriptor) => Promise<NativeMcpClient>;
 }
@@ -305,6 +315,10 @@ function lifetimeRequired(dependencies: NativeRuntimeDependencies): NativeRuntim
 	)
 		refuse("native_runtime_lifetime_contract_required");
 	return policy;
+}
+function readBudgetRequired(dependencies: NativeRuntimeDependencies) {
+	if (typeof dependencies.readBudget !== "function") refuse("native_read_budget_required");
+	return dependencies.readBudget;
 }
 function publicError(error: unknown): FrontendError {
 	if (error instanceof FrontendError && /^(native|consumer|relay)_[a-z_]{1,100}$/.test(error.code))
@@ -481,12 +495,21 @@ export async function startOwnNativeRuntime(
 	dependencies: NativeRuntimeDependencies = {},
 ): Promise<OwnNativeProRuntime> {
 	const lifetime = lifetimeRequired(dependencies);
+	const qualifyBudget = readBudgetRequired(dependencies);
 	const data = inputs.get(input);
 	if (!data) return refuse("native_runtime_private_input_invalid");
 	try {
 		await verifyReceived(data);
 	} catch (error) {
 		throw publicError(error);
+	}
+	const directory = join(data.options.consumerLedgerDirectory, ".sdk-runtime");
+	// Preserve any original attempt before requalifying or constructing a client.
+	try {
+		await lstat(directory);
+		return refuse("native_runtime_readback_required");
+	} catch (error) {
+		if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw publicError(error);
 	}
 	const context: NativeRuntimeLifetimeContext = Object.freeze({
 		receiptDigest: digest(`${data.inputHash}:${data.bindingHash}`),
@@ -498,6 +521,19 @@ export async function startOwnNativeRuntime(
 	} catch {
 		return refuse("native_runtime_lifetime_unqualified");
 	}
+	const budgetContext = Object.freeze({
+		...context,
+		admissionDigest: digest(JSON.stringify(data.admission)),
+		ledgerDirectory: data.options.consumerLedgerDirectory,
+	});
+	let readBudget: NativeReadBudget;
+	try {
+		readBudget = await qualifyBudget(budgetContext);
+		matchNativeReadBudget(readBudget, budgetContext, data.now);
+	} catch {
+		return refuse("native_read_budget_unqualified");
+	}
+
 	// Qualification may await an operator. Changed files/realm/pins cannot be
 	// accepted merely because they were valid before that wait.
 	try {
@@ -505,7 +541,6 @@ export async function startOwnNativeRuntime(
 	} catch (error) {
 		throw publicError(error);
 	}
-	const directory = join(data.options.consumerLedgerDirectory, ".sdk-runtime");
 	try {
 		await mkdir(directory, { recursive: true, mode: 0o700 });
 		await metadataFile(directory, "intent.json", { version: 1, state: "attempted", context });
@@ -528,6 +563,7 @@ export async function startOwnNativeRuntime(
 				]),
 			),
 		});
+		await revalidateNativeReadBudget(readBudget, data.now);
 		const client = await (dependencies.connect ?? connectPinnedSdk)(descriptor);
 		retainedClients.add(client);
 		await lifetime.retain(context, client);
@@ -537,6 +573,7 @@ export async function startOwnNativeRuntime(
 			data.admission,
 			data.options.consumerLedgerDirectory,
 			data.now,
+			readBudget,
 		);
 		await session.acquire();
 		acquiredContext = Object.freeze({ ...context, nativeTask: Object.freeze(session.binding) });
@@ -561,6 +598,7 @@ export async function prepareOwnNativeProFromFile(
 	} = {},
 ) {
 	lifetimeRequired(dependencies);
+	readBudgetRequired(dependencies);
 	const input = await readNativeRuntimeInput(path, dependencies.producerPin, dependencies.now);
 	const runtime = await startOwnNativeRuntime(input, dependencies);
 	return runtime.prepareProOnly();
