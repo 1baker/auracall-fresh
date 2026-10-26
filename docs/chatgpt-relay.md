@@ -765,3 +765,41 @@ operator's private compiled bootstrap with the above real suppliers, selected
 listener/reachability/authentication and SSH-independent supervision. No such
 bootstrap or transport binding is supplied by this source result; there is no
 qualified live launch command yet.
+## Persistent private carrier composition (source only, 2026-10-26)
+
+`createNativeCallbackIntegration` in
+`src/browser/frontends/nativeCallbackIntegration.ts` supplies the existing private
+`startOwnNativeFrontendHost` with `dependencies` and finite `authority`. The
+operator still supplies its actual received input, exact request intent, ingress
+configuration, original accounting suppliers and dedicated inherited IPC. This
+is a compiled library entrypoint; there is no new JSON mode or process launcher.
+
+It consumes frozen operator f8625bd4 / contract d4d38756, protocol
+`p266.original-callback-carrier.v1`. One persistent peer retains the full-v2
+validator, local SDK client and opaque results. Root results become available only
+after the carrier's final return. Nested authority assertions run within that
+single transaction. Malformed frames, duplicate callbacks, mismatched identity,
+transport loss and holds refuse without replay, reconnect or endpoint closure.
+
+The runtime binds a memory getter to its actual `NativeConsumerSession` before
+acquisition; it refuses until that same session has a validated binding. The
+carrier's before/after task callbacks read that getter, not a caller-supplied task
+descriptor. Its reads perform no page or SDK action. A synchronous peer fence
+also guards acquired-runtime publication. Existing local drivers may omit this
+receiver; this carrier composition always supplies it.
+
+The production path uses ordinary/finite `protect` around the whole ledger
+transaction, including its exact dispatch. The legacy callback-only
+`protected_dispatch` port has no context/dispatch metadata and intentionally
+refuses in this peer. It is not nested inside the writer transaction or rebuilt
+from remembered arguments.
+
+Current compatibility boundary: f862's Python ledger parser rejects the mandatory
+`dispatch` field already carried by Aura. A real Node-to-frozen-Python synthetic
+IPC check reproduces that refusal before invoking the operation. Do not remove
+that field or select a guessed successor. The incumbent operator owns the repair
+and finite-fill compatibility. Its independent carrier review is also pending.
+Local IPC proof does not qualify real bootstrap, original accounting participation,
+complete carried usage, two reserved observations, private admission, producer
+selection, frontend transport or an additional Send. Existing 2/2 Sends remain
+spent; autonomous browser acceptance is still incomplete.

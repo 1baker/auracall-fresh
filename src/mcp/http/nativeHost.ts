@@ -21,7 +21,8 @@ import { createFrontendHttpServer } from "./server.js";
  */
 export interface OwnNativeFrontendHostOptions {
 	input: NativeRuntimeInput;
-	dependencies: Required<Omit<NativeRuntimeDependencies, "connect">>;
+	dependencies: Required<Omit<NativeRuntimeDependencies, "connect" | "taskReceiver">> &
+		Pick<NativeRuntimeDependencies, "taskReceiver">;
 	intent: NativeSendIntent;
 	authority: NativeFiniteAuthority;
 	http: FrontendHttpConfig;

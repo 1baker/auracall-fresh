@@ -26248,3 +26248,17 @@ private expectations. Accept the original local value only after AFTER ACK.
 Notify the same bridge of independently validated acquisition before publishing
 a route, and include exact dispatch in the already-required ledger participant.
 Source compatibility still does not install a carrier or authorize browser input.
+## 2026-10-26 — Persistent carrier lacked its Node callback peer
+
+- Existing host70 assembled the runtime and sender, but could not consume the
+  operator's concrete Python callback protocol. Added its exact private peer and
+  integration, retaining opaque values locally until the successful parent return.
+- Validate a complete delivered batch before accepting an ACK or invoking code.
+  Duplicate keys, callbacks, malformed UTF-8, negative/unknown replies and trailing
+  partial frames hold the original binding. No automatic replay or stream close.
+- An acquired argument is not an independent task observation. The runtime now
+  offers a one-time memory-reader receiver over the same validated session; the
+  callback peer reads it freshly before/after, without another browser action.
+- Real synthetic Node/Python IPC exposed an operator mismatch: the frozen parser
+  omits Aura's mandatory dispatch descriptor. Preserve the descriptor and refusal;
+  repair belongs to the existing Python owner, not a client-side downgrade.

@@ -56229,3 +56229,18 @@ Post-acquisition startup failures hold the original session. Focused composition
 checks cover shared-instance wiring, unauthenticated refusal and startup failures.
 Actual private operator bootstrap, selected transport and independent home process
 lifetime remain required; no build, deployment or real browser/Send performed.
+## 2026-10-26 — Concrete Node peer for the persistent operator carrier
+
+Consumed frozen f8625bd4/d4d38756 in the existing private70 host composition.
+Added strict framed IPC and callback routing with full-v2 validation, opaque local
+results held until AFTER, same-session task getter, and synchronous hold fencing.
+Kept one ledger driver and exact dispatch metadata; no Python/controller/sender
+rewrite, startup JSON mode, process spawn, producer repin or runtime activation.
+
+The actual anonymous-IPC synthetic exchange reaches admission, budget, handshake,
+acquisition notification and then reproduces the frozen Python dispatch-parser
+refusal before the ledger operation. Routed the exact mismatch through Chief.
+Actual original accounting/provider/bootstrap bindings remain absent; source
+ownership is not a live participant. Browser5354 and original shared limits stay
+unchanged. Focused evidence distinguishes Node-peer checks from prior Python-only
+checks and full live-provider acceptance.

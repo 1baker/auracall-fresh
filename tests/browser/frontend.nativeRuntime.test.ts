@@ -283,6 +283,30 @@ function fixtureBudget(f: Awaited<ReturnType<typeof fixture>>, reads = 18, draft
 			() => f.now,
 		);
 }
+it("binds the private task reader to the actual SAME acquired session before the acquired ACK", async () => {
+	const f = await fixture();
+	const input = await readNativeRuntimeInput(f.path, fixturePin, () => f.now);
+	let reader!: () => Readonly<import("../../src/browser/frontends/types.js").NativeTaskBinding>;
+	const lifetime = fixtureLifetime();
+	lifetime.acquired.mockImplementation(async (context) => {
+		expect(reader()).toEqual((context as { nativeTask: unknown }).nativeTask);
+		expect(reader()).not.toBe((context as { nativeTask: unknown }).nativeTask);
+	});
+	const bind = vi.fn((fn) => {
+		reader = fn;
+		expect(() => reader()).toThrow();
+	});
+	const callTool = vi.fn(async () => opened(f));
+	const runtime = await startOwnNativeRuntime(input, {
+		lifetime,
+		readBudget: fixtureBudget(f),
+		taskReceiver: { bind },
+		connect: async () => ({ callTool }),
+	});
+	expect(bind).toHaveBeenCalledOnce();
+	expect(reader()).toEqual(runtime.route.nativeTask);
+	expect(callTool).toHaveBeenCalledOnce(); // no re-acquisition or observer read
+});
 it("retains a connected client when the whole-operation guard refuses after handshake", async () => {
 	const f = await fixture();
 	const input = await readNativeRuntimeInput(f.path, fixturePin, () => f.now);

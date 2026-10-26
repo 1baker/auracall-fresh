@@ -445,3 +445,18 @@ transaction metadata retains the original task/operation. Retain real carry and
 all runtime holds. Python fill refusal is a concrete counterpart gap, not permission
 to bypass it. Actual home-host lifetime/transport/private authority remains the
 incumbent operator's same integration work.
+## Concrete persistent Node peer (2026-10-26)
+
+Same bf8/01a1751a; consume actual operator f8625bd4/d4d38756 in the existing70
+private host. Implement only the Node peer, same-session task receiver and compiled
+integration. Reuse the full-v2 decoder, ordinary/finite writer, same frontend and
+Bastion P447/08b return. No duplicate Python, sender, server or new runtime mode.
+
+Acceptance: full wire reaches the original validator; opaque Node values remain
+local until AFTER; fresh task callbacks use the same acquired session; known batch
+poison or asynchronous hold cannot produce a successful result. Verify through
+the public seam and one real local Node/frozen-Python synthetic IPC exchange.
+Preserve exact dispatch and closed refusal where the frozen counterpart rejects
+it. Operator successor and independent review, real providers/bootstrap/accounting
+and actual frontend transport remain separate gates. No browser/runtime activation
+or Send allowance follows from this source slice.

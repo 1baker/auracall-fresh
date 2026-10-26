@@ -325,7 +325,14 @@ export interface NativeRuntimeLifetime {
 	retain(context: NativeRuntimeLifetimeContext, client: NativeMcpClient): Promise<void>;
 	uncertain(context: NativeRuntimeLifetimeContext, reason: string): Promise<void>;
 }
+/** Private memory reader, bound exactly once to the acquired session itself.
+ * Reading this getter causes no SDK call and does not establish live authority. */
+export interface NativeTaskReaderReceiver {
+	bind(reader: () => Readonly<NativeTaskBinding>): void;
+}
 export interface NativeRuntimeDependencies {
+	/** Optional for existing local drivers; mandatory in the callback carrier composition. */
+	taskReceiver?: NativeTaskReaderReceiver;
 	/** Mandatory original-authority writer participant. A local lock is not this authority. */
 	writer?: NativeLedgerWriter;
 	lifetime?: NativeRuntimeLifetime;
@@ -785,6 +792,9 @@ export async function startOwnNativeRuntime(
 	const qualifyBudget = readBudgetRequired(dependencies);
 	const execution = executionRequired(dependencies);
 	const writer = requireNativeLedgerWriter(dependencies.writer);
+	if (dependencies.taskReceiver && typeof dependencies.taskReceiver.bind !== "function")
+		refuse("native_runtime_task_receiver_invalid");
+	const bindTaskReader = dependencies.taskReceiver?.bind.bind(dependencies.taskReceiver);
 	const data = inputs.get(input);
 	if (!data) return refuse("native_runtime_private_input_invalid");
 	try {
@@ -899,6 +909,14 @@ export async function startOwnNativeRuntime(
 			writer,
 			() => acquiredContext,
 		);
+		if (bindTaskReader) {
+			const sameSession = session;
+			const bound = bindTaskReader(() => Object.freeze(sameSession.binding)) as unknown;
+			if (bound !== undefined) {
+				if (bound instanceof Promise) void bound.catch(() => {});
+				refuse("native_runtime_task_receiver_invalid");
+			}
+		}
 		await session.acquire();
 		acquiredContext = Object.freeze({ ...context, nativeTask: Object.freeze(session.binding) });
 		await lifetime.acquired(acquiredContext);
