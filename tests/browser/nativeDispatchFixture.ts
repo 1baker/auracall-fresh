@@ -5,9 +5,14 @@ import type { NativeRuntimeExecution } from "../../src/browser/frontends/nativeR
 /** Synthetic callback forwarding only. No Python guard, admission or authority. */
 export function fixtureDispatchJoin(events: string[] = []): NativeOperatorDispatchJoin {
 	return {
-		async admit_once(nonce, operation) {
+		async admit_once(nonce, operation, validate) {
 			events.push("admit_once");
-			return operation(nonce);
+			const completed = await operation(nonce);
+			validate(completed.wire);
+			return completed.value;
+		},
+		async acquired() {
+			events.push("acquired");
 		},
 		async qualify_budget(_context, operation) {
 			events.push("qualify_budget");

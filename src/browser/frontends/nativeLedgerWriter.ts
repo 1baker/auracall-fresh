@@ -1,10 +1,11 @@
-import type { NativeRuntimeLifetimeContext } from "./nativeRuntime.js";
+import type { NativeRuntimeDispatch, NativeRuntimeLifetimeContext } from "./nativeRuntime.js";
 import { FrontendError } from "./types.js";
 
 export type NativeLedgerBucket = "acquisition" | "read" | "control" | "draft" | "send";
 export type NativeLedgerCheck = "mutation" | "effect" | "cleanup";
 export interface NativeLedgerOperation {
 	readonly original: NativeRuntimeLifetimeContext;
+	readonly dispatch: NativeRuntimeDispatch;
 	readonly ledgerDirectory: string;
 	readonly admissionDigest: string;
 	readonly expiresAtMs: number;

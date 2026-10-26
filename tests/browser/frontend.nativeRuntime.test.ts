@@ -263,6 +263,7 @@ function fixtureLifetime() {
 		qualify: vi.fn(async () => {}),
 		assertCurrent: vi.fn(async (_context: unknown, _dispatch: unknown) => {}),
 		acquired: vi.fn(async (_context: unknown) => {}),
+		assertAcquiredCurrent: vi.fn((_context: unknown) => {}),
 		retain: vi.fn(async (_context: unknown, _client: unknown) => {}),
 		uncertain: vi.fn(async () => {}),
 	};
@@ -392,7 +393,11 @@ it.each([
 	).rejects.toMatchObject({ code: "native_runtime_execution_unqualified" });
 	expect(call).toHaveBeenCalledTimes(mode === "skipped" ? 0 : 1);
 });
-it("binds v2 observation and the phase-aware operator to the actual private receiver and own SDK", async () => {
+it.each([
+	"normal",
+	"late-hold",
+	"late-expiry",
+])("binds v2 observation to the own SDK with %s acquisition ACK", async (mode) => {
 	const f = await fixture();
 	const input = await readNativeRuntimeInput(f.path, fixturePin, () => f.now);
 	const owner = {
@@ -417,6 +422,22 @@ it("binds v2 observation and the phase-aware operator to the actual private rece
 	const authority = vi.fn(async () => {});
 	const joinEvents: string[] = [];
 	const dispatchJoin = fixtureDispatchJoin(joinEvents);
+	let holdAcquired:
+		| ((
+				context: import("../../src/browser/frontends/nativeRuntime.js").NativeRuntimeLifetimeContext,
+		  ) => Promise<void>)
+		| undefined;
+	if (mode !== "normal")
+		dispatchJoin.acquired = async (context) => {
+			queueMicrotask(() =>
+				queueMicrotask(() =>
+					queueMicrotask(() => {
+						if (mode === "late-hold") void holdAcquired?.(context);
+						else f.now += 31000;
+					}),
+				),
+			);
+		};
 	const operator = await bindNativeOperatorIntegration(input, {
 		dispatchJoin,
 		writer: fixtureLedgerWriter(dispatchJoin),
@@ -441,14 +462,22 @@ it("binds v2 observation and the phase-aware operator to the actual private rece
 	});
 	const client = { callTool: vi.fn(async () => opened(f)), close: vi.fn() };
 	const connect = vi.fn(async () => client);
-	const runtime = await startOwnNativeRuntime(input, { ...operator, connect });
+	holdAcquired = (context) => operator.lifetime.uncertain(context, "synthetic-late-hold");
+	const startup = startOwnNativeRuntime(input, { ...operator, connect });
+	if (mode !== "normal") {
+		await expect(startup).rejects.toBeDefined();
+		expect(client.callTool).toHaveBeenCalledOnce();
+		expect(client.close).not.toHaveBeenCalled();
+		return;
+	}
+	const runtime = await startup;
 	expect(runtime.route.nativeTask?.taskId).toBe("fixture-OWN-consumer-task");
 	expect(observe).toHaveBeenCalledOnce();
 	expect(connect).toHaveBeenCalledOnce();
 	expect(client.callTool).toHaveBeenCalledOnce();
 	expect(client.close).not.toHaveBeenCalled();
 	expect(authority).toHaveBeenCalledTimes(2);
-	expect(joinEvents).toEqual(["admit_once", "qualify_budget", "handshake", "acquire"]);
+	expect(joinEvents).toEqual(["admit_once", "qualify_budget", "handshake", "acquire", "acquired"]);
 });
 it("requires carried accounting even when lifetime admission succeeds", async () => {
 	const f = await fixture();
@@ -1906,4 +1935,82 @@ it("does not create a reservation when a hold lands between assertion and caller
 		before,
 	);
 	expect(h.client.callTool).toHaveBeenCalledOnce();
+});
+
+it("provides exact dispatch and acquired identity before every ordinary ledger transaction", async () => {
+	const operations: import("../../src/browser/frontends/nativeLedgerWriter.js").NativeLedgerOperation[] =
+		[];
+	const h = await finiteFixture(18, 0, (execution) => {
+		const writer = fixtureLedgerWriter(execution),
+			protect = writer.protect;
+		writer.protect = async (op, run) => {
+			operations.push(op);
+			return protect(op, run);
+		};
+		return writer;
+	});
+	await h.runtime.prepareProOnly();
+	expect(operations[0].dispatch).toEqual({ kind: "acquire" });
+	const requests = h.client.callTool.mock.calls
+		.map(([r]) => r)
+		.filter((r) => r.name === "browser_command");
+	expect(operations.slice(1).map((op) => op.dispatch)).toEqual(
+		requests.map((r) => ({
+			kind: "command",
+			action: r.arguments.action,
+			operationKey: r.arguments.operationKey,
+		})),
+	);
+	for (const op of operations.slice(1)) {
+		expect(op.original.nativeTask?.taskId).toBe("fixture-OWN-consumer-task");
+		expect(Object.isFrozen(op.dispatch)).toBe(true);
+	}
+	expect(h.sends).toBe(0);
+});
+
+it.each([
+	"originalReadback",
+	"releaseConsumerReference",
+] as const)("carries the original operation key into %s writer metadata", async (method) => {
+	const operations: import("../../src/browser/frontends/nativeLedgerWriter.js").NativeLedgerOperation[] =
+		[];
+	const h = await finiteFixture(18, 0, (execution) => {
+		const writer = fixtureLedgerWriter(execution),
+			protect = writer.protect;
+		writer.protect = async (op, run) => {
+			operations.push(op);
+			return protect(op, run);
+		};
+		return writer;
+	});
+	await h.runtime.prepareProOnly();
+	const original = h.client.callTool.mock.calls.find(([r]) => r.name === "browser_command")?.[0]
+		.arguments.operationKey;
+	expect(typeof original).toBe("string");
+	// This page fixture deliberately has no metadata ACK; inspect only supplied transaction metadata.
+	await expect(h.runtime[method](String(original))).rejects.toBeDefined();
+	expect(operations.at(-1)?.dispatch).toEqual({
+		kind: method === "originalReadback" ? "original_readback" : "release",
+		operationKey: original,
+	});
+	expect(operations.at(-1)?.original.nativeTask?.taskId).toBe("fixture-OWN-consumer-task");
+	expect(h.client.callTool.mock.calls.filter(([r]) => r.name === "browser_open")).toHaveLength(1);
+});
+
+it.each([
+	"missing",
+	"async",
+])("refuses a %s synchronous acquired-publication fence", async (mode) => {
+	const f = await fixture(),
+		input = await readNativeRuntimeInput(f.path, fixturePin, () => f.now);
+	const lifetime = fixtureLifetime();
+	if (mode === "missing") lifetime.assertAcquiredCurrent = undefined as never;
+	else lifetime.assertAcquiredCurrent = vi.fn(async () => {}) as never;
+	const client = { callTool: vi.fn(async () => opened(f)), close: vi.fn() };
+	const connect = vi.fn(async () => client);
+	await expect(
+		startOwnNativeRuntime(input, { lifetime, readBudget: fixtureBudget(f), connect }),
+	).rejects.toMatchObject({ code: "native_runtime_lifetime_contract_required" });
+	expect(connect).toHaveBeenCalledTimes(mode === "missing" ? 0 : 1);
+	expect(client.close).not.toHaveBeenCalled();
 });

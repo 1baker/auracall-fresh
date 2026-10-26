@@ -201,6 +201,18 @@ class RetainedNativeLifetime implements NativeRuntimeLifetime {
 		this.#task = JSON.stringify(checked.nativeTask);
 		this.#phase = "acquired";
 	}
+	assertAcquiredCurrent(context: NativeRuntimeLifetimeContext): void {
+		const checked = this.parsed(context);
+		if (
+			!this.matches(checked) ||
+			!checked.nativeTask ||
+			!this.#client ||
+			this.#phase !== "acquired" ||
+			JSON.stringify(checked.nativeTask) !== this.#task ||
+			!this.initialFresh(checked)
+		)
+			this.refuse();
+	}
 	private dispatchAllowed(
 		context: NativeRuntimeLifetimeContext,
 		dispatch: NativeRuntimeDispatch,

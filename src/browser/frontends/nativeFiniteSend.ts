@@ -67,6 +67,7 @@ export type NativeFiniteEvidence = z.infer<typeof evidenceSchema>;
 export type NativeBucket = "acquisition" | "read" | "control" | "draft" | "send";
 export type NativeCounts = Record<NativeBucket, number>;
 export interface NativeFiniteOperation {
+	readonly dispatch: import("./nativeRuntime.js").NativeRuntimeDispatch;
 	readonly context: NativeFiniteContext;
 	readonly key: string;
 	readonly bucket: NativeBucket;
@@ -265,6 +266,7 @@ export async function protectFiniteLedger<T>(
 	key: string,
 	bucket: NativeBucket,
 	intent: unknown,
+	dispatch: import("./nativeRuntime.js").NativeRuntimeDispatch,
 	operation: () => Promise<T>,
 	readReserve = 0,
 	originalKeys: readonly string[] = [],
@@ -276,6 +278,7 @@ export async function protectFiniteLedger<T>(
 	}
 	s.busy = true;
 	const op = Object.freeze({
+		dispatch: Object.freeze({ ...dispatch }),
 		context: s.context,
 		key,
 		bucket,

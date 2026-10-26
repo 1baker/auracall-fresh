@@ -26226,3 +26226,14 @@ writes and accounting. Skip only the redundant SDK wrapper for that exact active
 transaction. Verify lock identity after the last awaited authority check before
 unlink; uncertain cleanup retains the lock/reservations. Actual cooperating-writer
 coverage and original usage must still come from the operator, never a marker.
+
+
+## 2026-10-26 — Timing metadata cannot substitute for the complete private observation
+
+A current operator requires observation-v2 while the Node callback returned only
+three timing fields. Carry the exact validated full wire separately from the
+original opaque Node value; bind its validator to that single callback/nonce and
+private expectations. Accept the original local value only after AFTER ACK.
+Notify the same bridge of independently validated acquisition before publishing
+a route, and include exact dispatch in the already-required ledger participant.
+Source compatibility still does not install a carrier or authorize browser input.

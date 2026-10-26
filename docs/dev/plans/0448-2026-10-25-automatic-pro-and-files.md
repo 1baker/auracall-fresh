@@ -421,3 +421,20 @@ survives. Preserve exact full-v2/acquired identity and original readback rules.
 Runtime journals, two-read observer supplier, manual/external writers and canonical
 Bastion store require explicit separate classification. No source hook is proof
 of actual complete carry or global exclusion. Actual operator bindings remain held.
+
+
+## Current full-v2 private counterpart join (24d, same continuation)
+
+After64c closes the ledger-span source gap, implement the remaining Aura-owned
+private handoff to reviewed ab099/8f1004: completed immutable full observation plus
+original local value; same-attempt exact full validator; validated same-client
+acquired-task notification before route exposure; exact dispatch in the existing
+pre-ledger participant descriptor. Keep ONE driver, existing decoder/guards and
+P447/08b sender; no new server, transport protocol or producer writer.
+
+Prove full-v2 reaches its private validator, invalid/missing/late validation and
+wrong result identity hold, acquisition ACK cannot revive held/expired work, and
+transaction metadata retains the original task/operation. Retain real carry and
+all runtime holds. Python fill refusal is a concrete counterpart gap, not permission
+to bypass it. Actual home-host lifetime/transport/private authority remains the
+incumbent operator's same integration work.

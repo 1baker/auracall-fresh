@@ -63,22 +63,40 @@ export interface NativeOperatorOptions {
 	receiptDigest: string;
 	now?: () => number;
 }
-/** Node callback ports for exact311f NativeDispatchJoin, backed by the SAME
- * persistent original guard. This is not a Python FD or a bridge implementation.
- * The actual bridge owns Python ObservationTiming conversion; timing is not proof.
- * Opaque qualifier/client/results stay in their original Node process.
+/** Private Node callback boundary for reviewed ab099 full-v2 admission.
+ * The actual persistent carrier implements the Python ABI; this is not an RPC
+ * protocol or a new phase driver. Opaque values stay on this Node instance until
+ * the same carrier acknowledges its AFTER checks. Timing alone is not proof.
  */
 export interface NativeOperatorDispatchJoin extends NativeRuntimeExecution {
-	admit_once(
+	admit_once<T>(
 		nonce: string,
-		observeAndValidate: (nonce: string) => Promise<NativeObservationTiming>,
-	): Promise<NativeObservationTiming>;
+		observeAndValidate: (nonce: string) => Promise<NativeFullV2OperationResult<T>>,
+		validateFullV2: (wire: unknown) => NativeObservationProjection,
+	): Promise<T>;
+	/** SAME validated acquisition; no second Open, task substitution or new handle. */
+	acquired(context: NativeRuntimeLifetimeContext): Promise<void>;
 	qualify_budget<T>(context: NativeReadBudgetContext, qualifier: () => Promise<T>): Promise<T>;
 }
-interface NativeObservationTiming {
-	requestNonce: string;
-	observedAtMs: number;
-	validUntilMs: number;
+export interface NativeObservationProjection {
+	readonly receiptDigest: string;
+	readonly producerSha256: string;
+	readonly requestNonce: string;
+	readonly observedAtMs: number;
+	readonly validUntilMs: number;
+}
+export interface NativeFullV2OperationResult<T> {
+	/** Private completed observation only; never a general uploaded proof or tool result. */
+	readonly wire: ReturnType<typeof validateNativeAdmissionObservation>;
+	/** Original opaque Node value; the carrier must not serialize or reconstruct it. */
+	readonly value: T;
+}
+function freezeObservation<T>(value: T): T {
+	if (value && typeof value === "object") {
+		for (const nested of Object.values(value)) freezeObservation(nested);
+		Object.freeze(value);
+	}
+	return value;
 }
 const envelope = z
 	.object({
@@ -125,6 +143,7 @@ export function createNativeOperatorIntegration(options: NativeOperatorOptions) 
 			join.handshake,
 			join.acquire,
 			join.protected_dispatch,
+			join.acquired,
 		].some((method) => typeof method !== "function")
 	)
 		refuse();
@@ -137,6 +156,7 @@ export function createNativeOperatorIntegration(options: NativeOperatorOptions) 
 		usage = supplier.originalUsage.bind(supplier),
 		authority = supplier.assertCurrent.bind(supplier),
 		admitOnce = join.admit_once.bind(join),
+		notifyAcquired = join.acquired.bind(join),
 		qualifyBudget = join.qualify_budget.bind(join);
 	const execution: NativeRuntimeExecution = Object.freeze({
 		handshake: join.handshake.bind(join),
@@ -161,6 +181,7 @@ export function createNativeOperatorIntegration(options: NativeOperatorOptions) 
 	)
 		refuse();
 	let base: OriginalContext | undefined;
+	let admissionValidUntilMs = 0;
 	let phase: "new" | "observed" | "budgeted" | "connected" | "acquiring" | "governed" = "new";
 	let held = false,
 		busy = false;
@@ -214,20 +235,16 @@ export function createNativeOperatorIntegration(options: NativeOperatorOptions) 
 				if (held) refuse();
 				const admissionContext = base;
 				let result: ReturnType<typeof validateNativeAdmissionObservation> | undefined;
-				await runNativeOperation(
-					(operation) =>
-						admitOnce(nonce, (suppliedNonce) => {
-							if (suppliedNonce !== nonce) refuse();
-							return operation();
-						}),
-					async () => {
-						await checkpoint("observing_native", admissionContext);
-						if (held || now() >= admissionContext.expiresAtMs) refuse();
-						const startedAtMs = now();
-						const raw = envelope.parse(await observe(admissionContext, nonce));
-						await assertGuard(admissionContext);
-						if (held) refuse();
-						result = validateNativeAdmissionObservation(raw.privateResult, {
+				let startedAtMs = 0,
+					validationCalls = 0,
+					admissionClosed = false;
+				const validateFullV2 = (wire: unknown): NativeObservationProjection => {
+					if (admissionClosed || held || !result || validationCalls++ !== 0) {
+						held = true;
+						return refuse();
+					}
+					try {
+						const checked = validateNativeAdmissionObservation(wire, {
 							grant,
 							ownerAuthority: owner,
 							producerTaskId,
@@ -236,14 +253,60 @@ export function createNativeOperatorIntegration(options: NativeOperatorOptions) 
 							startedAtMs,
 							nowMs: now(),
 						});
+						if (JSON.stringify(checked) !== JSON.stringify(result)) refuse();
 						return Object.freeze({
-							requestNonce: result.requestNonce,
-							observedAtMs: result.observedAtMs,
-							validUntilMs: result.validUntilMs,
+							receiptDigest: checked.receiptDigest,
+							producerSha256: checked.producerSha256,
+							requestNonce: checked.requestNonce,
+							observedAtMs: checked.observedAtMs,
+							validUntilMs: checked.validUntilMs,
 						});
-					},
-				);
-				if (!result || held) refuse();
+					} catch {
+						held = true;
+						return refuse();
+					}
+				};
+				try {
+					await runNativeOperation(
+						(operation) =>
+							admitOnce(
+								nonce,
+								async (suppliedNonce) => {
+									if (suppliedNonce !== nonce) {
+										held = true;
+										refuse();
+									}
+									const value = await operation();
+									return Object.freeze({ wire: value, value });
+								},
+								validateFullV2,
+							),
+						async () => {
+							await checkpoint("observing_native", admissionContext);
+							if (held || now() >= admissionContext.expiresAtMs) refuse();
+							startedAtMs = now();
+							const raw = envelope.parse(await observe(admissionContext, nonce));
+							await assertGuard(admissionContext);
+							if (held) refuse();
+							result = freezeObservation(
+								validateNativeAdmissionObservation(raw.privateResult, {
+									grant,
+									ownerAuthority: owner,
+									producerTaskId,
+									context: admissionContext,
+									requestNonce: nonce,
+									startedAtMs,
+									nowMs: now(),
+								}),
+							);
+							return result;
+						},
+					);
+				} finally {
+					admissionClosed = true;
+				}
+				if (!result || held || validationCalls !== 1) refuse();
+				admissionValidUntilMs = result.validUntilMs;
 				phase = "observed";
 				return {
 					receiptDigest: result.receiptDigest,
@@ -294,9 +357,28 @@ export function createNativeOperatorIntegration(options: NativeOperatorOptions) 
 			),
 	});
 	const lifetime = Object.freeze({
+		assertAcquiredCurrent(context: NativeRuntimeLifetimeContext) {
+			if (held) refuse();
+			original(context);
+			policy.assertAcquiredCurrent(context);
+		},
 		qualify: policy.qualify.bind(policy),
 		retain: policy.retain.bind(policy),
-		acquired: policy.acquired.bind(policy),
+		acquired: (context: NativeRuntimeLifetimeContext) =>
+			run(async () => {
+				original(context);
+				if (phase !== "acquiring" || !context.nativeTask) refuse();
+				const captured = Object.freeze({
+					...context,
+					nativeTask: Object.freeze({ ...context.nativeTask }),
+				});
+				await policy.acquired(captured);
+				if (held) refuse();
+				await notifyAcquired(captured);
+				const currentTime = now();
+				if (held || currentTime >= admissionValidUntilMs || currentTime >= captured.expiresAtMs)
+					refuse();
+			}),
 		assertCurrent: policy.assertCurrent.bind(policy),
 		async uncertain(context: NativeRuntimeLifetimeContext, reason: string) {
 			held = true;

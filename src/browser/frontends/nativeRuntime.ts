@@ -319,6 +319,8 @@ export interface NativeRuntimeLifetime {
 	): Promise<void>;
 	/** Confirm initial admission freshness after validated acquisition, before use. */
 	acquired(context: NativeRuntimeLifetimeContext): Promise<void>;
+	/** Synchronous local publication fence after the acquired ACK; no RPC or await. */
+	assertAcquiredCurrent(context: NativeRuntimeLifetimeContext): void;
 	/** Retain this SAME client privately for original readback. No close/release port. */
 	retain(context: NativeRuntimeLifetimeContext, client: NativeMcpClient): Promise<void>;
 	uncertain(context: NativeRuntimeLifetimeContext, reason: string): Promise<void>;
@@ -393,6 +395,7 @@ function lifetimeRequired(dependencies: NativeRuntimeDependencies): NativeRuntim
 		typeof policy.qualify !== "function" ||
 		typeof policy.assertCurrent !== "function" ||
 		typeof policy.acquired !== "function" ||
+		typeof policy.assertAcquiredCurrent !== "function" ||
 		typeof policy.retain !== "function" ||
 		typeof policy.uncertain !== "function"
 	)
@@ -778,6 +781,7 @@ export async function startOwnNativeRuntime(
 	dependencies: NativeRuntimeDependencies = {},
 ): Promise<OwnNativeProRuntime> {
 	const lifetime = lifetimeRequired(dependencies);
+	const assertAcquiredCurrent = lifetime.assertAcquiredCurrent.bind(lifetime);
 	const qualifyBudget = readBudgetRequired(dependencies);
 	const execution = executionRequired(dependencies);
 	const writer = requireNativeLedgerWriter(dependencies.writer);
@@ -898,6 +902,11 @@ export async function startOwnNativeRuntime(
 		await session.acquire();
 		acquiredContext = Object.freeze({ ...context, nativeTask: Object.freeze(session.binding) });
 		await lifetime.acquired(acquiredContext);
+		const publicationFence = assertAcquiredCurrent(acquiredContext) as unknown;
+		if (publicationFence !== undefined) {
+			if (publicationFence instanceof Promise) void publicationFence.catch(() => {});
+			refuse("native_runtime_lifetime_contract_required");
+		}
 		runtime = new NativeProRuntime(data, lifetime, acquiredContext, directory, session);
 		return runtime;
 	} catch (error) {

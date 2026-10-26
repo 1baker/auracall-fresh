@@ -56207,3 +56207,14 @@ checks; one active transaction replaces the inner SDK wrapper. Known lock identi
 and holds survive cleanup; failed work is not refunded. No source/caller/decoder
 redo, live operator or quota change. Runtime journals and external writers remain
 explicit production-mapping requirements, separate from this ledger hook.
+
+
+## 2026-10-26 — Connect the current private full-v2 interfaces
+
+Same user automatic-relay continuation implements Aura's missing full-wire/value
+admission handoff, per-attempt validator, acquired-task acknowledgement and exact
+transaction dispatch metadata. Reuses64c ledger protection and existing decoder.
+Actual operator persistent transport and original authority remain unbound.
+Reported concrete8f1004 fill refusal through Chief; no producer edit or alias.
+Surface SSH requirement is home-hosted lifetime independent of SSH, not yet proved.
+No runtime/Send/deployment or counter reset.

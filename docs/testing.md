@@ -4081,3 +4081,19 @@ Independent review reproduced two additional races: a final protector returning
 success after hold, and a queued hold landing between an assertion helper and
 its caller. Both public runtime regressions were observed RED before repair and
 GREEN after synchronous caller-side fences; no provider effects were used.
+
+
+### Full-v2 private handoff checks
+
+Reuse the six affected native runtime/operator/consumer/lifetime/Pro and MCP-client
+suites. New public-interface regressions prove complete observation handoff and
+exact pre-ledger dispatch metadata (observed RED before their changes). Synthetic
+carrier fixtures invoke the same private validator once and return the original
+value. Test omitted/repeated/wrong/late validation, replaced result identity,
+held/expired acquired acknowledgement and original-key recovery metadata.
+These fixtures do not execute Python, an actual persistent carrier or browser.
+
+A review regression reproduced a queued hold after acquired ACK but before caller
+publication. The synchronous caller fence now refuses it; tests also cover queued
+expiry, a missing fence and an asynchronous substitute. No connection is closed
+or reacquired on refusal.

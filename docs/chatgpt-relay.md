@@ -670,3 +670,50 @@ before helper execution. External/manual writers and the Bastion canonical store
 retain their own original-authority enforcement. Supplying this interface does
 not prove those actors participate. A refused hold-journal write remains uncertain;
 no cleanup/retry/usage reset follows. All production suppliers remain unbound.
+
+
+### Private full-observation and acquired-task handoff (ab099/24d)
+
+The existing `NativeOperatorDispatchJoin.admit_once` Node port now receives the
+original nonce, a one-shot callback returning `{wire,value}`, and a same-attempt
+`validateFullV2(wire)` callback. This is private compiled composition, not a new
+MCP tool, JSON startup mode or RPC framing protocol. The operator carrier retains
+the original opaque Node value and returns it only after the same Python bridge
+completes its AFTER checks. It never serializes/reconstructs the local result.
+
+The wire is the deeply frozen complete observation-v2 decoded by the unchanged
+validator. The private validator captures the original grant, distinct owner and
+consumer authority, producer-history task, context, nonce and original start time.
+It accepts an exact full-wire roundtrip only within that attempt; missing, repeated,
+late, altered-history or wrong-nonce validation holds even if the carrier catches
+the refusal. No second helper call or refreshed validity is allowed.
+
+`acquired(context)` is now a mandatory same-bridge notification. The runtime first
+validates its same-client consumer task, then awaits this acknowledgement before
+exposing the route. The mandatory local `assertAcquiredCurrent(context)` fence is
+synchronous at the runtime caller immediately before construction; it accepts no
+Promise or RPC and checks the same held state, task and original validity.
+Held/expired/lost acknowledgement retains the original task
+and connection, without another Open. Original producer history task is never
+substituted for the acquired consumer task.
+
+Ordinary and finite ledger operation descriptors now include immutable `dispatch`
+from the same request: acquire, command/action/key, or original-readback/release
+with the ORIGINAL operation key. The existing original-authority participant
+selects ONE whole-operation boundary before ledger mutation. It must not nest a
+second wrapper at SDK dispatch; immediate full-task/lifetime checks remain.
+
+**Exact remaining compatibility:** reviewed Python8f1004 dispatch validation
+refuses `fill`. The finite sender requires exact prompt fill, so its actual binding
+remains closed pending the operator's reviewed finite-input contract. Do not
+relabel fill, widen prepare-only policy or treat the three raw guard methods as
+the five callback ports. The persistent carrier, actual bootstrap/affected-writer
+participation/full carry/two reserved reads, helper/private admission and home-host
+frontend process/reachability/auth still require operator qualification. Bastion
+keeps the canonical store; no port or route is selected by these interfaces.
+
+For the human's Surface-via-SSH workflow, browser and runner must remain home-hosted
+and their lifetime must survive SSH disconnect. This source change neither starts
+a background service nor proves that lifetime; runtime acceptance must verify it
+and preserve original-request readback after uncertainty. Current two Sends remain
+consumed, with no further model execution authorized by this source result.

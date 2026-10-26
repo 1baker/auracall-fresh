@@ -2,7 +2,10 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, expect, it, vi } from "vitest";
-import { createNativeOperatorIntegration } from "../../src/browser/frontends/nativeOperator.js";
+import {
+	createNativeOperatorIntegration,
+	type NativeOperatorDispatchJoin,
+} from "../../src/browser/frontends/nativeOperator.js";
 import { nativeBudgetDigest } from "../../src/browser/frontends/nativeReadBudget.js";
 import fixture from "./fixtures/native-admission-observation-v2.json";
 import { fixtureDispatchJoin, fixtureLedgerWriter } from "./nativeDispatchFixture.js";
@@ -24,9 +27,10 @@ const task = {
 	tabId: "synthetic-tab",
 	targetId: "synthetic-target",
 };
-async function harness() {
+async function harness(configureJoin?: (join: NativeOperatorDispatchJoin) => void) {
 	const directory = await mkdtemp(join(tmpdir(), "auracall-operator-synthetic-"));
 	dirs.push(directory);
+	let currentTime = 2000;
 	const stages: string[] = [];
 	const events: string[] = [];
 	const guard = {
@@ -61,6 +65,7 @@ async function harness() {
 	};
 	const joinEvents: string[] = [];
 	const dispatchJoin = fixtureDispatchJoin(joinEvents);
+	configureJoin?.(dispatchJoin);
 	const integration = createNativeOperatorIntegration({
 		dispatchJoin,
 		writer: fixtureLedgerWriter(dispatchJoin),
@@ -71,10 +76,21 @@ async function harness() {
 		producerTaskId: "synthetic-producer-task",
 		producerSha256: context.producerSha256,
 		receiptDigest: context.receiptDigest,
-		now: () => 2000,
+		now: () => currentTime,
 	});
 	const budgetContext = { ...context, admissionDigest: "a".repeat(64), ledgerDirectory: directory };
-	return { ...integration, guard, supplier, budgetContext, stages, events, joinEvents };
+	return {
+		...integration,
+		guard,
+		supplier,
+		budgetContext,
+		stages,
+		events,
+		joinEvents,
+		setTime: (value: number) => {
+			currentTime = value;
+		},
+	};
 }
 
 it("joins the original three-field guard to the acquired identity without losing dispatch metadata", async () => {
@@ -90,7 +106,7 @@ it("joins the original three-field guard to the acquired identity without losing
 	await h.lifetime.assertCurrent(acquired, dispatch);
 	expect(h.supplier.assertCurrent).toHaveBeenLastCalledWith(acquired, dispatch);
 	expect(h.events).toEqual(["reserve", "observe"]);
-	expect(h.joinEvents).toEqual(["admit_once", "qualify_budget"]);
+	expect(h.joinEvents).toEqual(["admit_once", "qualify_budget", "acquired"]);
 	expect(h.stages).toEqual([
 		"qualifying_admit",
 		"observing_native",
@@ -192,4 +208,143 @@ it("blocks changed task identity and later use after real current-authority refu
 		),
 	).rejects.toMatchObject({ code: "native_lifetime_held" });
 	expect(h.supplier.assertCurrent).toHaveBeenCalledTimes(calls);
+});
+
+it("hands the same completed full-v2 observation to the private owner validator", async () => {
+	let observation: unknown;
+	const h = await harness((join) => {
+		join.admit_once = async (nonce, operation, validate) => {
+			const completed = await operation(nonce);
+			observation = completed.wire;
+			expect(completed.wire.schemaVersion).toBe("agent-browser.native-admission-observation.v2");
+			expect(completed.wire.nativeCustodyHistory.taskId).toBe("synthetic-producer-task");
+			const proof = validate(structuredClone(completed.wire));
+			expect(proof).toEqual({
+				receiptDigest: context.receiptDigest,
+				producerSha256: context.producerSha256,
+				requestNonce: nonce,
+				observedAtMs: completed.wire.observedAtMs,
+				validUntilMs: completed.wire.validUntilMs,
+			});
+			expect(Object.isFrozen(completed.wire.nativeCustodyHistory.gaps)).toBe(true);
+			return completed.value;
+		};
+	});
+	await h.lifetime.qualify(context);
+	expect(observation).toBeDefined();
+	expect(h.supplier.reserveObservationReads).toHaveBeenCalledOnce();
+	expect(h.supplier.observe).toHaveBeenCalledOnce();
+});
+
+it.each([
+	"omitted",
+	"timing-only",
+	"different-history",
+	"repeated",
+	"reconstructed-value",
+	"wrong-nonce",
+])("holds full-v2 admission after %s private validation", async (mode) => {
+	const h = await harness((join) => {
+		join.admit_once = async (nonce, operation, validate) => {
+			if (mode === "wrong-nonce") {
+				try {
+					await operation("a".repeat(64));
+				} catch {}
+			}
+			const completed = await operation(nonce);
+			if (mode === "timing-only")
+				validate({
+					requestNonce: nonce,
+					observedAtMs: completed.wire.observedAtMs,
+					validUntilMs: completed.wire.validUntilMs,
+				});
+			else if (mode === "different-history") {
+				const changed = structuredClone(completed.wire);
+				changed.nativeCustodyHistory.digest =
+					completed.wire.nativeCustodyHistory.digest === "f".repeat(64)
+						? "e".repeat(64)
+						: "f".repeat(64);
+				validate(changed);
+			} else if (mode !== "omitted") validate(completed.wire);
+			if (mode === "repeated") {
+				try {
+					validate(completed.wire);
+				} catch {}
+			}
+			return mode === "reconstructed-value" ? structuredClone(completed.value) : completed.value;
+		};
+	});
+	await expect(h.lifetime.qualify(context)).rejects.toMatchObject({ code: "native_lifetime_held" });
+	await expect(h.lifetime.qualify(context)).rejects.toBeDefined();
+	expect(h.supplier.reserveObservationReads).toHaveBeenCalledOnce();
+	expect(h.supplier.observe).toHaveBeenCalledTimes(mode === "wrong-nonce" ? 0 : 1);
+});
+
+it("closes the private validator with its original admission attempt", async () => {
+	let saved: ((wire: unknown) => unknown) | undefined, wire: unknown;
+	const h = await harness((join) => {
+		join.admit_once = async (nonce, operation, validate) => {
+			const completed = await operation(nonce);
+			saved = validate;
+			wire = completed.wire;
+			validate(wire);
+			return completed.value;
+		};
+	});
+	await h.lifetime.qualify(context);
+	expect(() => saved?.(wire)).toThrow();
+	await expect(h.readBudget(h.budgetContext)).rejects.toBeDefined();
+	expect(h.supplier.observe).toHaveBeenCalledOnce();
+});
+
+it("notifies the same bridge of validated consumer acquisition and holds on failed ACK", async () => {
+	const notify = vi.fn(async (_ctx: unknown) => {
+		throw new Error("lost acquired ACK");
+	});
+	const h = await harness((join) => {
+		join.acquired = notify;
+	});
+	await h.lifetime.qualify(context);
+	await h.readBudget(h.budgetContext);
+	await h.lifetime.assertCurrent(context, { kind: "sdk_connect" });
+	await h.lifetime.retain(context, { callTool: vi.fn() });
+	await h.lifetime.assertCurrent(context, { kind: "acquire" });
+	const acquired = { ...context, nativeTask: task };
+	await expect(h.lifetime.acquired(acquired)).rejects.toBeDefined();
+	expect(notify).toHaveBeenCalledExactlyOnceWith(acquired);
+	await expect(
+		h.lifetime.assertCurrent(acquired, {
+			kind: "command",
+			action: "url",
+			operationKey: "read-after-unknown",
+		}),
+	).rejects.toBeDefined();
+});
+
+it.each(["hold", "expiry"])("does not expose acquisition after %s during its ACK", async (mode) => {
+	let entered!: () => void, finish!: () => void;
+	const waiting = new Promise<void>((r) => {
+		entered = r;
+	});
+	const h = await harness((join) => {
+		join.acquired = async () => {
+			entered();
+			await new Promise<void>((r) => {
+				finish = r;
+			});
+		};
+	});
+	await h.lifetime.qualify(context);
+	await h.readBudget(h.budgetContext);
+	await h.lifetime.assertCurrent(context, { kind: "sdk_connect" });
+	await h.lifetime.retain(context, { callTool: vi.fn() });
+	await h.lifetime.assertCurrent(context, { kind: "acquire" });
+	const pending = h.lifetime.acquired({ ...context, nativeTask: task });
+	const rejected = expect(pending).rejects.toBeDefined();
+	await waiting;
+	if (mode === "hold")
+		await h.lifetime.uncertain({ ...context, nativeTask: task }, "synthetic-hold");
+	else h.setTime(50000);
+	finish();
+	await rejected;
 });

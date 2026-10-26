@@ -333,6 +333,7 @@ class NativeLedger {
 		key: string,
 		intent: unknown,
 		bucket: Bucket,
+		dispatch: import("./nativeRuntime.js").NativeRuntimeDispatch,
 		effect: () => Promise<{ value: T; metadata: unknown }>,
 		originalKey?: string | string[],
 		readReserve = 0,
@@ -344,6 +345,7 @@ class NativeLedger {
 				key,
 				bucket,
 				intent,
+				dispatch,
 				run,
 				readReserve,
 				originalKey === undefined ? [] : Array.isArray(originalKey) ? originalKey : [originalKey],
@@ -361,6 +363,7 @@ class NativeLedger {
 		);
 		const original = this.writerContext();
 		const op: NativeLedgerOperation = Object.freeze({
+			dispatch: Object.freeze({ ...dispatch }),
 			original: Object.freeze({
 				...original,
 				...(original.nativeTask ? { nativeTask: Object.freeze({ ...original.nativeTask }) } : {}),
@@ -871,6 +874,7 @@ export class NativeConsumerSession {
 			"consumer_acquisition",
 			[a.consumerGrantId, a.taskKey, a.profileId, a.browserId, a.tabId, a.targetId, a.expiresAtMs],
 			"acquisition",
+			{ kind: "acquire" },
 			async () => {
 				const data = await this.invoke("browser_open", this.acquisitionArguments(), "open");
 				this.#expires = data.expiresAtMs;
@@ -893,7 +897,7 @@ export class NativeConsumerSession {
 		);
 	}
 	private async command(
-		action: string,
+		action: "url" | "snapshot" | "gettext" | "click" | "press" | "fill",
 		params: Record<string, unknown>,
 		key: string,
 		bucket: Bucket,
@@ -905,6 +909,7 @@ export class NativeConsumerSession {
 			key,
 			[binding, action, params],
 			bucket,
+			{ kind: "command", action, operationKey: key },
 			async () => {
 				const data = await this.invoke(
 					"browser_command",
@@ -1081,6 +1086,7 @@ export class NativeConsumerSession {
 			`${this.#releaseKey === null ? "metadata" : "release_metadata"}_${digest(key)}`,
 			[this.binding, key],
 			"read",
+			{ kind: "original_readback", operationKey: key },
 			() => this.metadata("browser_continue", key),
 			this.#releaseKey === null ? key : [key, "consumer_reference_release"],
 		);
@@ -1096,6 +1102,7 @@ export class NativeConsumerSession {
 			"consumer_reference_release",
 			[binding, originalKey, "release"],
 			"control",
+			{ kind: "release", operationKey: originalKey },
 			() => this.metadata("browser_close", originalKey, true),
 			originalKey,
 			1,
