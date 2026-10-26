@@ -8,7 +8,7 @@ import type { NativeLedgerOperation } from "../../src/browser/frontends/nativeLe
 import type { NativeFullV2OperationResult } from "../../src/browser/frontends/nativeOperator.js";
 import observation from "./fixtures/native-admission-observation-v2.json";
 
-const protocol = "p266.original-callback-carrier.v1";
+const protocol = "p266.original-callback-carrier.v2";
 const context = {
 	receiptDigest: "1".repeat(64),
 	producerSha256: "2".repeat(64),
@@ -81,7 +81,7 @@ describe("private persistent callback peer", () => {
 			id: 2,
 			parent: 1,
 			method: "validate_full_v2",
-			args: [wire, context, "nonce", target],
+			args: [wire],
 		});
 		await tick();
 		expect(validate).toHaveBeenCalledOnce();
@@ -98,6 +98,42 @@ describe("private persistent callback peer", () => {
 		send({ type: "return", id: 1, ok: true, result: null });
 		await result;
 		expect(reader).toHaveBeenCalledOnce();
+	});
+	it("refuses revision1 instead of silently accepting a legacy carrier", async () => {
+		const { peer, output } = setup();
+		const pending = peer.guard.assert_current(context);
+		const rejected = expect(pending).rejects.toMatchObject({
+			code: "native_callback_peer_uncertain",
+		});
+		output.write(
+			`${JSON.stringify({ protocol: "p266.original-callback-carrier.v1", type: "return", id: 1, ok: true, result: null })}\n`,
+		);
+		await rejected;
+		expect(() => peer.assertCurrent()).toThrow();
+	});
+	it("rejects the old four-argument validator callback without invoking the validator", async () => {
+		const { peer, send } = setup(),
+			wire = observation.privateResult as NativeFullV2OperationResult<unknown>["wire"];
+		const validate = vi.fn();
+		const pending = peer.dispatchJoin.admit_once(
+			"nonce",
+			async () => ({ wire, value: Symbol("local") }),
+			validate,
+		);
+		const rejected = expect(pending).rejects.toMatchObject({
+			code: "native_callback_peer_uncertain",
+		});
+		send({ type: "callback", id: 1, parent: 1, method: "observe_full_v2", args: ["nonce"] });
+		await tick();
+		send({
+			type: "callback",
+			id: 2,
+			parent: 1,
+			method: "validate_full_v2",
+			args: [wire, context, "nonce", target],
+		});
+		await rejected;
+		expect(validate).not.toHaveBeenCalled();
 	});
 	it("forwards full dispatch metadata and permits assertions inside ONE ledger root", async () => {
 		const { peer, calls, send } = setup();
@@ -285,11 +321,11 @@ describe("private persistent callback peer", () => {
 	});
 });
 
-it.skipIf(!process.env.AURACALL_PUBLIC_CARRIER_SOURCE)(
-	"exchanges real anonymous IPC with frozen f862 Python and preserves its dispatch mismatch as refusal",
+it.skipIf(!process.env.AURACALL_REVIEWED_V2_CARRIER_SOURCE)(
+	"exchanges real anonymous IPC with the selected reviewed v2 Python carrier",
 	async () => {
-		const carrierSource = process.env.AURACALL_PUBLIC_CARRIER_SOURCE;
-		if (!carrierSource) throw new Error("frozen public fixture source required");
+		const carrierSource = process.env.AURACALL_REVIEWED_V2_CARRIER_SOURCE;
+		if (!carrierSource) throw new Error("selected reviewed v2 fixture source required");
 		const child = spawn(
 			"python3",
 			[
@@ -400,12 +436,14 @@ it.skipIf(!process.env.AURACALL_PUBLIC_CARRIER_SOURCE)(
 				originalKeys: [],
 				readReserve: 1,
 			};
-			const operation = vi.fn();
-			await expect(peer.writer.protect(action, operation)).rejects.toMatchObject({
-				code: "native_callback_peer_uncertain",
+			const opaqueResult = Symbol("local-synthetic-observation");
+			const operation = vi.fn(async () => {
+				await peer.writer.assertCurrent(action, "effect");
+				return opaqueResult;
 			});
-			expect(operation).not.toHaveBeenCalled(); // frozen Python rejects mandatory dispatch; no downgrade
-			expect(() => peer.assertCurrent()).toThrow();
+			expect(await peer.writer.protect(action, operation)).toBe(opaqueResult);
+			expect(operation).toHaveBeenCalledOnce();
+			expect(() => peer.assertCurrent()).not.toThrow();
 		} catch (error) {
 			throw new Error(`Public IPC fixture failed at ${trace.join(",")}`, { cause: error });
 		} finally {

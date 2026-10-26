@@ -91,13 +91,13 @@ function metadata<T>(value: T): T {
 	return parsed;
 }
 
-/** Concrete f862/d4d carrier consumer, not an authority provider. Opaque budgets,
+/** Exact revision2 carrier consumer, not an authority provider. Opaque budgets,
  * SDK clients and results never cross IPC. Its BEFORE/callback/AFTER sequence is
  * the ONE operator driver; ordinary/finite writers must not nest a join root. */
 export function createNativeCallbackPeer(options: NativeCallbackPeerOptions) {
 	const input = options.input,
 		output = options.output;
-	const base = Object.freeze(baseSchema.parse(options.context));
+	baseSchema.parse(options.context);
 	const target = Object.freeze(targetSchema.parse(options.target));
 	const timeoutMs = options.timeoutMs;
 	if (
@@ -226,11 +226,7 @@ export function createNativeCallbackPeer(options: NativeCallbackPeerOptions) {
 		} else if (f.method === "observe_full_v2") {
 			if (!r.observe || !isDeepStrictEqual(args, [r.args[0]])) throw failure();
 		} else if (f.method === "validate_full_v2") {
-			if (
-				!r.validate ||
-				!r.seen.has("observe_full_v2") ||
-				!isDeepStrictEqual(args, [r.wire, base, r.args[0], target])
-			)
+			if (!r.validate || !r.seen.has("observe_full_v2") || !isDeepStrictEqual(args, [r.wire]))
 				throw failure();
 		} else {
 			if (

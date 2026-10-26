@@ -774,9 +774,11 @@ operator still supplies its actual received input, exact request intent, ingress
 configuration, original accounting suppliers and dedicated inherited IPC. This
 is a compiled library entrypoint; there is no new JSON mode or process launcher.
 
-It consumes frozen operator f8625bd4 / contract d4d38756, protocol
-`p266.original-callback-carrier.v1`. One persistent peer retains the full-v2
-validator, local SDK client and opaque results. Root results become available only
+The initial peer consumed frozen operator f8625bd4 / contract d4d38756,
+protocol v1. The current source matches the exact revision2 contract21b2: strict
+`p266.original-callback-carrier.v2` frames and one `validate_full_v2([wire])`
+callback. It rejects v1 and the old four-argument callback; there is no fallback.
+The same full-v2 validator, local SDK client and opaque results remain retained. Root results become available only
 after the carrier's final return. Nested authority assertions run within that
 single transaction. Malformed frames, duplicate callbacks, mismatched identity,
 transport loss and holds refuse without replay, reconnect or endpoint closure.
@@ -794,11 +796,14 @@ transaction, including its exact dispatch. The legacy callback-only
 refuses in this peer. It is not nested inside the writer transaction or rebuilt
 from remembered arguments.
 
-Current compatibility boundary: f862's Python ledger parser rejects the mandatory
-`dispatch` field already carried by Aura. A real Node-to-frozen-Python synthetic
-IPC check reproduces that refusal before invoking the operation. Do not remove
-that field or select a guessed successor. The incumbent operator owns the repair
-and finite-fill compatibility. Its independent carrier review is also pending.
+Historical f862 IPC reproduced refusal of the mandatory `dispatch` field before
+invoking the operation. The a17f v2 successor carries that field, but its known
+finite-permission overlap race remains with the incumbent operator. The actual
+paired Node/Python v2 check requires the repaired, independently reviewed successor;
+none is selected here. Its opt-in fixture refuses even when a source path is supplied
+until an immutable reviewed pin is committed. A skipped pair is not compatibility
+proof. Do not strip dispatch, reuse a v1 fixture as v2 evidence, or run a17f as the
+accepted counterpart.
 Local IPC proof does not qualify real bootstrap, original accounting participation,
 complete carried usage, two reserved observations, private admission, producer
 selection, frontend transport or an additional Send. Existing 2/2 Sends remain

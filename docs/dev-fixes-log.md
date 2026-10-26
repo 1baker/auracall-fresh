@@ -1,3 +1,11 @@
+## 2026-10-26 — Private peer expected the previous carrier wire
+
+- Match protocol v2 and `validate_full_v2([wire])` exactly. Preserve the full wire
+  and original validator; reject v1 and the old four-argument callback.
+- Keep the public paired-IPC fixture closed until the repaired, reviewed Python
+  successor is selected. The known finite-permission race is not accepted by a
+  successful local peer test or by supplied path metadata.
+
 ## 2026-10-26 — Original accounting callbacks had no concrete supplier
 
 - Added real pinned-file/native-reservation enumeration and guard process/lock

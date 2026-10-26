@@ -1,7 +1,7 @@
 import { TextDecoder } from "node:util";
 import { z } from "zod";
 
-export const NATIVE_CALLBACK_PROTOCOL = "p266.original-callback-carrier.v1";
+export const NATIVE_CALLBACK_PROTOCOL = "p266.original-callback-carrier.v2";
 export const NATIVE_CALLBACK_FRAME_LIMIT = 16384;
 const sequence = z.number().int().positive().max(Number.MAX_SAFE_INTEGER);
 const common = { protocol: z.literal(NATIVE_CALLBACK_PROTOCOL), id: sequence };

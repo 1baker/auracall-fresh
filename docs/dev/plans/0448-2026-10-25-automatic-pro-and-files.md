@@ -481,3 +481,12 @@ recorded one unexplained positive-path refusal (15/16); later diagnostic runs
 passed, including16/16. That intermittent refusal remains unresolved. Source
 Spec remediation passed; Standards/validation remains PARTIAL. This is a private
 source checkpoint, not a clean integration or production activation candidate.
+
+## Private peer v2 delta, same continuation
+
+Latest SAME3258 direction selects only protocol v2 and single-wire validator
+callback compatibility. Keep current decoder/host/accounting implementation and
+all carried limits. Acceptance needs focused legacy-refusal coverage and ONE
+actual public Node/Python IPC exchange using the final repaired, reviewed
+counterpart. The known a17f finite overlap race blocks selecting that counterpart;
+no fallback or guessed pin. Unit success alone leaves paired compatibility open.

@@ -1,3 +1,12 @@
+## 2026-10-26 — Exact private callback v2 join
+
+Matched the two counterpart wire changes: strict revision2 frames and the single
+full-wire validator argument. Existing full-v2 validation, exact dispatch, local
+opaque results and sticky holds remain unchanged; legacy frames/arity refuse.
+The public Node/Python pair remains pending the incumbent's repaired, reviewed
+finite-permission successor. This changes no runtime selection or Send capacity.
+Original accounting's unresolved positive-path refusal remains recorded below.
+
 ## 2026-10-26 — Accounting candidate validation limit
 
 The review found target carry was counted after observation. Moved combined
