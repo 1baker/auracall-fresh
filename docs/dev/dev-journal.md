@@ -56218,3 +56218,14 @@ Actual operator persistent transport and original authority remain unbound.
 Reported concrete8f1004 fill refusal through Chief; no producer edit or alias.
 Surface SSH requirement is home-hosted lifetime independent of SSH, not yet proved.
 No runtime/Send/deployment or counter reset.
+
+## 2026-10-26 — Compose the automatic home-host entrypoint
+
+Same bf8/P266 continuation adds `startOwnNativeFrontendHost`: receive actual
+compiled operator inputs, acquire one runtime, bind its existing finite sender,
+and listen through the existing authenticated HTTP frontend. No sender rewrite,
+JSON native mode, default port, duplicate acquisition or canonical-store copy.
+Post-acquisition startup failures hold the original session. Focused composition
+checks cover shared-instance wiring, unauthenticated refusal and startup failures.
+Actual private operator bootstrap, selected transport and independent home process
+lifetime remain required; no build, deployment or real browser/Send performed.

@@ -717,3 +717,51 @@ and their lifetime must survive SSH disconnect. This source change neither start
 a background service nor proves that lifetime; runtime acceptance must verify it
 and preserve original-request readback after uncertainty. Current two Sends remain
 consumed, with no further model execution authorized by this source result.
+
+### Private native frontend host entrypoint
+
+`src/mcp/http/nativeHost.ts` exports `startOwnNativeFrontendHost(options)` for the
+private compiled operator bootstrap. Its compiled import is
+`dist/src/mcp/http/nativeHost.js`. This function executes the startup composition:
+one `startOwnNativeRuntime`, one `bindOwnNativeSendFrontend` on that same returned
+runtime, then `createFrontendHttpServer({config, service})` and an explicit
+loopback listener. Starting it performs acquisition and finite qualification but
+does not claim, configure, fill or Send. It is not selected by ordinary JSON/CLI
+startup, and this source slice does not build, install or invoke it.
+
+The operator must supply these exact inputs:
+
+- `input`: the opaque result of the existing private receiver, bound to the
+  selected matching producer/helper, actual finite consumer admission and paths.
+- `dependencies`: the actual lifetime, complete carried `readBudget`, one
+  `execution` driver and original-authority `writer`. The production entrypoint
+  deliberately rejects an injected SDK connector; it uses the receiver's pin.
+- `intent`: the canonical request ID, fingerprint, exact prompt digest and
+  previous request ID. These are parsed and frozen before acquisition.
+- `authority`: the actual finite `verify`, canonical P447 `assertClaim`,
+  original-writer `protect` and `assertCurrent` ports. No additional Send is
+  inferred; the exhausted original two remain charged.
+- `http`: explicit frontend mode, operator-selected port, exactly the acquired
+  route ID, resource, issuer, JWKS and owner subject. Relay mode, default port,
+  additional routes or substituted relay scopes are not accepted. Existing
+  frontend OAuth verification still requires `frontend:read`,
+  `frontend:configure` and `frontend:send` as appropriate to the call.
+
+The private bootstrap retains the returned server and runtime in the home-host
+process. It must keep that process independent of the Surface SSH session and
+govern shutdown using the same original authority. There are no signal handlers,
+stdin hooks, SDK-close-as-release, automatic reacquisition or sender loops here.
+Any post-acquisition binding/listen failure holds the original runtime and closes
+only an owned listening HTTP server. Re-running the startup is not recovery.
+The thrown `NativeFrontendHostError.runtime` retains that exact held runtime for
+the private caller's original-readback/release reconciliation; the handle is not
+serialized. Local held state and a resolved `hold()` do not prove the hold journal
+or operator acknowledgement; original-record reconciliation must establish those.
+
+On Bastion, use the existing authenticated MCP client with `createMcpFrontend`
+and P447 `dispatchRelayRequest` against the canonical Bastion RelayStore. Do not
+copy that store to the home host. The concrete missing production input is the
+operator's private compiled bootstrap with the above real suppliers, selected
+listener/reachability/authentication and SSH-independent supervision. No such
+bootstrap or transport binding is supplied by this source result; there is no
+qualified live launch command yet.

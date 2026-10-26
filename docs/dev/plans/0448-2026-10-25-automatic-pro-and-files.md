@@ -7,6 +7,13 @@ private personal work-tracker81; direct human2026-10-25 automatic Pro/files requ
 
 ## Current state
 
+Current owned source now includes the executable private compiled home-host
+composition `startOwnNativeFrontendHost`: one runtime, its same finite frontend,
+and the existing OAuth HTTP server. It requires actual operator suppliers and
+explicit transport configuration; no production bootstrap, build or activation
+is implied. The exact input contract is in `docs/chatgpt-relay.md` under
+"Private native frontend host entrypoint". Original two Sends remain exhausted.
+
 P449db5/0601 is live. The immutable191/c8 protected Pro-only checkpoint remains
 source-only. This existing-lane continuation adds the own SDK private receiver and
 pinned caller; no producer/runtime installation or private/browser effect occurs.

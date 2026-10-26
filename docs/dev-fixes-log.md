@@ -1,3 +1,14 @@
+## 2026-10-26 — Native startup did not host the retained sender
+
+- The own runtime and finite sender existed, but ordinary startup did not compose
+  them with the HTTP frontend. Added one private compiled host entrypoint that
+  acquires once and injects the same bound facade into the existing server.
+- Reject missing finite ports, implicit port/mode and extra routes before
+  acquisition. After acquisition, a mismatched route or binding/listen failure
+  holds that original runtime; it never retries or releases the browser.
+- Source composition cannot manufacture actual operator authority, additional
+  Send capacity, frontend OAuth binding, reachability or durable supervision.
+
 ## 2026-10-26 — Existing sender had no frontend MCP consumer
 
 - P447 accepts FrontendTools and a local canonical RelayStore. The genuine browser
