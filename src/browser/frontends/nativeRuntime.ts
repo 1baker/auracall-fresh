@@ -58,20 +58,21 @@ const producerSchema = z
 		origin: z.literal("https://chatgpt.com"),
 	})
 	.strict();
-const grantSchema = z
+export const nativeRegisteredAuthoritySchema = z
+	.object({
+		principalId: id.max(256),
+		profileId: id,
+		capabilityId: id,
+		capabilityRevision: positive,
+		provenance: z.literal("registered_capability"),
+	})
+	.strict();
+export const nativeOwnerGrantSchema = z
 	.object({
 		grantId: id,
 		consumerTaskKey: id,
 		producer: producerSchema,
-		caller: z
-			.object({
-				principalId: id.max(256),
-				profileId: id,
-				capabilityId: id,
-				capabilityRevision: positive,
-				provenance: z.literal("registered_capability"),
-			})
-			.strict(),
+		caller: nativeRegisteredAuthoritySchema,
 		issuedAtMs: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),
 		expiresAtMs: positive,
 	})
@@ -94,7 +95,7 @@ const inputSchema = z
 	.object({
 		version: z.literal("auracall.own-sdk-runtime.v1"),
 		bindingOut: absolute,
-		grant: grantSchema,
+		grant: nativeOwnerGrantSchema,
 		admission: z.unknown(),
 		options: optionsSchema,
 	})
@@ -106,7 +107,7 @@ export interface NativeRuntimeInput {
 }
 interface ReceivedInput {
 	admission: NativeConsumerAdmission;
-	grant: z.infer<typeof grantSchema>;
+	grant: z.infer<typeof nativeOwnerGrantSchema>;
 	options: z.infer<typeof optionsSchema>;
 	path: string;
 	bindingOut: string;
@@ -316,6 +317,36 @@ export interface NativeRuntimeDependencies {
 	readBudget?: (context: NativeReadBudgetContext) => Promise<NativeReadBudget>;
 	/** Source fixture seam; production defaults to the pinned SDK stdio connector. */
 	connect?: (descriptor: NativeSdkDescriptor) => Promise<NativeMcpClient>;
+}
+
+/** Bind the final operator composition to this EXACT opaque private receiver.
+ * No extra runtime JSON fields and no descriptor/grant supplied in place of it.
+ * This validates local files only; startOwnNativeRuntime remains the sole caller.
+ * Real persistent guard, private helper and original-accounting suppliers are
+ * separately required. This function does not acquire any of them.
+ */
+export async function bindNativeOperatorIntegration(
+	input: NativeRuntimeInput,
+	operator: Pick<
+		import("./nativeOperator.js").NativeOperatorOptions,
+		"guard" | "supplier" | "ownerAuthority" | "producerTaskId"
+	>,
+) {
+	const data = inputs.get(input);
+	if (!data) return refuse("native_runtime_private_input_invalid");
+	try {
+		await verifyReceived(data);
+		const { createNativeOperatorIntegration } = await import("./nativeOperator.js");
+		return createNativeOperatorIntegration({
+			...operator,
+			grant: data.grant,
+			producerSha256: data.pin.binarySha256,
+			receiptDigest: digest(`${data.inputHash}:${data.bindingHash}`),
+			now: data.now,
+		});
+	} catch (error) {
+		throw publicError(error);
+	}
 }
 export interface OwnNativeProRuntime {
 	readonly route: NativeTaskFrontendRoute;

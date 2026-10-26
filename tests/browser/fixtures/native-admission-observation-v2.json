@@ -1,0 +1,133 @@
+{
+  "synthetic": true,
+  "request": {
+    "operation": "observe_native_admission",
+    "expectedGrant": {
+      "grantId": "synthetic-grant",
+      "caller": {
+        "principalId": "principal:synthetic-consumer",
+        "profileId": "disposable:synthetic:1",
+        "capabilityId": "synthetic-consumer-capability",
+        "capabilityRevision": 1,
+        "provenance": "registered_capability"
+      },
+      "consumerTaskKey": "synthetic-consumer-task",
+      "producer": {
+        "allocationId": "disposable:synthetic:1",
+        "profileId": "disposable:synthetic:1",
+        "browserId": "synthetic-browser",
+        "tabId": "synthetic-tab",
+        "targetId": "synthetic-target",
+        "ownerTransportSession": "synthetic-owner-route",
+        "ownerGeneration": 1,
+        "publishedProcessDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "custodyDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "origin": "https://chatgpt.com"
+      },
+      "issuedAtMs": 1000,
+      "expiresAtMs": 100000
+    },
+    "ownerProfileCapability": "SYNTHETIC-OWNER-CAPABILITY-NOT-REAL",
+    "ownerTransportSession": "synthetic-owner-route",
+    "receiptDigest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "requestNonce": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "observationOut": "/synthetic/private/new-observation.json"
+  },
+  "privateResult": {
+    "schemaVersion": "agent-browser.native-admission-observation.v2",
+    "grant": {
+      "grantId": "synthetic-grant",
+      "caller": {
+        "principalId": "principal:synthetic-consumer",
+        "profileId": "disposable:synthetic:1",
+        "capabilityId": "synthetic-consumer-capability",
+        "capabilityRevision": 1,
+        "provenance": "registered_capability"
+      },
+      "consumerTaskKey": "synthetic-consumer-task",
+      "producer": {
+        "allocationId": "disposable:synthetic:1",
+        "profileId": "disposable:synthetic:1",
+        "browserId": "synthetic-browser",
+        "tabId": "synthetic-tab",
+        "targetId": "synthetic-target",
+        "ownerTransportSession": "synthetic-owner-route",
+        "ownerGeneration": 1,
+        "publishedProcessDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "custodyDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "origin": "https://chatgpt.com"
+      },
+      "issuedAtMs": 1000,
+      "expiresAtMs": 100000
+    },
+    "ownerAuthority": {
+      "principalId": "principal:synthetic-owner",
+      "profileId": "disposable:synthetic:1",
+      "capabilityId": "synthetic-owner-capability",
+      "capabilityRevision": 1,
+      "provenance": "registered_capability"
+    },
+    "producerSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "receiptDigest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "requestNonce": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "observedAtMs": 2000,
+    "validUntilMs": 32000,
+    "nativeHistory": {
+      "digest": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "grantCount": 1,
+      "taskCount": 0,
+      "operationCount": 0
+    },
+    "historyScope": "native_consumer_and_runtime_custody_records",
+    "requiresOperatorGuard": true,
+    "nativeCustodyHistory": {
+      "schemaVersion": "agent-browser.native-custody-history.v1",
+      "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "taskId": "synthetic-producer-task",
+      "rows": 3,
+      "sources": [
+        {
+          "source": "browser_session_state",
+          "present": true
+        },
+        {
+          "source": "browser_launch_custody",
+          "present": true
+        },
+        {
+          "source": "browser_idle_retirement_custody",
+          "present": true
+        },
+        {
+          "source": "browser_recovery_registry",
+          "present": false
+        },
+        {
+          "source": "remote_view_mutation:*",
+          "present": false
+        },
+        {
+          "source": "terminal_history_archive",
+          "present": false
+        },
+        {
+          "source": "retained_cache_transitions_v1+events_v1",
+          "present": false
+        }
+      ],
+      "gaps": [
+        "completed_ordinary_activity_is_pruned",
+        "compacted_navigation_is_not_original_operations",
+        "other_namespaces_and_external_writers",
+        "platform_exclusion_and_pre_effect_protection",
+        "shared_carried_usage_accounting"
+      ]
+    }
+  },
+  "publicResult": {
+    "success": true,
+    "data": {
+      "ownerObservation": "completed"
+    }
+  }
+}

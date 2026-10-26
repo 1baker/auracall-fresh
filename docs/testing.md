@@ -1,3 +1,13 @@
+## Sealed admission v2 / operator composition (2026-10-26)
+
+Focused tests use the unchanged sealed native synthetic fixture74e327bf. They
+exercise the full v2 decoder, owner/grant/task/coverage and time refusals, exact
+three-field versus acquired-task forwarding, one observation after reservation,
+unknown accounting, hold races and integration through the opaque private input
+into the existing SDK caller with an in-process fake transport. Existing lifetime,
+read-budget and native runtime regressions remain applicable. No private helper,
+Python operator, SDK process or real browser is executed by these tests.
+
 ## Native admission/current-guard integration (2026-10-26)
 
 The runtime regression first demonstrates a second native call after operator

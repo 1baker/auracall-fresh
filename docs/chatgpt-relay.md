@@ -481,3 +481,30 @@ The ordinary startup still supplies no trusted callbacks. The matching platform
 helper executor, full grant/output validation, continuous exclusion and complete
 original accounting must be connected before runtime use. No successor binary
 is selected by this source update, and no intermediate7d/e43 repin/build occurs.
+
+### Final native v2 operator composition (source only)
+
+The compiled own caller can use `bindNativeOperatorIntegration(receivedInput,
+operator)` and pass its `lifetime` and `readBudget` to the existing
+`startOwnNativeRuntime` once. The receiver supplies the expected grant, receipt,
+producer hash and clock; the operator supplies independently registered owner
+identity and original producer task. Private JSON cannot enable this path.
+
+The required `guard` is one already-acquired live instance with
+`checkpoint(stage, originalContext)`, `assert_current(originalContext)` and
+`attach_read_budget_context(budgetContext)`. Its three-field context remains
+unchanged. The required supplier provides `reserveObservationReads(context, 2)`,
+`observe(context, nonce)`, `originalUsage(budgetContext)` and
+`assertCurrent(fullContext, dispatch)`. The latter receives the acquired task and
+operation; it cannot be replaced by trimming them for the older operator method.
+
+The observer supplier must itself execute the qualified pinned helper and consume
+its newly created private output, returning the exact public completion and full
+private v2 result. The composition validates the sealed contracte0db/fixture74e3,
+including every coverage gap, before giving the lifetime policy a projection.
+This does not implement a Node/Python transport or a live accounting actor.
+Complete original carry, participation of all relevant writers, two-read charging,
+current native authority and one retained operator handle remain required.
+Unknown usage refuses. Default pins and CLI remain closed; no activation follows
+from these source tests. Existing 80 cumulative reads, six controls and zero
+remaining Sends are unchanged.

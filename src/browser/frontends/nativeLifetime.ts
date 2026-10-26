@@ -42,9 +42,10 @@ const observationSchema = z
 		validUntilMs: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
 	})
 	.strict();
-/** Correlation projection of final1727, after the trusted caller validates the
+/** Correlation projection after the trusted caller validates the
  * full self-executed private helper result and exact grant/owner/guard/accounting.
- * This is not an exported wire decoder or authority accepted from JSON.
+ * nativeOperator composes the sealed v2 decoder; this five-field projection
+ * alone is not an exported wire decoder or authority accepted from JSON.
  */
 export type NativeInitialObservation = z.infer<typeof observationSchema>;
 const operationKey = z.string().regex(/^[a-zA-Z0-9_-]{8,128}$/);

@@ -1,3 +1,24 @@
+## 2026-10-26 — Sealed v2 validation and operator phase composition
+
+Chief975 delivers final Browserf865 / contracte0db / fixture74e3 and operator26d.
+This supersedes the v1 basis of daa without changing producer pins or strict8.
+The full v2 decoder checks the exact grant, distinct registered owner, original
+producer task, nonce, timing, bounded history and all ordered coverage sources
+and mandatory gaps. It never treats native history as complete carried usage.
+
+bindNativeOperatorIntegration binds the composition to the existing opaque private
+receiver. One supplied live operator instance receives only its original three
+fields; a separate required authority assertion receives the complete acquired
+nativeTask and dispatch. Both are checked before use. The existing read-budget
+qualifier remains mandatory. Two observation reads are reserved before calling
+the supplier, and hold/uncertainty never refunds or retries them. An asynchronous
+checkpoint/hold race was reproduced and repaired before closeout.
+
+Source composition is not a production supplier. The operator's persistent
+Node/Python handle, all relevant original accounting writers, complete carried
+usage and self-executed pinned helper/two-read reservation remain unbound.
+Default startup stays closed; no SDK/helper/browser/private runtime effect ran.
+
 ## 2026-10-26 — Native admission lifetime and per-dispatch guard join
 
 Final native observer1727/fixture1d82 supersedes early91. The own runtime now

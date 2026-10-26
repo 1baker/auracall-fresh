@@ -312,3 +312,21 @@ This slice implements the owned call sites and compiled policy contract. The
 actual platform-held guard and private helper executor remain platform/own
 production integration dependencies until delivered; no mock verifier is used
 for live work. No successor repin/build/runtime/private effect is part of source QA.
+
+## Sealed v2 and final operator join (2026-10-26)
+
+Same selected slice, Chief975: explicitly adopt finalf865/e0db/74e3. Preserve the
+older v1 milestone as history. Add full closed v2 validation, exact private-input
+binding and phase-aware composition for operator26d. No replacement runtime JSON,
+new native action, pin selection or duplicate producer job.
+
+Acceptance: the original three-field operator context stays immutable; acquired
+nativeTask and dispatch reach the real authority supplier separately and fully.
+The same live guard spans observation/budget/SDK/acquisition/governed phases.
+Two reads reserve before observation; missing/unknown carry or guard loss stops
+before SDK. Missing/changed v2 coverage refuses. Late holds fence pending helper
+and SDK dispatch. No automatic release, retry, re-observation or fresh ledger.
+
+Actual persistent operator transport, cooperating-writer enforcement, complete
+original usage and pinned helper execution remain required production bindings.
+An interface-only supplier does not close these gates. Default CLI stays closed.

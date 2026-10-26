@@ -1,3 +1,18 @@
+## 2026-10-26 — v2 coverage and operator context mismatch
+
+- The five-field lifetime projection did not validate the final native v2 wire.
+  Added exact full-result validation using the sealed producer fixture, refusing
+  v1, altered/missing coverage, authority drift, nonce mismatch and stale output.
+- The operator accepts three original fields while Aura adds acquired task data.
+  The composition now retains the original context for the same operator guard
+  and passes full task/operation identity to a mandatory current-authority check.
+  The private receiver supplies the expected grant, receipt and producer pin.
+- A hold arriving during the observer checkpoint initially still allowed dispatch.
+  The public-seam regression failed, then passed after checking the hold again
+  before the helper supplier. Reserved reads remain charged; no repeat attempt.
+- Real full-carry accounting and all-writer exclusion are still required. Source
+  callbacks, partial native custody records and JSON receipts cannot supply them.
+
 ## 2026-10-26 — Initial admission was being used without a current dispatch guard
 
 - Symptom: the lifetime callback ran once, and later browser calls proceeded

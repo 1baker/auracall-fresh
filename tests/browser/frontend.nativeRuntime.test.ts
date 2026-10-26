@@ -9,11 +9,13 @@ import {
 	qualifyNativeReadBudget,
 } from "../../src/browser/frontends/nativeReadBudget.js";
 import {
+	bindNativeOperatorIntegration,
 	type NativeSdkDescriptor,
 	prepareOwnNativeProFromFile,
 	readNativeRuntimeInput,
 	startOwnNativeRuntime,
 } from "../../src/browser/frontends/nativeRuntime.js";
+import observationV2 from "./fixtures/native-admission-observation-v2.json";
 import { withCompletedIdentity } from "./nativeIdentityFixture.js";
 
 const roots: string[] = [];
@@ -240,6 +242,59 @@ function fixtureBudget(f: Awaited<ReturnType<typeof fixture>>) {
 			() => f.now,
 		);
 }
+it("binds v2 observation and the phase-aware operator to the actual private receiver and own SDK", async () => {
+	const f = await fixture();
+	const input = await readNativeRuntimeInput(f.path, fixturePin, () => f.now);
+	const owner = {
+		...observationV2.privateResult.ownerAuthority,
+		profileId: f.input.grant.producer.profileId,
+	};
+	const observe = vi.fn(
+		async (ctx: { receiptDigest: string; producerSha256: string }, nonce: string) => ({
+			publicResult: observationV2.publicResult,
+			privateResult: {
+				...observationV2.privateResult,
+				grant: f.input.grant,
+				ownerAuthority: owner,
+				receiptDigest: ctx.receiptDigest,
+				producerSha256: ctx.producerSha256,
+				requestNonce: nonce,
+				observedAtMs: f.now,
+				validUntilMs: f.now + 30000,
+			},
+		}),
+	);
+	const authority = vi.fn(async () => {});
+	const operator = await bindNativeOperatorIntegration(input, {
+		ownerAuthority: owner,
+		producerTaskId: "synthetic-producer-task",
+		guard: {
+			checkpoint: vi.fn(async () => {}),
+			assert_current: vi.fn(async () => {}),
+			attach_read_budget_context: vi.fn(async () => {}),
+		},
+		supplier: {
+			reserveObservationReads: vi.fn(async () => {}),
+			observe,
+			assertCurrent: authority,
+			originalUsage: async (ctx) => ({
+				amendment: nativeReadAmendment,
+				contextDigest: nativeBudgetDigest(ctx),
+				reservationDigest: nativeBudgetDigest([]),
+				consumed: { acquisition: 0, read: 20, control: 0, draft: 0, send: 2 },
+			}),
+		},
+	});
+	const client = { callTool: vi.fn(async () => opened(f)), close: vi.fn() };
+	const connect = vi.fn(async () => client);
+	const runtime = await startOwnNativeRuntime(input, { ...operator, connect });
+	expect(runtime.route.nativeTask?.taskId).toBe("fixture-OWN-consumer-task");
+	expect(observe).toHaveBeenCalledOnce();
+	expect(connect).toHaveBeenCalledOnce();
+	expect(client.callTool).toHaveBeenCalledOnce();
+	expect(client.close).not.toHaveBeenCalled();
+	expect(authority).toHaveBeenCalledTimes(2);
+});
 it("requires carried accounting even when lifetime admission succeeds", async () => {
 	const f = await fixture();
 	const input = await readNativeRuntimeInput(f.path, fixturePin, () => f.now);
