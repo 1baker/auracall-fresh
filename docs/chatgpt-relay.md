@@ -485,7 +485,7 @@ is selected by this source update, and no intermediate7d/e43 repin/build occurs.
 ### Final native v2 operator composition (source only)
 
 The compiled own caller can use `bindNativeOperatorIntegration(receivedInput,
-operator)` and pass its `lifetime` and `readBudget` to the existing
+operator)` and pass its `lifetime`, `readBudget` and `execution` to the existing
 `startOwnNativeRuntime` once. The receiver supplies the expected grant, receipt,
 producer hash and clock; the operator supplies independently registered owner
 identity and original producer task. Private JSON cannot enable this path.
@@ -539,3 +539,38 @@ forbids draft/Send and native protected dispatch excludes fill; both remain inta
 Do not call createNativeConsumerFrontend to acquire a second task as a shortcut.
 No copying live stores/claims/locks, WSL path alias, API-ID conversion, manual claim,
 widget action or human reply copying satisfies automatic acceptancebf8f5906.
+
+### Whole-operation operator join (exact311f, source only)
+
+`bindNativeOperatorIntegration` now requires `dispatchJoin` alongside the existing
+original guard and suppliers. Its five callback methods match the exact311f
+operator component: admit_once, qualify_budget, handshake, acquire and
+protected_dispatch. One persistent actual operator binding must supply them; the
+source port creates no Python process, FD, IPC, reservation, authority or client.
+
+The own runtime requires the returned `execution` object before admission or SDK
+work. Connection, acquisition and governed calls execute inside these wrappers,
+so a failure in the operator's AFTER check cannot be mistaken for success. The
+callback must run exactly once and return the original local result. No skipped,
+substituted or repeated operation is accepted. A connected SDK client is retained
+even when a post-connect check fails. Existing acquired-task/current-authority and
+completed-operation validation remain mandatory.
+
+Integration-contract.v2 is not observation-v2: the supplied311f still names the
+old1727 observation. The actual admission callback continues to validate FULL
+f865/e0db/74e3 observation-v2, including custody coverage and mandatory gaps, before
+producing timing. The persistent bridge must construct Python ObservationTiming
+from that validated callback and return the original Node timing object; a JSON
+object cannot substitute for the Python type or establish authority. The opaque
+NativeReadBudget/client/results stay in the original Node process.
+
+The Python join marks both itself and the original guard uncertain on refusal.
+Its ABI has no recovery-readback method. Aura's originalReadback/ref-only release
+remain conditional on whole-call wrapper success; if it refuses, retain the
+original history and stop. Never bypass it, reconnect, recreate a claim, clear a
+hold or promise that metadata readback can recover this operator.
+
+Actual persistent bridge, writer exclusion, original usage/reservation, helper
+execution, private admission and host transport are still unbound. The normal CLI
+has no defaults for them. No native Send/fill permission, producer pin, JSON input
+field, Bastion store identity or cumulative limit changes in this source slice.

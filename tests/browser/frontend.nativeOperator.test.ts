@@ -5,6 +5,7 @@ import { afterEach, expect, it, vi } from "vitest";
 import { createNativeOperatorIntegration } from "../../src/browser/frontends/nativeOperator.js";
 import { nativeBudgetDigest } from "../../src/browser/frontends/nativeReadBudget.js";
 import fixture from "./fixtures/native-admission-observation-v2.json";
+import { fixtureDispatchJoin } from "./nativeDispatchFixture.js";
 
 const dirs: string[] = [];
 afterEach(async () => {
@@ -58,7 +59,9 @@ async function harness() {
 		})),
 		assertCurrent: vi.fn(async (_ctx: unknown, _dispatch: unknown) => {}),
 	};
+	const joinEvents: string[] = [];
 	const integration = createNativeOperatorIntegration({
+		dispatchJoin: fixtureDispatchJoin(joinEvents),
 		guard,
 		supplier,
 		grant: fixture.request.expectedGrant,
@@ -69,7 +72,7 @@ async function harness() {
 		now: () => 2000,
 	});
 	const budgetContext = { ...context, admissionDigest: "a".repeat(64), ledgerDirectory: directory };
-	return { ...integration, guard, supplier, budgetContext, stages, events };
+	return { ...integration, guard, supplier, budgetContext, stages, events, joinEvents };
 }
 
 it("joins the original three-field guard to the acquired identity without losing dispatch metadata", async () => {
@@ -85,6 +88,7 @@ it("joins the original three-field guard to the acquired identity without losing
 	await h.lifetime.assertCurrent(acquired, dispatch);
 	expect(h.supplier.assertCurrent).toHaveBeenLastCalledWith(acquired, dispatch);
 	expect(h.events).toEqual(["reserve", "observe"]);
+	expect(h.joinEvents).toEqual(["admit_once", "qualify_budget"]);
 	expect(h.stages).toEqual([
 		"qualifying_admit",
 		"observing_native",

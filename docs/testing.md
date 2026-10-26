@@ -4038,3 +4038,14 @@ route, concurrent/changed-ID and uncertainty fences, no invented release, and
 unsupported Pro with zero Sends. Default foreground entry stays closed before
 private-file reads when the lifetime contract is unresolved. This is source
 evidence, never a real SDK/process/producer/browser acceptance claim.
+
+### Native operator whole-operation boundary (2026-10-26)
+
+Focused selection: frontend.nativeRuntime, frontend.nativeOperator,
+frontend.nativeAdmission and frontend.nativeLifetime. Carried read-budget
+qualification is covered inside the nativeRuntime selection.
+The new regression first failed because post-handshake guard loss was ignored.
+Synthetic checks exercise before/after refusal, exact-once callback execution,
+opaque local results and refused readback/release; existing full-v2/custody/gap
+and acquired-identity coverage remains. No Python production guard or browser is
+executed. Preserve failed diagnostic receipts; fixture corrections are not flakes.

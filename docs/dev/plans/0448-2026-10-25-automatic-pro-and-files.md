@@ -359,3 +359,24 @@ real original accounting and a future finite automatic Send. The current native
 Pro-only runtime does not expose a full sender, its guard excludes fill, and f874
 forbids draft/Send. Preserve all three restrictions; do not disable them or expose
 an unguarded facade. No source-only client is presented as an installed endpoint.
+
+## Exact operator whole-call ABI integration (2026-10-26)
+
+Same accepted automatic roundtripbf8 and exact counterpart16c/311f: close the
+source call-site gap between before-only assertions and NativeDispatchJoin's
+before/after operation protection. Require one supplied five-method join in the
+existing native operator composition; wrap the actual handshake/acquisition/
+governed calls and existing full-v2 observation/budget qualifiers. Preserve
+current authority and opaque acquired/task/budget identity. No source-only
+wrapper is a production Python FD or a runtime admission.
+
+Verify post-handshake/post-acquisition refusal is held with no close/retry;
+missing wrappers refuse before admission; malformed callback execution cannot
+skip/substitute/repeat an operation; original metadata and release never bypass
+an uncertain Python guard. Full f865 custody/gaps validation stays in the callback.
+The operator's v2 integration still cites observation-v1 and cannot downgrade it.
+
+Actual Python ObservationTiming conversion, persistent Node/Python operation
+bridge, real writer/accounting suppliers and private finite host admission remain
+operator integration requirements. No executable binding or caller-loaded JSON
+proof is introduced. Source prepare-only/2-used-0-remaining Sends stay unchanged.

@@ -26193,3 +26193,12 @@ documented Pro receipt plus the synthetic slider observation. These are offline
 source checks, not Windows/Chrome/provider acceptance. Windows private-path ACL
 checks are implemented and refuse broad access, but their actual Windows execution
 remains held. See `docs/stock-chrome.md` and plan0444 for the concrete setup boundary.
+
+## 2026-10-26 — Native whole-operation protection
+
+A source regression showed a supplied post-handshake guard refusal was ignored:
+the old runtime performed only a pre-call assertion and returned a usable runtime.
+The required exact operator callback ports now wrap the full operation, propagate
+post-call refusal and retain the original client/attempt. Full observation-v2 and
+acquired authority checks remain. This closes a source gap; the actual persistent
+operator bridge and live accounting/admission remain unqualified.

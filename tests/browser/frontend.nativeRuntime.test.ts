@@ -9,12 +9,23 @@ import {
 	qualifyNativeReadBudget,
 } from "../../src/browser/frontends/nativeReadBudget.js";
 import {
+	startOwnNativeRuntime as actualStartOwnNativeRuntime,
 	bindNativeOperatorIntegration,
+	type NativeRuntimeDependencies,
+	type NativeRuntimeInput,
 	type NativeSdkDescriptor,
 	prepareOwnNativeProFromFile,
 	readNativeRuntimeInput,
-	startOwnNativeRuntime,
+	runNativeOperation,
 } from "../../src/browser/frontends/nativeRuntime.js";
+import { fixtureDispatchJoin } from "./nativeDispatchFixture.js";
+
+// Synthetic wrappers for existing runtime fixtures; production has no default.
+const startOwnNativeRuntime = (
+	input: NativeRuntimeInput,
+	dependencies: NativeRuntimeDependencies = {},
+) => actualStartOwnNativeRuntime(input, { execution: fixtureDispatchJoin(), ...dependencies });
+
 import observationV2 from "./fixtures/native-admission-observation-v2.json";
 import { withCompletedIdentity } from "./nativeIdentityFixture.js";
 
@@ -242,6 +253,114 @@ function fixtureBudget(f: Awaited<ReturnType<typeof fixture>>) {
 			() => f.now,
 		);
 }
+it("retains a connected client when the whole-operation guard refuses after handshake", async () => {
+	const f = await fixture();
+	const input = await readNativeRuntimeInput(f.path, fixturePin, () => f.now);
+	const client = { callTool: vi.fn(async () => opened(f)), close: vi.fn() };
+	const connect = vi.fn(async () => client);
+	const lifetime = fixtureLifetime();
+	const handshake = vi.fn(async (operation: () => Promise<unknown>) => {
+		await operation();
+		throw new Error("private post-dispatch guard failure");
+	});
+	await expect(
+		startOwnNativeRuntime(input, {
+			lifetime,
+			readBudget: fixtureBudget(f),
+			connect,
+			execution: { handshake, acquire: vi.fn(), protected_dispatch: vi.fn() },
+		} as never),
+	).rejects.toMatchObject({ code: "native_runtime_connection_unresolved" });
+	expect(handshake).toHaveBeenCalledOnce();
+	expect(connect).toHaveBeenCalledOnce();
+	expect(client.callTool).not.toHaveBeenCalled();
+	expect(client.close).not.toHaveBeenCalled();
+	expect(lifetime.uncertain).toHaveBeenCalledOnce();
+});
+it("requires a whole-operation executor before admission or SDK effects", async () => {
+	const f = await fixture();
+	const input = await readNativeRuntimeInput(f.path, fixturePin, () => f.now);
+	const lifetime = fixtureLifetime(),
+		connect = vi.fn();
+	await expect(
+		actualStartOwnNativeRuntime(input, {
+			lifetime,
+			readBudget: fixtureBudget(f),
+			connect,
+		}),
+	).rejects.toMatchObject({ code: "native_runtime_execution_required" });
+	expect(lifetime.qualify).not.toHaveBeenCalled();
+	expect(connect).not.toHaveBeenCalled();
+	expect(await readdir(f.dirs.consumer)).toEqual([]);
+});
+it("holds the original acquisition when the operator refuses its completion", async () => {
+	const f = await fixture();
+	const input = await readNativeRuntimeInput(f.path, fixturePin, () => f.now);
+	const client = { callTool: vi.fn(async () => opened(f)), close: vi.fn() };
+	const execution = fixtureDispatchJoin();
+	execution.acquire = async (operation) => {
+		await operation();
+		throw new Error("guard lost after Open");
+	};
+	const lifetime = fixtureLifetime();
+	await expect(
+		actualStartOwnNativeRuntime(input, {
+			lifetime,
+			readBudget: fixtureBudget(f),
+			execution,
+			connect: async () => client,
+		}),
+	).rejects.toMatchObject({ code: "consumer_readback_required" });
+	expect(client.callTool).toHaveBeenCalledOnce();
+	expect(client.close).not.toHaveBeenCalled();
+	expect(lifetime.uncertain).toHaveBeenCalledOnce();
+	expect(await readdir(join(f.dirs.consumer, ".sdk-runtime"))).toContain("held.json");
+});
+it.each([
+	"originalReadback",
+	"releaseConsumerReference",
+] as const)("never bypasses a refusing whole-call guard for %s", async (method) => {
+	const f = await fixture();
+	const input = await readNativeRuntimeInput(f.path, fixturePin, () => f.now);
+	const client = { callTool: vi.fn(async () => opened(f)), close: vi.fn() };
+	const execution = fixtureDispatchJoin();
+	execution.protected_dispatch = vi.fn(async () => {
+		throw new Error("operator uncertain");
+	});
+	const runtime = await actualStartOwnNativeRuntime(input, {
+		lifetime: fixtureLifetime(),
+		readBudget: fixtureBudget(f),
+		execution,
+		connect: async () => client,
+	});
+	await expect(runtime[method]("consumer_acquisition")).rejects.toBeDefined();
+	expect(runtime.state).toBe("held");
+	expect(execution.protected_dispatch).toHaveBeenCalledOnce();
+	expect(client.callTool).toHaveBeenCalledOnce();
+	expect(client.close).not.toHaveBeenCalled();
+});
+it.each([
+	"skipped",
+	"replaced",
+	"duplicate",
+])("refuses %s operation result without allowing another call", async (mode) => {
+	const original = Object.freeze({ opaque: "local-result" });
+	const call = vi.fn(async () => original);
+	await expect(
+		runNativeOperation(async (operation) => {
+			if (mode === "skipped") return original;
+			const value = await operation();
+			if (mode === "replaced") return { ...value };
+			try {
+				await operation();
+			} catch {
+				/* A bridge cannot swallow its second invocation. */
+			}
+			return value;
+		}, call),
+	).rejects.toMatchObject({ code: "native_runtime_execution_unqualified" });
+	expect(call).toHaveBeenCalledTimes(mode === "skipped" ? 0 : 1);
+});
 it("binds v2 observation and the phase-aware operator to the actual private receiver and own SDK", async () => {
 	const f = await fixture();
 	const input = await readNativeRuntimeInput(f.path, fixturePin, () => f.now);
@@ -265,7 +384,9 @@ it("binds v2 observation and the phase-aware operator to the actual private rece
 		}),
 	);
 	const authority = vi.fn(async () => {});
+	const joinEvents: string[] = [];
 	const operator = await bindNativeOperatorIntegration(input, {
+		dispatchJoin: fixtureDispatchJoin(joinEvents),
 		ownerAuthority: owner,
 		producerTaskId: "synthetic-producer-task",
 		guard: {
@@ -294,6 +415,7 @@ it("binds v2 observation and the phase-aware operator to the actual private rece
 	expect(client.callTool).toHaveBeenCalledOnce();
 	expect(client.close).not.toHaveBeenCalled();
 	expect(authority).toHaveBeenCalledTimes(2);
+	expect(joinEvents).toEqual(["admit_once", "qualify_budget", "handshake", "acquire"]);
 });
 it("requires carried accounting even when lifetime admission succeeds", async () => {
 	const f = await fixture();

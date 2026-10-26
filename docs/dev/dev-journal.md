@@ -56173,3 +56173,13 @@ compilation, full typecheck and scoped lint PASS. Independent native Standards
 and bounded source Spec PASS; full goal remains PARTIAL. The post-freeze unused
 Vitest import removal is mechanical and covered by final validation. No Browser
 tests rerun or actual connection/Send/Windows/provider/install/LIVE effects.
+
+## 2026-10-26 — Same P266 operator ABI repair
+
+Matched frozen16c/60fade/311f without executing operator private code or changing
+its source. Integration-v2 does not upgrade its inherited observation-v1 contract.
+Added the mandatory whole-operation callback connection to existing native
+startup/operator composition; preserved full f865/v2 validation and uncertainty.
+Actual Python ObservationTiming/FD binding remains the operator's missing runtime
+join. Original reads80/usageUNKNOWN, controls6, Sends2used/0remaining and PD hold
+are unchanged. No SDK connection, browser action, repin, install or runtime test.

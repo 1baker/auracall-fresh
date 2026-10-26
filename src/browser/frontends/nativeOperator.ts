@@ -4,9 +4,11 @@ import { createRetainedNativeLifetime } from "./nativeLifetime.js";
 import { type NativeReadBudgetContext, qualifyNativeReadBudget } from "./nativeReadBudget.js";
 import {
 	type NativeRuntimeDispatch,
+	type NativeRuntimeExecution,
 	type NativeRuntimeLifetimeContext,
 	nativeOwnerGrantSchema,
 	nativeRegisteredAuthoritySchema,
+	runNativeOperation,
 } from "./nativeRuntime.js";
 import { FrontendError } from "./types.js";
 
@@ -50,6 +52,7 @@ export interface NativeAdmissionSupplier {
 }
 export interface NativeOperatorOptions {
 	guard: NativeOriginalGuard;
+	dispatchJoin: NativeOperatorDispatchJoin;
 	supplier: NativeAdmissionSupplier;
 	grant: unknown;
 	ownerAuthority: unknown;
@@ -57,6 +60,23 @@ export interface NativeOperatorOptions {
 	producerSha256: string;
 	receiptDigest: string;
 	now?: () => number;
+}
+/** Node callback ports for exact311f NativeDispatchJoin, backed by the SAME
+ * persistent original guard. This is not a Python FD or a bridge implementation.
+ * The actual bridge owns Python ObservationTiming conversion; timing is not proof.
+ * Opaque qualifier/client/results stay in their original Node process.
+ */
+export interface NativeOperatorDispatchJoin extends NativeRuntimeExecution {
+	admit_once(
+		nonce: string,
+		observeAndValidate: (nonce: string) => Promise<NativeObservationTiming>,
+	): Promise<NativeObservationTiming>;
+	qualify_budget<T>(context: NativeReadBudgetContext, qualifier: () => Promise<T>): Promise<T>;
+}
+interface NativeObservationTiming {
+	requestNonce: string;
+	observedAtMs: number;
+	validUntilMs: number;
 }
 const envelope = z
 	.object({
@@ -83,10 +103,12 @@ function refuse(): never {
 export function createNativeOperatorIntegration(options: NativeOperatorOptions) {
 	const guard = options.guard,
 		supplier = options.supplier,
+		join = options.dispatchJoin,
 		now = options.now ?? Date.now;
 	if (
 		!guard ||
 		!supplier ||
+		!join ||
 		[
 			guard.checkpoint,
 			guard.assert_current,
@@ -95,6 +117,11 @@ export function createNativeOperatorIntegration(options: NativeOperatorOptions) 
 			supplier.observe,
 			supplier.originalUsage,
 			supplier.assertCurrent,
+			join.admit_once,
+			join.qualify_budget,
+			join.handshake,
+			join.acquire,
+			join.protected_dispatch,
 		].some((method) => typeof method !== "function")
 	)
 		refuse();
@@ -105,7 +132,14 @@ export function createNativeOperatorIntegration(options: NativeOperatorOptions) 
 		reserve = supplier.reserveObservationReads.bind(supplier),
 		observe = supplier.observe.bind(supplier),
 		usage = supplier.originalUsage.bind(supplier),
-		authority = supplier.assertCurrent.bind(supplier);
+		authority = supplier.assertCurrent.bind(supplier),
+		admitOnce = join.admit_once.bind(join),
+		qualifyBudget = join.qualify_budget.bind(join);
+	const execution: NativeRuntimeExecution = Object.freeze({
+		handshake: join.handshake.bind(join),
+		acquire: join.acquire.bind(join),
+		protected_dispatch: join.protected_dispatch.bind(join),
+	});
 	const parsedGrant = nativeOwnerGrantSchema.safeParse(options.grant);
 	const parsedOwner = nativeRegisteredAuthoritySchema.safeParse(options.ownerAuthority);
 	if (!parsedGrant.success || !parsedOwner.success) refuse();
@@ -175,21 +209,38 @@ export function createNativeOperatorIntegration(options: NativeOperatorOptions) 
 				await reserve(base, 2);
 				await assertGuard(base);
 				if (held) refuse();
-				await checkpoint("observing_native", base);
-				if (held || now() >= base.expiresAtMs) refuse();
-				const startedAtMs = now();
-				const raw = envelope.parse(await observe(base, nonce));
-				await assertGuard(base);
-				if (held) refuse();
-				const result = validateNativeAdmissionObservation(raw.privateResult, {
-					grant,
-					ownerAuthority: owner,
-					producerTaskId,
-					context: base,
-					requestNonce: nonce,
-					startedAtMs,
-					nowMs: now(),
-				});
+				const admissionContext = base;
+				let result: ReturnType<typeof validateNativeAdmissionObservation> | undefined;
+				await runNativeOperation(
+					(operation) =>
+						admitOnce(nonce, (suppliedNonce) => {
+							if (suppliedNonce !== nonce) refuse();
+							return operation();
+						}),
+					async () => {
+						await checkpoint("observing_native", admissionContext);
+						if (held || now() >= admissionContext.expiresAtMs) refuse();
+						const startedAtMs = now();
+						const raw = envelope.parse(await observe(admissionContext, nonce));
+						await assertGuard(admissionContext);
+						if (held) refuse();
+						result = validateNativeAdmissionObservation(raw.privateResult, {
+							grant,
+							ownerAuthority: owner,
+							producerTaskId,
+							context: admissionContext,
+							requestNonce: nonce,
+							startedAtMs,
+							nowMs: now(),
+						});
+						return Object.freeze({
+							requestNonce: result.requestNonce,
+							observedAtMs: result.observedAtMs,
+							validUntilMs: result.validUntilMs,
+						});
+					},
+				);
+				if (!result || held) refuse();
 				phase = "observed";
 				return {
 					receiptDigest: result.receiptDigest,
@@ -251,6 +302,7 @@ export function createNativeOperatorIntegration(options: NativeOperatorOptions) 
 	});
 	return Object.freeze({
 		lifetime,
+		execution,
 		readBudget: (context: NativeReadBudgetContext) =>
 			run(async () => {
 				const origin = original(context);
@@ -259,7 +311,10 @@ export function createNativeOperatorIntegration(options: NativeOperatorOptions) 
 				if (held) refuse();
 				await checkpoint("qualifying_budget", origin);
 				if (held) refuse();
-				const budget = await qualifyNativeReadBudget(context, usage, now);
+				const budget = await runNativeOperation(
+					(operation) => qualifyBudget(context, operation),
+					() => qualifyNativeReadBudget(context, usage, now),
+				);
 				await assertGuard(origin);
 				if (held) refuse();
 				phase = "budgeted";

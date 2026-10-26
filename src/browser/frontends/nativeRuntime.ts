@@ -311,12 +311,22 @@ export interface NativeRuntimeLifetime {
 }
 export interface NativeRuntimeDependencies {
 	lifetime?: NativeRuntimeLifetime;
+	/** Whole-call ports from ONE actual operator NativeDispatchJoin. A check-before
+	 * callback or JSON guard receipt cannot replace its before/after protection.
+	 * The persistent Python/Node binding and real suppliers remain operator-owned.
+	 */
+	execution?: NativeRuntimeExecution;
 	/** Trusted compiled operator qualifier. Never read from the private input JSON.
 	 * Required for this Pro-only runtime; missing or unknown carried accounting refuses.
 	 */
 	readBudget?: (context: NativeReadBudgetContext) => Promise<NativeReadBudget>;
 	/** Source fixture seam; production defaults to the pinned SDK stdio connector. */
 	connect?: (descriptor: NativeSdkDescriptor) => Promise<NativeMcpClient>;
+}
+export interface NativeRuntimeExecution {
+	handshake<T>(operation: () => Promise<T>): Promise<T>;
+	acquire<T>(operation: () => Promise<T>): Promise<T>;
+	protected_dispatch<T>(operation: () => Promise<T>): Promise<T>;
 }
 
 /** Bind the final operator composition to this EXACT opaque private receiver.
@@ -329,7 +339,7 @@ export async function bindNativeOperatorIntegration(
 	input: NativeRuntimeInput,
 	operator: Pick<
 		import("./nativeOperator.js").NativeOperatorOptions,
-		"guard" | "supplier" | "ownerAuthority" | "producerTaskId"
+		"guard" | "supplier" | "dispatchJoin" | "ownerAuthority" | "producerTaskId"
 	>,
 ) {
 	const data = inputs.get(input);
@@ -376,6 +386,52 @@ function lifetimeRequired(dependencies: NativeRuntimeDependencies): NativeRuntim
 function readBudgetRequired(dependencies: NativeRuntimeDependencies) {
 	if (typeof dependencies.readBudget !== "function") refuse("native_read_budget_required");
 	return dependencies.readBudget;
+}
+function executionRequired(dependencies: NativeRuntimeDependencies): NativeRuntimeExecution {
+	const execution = dependencies.execution;
+	if (
+		!execution ||
+		[execution.handshake, execution.acquire, execution.protected_dispatch].some(
+			(method) => typeof method !== "function",
+		)
+	)
+		refuse("native_runtime_execution_required");
+	return Object.freeze({
+		handshake: execution.handshake.bind(execution),
+		acquire: execution.acquire.bind(execution),
+		protected_dispatch: execution.protected_dispatch.bind(execution),
+	});
+}
+
+/** Preserve opaque local results; the bridge must invoke exactly one actual call.
+ * A lost post-call guard reply holds the original operation, never retries it.
+ */
+export async function runNativeOperation<T>(
+	wrap: (operation: () => Promise<T>) => Promise<T>,
+	operation: () => Promise<T>,
+): Promise<T> {
+	let called = false,
+		finished = false,
+		closed = false,
+		invalid = false;
+	let value: T | undefined;
+	try {
+		const returned = await wrap(async () => {
+			if (called || closed) {
+				invalid = true;
+				return refuse("native_runtime_execution_unqualified");
+			}
+			called = true;
+			value = await operation();
+			finished = true;
+			return value;
+		});
+		if (invalid || !called || !finished || !Object.is(returned, value))
+			refuse("native_runtime_execution_unqualified");
+		return returned;
+	} finally {
+		closed = true;
+	}
 }
 function publicError(error: unknown): FrontendError {
 	if (error instanceof FrontendError && /^(native|consumer|relay)_[a-z_]{1,100}$/.test(error.code))
@@ -575,6 +631,7 @@ export async function startOwnNativeRuntime(
 ): Promise<OwnNativeProRuntime> {
 	const lifetime = lifetimeRequired(dependencies);
 	const qualifyBudget = readBudgetRequired(dependencies);
+	const execution = executionRequired(dependencies);
 	const data = inputs.get(input);
 	if (!data) return refuse("native_runtime_private_input_invalid");
 	try {
@@ -645,23 +702,30 @@ export async function startOwnNativeRuntime(
 			),
 		});
 		await revalidateNativeReadBudget(readBudget, data.now);
-		await lifetime.assertCurrent(context, Object.freeze({ kind: "sdk_connect" }));
-		const client = await (dependencies.connect ?? connectPinnedSdk)(descriptor);
-		retainedClients.add(client);
+		const client = await runNativeOperation(execution.handshake, async () => {
+			await lifetime.assertCurrent(context, Object.freeze({ kind: "sdk_connect" }));
+			const connected = await (dependencies.connect ?? connectPinnedSdk)(descriptor);
+			// Retain even if the operator's AFTER check or reply fails.
+			retainedClients.add(connected);
+			return connected;
+		});
 		await lifetime.retain(context, client);
 		if (data.grant.expiresAtMs <= data.now()) refuse("native_runtime_admission_expired");
 		const protectedClient: NativeMcpClient = Object.freeze({
 			async callTool(request: Parameters<NativeMcpClient["callTool"]>[0]) {
 				const dispatch = protectedDispatch(request);
-				await lifetime.assertCurrent(acquiredContext, dispatch);
-				// A hold is synchronous even if its lifetime hook or durable write fails.
-				if (
-					runtime?.state === "held" &&
-					dispatch.kind !== "original_readback" &&
-					dispatch.kind !== "release"
-				)
-					refuse("native_runtime_readback_required");
-				return client.callTool(request);
+				const wrap = dispatch.kind === "acquire" ? execution.acquire : execution.protected_dispatch;
+				return runNativeOperation(wrap, async () => {
+					await lifetime.assertCurrent(acquiredContext, dispatch);
+					// A hold is synchronous even if its lifetime hook or durable write fails.
+					if (
+						runtime?.state === "held" &&
+						dispatch.kind !== "original_readback" &&
+						dispatch.kind !== "release"
+					)
+						refuse("native_runtime_readback_required");
+					return client.callTool(request);
+				});
 			},
 		});
 		const session = new NativeConsumerSession(
@@ -697,6 +761,7 @@ export async function prepareOwnNativeProFromFile(
 ) {
 	lifetimeRequired(dependencies);
 	readBudgetRequired(dependencies);
+	executionRequired(dependencies);
 	const input = await readNativeRuntimeInput(path, dependencies.producerPin, dependencies.now);
 	const runtime = await startOwnNativeRuntime(input, dependencies);
 	return runtime.prepareProOnly();
