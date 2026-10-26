@@ -1,3 +1,13 @@
+## 2026-10-26 — Supplier RPC on the existing v3 peer
+
+Added the exact three owner supplier RPCs to the existing retained peer; full
+observation and original-usage results go unchanged to existing validators. The
+same receiver, phase driver, opaque results and post-ACK hold fence are reused.
+Current caller assembly must pass this peer's taskReceiver before acquisition;
+operator4254's missing receiver and hold/race findings remain with that owner.
+No second client/controller, provider factory or accounting reset was introduced.
+Actual paired IPC remains pending a repaired, reviewed successor.
+
 ## 2026-10-26 — Exact private callback v2 join
 
 Matched the two counterpart wire changes: strict revision2 frames and the single

@@ -490,3 +490,13 @@ all carried limits. Acceptance needs focused legacy-refusal coverage and ONE
 actual public Node/Python IPC exchange using the final repaired, reviewed
 counterpart. The known a17f finite overlap race blocks selecting that counterpart;
 no fallback or guessed pin. Unit success alone leaves paired compatibility open.
+
+## Supplier RPC v3 join, same existing lane
+
+Chief reviewcfa6163e identifies operator4254's ACK/hold, same-session receiver and
+inherited finite overlap defects. These remain operator repairs. Add only the
+exact80fe3bba v3 supplier methods to the SAME completed Aura peer, returning
+observation/usage without normalization and preserving the existing after-ACK
+fence, receiver and one phase driver. No duplicate controller/decoder/host.
+Original accounting remains unchanged. Actual paired IPC requires repaired,
+reviewed counterpart bytes; no production provider, admission or capacity follows.

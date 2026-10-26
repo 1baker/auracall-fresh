@@ -10,6 +10,7 @@ import {
 import type { NativeFiniteAuthority, NativeFiniteOperation } from "./nativeFiniteSend.js";
 import type { NativeLedgerOperation, NativeLedgerWriter } from "./nativeLedgerWriter.js";
 import type {
+	NativeAdmissionSupplier,
 	NativeFullV2OperationResult,
 	NativeObservationProjection,
 	NativeOperatorDispatchJoin,
@@ -91,7 +92,7 @@ function metadata<T>(value: T): T {
 	return parsed;
 }
 
-/** Exact revision2 carrier consumer, not an authority provider. Opaque budgets,
+/** Exact revision3 carrier consumer, not an authority provider. Opaque budgets,
  * SDK clients and results never cross IPC. Its BEFORE/callback/AFTER sequence is
  * the ONE operator driver; ordinary/finite writers must not nest a join root. */
 export function createNativeCallbackPeer(options: NativeCallbackPeerOptions) {
@@ -323,7 +324,13 @@ export function createNativeCallbackPeer(options: NativeCallbackPeerOptions) {
 				hasCallback = true;
 			} else {
 				const p = pending.get(f.id);
-				if (!p || seen.has(f.id) || !f.ok || (p.method !== "finite.verify" && f.result !== null))
+				if (
+					!p ||
+					seen.has(f.id) ||
+					!f.ok ||
+					(!["finite.verify", "supplier.observe", "supplier.original_usage"].includes(p.method) &&
+						f.result !== null)
+				)
 					throw failure();
 				seen.add(f.id);
 				if (p === root && (root.busy || !complete(root) || pending.size !== 1)) throw failure();
@@ -389,15 +396,29 @@ export function createNativeCallbackPeer(options: NativeCallbackPeerOptions) {
 		assertCurrent: (operation, stage) => call<void>("finite.assert_current", [operation, stage]),
 		protect: (operation, run) => call("finite.protect", [operation], { operation: run }),
 	});
+	const assertNativeCurrent = (
+		context: NativeRuntimeLifetimeContext,
+		dispatch: NativeRuntimeDispatch,
+	) => call<void>("native.assert_current", [context, dispatch]);
+	// Exact v3 owner RPCs on this SAME retained channel. The existing admission
+	// and read-budget validators consume the unmodified results. These calls do
+	// not create a provider, inventory, reservation, capacity or local authority.
+	const supplier = Object.freeze<NativeAdmissionSupplier>({
+		reserveObservationReads: (context, reads) =>
+			call<void>("supplier.reserve_observation_reads", [context, reads]),
+		observe: (context, nonce) => call<unknown>("supplier.observe", [context, nonce]),
+		originalUsage: (context) => call<unknown>("supplier.original_usage", [context]),
+		assertCurrent: assertNativeCurrent,
+	});
 	return Object.freeze({
 		guard,
 		dispatchJoin,
 		writer,
 		finite,
+		supplier,
 		taskReceiver,
 		assertCurrent,
 		hold,
-		assertNativeCurrent: (context: NativeRuntimeLifetimeContext, dispatch: NativeRuntimeDispatch) =>
-			call<void>("native.assert_current", [context, dispatch]),
+		assertNativeCurrent,
 	});
 }

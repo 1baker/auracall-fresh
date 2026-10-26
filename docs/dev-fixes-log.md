@@ -1,3 +1,12 @@
+## 2026-10-26 — Successor supplier RPCs were absent from the existing peer
+
+- Extend the same strict peer to protocolv3 and the three documented owner
+  supplier calls; preserve the current task receiver and continuation hold fence.
+- Carry observation/usage unchanged; a void reservation ACK cannot contain a
+  synthetic READY result. Existing validators retain authority over full carry.
+- Reuse one phase/channel/session; the operator runner must wire the existing
+  receiver rather than supply a snapshot or replace the completed Aura peer.
+
 ## 2026-10-26 — Private peer expected the previous carrier wire
 
 - Match protocol v2 and `validate_full_v2([wire])` exactly. Preserve the full wire

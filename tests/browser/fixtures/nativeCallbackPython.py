@@ -12,13 +12,13 @@ import sys
 import tempfile
 import time
 
-# No repaired/reviewed v2 successor has been selected. Set an exact immutable
+# No repaired/reviewed v3 successor has been selected. Set an exact immutable
 # reviewed source pin only after the incumbent's finite-permission repair passes.
-# Never accept a path/env-provided digest or run the known-racy a17f candidate.
+# Never accept a path/env-provided digest or run the known-racy a17f/4254 candidate.
 REVIEWED_CARRIER_SHA256 = None
 source = Path(sys.argv[1])
 if REVIEWED_CARRIER_SHA256 is None:
-    raise RuntimeError("reviewed v2 carrier selection pending; no pair execution")
+    raise RuntimeError("reviewed v3 carrier selection pending; no pair execution")
 if hashlib.sha256((source / "original_callback_carrier.py").read_bytes()).hexdigest() != REVIEWED_CARRIER_SHA256:
     raise RuntimeError("frozen carrier mismatch")
 sys.path.insert(0, str(source))

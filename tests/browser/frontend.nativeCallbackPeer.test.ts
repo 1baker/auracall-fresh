@@ -8,7 +8,7 @@ import type { NativeLedgerOperation } from "../../src/browser/frontends/nativeLe
 import type { NativeFullV2OperationResult } from "../../src/browser/frontends/nativeOperator.js";
 import observation from "./fixtures/native-admission-observation-v2.json";
 
-const protocol = "p266.original-callback-carrier.v2";
+const protocol = "p266.original-callback-carrier.v3";
 const context = {
 	receiptDigest: "1".repeat(64),
 	producerSha256: "2".repeat(64),
@@ -30,6 +30,117 @@ function setup() {
 }
 const tick = () => new Promise((resolve) => setImmediate(resolve));
 describe("private persistent callback peer", () => {
+	it("carries owner supplier RPC results inside the SAME admission and budget callbacks", async () => {
+		const { peer, calls, send } = setup();
+		const reservation = peer.supplier.reserveObservationReads(context, 2);
+		expect(calls[0]).toMatchObject({
+			method: "supplier.reserve_observation_reads",
+			args: [context, 2],
+		});
+		send({ type: "return", id: 1, ok: true, result: null });
+		await reservation;
+		const wire = {
+			...observation.privateResult,
+			receiptDigest: context.receiptDigest,
+			producerSha256: context.producerSha256,
+			requestNonce: "nonce",
+		} as NativeFullV2OperationResult<unknown>["wire"];
+		const envelope = { publicResult: observation.publicResult, privateResult: wire };
+		const local = Symbol("local-admission");
+		const validator = vi.fn((raw: unknown) => {
+			expect(raw).toEqual(wire);
+			return {
+				receiptDigest: wire.receiptDigest,
+				producerSha256: wire.producerSha256,
+				requestNonce: wire.requestNonce,
+				observedAtMs: wire.observedAtMs,
+				validUntilMs: wire.validUntilMs,
+			};
+		});
+		const admission = peer.dispatchJoin.admit_once(
+			"nonce",
+			async (nonce) => {
+				const returned = await peer.supplier.observe(context, nonce);
+				expect(returned).toEqual(envelope);
+				return { wire, value: local };
+			},
+			validator,
+		);
+		send({ type: "callback", id: 1, parent: 2, method: "observe_full_v2", args: ["nonce"] });
+		await tick();
+		expect(calls.at(-1)).toMatchObject({
+			id: 3,
+			method: "supplier.observe",
+			args: [context, "nonce"],
+		});
+		send({ type: "return", id: 3, ok: true, result: envelope });
+		await tick();
+		send({ type: "callback", id: 2, parent: 2, method: "validate_full_v2", args: [wire] });
+		await tick();
+		expect(validator).toHaveBeenCalledOnce();
+		send({ type: "return", id: 2, ok: true, result: null });
+		expect(await admission).toBe(local);
+		const budgetContext = {
+			...context,
+			admissionDigest: "a".repeat(64),
+			ledgerDirectory: "/synthetic/ledger",
+		};
+		const carried = {
+			complete: false,
+			reads: "UNKNOWN",
+			sends: 2,
+			reservationDigest: "b".repeat(64),
+		};
+		const budget = peer.dispatchJoin.qualify_budget(budgetContext, async () => {
+			const usage = await peer.supplier.originalUsage(budgetContext);
+			expect(usage).toEqual(carried); // Transport never turns UNKNOWN into zero or drops spent Sends.
+			return local;
+		});
+		send({
+			type: "callback",
+			id: 3,
+			parent: 4,
+			method: "invoke",
+			args: ["join.qualify_budget", []],
+		});
+		await tick();
+		expect(calls.at(-1)).toMatchObject({
+			id: 5,
+			method: "supplier.original_usage",
+			args: [budgetContext],
+		});
+		send({ type: "return", id: 5, ok: true, result: carried });
+		await tick();
+		send({ type: "return", id: 4, ok: true, result: null });
+		expect(await budget).toBe(local);
+	});
+	it.each([
+		"guard",
+		"supplier",
+	])("fences a non-root %s ACK if hold precedes its continuation", async (kind) => {
+		const { peer, send } = setup();
+		const result =
+			kind === "guard"
+				? peer.guard.assert_current(context)
+				: peer.supplier.reserveObservationReads(context, 2);
+		const continuation = vi.fn();
+		const observed = result.then(continuation);
+		const rejected = expect(observed).rejects.toMatchObject({
+			code: "native_callback_peer_uncertain",
+		});
+		send({ type: "return", id: 1, ok: true, result: null });
+		peer.hold();
+		await rejected;
+		expect(continuation).not.toHaveBeenCalled();
+	});
+	it("refuses a non-void supplier reservation ACK", async () => {
+		const { peer, send } = setup();
+		const result = peer.supplier.reserveObservationReads(context, 2);
+		const rejected = expect(result).rejects.toThrow();
+		send({ type: "return", id: 1, ok: true, result: { ready: true } });
+		await rejected;
+		expect(() => peer.assertCurrent()).toThrow();
+	});
 	it("retains the original opaque value until the carrier's AFTER return", async () => {
 		const { peer, calls, send } = setup();
 		const opaque = { secretLocalOnly: new Map([["client", Symbol("client")]]) };
@@ -99,14 +210,16 @@ describe("private persistent callback peer", () => {
 		await result;
 		expect(reader).toHaveBeenCalledOnce();
 	});
-	it("refuses revision1 instead of silently accepting a legacy carrier", async () => {
+	it.each([
+		1, 2,
+	])("refuses revision%s instead of silently accepting a legacy carrier", async (revision) => {
 		const { peer, output } = setup();
 		const pending = peer.guard.assert_current(context);
 		const rejected = expect(pending).rejects.toMatchObject({
 			code: "native_callback_peer_uncertain",
 		});
 		output.write(
-			`${JSON.stringify({ protocol: "p266.original-callback-carrier.v1", type: "return", id: 1, ok: true, result: null })}\n`,
+			`${JSON.stringify({ protocol: `p266.original-callback-carrier.v${revision}`, type: "return", id: 1, ok: true, result: null })}\n`,
 		);
 		await rejected;
 		expect(() => peer.assertCurrent()).toThrow();
@@ -321,11 +434,11 @@ describe("private persistent callback peer", () => {
 	});
 });
 
-it.skipIf(!process.env.AURACALL_REVIEWED_V2_CARRIER_SOURCE)(
-	"exchanges real anonymous IPC with the selected reviewed v2 Python carrier",
+it.skipIf(!process.env.AURACALL_REVIEWED_V3_CARRIER_SOURCE)(
+	"exchanges real anonymous IPC with the selected reviewed v3 Python carrier",
 	async () => {
-		const carrierSource = process.env.AURACALL_REVIEWED_V2_CARRIER_SOURCE;
-		if (!carrierSource) throw new Error("selected reviewed v2 fixture source required");
+		const carrierSource = process.env.AURACALL_REVIEWED_V3_CARRIER_SOURCE;
+		if (!carrierSource) throw new Error("selected reviewed v3 fixture source required");
 		const child = spawn(
 			"python3",
 			[

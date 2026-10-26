@@ -775,9 +775,10 @@ configuration, original accounting suppliers and dedicated inherited IPC. This
 is a compiled library entrypoint; there is no new JSON mode or process launcher.
 
 The initial peer consumed frozen operator f8625bd4 / contract d4d38756,
-protocol v1. The current source matches the exact revision2 contract21b2: strict
-`p266.original-callback-carrier.v2` frames and one `validate_full_v2([wire])`
-callback. It rejects v1 and the old four-argument callback; there is no fallback.
+protocol v1. Checkpoint36e62947 matched revision2 contract21b2. Current source matches the
+revision3 supplier-RPC wire in contract80fe3bba: strict
+`p266.original-callback-carrier.v3` frames and one `validate_full_v2([wire])`
+callback. It rejects v1/v2 and the old four-argument callback; there is no fallback.
 The same full-v2 validator, local SDK client and opaque results remain retained. Root results become available only
 after the carrier's final return. Nested authority assertions run within that
 single transaction. Malformed frames, duplicate callbacks, mismatched identity,
@@ -796,13 +797,32 @@ transaction, including its exact dispatch. The legacy callback-only
 refuses in this peer. It is not nested inside the writer transaction or rebuilt
 from remembered arguments.
 
+The same peer now exposes the exact `NativeAdmissionSupplier` methods:
+`reserveObservationReads` calls `supplier.reserve_observation_reads(context, 2)`;
+`observe` calls `supplier.observe(context, nonce)`; `originalUsage` calls
+`supplier.original_usage(budgetContext)`. Current authority uses the existing
+`native.assert_current` RPC. Reservation requires a null acknowledgment. Only the
+observation and usage calls accept their unmodified data results; the existing
+full-v2 and read-budget validators still decide eligibility. UNKNOWN is never
+converted into zero, and a transport result is not production authority.
+
+For the existing operator runner, use ONE `createNativeCallbackPeer`: its guard,
+supplier, dispatchJoin and writer feed `bindNativeOperatorIntegration`; its
+`taskReceiver` must be supplied to `startOwnNativeRuntime` before acquisition.
+Keep the existing synchronous publication/hold fence with that same peer. Do not
+construct a second peer or use a caller task snapshot. The existing own
+`createOriginalAccountedNativeCallbackIntegration` remains the concrete Node
+accounting composition; this transport delta does not replace its selection,
+create an operator provider, or instantiate both accounting paths.
+
 Historical f862 IPC reproduced refusal of the mandatory `dispatch` field before
 invoking the operation. The a17f v2 successor carries that field, but its known
-finite-permission overlap race remains with the incumbent operator. The actual
-paired Node/Python v2 check requires the repaired, independently reviewed successor;
+finite-permission overlap race remains with the incumbent operator. Reviewcfa6163e also rejects the4254 runner for its non-root ACK/hold and missing
+same-session receiver joins; it used stub Aura startup exports. The actual
+paired Node/Python v3 check requires the repaired, independently reviewed successor;
 none is selected here. Its opt-in fixture refuses even when a source path is supplied
 until an immutable reviewed pin is committed. A skipped pair is not compatibility
-proof. Do not strip dispatch, reuse a v1 fixture as v2 evidence, or run a17f as the
+proof. Do not strip dispatch, reuse an older fixture as v3 evidence, or run a17f/4254 as the
 accepted counterpart.
 Local IPC proof does not qualify real bootstrap, original accounting participation,
 complete carried usage, two reserved observations, private admission, producer

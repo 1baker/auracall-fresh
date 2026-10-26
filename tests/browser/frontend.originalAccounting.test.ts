@@ -351,7 +351,7 @@ describe.skipIf(!rootSource)("original accounting with actual synthetic POSIX gu
 		const input = new PassThrough(),
 			output = new PassThrough();
 		const acquire = vi.spyOn(runtimeModule, "startOwnNativeRuntime");
-		const protocol = "p266.original-callback-carrier.v2";
+		const protocol = "p266.original-callback-carrier.v3";
 		input.on("data", (raw) => {
 			const frame = JSON.parse(raw.toString());
 			if (frame.method === "binding.hold") return;
