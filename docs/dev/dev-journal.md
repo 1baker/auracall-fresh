@@ -1,3 +1,25 @@
+## 2026-10-26 — Automatic prompt/reply host transport join
+
+Direct-human acceptancebf8f5906 requires automatic Codex -> owned ChatGPT Pro ->
+exact prompt -> full saved reply -> Codex. P447 already implements claim/dispatch/
+readback, but its deployed canonical store is on Bastion while the owned native
+frontend belongs on WSL. A local preparation store or matching path cannot join
+those hosts. The existing frontend MCP protocol supplies inspect/configure/send/
+status, so add its client adapter rather than another sender or public server.
+
+createMcpFrontend binds one already-connected owned client and route. It preserves
+exact request bytes and full matching structured/text results; malformed responses,
+transport loss and route mismatch refuse without retries or reconnects. P447 stays
+beside its real store. Actual registered MCP tools plus synthetic frontend and
+private RelayStore tests cover automatic Pro/independent readback, full Unicode
+reply persistence and lost Send ACK recovery without another Send.
+
+The actual authenticated inter-host transport, genuine admitted native facade and
+future finite automatic-Send accounting remain unqualified. Current native runtime
+is still Pro-only; no fill enable, draft/Send policy change or JSON mode was added.
+No real client, endpoint, store, browser or provider was touched. Manual391 remains
+valid history only; zero remaining Sends and all existing counters stay carried.
+
 ## 2026-10-26 — Sealed v2 validation and operator phase composition
 
 Chief975 delivers final Browserf865 / contracte0db / fixture74e3 and operator26d.

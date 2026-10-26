@@ -1,3 +1,14 @@
+## Automatic sender through frontend MCP (2026-10-26)
+
+`tests/relay.mcpFrontend.test.ts` connects an SDK client to the existing registered
+frontend tools over InMemoryTransport, using a synthetic provider and private
+fixture RelayStore. It runs the existing P447 sender through Pro configuration and
+independent inspection, exact-prompt once-only Send, full Unicode reply persistence
+and fresh saved readback. A lost Send acknowledgment recovers only the original
+answer; the Send count stays one. Protocol/route/refusal/size checks fail without
+truncation, private error disclosure or automatic retry. This proves source
+composition, not a signed-in browser, real Pro control, host transport or OAuth.
+
 ## Sealed admission v2 / operator composition (2026-10-26)
 
 Focused tests use the unchanged sealed native synthetic fixture74e327bf. They

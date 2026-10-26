@@ -330,3 +330,32 @@ and SDK dispatch. No automatic release, retry, re-observation or fresh ledger.
 Actual persistent operator transport, cooperating-writer enforcement, complete
 original usage and pinned helper execution remain required production bindings.
 An interface-only supplier does not close these gates. Default CLI stays closed.
+
+## Automatic roundtrip acceptance and host join (2026-10-26)
+
+Direct-human refinementbf8f5906 requires a fully automatic exact-prompt/full-reply
+roundtrip. Manual391 and Pro preparation remain prerequisites/history, not terminal
+acceptance. Reuse P447 dispatch, semantic Pro and guarded native runtime; no new
+sender loop, provider task, OAuth registration or Send authority.
+
+Current split: the canonical RelayStore and selected0601/db5 release are on
+Bastion. The native SDK/producer and admitted frontend belong on the WSL Browser
+host. The same pathname on WSL is not the Bastion store. Existing relay MCP tools
+do not export frontendClaim/configureFrontend; relay_claim is the manual protocol.
+Ordinary relay dispatch JSON uses service/stock configuration, not native startup.
+
+Smallest source transport join: adapt one already-connected owned SDK client for
+the EXISTING frontend_inspect/configure/send/status MCP tools into FrontendTools.
+P447 can then remain with the canonical store on Bastion. Require the original
+opaque route, preserve exact arguments/full structured readback, refuse malformed
+or failed results and never connect/retry/close or perform catalog discovery.
+Source tests use the actual registered MCP tools over in-memory SDK transport plus
+P447 and a private synthetic RelayStore: independent Pro readback, claim before
+one Send, entire saved Unicode reply, and no repeat after uncertain input.
+
+Runtime selection remains unqualified: the existing operator must bind the actual
+Bastion caller/client to the genuine WSL frontend, transport/auth/host identities,
+real original accounting and a future finite automatic Send. The current native
+Pro-only runtime does not expose a full sender, its guard excludes fill, and f874
+forbids draft/Send. Preserve all three restrictions; do not disable them or expose
+an unguarded facade. No source-only client is presented as an installed endpoint.

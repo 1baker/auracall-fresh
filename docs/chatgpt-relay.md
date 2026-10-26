@@ -508,3 +508,34 @@ current native authority and one retained operator handle remain required.
 Unknown usage refuses. Default pins and CLI remain closed; no activation follows
 from these source tests. Existing 80 cumulative reads, six controls and zero
 remaining Sends are unchanged.
+
+### Automatic roundtrip across the existing host split
+
+Current actual deployment evidence pins the Bastion relay to release0601a218 /
+source db5c0196. Its canonical store is
+`/home/bak3r/.local/state/auracall-relay/store`, selected through the existing
+private `/home/bak3r/.config/auracall-relay/relay-oauth.json`. These are Bastion
+paths, not WSL aliases. No current-state network probe is implied by this source
+trace. The WSL native runtime uses a separate route-preparation journal.
+
+The source consumer `createMcpFrontend(ownedConnectedClient, routeId)` adapts the
+existing frontend_inspect/configure/send/status tools to P447 FrontendTools.
+The compiled operator can pass that facade and the actual Bastion RelayStore into
+`dispatchRelayRequest`. That function returns the complete saved status/reply to
+its caller and verifies it through RelayStore.status. It owns the same claim and
+completion flow; the adapter introduces no sender loop or alternate store.
+
+The remote endpoint would need to expose the genuine admitted frontend using the
+existing frontend MCP registration/server, with reviewed host/auth/transport and
+same-route lifetime. None is inferred from the connected relay-only MCP URL.
+The current JSON dispatch CLI still supports service/stock configuration only;
+the native Pro runtime still exposes prepare-only. No runnable native automatic
+CLI, new server registration or authority is supplied by this adapter alone.
+
+Next operator join: one owned authenticated frontend MCP client on the canonical
+store host; a genuine guarded native facade on the browser host; complete original
+accounting and a specifically admitted future automatic Send. Current f874 policy
+forbids draft/Send and native protected dispatch excludes fill; both remain intact.
+Do not call createNativeConsumerFrontend to acquire a second task as a shortcut.
+No copying live stores/claims/locks, WSL path alias, API-ID conversion, manual claim,
+widget action or human reply copying satisfies automatic acceptancebf8f5906.

@@ -1,3 +1,18 @@
+## 2026-10-26 — Existing sender had no frontend MCP consumer
+
+- P447 accepts FrontendTools and a local canonical RelayStore. The genuine browser
+  and canonical store reside on different hosts; the old loopback service broker
+  speaks service-request v1, not frontend MCP. Neither path aliases nor relay_claim
+  supply the automatic frontend claim/configuration protocol.
+- Added an adapter for the exact existing frontend MCP tools, retaining one supplied
+  SDK client/route and complete matching results. It never connects, discovers,
+  retries, reauthenticates, closes or invents a remote endpoint.
+- Integration tests run P447 through the actual registered MCP tools and verify
+  Pro readback, original prompt bytes, durable claim before Send, full saved reply,
+  and original-only recovery after a lost Send ACK. Synthetic provider only.
+- This closes a source transport-consumer seam, not actual host/authority admission.
+  Pro-only runtime, original shared accounting and zero available Sends remain held.
+
 ## 2026-10-26 — v2 coverage and operator context mismatch
 
 - The five-field lifetime projection did not validate the final native v2 wire.
