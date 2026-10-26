@@ -145,7 +145,8 @@ class NativeLedger {
 		intent: unknown,
 		bucket: Bucket,
 		effect: () => Promise<{ value: T; metadata: unknown }>,
-		originalKey?: string,
+		originalKey?: string | string[],
+		readReserve = 0,
 	): Promise<T> {
 		if (!/^[a-zA-Z0-9_-]{8,128}$/.test(key)) fail("consumer_operation_key_invalid");
 		await mkdir(this.directory, { recursive: true, mode: 0o700 });
@@ -154,8 +155,11 @@ class NativeLedger {
 		const fd = await open(lock, "wx", 0o600).catch(() => fail("consumer_operation_held"));
 		try {
 			const entries = await readdir(this.directory);
+			const originals =
+				originalKey === undefined ? [] : Array.isArray(originalKey) ? originalKey : [originalKey];
+			const found = new Set<string>();
 			let used = 0,
-				originalFound = originalKey === undefined;
+				readsUsed = 0;
 			for (const name of entries.filter((n) => /^reservation-[a-f0-9]{64}\.json$/.test(n))) {
 				await this.privatePath(join(this.directory, name));
 				const f = await open(join(this.directory, name), constants.O_RDONLY | constants.O_NOFOLLOW);
@@ -174,10 +178,10 @@ class NativeLedger {
 					await f.close();
 				}
 				if (!Object.hasOwn(limits, record.bucket)) fail("consumer_ledger_invalid");
-				if (record.key === originalKey) originalFound = true;
+				if (originals.includes(record.key)) found.add(record.key);
 				if (name !== `reservation-${digest(record.key)}.json`) fail("consumer_ledger_invalid");
 				const completion = name.replace("reservation-", "completed-");
-				if (!entries.includes(completion) && record.key !== originalKey)
+				if (!entries.includes(completion) && !originals.includes(record.key))
 					fail("consumer_readback_required");
 				if (entries.includes(completion)) {
 					await this.privatePath(join(this.directory, completion));
@@ -200,12 +204,15 @@ class NativeLedger {
 					}
 				}
 				if (record.bucket === bucket) used++;
+				if (record.bucket === "read") readsUsed++;
 			}
 			const token = digest(key);
-			if (!originalFound) fail("consumer_operation_key_invalid");
+			if (found.size !== originals.length) fail("consumer_operation_key_invalid");
 			if (entries.includes(`reservation-${token}.json`))
 				fail(bucket === "acquisition" ? "consumer_acquisition_held" : "consumer_operation_held");
 			if (used >= limits[bucket]) fail("consumer_budget_exhausted");
+			// Leave capacity for the post-input URL/snapshot/URL and independent prepare check.
+			if (limits.read - readsUsed < readReserve) fail("consumer_budget_exhausted");
 			await this.write(`reservation-${token}.json`, { bucket, key, intentDigest: digest(intent) });
 			const result = await effect();
 			await this.write(`completed-${token}.json`, {
@@ -234,11 +241,13 @@ export class NativeConsumerSession {
 	#binding: NativeTaskBinding | null = null;
 	#now: () => number;
 	#held = false;
+	#releaseKey: string | null = null;
 	#expires: number | null = null;
 	#wireSession: string | null = null;
 	#controlRef: string | null = null;
 	#acquisitionId: string | null = null;
 	#bindingDigest: string | null = null;
+	#completedOperations = new Set<string>();
 	constructor(
 		client: NativeMcpClient,
 		admission: NativeConsumerAdmission,
@@ -253,6 +262,10 @@ export class NativeConsumerSession {
 	get binding(): NativeTaskBinding {
 		if (!this.#binding) return fail("consumer_acquisition_required");
 		return { ...this.#binding };
+	}
+	/** Sticky semantic uncertainty; original metadata may still be read. */
+	hold() {
+		this.#held = true;
 	}
 	private async payload(tool: string, args: Record<string, unknown>) {
 		const raw = await this.#client.callTool({ name: tool, arguments: args });
@@ -333,6 +346,7 @@ export class NativeConsumerSession {
 						: "input_acknowledged";
 			if (
 				data.consumerGrantId !== a.consumerGrantId ||
+				this.#completedOperations.has(data.operation.operationId) ||
 				data.expiresAtMs !== (this.#expires ?? a.expiresAtMs) ||
 				data.expiresAtMs <= this.#now() ||
 				data.consumerAck.completedAtMs > this.#now() ||
@@ -391,6 +405,7 @@ export class NativeConsumerSession {
 					fail("consumer_binding_mismatch");
 				this.#wireSession = envelope.session;
 			}
+			this.#completedOperations.add(data.operation.operationId);
 			return { ...data, identity, targetObservation: observed.data, bindingDigest };
 		} catch (error) {
 			this.#held = true;
@@ -455,36 +470,48 @@ export class NativeConsumerSession {
 		if (this.#held || (this.#expires ?? 0) <= this.#now())
 			return fail("consumer_readback_required");
 		const binding = this.binding;
-		return this.#ledger.run(key, [binding, action, params], bucket, async () => {
-			const data = await this.invoke(
-				"browser_command",
-				{ taskId: binding.taskId, operationKey: key, action, params },
-				action,
-				key,
-			);
-			if (
-				!data.result ||
-				typeof data.result !== "object" ||
-				Array.isArray(data.result) ||
-				(action === "fill" &&
-					!z
-						.object({ filled: z.literal(true) })
-						.strict()
-						.safeParse(data.result).success) ||
-				(action === "click" &&
-					!z
-						.object({ clicked: z.literal(true) })
-						.strict()
-						.safeParse(data.result).success)
-			) {
-				this.#held = true;
-				return fail("consumer_completion_invalid");
-			}
-			return {
-				value: data.result as Record<string, unknown>,
-				metadata: { taskId: data.taskId, controlRef: data.controlRef, operation: data.operation },
-			};
-		});
+		return this.#ledger.run(
+			key,
+			[binding, action, params],
+			bucket,
+			async () => {
+				const data = await this.invoke(
+					"browser_command",
+					{ taskId: binding.taskId, operationKey: key, action, params },
+					action,
+					key,
+				);
+				if (
+					!data.result ||
+					typeof data.result !== "object" ||
+					Array.isArray(data.result) ||
+					(action === "fill" &&
+						!z
+							.object({ filled: z.literal(true) })
+							.strict()
+							.safeParse(data.result).success) ||
+					(action === "click" &&
+						!z
+							.object({ clicked: z.literal(true) })
+							.strict()
+							.safeParse(data.result).success) ||
+					(action === "press" &&
+						!z
+							.object({ pressed: z.literal(true) })
+							.strict()
+							.safeParse(data.result).success)
+				) {
+					this.#held = true;
+					return fail("consumer_completion_invalid");
+				}
+				return {
+					value: data.result as Record<string, unknown>,
+					metadata: { taskId: data.taskId, controlRef: data.controlRef, operation: data.operation },
+				};
+			},
+			undefined,
+			bucket === "control" ? 6 : 0,
+		);
 	}
 	read(action: "url" | "snapshot" | "gettext", params: Record<string, unknown>, key: string) {
 		if (
@@ -511,95 +538,136 @@ export class NativeConsumerSession {
 	send(key: string) {
 		return this.command("click", { selector: 'button[data-testid="send-button"]' }, key, "send");
 	}
-	/** Metadata for the ORIGINAL key only; never returns page text or clears an input hold. */
+	/** Only snapshot refs and slider arrow input; no arbitrary selector/key or Send alias. */
+	control(action: "click" | "press", ref: string, key: string) {
+		if (!/^[e][1-9][0-9]*$/.test(ref) || !["click", "press"].includes(action))
+			return Promise.reject(
+				new FrontendError("consumer_arguments_invalid", "Use an observed native control ref."),
+			);
+		return this.command(
+			action,
+			action === "click" ? { selector: `@${ref}` } : { selector: `@${ref}`, key: "ArrowRight" },
+			key,
+			"control",
+		);
+	}
+	private async metadata(tool: "browser_continue" | "browser_close", key: string, release = false) {
+		const b = this.binding,
+			controlRef = this.#controlRef,
+			acquisitionId = this.#acquisitionId;
+		if (!controlRef || !acquisitionId) return fail("consumer_acquisition_required");
+		try {
+			const envelope = await this.payload(tool, { taskId: b.taskId, operationKey: key });
+			const d = z
+				.object({
+					contractVersion: z.literal(version),
+					taskId: z.literal(b.taskId),
+					controlRef: z.literal(controlRef),
+					acquisitionId: z.literal(acquisitionId),
+					consumerGrantId: z.literal(this.#admission.consumerGrantId),
+					expiresAtMs: z.literal(this.#expires ?? this.#admission.expiresAtMs),
+					requestedOperationKey: z.literal(key),
+					matchingOperation: z.literal(true),
+					state: z.enum(["active", "unknown", "released", "expired", "revoked"]),
+					operation: z.object({
+						operationKey: z.literal(key),
+						state: z.enum(["reserved", "claimed", "completed", "unknown"]),
+					}),
+				})
+				.parse(envelope.data);
+			if (
+				envelope.data &&
+				typeof envelope.data === "object" &&
+				("targetObservation" in envelope.data ||
+					"result" in envelope.data ||
+					"consumerAck" in envelope.data)
+			)
+				fail("consumer_readback_required");
+			const receipt = z
+				.object({
+					identityFreshness: z.enum(["stored_completion", "unavailable"]),
+					identity: completedIdentitySchema.nullable(),
+				})
+				.parse(envelope.data);
+			if (receipt.identityFreshness === "stored_completion") {
+				const stored = z
+					.object({
+						operation: operationSchema.extend({
+							ack: ackSchema.extend({ identity: completedIdentitySchema }),
+						}),
+					})
+					.parse(envelope.data);
+				if (
+					!receipt.identity ||
+					digest(receipt.identity) !== digest(stored.operation.ack.identity) ||
+					this.identityBinding(receipt.identity, { ...d, operation: stored.operation }) !==
+						this.#bindingDigest
+				)
+					fail("consumer_readback_required");
+			} else {
+				const unavailable = z
+					.object({
+						operation: z.object({
+							ack: z.object({ identity: z.unknown().optional() }).nullable().optional(),
+						}),
+					})
+					.parse(envelope.data);
+				if (receipt.identity !== null || unavailable.operation.ack?.identity != null)
+					fail("consumer_readback_required");
+			}
+			if (
+				release &&
+				(d.state !== "released" ||
+					(envelope.data as Record<string, unknown>).browserDisposition !== "retained")
+			)
+				fail("consumer_readback_required");
+			const metadata = {
+				taskId: d.taskId,
+				controlRef: d.controlRef,
+				operationKey: key,
+				state: d.state,
+				operationState: d.operation.state,
+				readbackOnly: true,
+				pageObserved: false,
+				identityFreshness: receipt.identityFreshness,
+				browserDisposition:
+					(envelope.data as Record<string, unknown>).browserDisposition === "retained"
+						? "retained"
+						: undefined,
+			};
+			return { value: metadata, metadata };
+		} catch {
+			return fail("consumer_readback_required");
+		}
+	}
+	/** Metadata for the ORIGINAL key only; never returns page text or clears a hold. */
 	async originalReadback(key: string): Promise<Record<string, unknown>> {
 		if (!/^[a-zA-Z0-9_-]{8,128}$/.test(key)) return fail("consumer_operation_key_invalid");
-		const b = this.binding;
-		const controlRef = this.#controlRef;
-		const acquisitionId = this.#acquisitionId;
-		if (!controlRef || !acquisitionId) return fail("consumer_acquisition_required");
+		if (this.#releaseKey !== null && this.#releaseKey !== key)
+			return fail("consumer_readback_required");
 		this.#held = true;
 		return this.#ledger.run(
-			`metadata_${digest(key)}`,
-			[b, key],
+			`${this.#releaseKey === null ? "metadata" : "release_metadata"}_${digest(key)}`,
+			[this.binding, key],
 			"read",
-			async () => {
-				try {
-					const envelope = await this.payload("browser_continue", {
-						taskId: b.taskId,
-						operationKey: key,
-					});
-					const d = z
-						.object({
-							contractVersion: z.literal(version),
-							taskId: z.literal(b.taskId),
-							controlRef: z.literal(controlRef),
-							acquisitionId: z.literal(acquisitionId),
-							consumerGrantId: z.literal(this.#admission.consumerGrantId),
-							expiresAtMs: z.literal(this.#expires ?? this.#admission.expiresAtMs),
-							requestedOperationKey: z.literal(key),
-							matchingOperation: z.literal(true),
-							state: z.enum(["active", "unknown", "released", "expired", "revoked"]),
-							operation: z.object({
-								operationKey: z.literal(key),
-								state: z.enum(["reserved", "claimed", "completed", "unknown"]),
-							}),
-						})
-						.parse(envelope.data);
-					if (
-						envelope.data &&
-						typeof envelope.data === "object" &&
-						("targetObservation" in envelope.data || "result" in envelope.data)
-					)
-						fail("consumer_readback_required");
-					const receipt = z
-						.object({
-							identityFreshness: z.enum(["stored_completion", "unavailable"]),
-							identity: completedIdentitySchema.nullable(),
-						})
-						.parse(envelope.data);
-					if (receipt.identityFreshness === "stored_completion") {
-						const stored = z
-							.object({
-								operation: operationSchema.extend({
-									ack: ackSchema.extend({ identity: completedIdentitySchema }),
-								}),
-							})
-							.parse(envelope.data);
-						if (
-							!receipt.identity ||
-							digest(receipt.identity) !== digest(stored.operation.ack.identity) ||
-							this.identityBinding(receipt.identity, { ...d, operation: stored.operation }) !==
-								this.#bindingDigest
-						)
-							fail("consumer_readback_required");
-					} else {
-						const unavailable = z
-							.object({
-								operation: z.object({
-									ack: z.object({ identity: z.unknown().optional() }).nullable().optional(),
-								}),
-							})
-							.parse(envelope.data);
-						if (receipt.identity !== null || unavailable.operation.ack?.identity != null)
-							fail("consumer_readback_required");
-					}
-					const metadata = {
-						taskId: d.taskId,
-						controlRef: d.controlRef,
-						operationKey: key,
-						state: d.state,
-						operationState: d.operation.state,
-						readbackOnly: true,
-						pageObserved: false,
-						identityFreshness: receipt.identityFreshness,
-					};
-					return { value: metadata, metadata };
-				} catch {
-					return fail("consumer_readback_required");
-				}
-			},
-			key,
+			() => this.metadata("browser_continue", key),
+			this.#releaseKey === null ? key : [key, "consumer_reference_release"],
+		);
+	}
+	/** Explicit consumer-ref release only. Stored operation metadata is not a close ACK. */
+	async release(originalKey: string): Promise<Record<string, unknown>> {
+		if (!/^[a-zA-Z0-9_-]{8,128}$/.test(originalKey)) return fail("consumer_operation_key_invalid");
+		if (this.#releaseKey !== null) return fail("consumer_readback_required");
+		const binding = this.binding;
+		this.#held = true;
+		this.#releaseKey = originalKey;
+		return this.#ledger.run(
+			"consumer_reference_release",
+			[binding, originalKey, "release"],
+			"control",
+			() => this.metadata("browser_close", originalKey, true),
+			originalKey,
+			1,
 		);
 	}
 }

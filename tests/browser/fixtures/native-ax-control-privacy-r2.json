@@ -1,0 +1,1078 @@
+{
+  "fixtureVersion": "agent-browser.ax-control.fixture.v1",
+  "contractVersion": "agent-browser.ax-control.v1",
+  "syntheticOnly": true,
+  "scope": "Expected optional refs only; existing rendered snapshot text is unchanged. No provider verdict or live readiness.",
+  "cases": [
+    {
+      "name": "actual_slider_value_and_label",
+      "nodes": [
+        {
+          "nodeId": "42",
+          "backendDOMNodeId": 42,
+          "role": {
+            "type": "role",
+            "value": "slider"
+          },
+          "name": {
+            "type": "computedString",
+            "value": "Synthetic control"
+          },
+          "value": {
+            "type": "number",
+            "value": 4
+          },
+          "properties": [
+            {
+              "name": "valuemin",
+              "value": {
+                "type": "number",
+                "value": 0
+              }
+            },
+            {
+              "name": "valuemax",
+              "value": {
+                "type": "number",
+                "value": 4
+              }
+            },
+            {
+              "name": "valuetext",
+              "value": {
+                "type": "string",
+                "value": "Pro"
+              }
+            },
+            {
+              "name": "disabled",
+              "value": {
+                "type": "boolean",
+                "value": false
+              }
+            },
+            {
+              "name": "focused",
+              "value": {
+                "type": "boolean",
+                "value": true
+              }
+            }
+          ]
+        }
+      ],
+      "expectedRefs": {
+        "e1": {
+          "role": "slider",
+          "name": "Synthetic control",
+          "ax": {
+            "schemaVersion": "agent-browser.ax-control.v1",
+            "value": 4.0,
+            "minimum": 0.0,
+            "maximum": 4.0,
+            "valueText": "Pro",
+            "disabled": false,
+            "focused": true
+          }
+        }
+      }
+    },
+    {
+      "name": "no_editable_values_textbox",
+      "nodes": [
+        {
+          "nodeId": "42",
+          "backendDOMNodeId": 42,
+          "role": {
+            "type": "role",
+            "value": "textbox"
+          },
+          "name": {
+            "type": "computedString",
+            "value": "Synthetic control"
+          },
+          "value": {
+            "type": "number",
+            "value": 123456
+          },
+          "properties": [
+            {
+              "name": "valuetext",
+              "value": {
+                "type": "string",
+                "value": "SYNTHETIC-PRIVATE-VALUE"
+              }
+            },
+            {
+              "name": "focused",
+              "value": {
+                "type": "boolean",
+                "value": true
+              }
+            }
+          ]
+        }
+      ],
+      "expectedRefs": {
+        "e1": {
+          "role": "textbox",
+          "name": "Synthetic control"
+        }
+      }
+    },
+    {
+      "name": "no_editable_values_searchbox",
+      "nodes": [
+        {
+          "nodeId": "42",
+          "backendDOMNodeId": 42,
+          "role": {
+            "type": "role",
+            "value": "searchbox"
+          },
+          "name": {
+            "type": "computedString",
+            "value": "Synthetic control"
+          },
+          "value": {
+            "type": "number",
+            "value": 123456
+          },
+          "properties": [
+            {
+              "name": "valuetext",
+              "value": {
+                "type": "string",
+                "value": "SYNTHETIC-PRIVATE-VALUE"
+              }
+            },
+            {
+              "name": "focused",
+              "value": {
+                "type": "boolean",
+                "value": true
+              }
+            }
+          ]
+        }
+      ],
+      "expectedRefs": {
+        "e1": {
+          "role": "searchbox",
+          "name": "Synthetic control"
+        }
+      }
+    },
+    {
+      "name": "no_editable_values_combobox",
+      "nodes": [
+        {
+          "nodeId": "42",
+          "backendDOMNodeId": 42,
+          "role": {
+            "type": "role",
+            "value": "combobox"
+          },
+          "name": {
+            "type": "computedString",
+            "value": "Synthetic control"
+          },
+          "value": {
+            "type": "number",
+            "value": 123456
+          },
+          "properties": [
+            {
+              "name": "valuetext",
+              "value": {
+                "type": "string",
+                "value": "SYNTHETIC-PRIVATE-VALUE"
+              }
+            },
+            {
+              "name": "focused",
+              "value": {
+                "type": "boolean",
+                "value": true
+              }
+            }
+          ]
+        }
+      ],
+      "expectedRefs": {
+        "e1": {
+          "role": "combobox",
+          "name": "Synthetic control"
+        }
+      }
+    },
+    {
+      "name": "no_editable_values_spinbutton",
+      "nodes": [
+        {
+          "nodeId": "42",
+          "backendDOMNodeId": 42,
+          "role": {
+            "type": "role",
+            "value": "spinbutton"
+          },
+          "name": {
+            "type": "computedString",
+            "value": "Synthetic control"
+          },
+          "value": {
+            "type": "number",
+            "value": 123456
+          },
+          "properties": [
+            {
+              "name": "valuetext",
+              "value": {
+                "type": "string",
+                "value": "SYNTHETIC-PRIVATE-VALUE"
+              }
+            },
+            {
+              "name": "focused",
+              "value": {
+                "type": "boolean",
+                "value": true
+              }
+            }
+          ]
+        }
+      ],
+      "expectedRefs": {
+        "e1": {
+          "role": "spinbutton",
+          "name": "Synthetic control"
+        }
+      }
+    },
+    {
+      "name": "sensitive_marker_editable_token",
+      "nodes": [
+        {
+          "nodeId": "42",
+          "backendDOMNodeId": 42,
+          "role": {
+            "type": "role",
+            "value": "slider"
+          },
+          "name": {
+            "type": "computedString",
+            "value": "Synthetic control"
+          },
+          "value": {
+            "type": "number",
+            "value": 4
+          },
+          "properties": [
+            {
+              "name": "valuemin",
+              "value": {
+                "type": "number",
+                "value": 0
+              }
+            },
+            {
+              "name": "valuemax",
+              "value": {
+                "type": "number",
+                "value": 4
+              }
+            },
+            {
+              "name": "valuetext",
+              "value": {
+                "type": "string",
+                "value": "Pro"
+              }
+            },
+            {
+              "name": "disabled",
+              "value": {
+                "type": "boolean",
+                "value": false
+              }
+            },
+            {
+              "name": "focused",
+              "value": {
+                "type": "boolean",
+                "value": true
+              }
+            },
+            {
+              "name": "editable",
+              "value": {
+                "type": "token",
+                "value": "plaintext"
+              }
+            }
+          ]
+        }
+      ],
+      "expectedRefs": {
+        "e1": {
+          "role": "slider",
+          "name": "Synthetic control"
+        }
+      }
+    },
+    {
+      "name": "sensitive_marker_editable_boolean",
+      "nodes": [
+        {
+          "nodeId": "42",
+          "backendDOMNodeId": 42,
+          "role": {
+            "type": "role",
+            "value": "slider"
+          },
+          "name": {
+            "type": "computedString",
+            "value": "Synthetic control"
+          },
+          "value": {
+            "type": "number",
+            "value": 4
+          },
+          "properties": [
+            {
+              "name": "valuemin",
+              "value": {
+                "type": "number",
+                "value": 0
+              }
+            },
+            {
+              "name": "valuemax",
+              "value": {
+                "type": "number",
+                "value": 4
+              }
+            },
+            {
+              "name": "valuetext",
+              "value": {
+                "type": "string",
+                "value": "Pro"
+              }
+            },
+            {
+              "name": "disabled",
+              "value": {
+                "type": "boolean",
+                "value": false
+              }
+            },
+            {
+              "name": "focused",
+              "value": {
+                "type": "boolean",
+                "value": true
+              }
+            },
+            {
+              "name": "editable",
+              "value": {
+                "type": "boolean",
+                "value": false
+              }
+            }
+          ]
+        }
+      ],
+      "expectedRefs": {
+        "e1": {
+          "role": "slider",
+          "name": "Synthetic control"
+        }
+      }
+    },
+    {
+      "name": "sensitive_marker_protected_boolean",
+      "nodes": [
+        {
+          "nodeId": "42",
+          "backendDOMNodeId": 42,
+          "role": {
+            "type": "role",
+            "value": "slider"
+          },
+          "name": {
+            "type": "computedString",
+            "value": "Synthetic control"
+          },
+          "value": {
+            "type": "number",
+            "value": 4
+          },
+          "properties": [
+            {
+              "name": "valuemin",
+              "value": {
+                "type": "number",
+                "value": 0
+              }
+            },
+            {
+              "name": "valuemax",
+              "value": {
+                "type": "number",
+                "value": 4
+              }
+            },
+            {
+              "name": "valuetext",
+              "value": {
+                "type": "string",
+                "value": "Pro"
+              }
+            },
+            {
+              "name": "disabled",
+              "value": {
+                "type": "boolean",
+                "value": false
+              }
+            },
+            {
+              "name": "focused",
+              "value": {
+                "type": "boolean",
+                "value": true
+              }
+            },
+            {
+              "name": "protected",
+              "value": {
+                "type": "boolean",
+                "value": true
+              }
+            }
+          ]
+        }
+      ],
+      "expectedRefs": {
+        "e1": {
+          "role": "slider",
+          "name": "Synthetic control"
+        }
+      }
+    },
+    {
+      "name": "sensitive_marker_protected_string",
+      "nodes": [
+        {
+          "nodeId": "42",
+          "backendDOMNodeId": 42,
+          "role": {
+            "type": "role",
+            "value": "slider"
+          },
+          "name": {
+            "type": "computedString",
+            "value": "Synthetic control"
+          },
+          "value": {
+            "type": "number",
+            "value": 4
+          },
+          "properties": [
+            {
+              "name": "valuemin",
+              "value": {
+                "type": "number",
+                "value": 0
+              }
+            },
+            {
+              "name": "valuemax",
+              "value": {
+                "type": "number",
+                "value": 4
+              }
+            },
+            {
+              "name": "valuetext",
+              "value": {
+                "type": "string",
+                "value": "Pro"
+              }
+            },
+            {
+              "name": "disabled",
+              "value": {
+                "type": "boolean",
+                "value": false
+              }
+            },
+            {
+              "name": "focused",
+              "value": {
+                "type": "boolean",
+                "value": true
+              }
+            },
+            {
+              "name": "protected",
+              "value": {
+                "type": "string",
+                "value": "unknown"
+              }
+            }
+          ]
+        }
+      ],
+      "expectedRefs": {
+        "e1": {
+          "role": "slider",
+          "name": "Synthetic control"
+        }
+      }
+    },
+    {
+      "name": "sensitive_marker_password_boolean",
+      "nodes": [
+        {
+          "nodeId": "42",
+          "backendDOMNodeId": 42,
+          "role": {
+            "type": "role",
+            "value": "slider"
+          },
+          "name": {
+            "type": "computedString",
+            "value": "Synthetic control"
+          },
+          "value": {
+            "type": "number",
+            "value": 4
+          },
+          "properties": [
+            {
+              "name": "valuemin",
+              "value": {
+                "type": "number",
+                "value": 0
+              }
+            },
+            {
+              "name": "valuemax",
+              "value": {
+                "type": "number",
+                "value": 4
+              }
+            },
+            {
+              "name": "valuetext",
+              "value": {
+                "type": "string",
+                "value": "Pro"
+              }
+            },
+            {
+              "name": "disabled",
+              "value": {
+                "type": "boolean",
+                "value": false
+              }
+            },
+            {
+              "name": "focused",
+              "value": {
+                "type": "boolean",
+                "value": true
+              }
+            },
+            {
+              "name": "password",
+              "value": {
+                "type": "boolean",
+                "value": true
+              }
+            }
+          ]
+        }
+      ],
+      "expectedRefs": {
+        "e1": {
+          "role": "slider",
+          "name": "Synthetic control"
+        }
+      }
+    },
+    {
+      "name": "button_state_without_value_fields",
+      "nodes": [
+        {
+          "nodeId": "42",
+          "backendDOMNodeId": 42,
+          "role": {
+            "type": "role",
+            "value": "button"
+          },
+          "name": {
+            "type": "computedString",
+            "value": "Synthetic control"
+          },
+          "value": {
+            "type": "number",
+            "value": 123456
+          },
+          "properties": [
+            {
+              "name": "valuetext",
+              "value": {
+                "type": "string",
+                "value": "SYNTHETIC-PRIVATE-VALUE"
+              }
+            },
+            {
+              "name": "focused",
+              "value": {
+                "type": "boolean",
+                "value": false
+              }
+            },
+            {
+              "name": "disabled",
+              "value": {
+                "type": "boolean",
+                "value": true
+              }
+            }
+          ]
+        }
+      ],
+      "expectedRefs": {
+        "e1": {
+          "role": "button",
+          "name": "Synthetic control",
+          "ax": {
+            "schemaVersion": "agent-browser.ax-control.v1",
+            "focused": false,
+            "disabled": true
+          }
+        }
+      }
+    },
+    {
+      "name": "disabled_and_ambiguous_sliders",
+      "nodes": [
+        {
+          "nodeId": "42",
+          "backendDOMNodeId": 42,
+          "role": {
+            "type": "role",
+            "value": "slider"
+          },
+          "name": {
+            "type": "computedString",
+            "value": "Synthetic control"
+          },
+          "value": {
+            "type": "number",
+            "value": 4
+          },
+          "properties": [
+            {
+              "name": "disabled",
+              "value": {
+                "type": "boolean",
+                "value": true
+              }
+            }
+          ]
+        },
+        {
+          "nodeId": "43",
+          "backendDOMNodeId": 43,
+          "role": {
+            "type": "role",
+            "value": "slider"
+          },
+          "name": {
+            "type": "computedString",
+            "value": "Synthetic control"
+          },
+          "value": {
+            "type": "number",
+            "value": 4
+          },
+          "properties": [
+            {
+              "name": "disabled",
+              "value": {
+                "type": "boolean",
+                "value": false
+              }
+            }
+          ]
+        }
+      ],
+      "expectedRefs": {
+        "e1": {
+          "role": "slider",
+          "name": "Synthetic control",
+          "ax": {
+            "schemaVersion": "agent-browser.ax-control.v1",
+            "value": 4.0,
+            "disabled": true
+          }
+        },
+        "e2": {
+          "role": "slider",
+          "name": "Synthetic control",
+          "ax": {
+            "schemaVersion": "agent-browser.ax-control.v1",
+            "value": 4.0,
+            "disabled": false
+          }
+        }
+      }
+    },
+    {
+      "name": "conflicting_range_withholds_numbers",
+      "nodes": [
+        {
+          "nodeId": "42",
+          "backendDOMNodeId": 42,
+          "role": {
+            "type": "role",
+            "value": "slider"
+          },
+          "name": {
+            "type": "computedString",
+            "value": "Synthetic control"
+          },
+          "value": {
+            "type": "number",
+            "value": 5
+          },
+          "properties": [
+            {
+              "name": "valuemin",
+              "value": {
+                "type": "number",
+                "value": 0
+              }
+            },
+            {
+              "name": "valuemax",
+              "value": {
+                "type": "number",
+                "value": 4
+              }
+            },
+            {
+              "name": "valuetext",
+              "value": {
+                "type": "string",
+                "value": "Pro"
+              }
+            },
+            {
+              "name": "disabled",
+              "value": {
+                "type": "boolean",
+                "value": false
+              }
+            },
+            {
+              "name": "focused",
+              "value": {
+                "type": "boolean",
+                "value": true
+              }
+            }
+          ]
+        }
+      ],
+      "expectedRefs": {
+        "e1": {
+          "role": "slider",
+          "name": "Synthetic control",
+          "ax": {
+            "schemaVersion": "agent-browser.ax-control.v1",
+            "valueText": "Pro",
+            "disabled": false,
+            "focused": true
+          }
+        }
+      }
+    },
+    {
+      "name": "duplicate_or_nonfinite_is_unknown",
+      "nodes": [
+        {
+          "nodeId": "42",
+          "backendDOMNodeId": 42,
+          "role": {
+            "type": "role",
+            "value": "slider"
+          },
+          "name": {
+            "type": "computedString",
+            "value": "Synthetic control"
+          },
+          "value": {
+            "type": "number",
+            "value": "Infinity"
+          },
+          "properties": [
+            {
+              "name": "valuemin",
+              "value": {
+                "type": "number",
+                "value": "NaN"
+              }
+            },
+            {
+              "name": "focused",
+              "value": {
+                "type": "boolean",
+                "value": true
+              }
+            },
+            {
+              "name": "focused",
+              "value": {
+                "type": "boolean",
+                "value": false
+              }
+            }
+          ]
+        }
+      ],
+      "expectedRefs": {
+        "e1": {
+          "role": "slider",
+          "name": "Synthetic control"
+        }
+      }
+    },
+    {
+      "name": "wrong_role_type_withholds_facts",
+      "nodes": [
+        {
+          "nodeId": "42",
+          "backendDOMNodeId": 42,
+          "role": {
+            "type": "string",
+            "value": "slider"
+          },
+          "name": {
+            "type": "computedString",
+            "value": "Synthetic control"
+          },
+          "value": {
+            "type": "number",
+            "value": 4
+          },
+          "properties": [
+            {
+              "name": "valuemin",
+              "value": {
+                "type": "number",
+                "value": 0
+              }
+            },
+            {
+              "name": "valuemax",
+              "value": {
+                "type": "number",
+                "value": 4
+              }
+            },
+            {
+              "name": "valuetext",
+              "value": {
+                "type": "string",
+                "value": "Pro"
+              }
+            },
+            {
+              "name": "disabled",
+              "value": {
+                "type": "boolean",
+                "value": false
+              }
+            },
+            {
+              "name": "focused",
+              "value": {
+                "type": "boolean",
+                "value": true
+              }
+            }
+          ]
+        }
+      ],
+      "expectedRefs": {
+        "e1": {
+          "role": "slider",
+          "name": "Synthetic control"
+        }
+      }
+    },
+    {
+      "name": "duplicate_sensitive_markers_order_0",
+      "nodes": [
+        {
+          "nodeId": "42",
+          "backendDOMNodeId": 42,
+          "role": {
+            "type": "role",
+            "value": "slider"
+          },
+          "name": {
+            "type": "computedString",
+            "value": "Synthetic control"
+          },
+          "value": {
+            "type": "number",
+            "value": 4
+          },
+          "properties": [
+            {
+              "name": "valuemin",
+              "value": {
+                "type": "number",
+                "value": 0
+              }
+            },
+            {
+              "name": "valuemax",
+              "value": {
+                "type": "number",
+                "value": 4
+              }
+            },
+            {
+              "name": "valuetext",
+              "value": {
+                "type": "string",
+                "value": "Pro"
+              }
+            },
+            {
+              "name": "disabled",
+              "value": {
+                "type": "boolean",
+                "value": false
+              }
+            },
+            {
+              "name": "focused",
+              "value": {
+                "type": "boolean",
+                "value": true
+              }
+            },
+            {
+              "name": "protected",
+              "value": {
+                "type": "boolean",
+                "value": true
+              }
+            },
+            {
+              "name": "protected",
+              "value": {
+                "type": "boolean",
+                "value": false
+              }
+            }
+          ]
+        }
+      ],
+      "expectedRefs": {
+        "e1": {
+          "role": "slider",
+          "name": "Synthetic control"
+        }
+      }
+    },
+    {
+      "name": "duplicate_sensitive_markers_order_1",
+      "nodes": [
+        {
+          "nodeId": "42",
+          "backendDOMNodeId": 42,
+          "role": {
+            "type": "role",
+            "value": "slider"
+          },
+          "name": {
+            "type": "computedString",
+            "value": "Synthetic control"
+          },
+          "value": {
+            "type": "number",
+            "value": 4
+          },
+          "properties": [
+            {
+              "name": "valuemin",
+              "value": {
+                "type": "number",
+                "value": 0
+              }
+            },
+            {
+              "name": "valuemax",
+              "value": {
+                "type": "number",
+                "value": 4
+              }
+            },
+            {
+              "name": "valuetext",
+              "value": {
+                "type": "string",
+                "value": "Pro"
+              }
+            },
+            {
+              "name": "disabled",
+              "value": {
+                "type": "boolean",
+                "value": false
+              }
+            },
+            {
+              "name": "focused",
+              "value": {
+                "type": "boolean",
+                "value": true
+              }
+            },
+            {
+              "name": "protected",
+              "value": {
+                "type": "boolean",
+                "value": false
+              }
+            },
+            {
+              "name": "protected",
+              "value": {
+                "type": "boolean",
+                "value": true
+              }
+            }
+          ]
+        }
+      ],
+      "expectedRefs": {
+        "e1": {
+          "role": "slider",
+          "name": "Synthetic control"
+        }
+      }
+    }
+  ]
+}

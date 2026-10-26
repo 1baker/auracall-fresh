@@ -288,6 +288,7 @@ export interface OwnNativeProRuntime {
 	readonly state: "active" | "held";
 	prepareProOnly(): Promise<Record<string, unknown>>;
 	originalReadback(originalKey: string): Promise<Record<string, unknown>>;
+	releaseConsumerReference(originalKey: string): Promise<Record<string, unknown>>;
 	hold(): Promise<void>;
 }
 
@@ -448,6 +449,12 @@ class NativeProRuntime implements OwnNativeProRuntime {
 		await this.hold();
 		return this.#session.originalReadback(originalKey);
 	}
+	/** Does not close the retained SDK or producer; preparation remains held. */
+	async releaseConsumerReference(originalKey: string): Promise<Record<string, unknown>> {
+		await this.hold();
+		return this.#session.release(originalKey);
+	}
+
 	async prepareProOnly(): Promise<Record<string, unknown>> {
 		if (this.#state !== "active") return refuse("native_runtime_readback_required");
 		try {

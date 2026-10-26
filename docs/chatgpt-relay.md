@@ -166,8 +166,8 @@ restart. It needs explicit operator reconciliation, never a new automatic try.
 A request with verified preparation does not change effort a second time.
 Configuration, reads and Send still consume their existing authorized bounds;
 this source capability does not renew those limits or activate a browser route.
-Native consumer Pro controls and file upload/download remain unsupported until
-an owned producer contract and runtime binding qualify those capabilities. A durable `sender.json`
+Native Pro has matched AX source support described below; its installed producer
+and runtime binding remain unqualified. File upload/download remain unsupported. A durable `sender.json`
 binds this claim to its route/conversation/model comparisons; it is not a browser
 grant. A preexisting panel/manual claim or an incomplete sender write is never
 adopted as a new Send. Changed routes refuse even on cached automatic readback;
@@ -278,9 +278,10 @@ peer/generation/owner preservation remain separately enforced by the producer.
 `NativeConsumerSession.acquire()` runs once; its **public** `session.binding`
 supplies the returned native route. No hidden facade lookup, borrowed task,
 serviceTabHandle projection or second Open is used. The returned interface offers
-only the immutable route, state, journaled `prepareProOnly`, original metadata
-readback and an explicit hold;
-it does not expose Send, claim, browser_close or release.
+the immutable route, state, journaled `prepareProOnly`, original metadata
+readback, explicit hold and `releaseConsumerReference(originalKey)`. The latter
+releases only the consumer reference under contract6b47, as detailed below.
+It does not expose Send or claim.
 
 A fixed `.sdk-runtime/intent.json` in the original consumer ledger is fsynced
 before the SDK attempt. Uncertainty leaves it held, including changed operation
@@ -306,11 +307,10 @@ implemented or selected here, and a no-op fixture is not live qualification.
 JSON cannot supply it or enable the CLI. Review of this retention policy alone
 does not authorize startup, consumer release, reconnect or browser activity.
 
-The native adapter still reports intelligence unverified and refuses configure
-with `native_intelligence_unsupported`; the caller preserves that refusal and
-cannot manufacture Pro. The existing protected helper reserves a distinct
-route-only operation and independently verifies genuine Pro if/when a supported
-adapter is delivered. Frozen191/c8 remains separate history; this source candidate
+The native adapter consumes the matched AX facts described below. Missing or
+conflicting facts still refuse; ordinary input ACKs cannot manufacture Pro. The
+existing protected helper reserves a distinct route-only operation and performs
+an additional independent Pro inspection. Frozen191/c8 remains separate history; this source candidate
 is not installed or activated. Bastion's canonical relay store is not a WSL local
 store; the explicitly admitted local preparation journal does not create model
 requests or replace canonical dispatch/readback. Existing 18 documented reads,
@@ -348,3 +348,34 @@ scheduler, automatic refresh/replay or provider call runs in this implementation
 - [Connect a custom MCP server](https://developers.openai.com/plugins/deploy/connect-chatgpt)
 - [Component bridge capabilities](https://developers.openai.com/plugins/reference#capabilities)
 - [MCP App compatibility methods](https://developers.openai.com/plugins/build/chatgpt-ui#prefer-shared-fields-and-methods)
+
+## Matched native AX Pro and explicit reference release (Plan0448)
+
+The source adapter now consumes the reviewed privacy-r2 AX contract d082ce05 and
+17-case fixture8434aa4a. It requires a unique named Intelligence or Thinking effort
+slider, explicit enabled state, finite integer value in the observed0..4 range,
+and a matching visible label. Model/account/composer evidence and URL must remain
+qualified. Unknown names or missing/conflicting AX facts refuse; this recipe is
+synthetically tested, not proof of a current website layout.
+
+Preparation opens only the observed enabled model picker when necessary, then
+uses snapshot-ref ArrowRight input with a Boolean native ACK. Each step requires
+a newly correlated URL/snapshot/URL observation and exactly one value increment;
+the protected prepare-only journal additionally runs independent inspection.
+Input reservations retain the existing control cap and leave six reads for the
+post-input and final independent checks. No claim, prompt, Send or file transfer
+is added. Refusal or uncertainty holds the session and never replays input.
+
+The own runtime exposes explicit `releaseConsumerReference(originalKey)` on its
+retained session. It journals one consumer-reference release, conservatively
+charges one existing control slot and reserves one remaining metadata read.
+`browser_close` must report released/retained with matching prior-operation
+metadata; this is not a fresh close/input ACK. A lost result permits only original
+metadata readback. Unknown operation history, the SDK connection and producer
+browser remain retained; no SDK.close, reconnect or automatic cleanup occurs.
+
+The compiled producer pin remains e43/6814, not silently changed to AX55 or a
+future cache-preserving host. Actual operator admission, compatible installed
+producer, cache transition/old-host preservation and browser Pro acceptance stay
+unqualified. Default startup is closed. Shared Sends remain2/2 used, +60 page
+reads pending, PD held; source tests grant no live capacity.

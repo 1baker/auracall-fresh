@@ -287,20 +287,20 @@ it("holds the original connection on uncertain acquisition and never reconnects 
 	expect(JSON.stringify(lifetime.uncertain.mock.calls)).not.toContain("fixture-CONSUMER-secret");
 });
 
-it("uses the journaled preparation path and preserves the unsupported-Pro refusal with zero model sends", async () => {
+it("holds journaled preparation when the producer has no correlated page evidence, with zero model sends", async () => {
 	const f = await fixture(),
 		lifetime = fixtureLifetime();
 	const input = await readNativeRuntimeInput(f.path, fixturePin, () => f.now);
 	const client = { callTool: vi.fn(async () => opened(f)), close: vi.fn() };
 	const runtime = await startOwnNativeRuntime(input, { connect: async () => client, lifetime });
 	await expect(runtime.prepareProOnly()).rejects.toMatchObject({
-		code: "native_intelligence_unsupported",
+		code: "consumer_readback_required",
 	});
 	expect(runtime.state).toBe("held");
 	await expect(runtime.prepareProOnly()).rejects.toMatchObject({
 		code: "native_runtime_readback_required",
 	});
-	expect(client.callTool).toHaveBeenCalledOnce(); // Acquisition only; no fabricated Pro or Send.
+	expect(client.callTool).toHaveBeenCalledTimes(2); // Acquisition and refused observation; no input or Send.
 	expect(client.close).not.toHaveBeenCalled();
 	expect(lifetime.uncertain).toHaveBeenCalledOnce();
 });
@@ -444,6 +444,57 @@ it.each([
 			},
 		],
 	]);
+	expect(connect).toHaveBeenCalledOnce();
+	expect(client.close).not.toHaveBeenCalled();
+});
+
+it("exposes explicit consumer-ref release while retaining the SDK and permanently holding preparation", async () => {
+	const f = await fixture(),
+		lifetime = fixtureLifetime();
+	const input = await readNativeRuntimeInput(f.path, fixturePin, () => f.now);
+	const wire = JSON.parse(opened(f, "consumer_acquisition").content[0].text);
+	const { targetObservation: _target, result: _result, consumerAck: _ack, ...metadata } = wire.data;
+	const released = {
+		content: [
+			{
+				type: "text",
+				text: JSON.stringify({
+					...wire,
+					tool: "browser_close",
+					data: {
+						...metadata,
+						state: "released",
+						browserDisposition: "retained",
+						requestedOperationKey: "consumer_acquisition",
+						matchingOperation: true,
+						identityFreshness: "stored_completion",
+					},
+				}),
+			},
+		],
+	};
+	const client = {
+		callTool: vi
+			.fn()
+			.mockResolvedValueOnce(opened(f, "consumer_acquisition"))
+			.mockResolvedValue(released),
+		close: vi.fn(),
+	};
+	const connect = vi.fn(async () => client);
+	const runtime = await startOwnNativeRuntime(input, { connect, lifetime });
+	expect(await runtime.releaseConsumerReference("consumer_acquisition")).toMatchObject({
+		state: "released",
+		browserDisposition: "retained",
+		pageObserved: false,
+	});
+	expect(runtime.state).toBe("held");
+	await expect(runtime.prepareProOnly()).rejects.toMatchObject({
+		code: "native_runtime_readback_required",
+	});
+	await expect(runtime.releaseConsumerReference("consumer_acquisition")).rejects.toMatchObject({
+		code: "consumer_readback_required",
+	});
+	expect(client.callTool).toHaveBeenCalledTimes(2);
 	expect(connect).toHaveBeenCalledOnce();
 	expect(client.close).not.toHaveBeenCalled();
 });

@@ -1,23 +1,18 @@
 import { createHash, randomUUID } from "node:crypto";
-import { z } from "zod";
+import { interpretChatgptPowerSlider } from "../actions/chatgptPowerSlider.js";
+import { nativeSnapshotSchema as snapshotSchema } from "./nativeAx.js";
 import type { NativeConsumerSession } from "./nativeConsumer.js";
 import {
+	type FrontendRequestRecord,
 	FrontendRequestStore,
 	frontendRouteBinding,
 	frontendTargetKey,
 	requestIdSchema,
-	type FrontendRequestRecord,
 } from "./requestStore.js";
-import { FrontendError, type NativeTaskFrontendRoute } from "./types.js";
 import { validateFrontendBinding } from "./route.js";
+import { FrontendError, type NativeTaskFrontendRoute } from "./types.js";
 
 const hash = (value: unknown) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
-const snapshotSchema = z
-	.object({
-		snapshot: z.string().max(1048576),
-		refs: z.record(z.string(), z.object({ role: z.string(), name: z.string() })),
-	})
-	.strict();
 function reject(code: string): never {
 	throw new FrontendError(
 		code,
@@ -111,12 +106,33 @@ function page(raw: Record<string, unknown>, model: string) {
 	const generating = entries.some(
 		([, v]) => v.role === "button" && /^(Stop generating|Stop streaming|Answer now)$/.test(v.name),
 	);
-	return { articles, composerEmpty, generating };
+	return { articles, composerEmpty, generating, refs };
+}
+
+/** Narrow semantic recipe; unknown site variants require qualification, not guessing. */
+function intelligence(refs: ReturnType<typeof page>["refs"]) {
+	const sliders = Object.entries(refs).filter(([, r]) => r.role === "slider");
+	if (sliders.length !== 1) return null;
+	const [ref, slider] = sliders[0];
+	const a = slider.ax;
+	if (
+		!/^e[1-9][0-9]*$/.test(ref) ||
+		!/^(Intelligence|Thinking effort)$/i.test(slider.name.trim()) ||
+		!a ||
+		a.disabled !== false ||
+		a.minimum !== 0 ||
+		a.maximum !== 4 ||
+		!Number.isInteger(a.value)
+	)
+		return null;
+	const effort = interpretChatgptPowerSlider(a.value, a.valueText);
+	return effort ? { ref, value: a.value as number, effort } : null;
 }
 
 /** Existing frontend MCP tools, using closed native actions rather than DOM scripts. */
 export class NativeChatgptFrontend {
 	private readonly store = new FrontendRequestStore();
+	private configuring = false;
 	constructor(
 		private readonly session: NativeConsumerSession | null,
 		private readonly route: NativeTaskFrontendRoute,
@@ -131,6 +147,7 @@ export class NativeChatgptFrontend {
 	}
 	private check(id: string) {
 		if (id !== this.route.id) reject("route_missing");
+		if (this.configuring) reject("native_configuration_in_progress");
 	}
 	private native() {
 		if (
@@ -153,6 +170,12 @@ export class NativeChatgptFrontend {
 			await this.read("snapshot", { compact: false, interactive: false }),
 			this.route.expectedModel,
 		);
+	}
+	private async observation() {
+		await this.url();
+		const p = await this.snapshot();
+		await this.url();
+		return p;
 	}
 	private async text(selector: string) {
 		const r = await this.read("gettext", { selector });
@@ -191,22 +214,69 @@ export class NativeChatgptFrontend {
 	}
 	async inspect(routeId: string) {
 		this.check(routeId);
-		await this.url();
-		const p = await this.snapshot();
+		const p = await this.observation();
+		const observed = intelligence(p.refs);
 		return {
 			ok: true,
 			provider: "chatgpt",
 			url: this.route.expectedUrl,
 			model: this.route.expectedModel,
-			intelligence: "unverified",
+			intelligence: observed ? "native_ax_observation" : "unverified",
+			effort: observed?.effort,
 			composerEmpty: p.composerEmpty,
 			generating: p.generating,
 			liveVerified: false,
 		};
 	}
-	async configure(routeId: string) {
+	async configure(routeId: string, effort: string = "pro") {
 		this.check(routeId);
-		return reject("native_intelligence_unsupported");
+		if (effort !== "pro") return reject("native_intelligence_unsupported");
+		this.configuring = true;
+		try {
+			let p = await this.observation();
+			const ready = () => {
+				if (!p.composerEmpty || p.generating) reject("native_configuration_busy");
+			};
+			ready();
+			if (!Object.values(p.refs).some((r) => r.role === "slider")) {
+				const buttons = Object.entries(p.refs).filter(
+					([, r]) => r.role === "button" && r.name === this.route.expectedModel,
+				);
+				if (buttons.length !== 1 || buttons[0][1].ax?.disabled !== false)
+					reject("native_intelligence_unqualified");
+				await this.native().control("click", buttons[0][0], `control_${randomUUID()}`);
+				p = await this.observation();
+				ready();
+			}
+			let observed = intelligence(p.refs);
+			if (!observed) return reject("native_intelligence_unqualified");
+			while (observed.effort !== "pro") {
+				const previous = observed.value;
+				await this.native().control("press", observed.ref, `control_${randomUUID()}`);
+				// ACK is only input; observe a new correlated snapshot on the same target.
+				p = await this.observation();
+				ready();
+				observed = intelligence(p.refs);
+				if (!observed || observed.value !== previous + 1)
+					reject("native_intelligence_readback_mismatch");
+			}
+			return {
+				ok: true,
+				verified: true,
+				provider: "chatgpt",
+				routeId,
+				url: this.route.expectedUrl,
+				model: this.route.expectedModel,
+				effort: "pro",
+				intelligence: "native_ax_observation",
+				liveVerified: false,
+			};
+		} catch (error) {
+			this.native().hold();
+			throw error;
+		} finally {
+			this.configuring = false;
+		}
 	}
 	async send(
 		routeId: string,

@@ -1,3 +1,16 @@
+## Matched native AX Pro source and reference release (Plan0448)
+
+Use frontend.nativePro plus nativeConsumer/nativeRuntime/identity/lifetime and
+protected preparation regressions. Consume the pinned17-case privacy-r2 fixture,
+including withheld sensitive/unknown facts. Exercise typed Pro, picker opening,
+new refs, malformed/conflicting/disabled/ambiguous facts, changed target/model/
+operation/custody/URL, stored evidence, incorrect ACKs, no progress after input,
+read headroom before control, sticky holds and cached protected preparation.
+Explicit consumer release must retain the SDK/producer and unknown operation
+history; lost or mismatched results must not permit retry or fresh close ACKs.
+These synthetic checks neither qualify the installed producer nor reset any live
+read/control/Send allowance. Native terminal model replies/files remain separate.
+
 ## Compiled native lifetime policy (existing Plan0448 continuation)
 
 Run frontend.nativeLifetime and frontend.nativeRuntime with native consumer,

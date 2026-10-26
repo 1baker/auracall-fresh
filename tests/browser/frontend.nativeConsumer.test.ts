@@ -1,13 +1,14 @@
-import { mkdtemp, rm, readFile, readdir, writeFile } from "node:fs/promises";
+import { mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+	type NativeConsumerAdmission,
 	NativeConsumerSession,
 	type NativeMcpClient,
-	type NativeConsumerAdmission,
 } from "../../src/browser/frontends/nativeConsumer.js";
 import { withCompletedIdentity } from "./nativeIdentityFixture.js";
+
 const makeSession = (
 	client: NativeMcpClient,
 	input: NativeConsumerAdmission,
@@ -101,6 +102,150 @@ async function directory() {
 }
 
 describe("sealed-r2 public consumer transport with synthetic producer", () => {
+	it("does not reuse an old completed operation identity as an independent observation", async () => {
+		const callTool = vi.fn(async ({ name, arguments: args }) => {
+			const d = data(name === "browser_open" ? "open" : "url", args.operationKey);
+			if (name === "browser_command") {
+				d.operation.operationId = "reused-observation";
+				d.targetObservation.operationId = "reused-observation";
+				d.identity.operationId = "reused-observation";
+				d.operation.ack.identity.operationId = "reused-observation";
+				d.consumerAck.identity.operationId = "reused-observation";
+			}
+			return envelope(name, d);
+		});
+		const session = makeSession({ callTool }, admission, await directory(), () => 2000);
+		await session.acquire();
+		await session.read("url", {}, "first-observation");
+		await expect(session.read("url", {}, "independent-observation")).rejects.toMatchObject({
+			code: "consumer_readback_required",
+		});
+		await expect(session.read("url", {}, "retry-observation")).rejects.toBeDefined();
+		expect(callTool).toHaveBeenCalledTimes(3);
+	});
+	it.each([
+		"lost",
+		"falseAck",
+		"mismatch",
+		"notRetained",
+		"notReleased",
+		"foreign",
+	])("holds %s release result; original metadata is the only next operation", async (change) => {
+		const callTool = vi.fn(async ({ name, arguments: args }) => {
+			const d = data(name === "browser_open" ? "open" : "url", args.operationKey);
+			if (name === "browser_close" || name === "browser_continue") {
+				if (name === "browser_close" && change === "lost")
+					throw new Error("synthetic timeout after possible release");
+				const { result: _result, targetObservation: _target, consumerAck: _ack, ...stored } = d;
+				const metadata: Record<string, unknown> = {
+					...stored,
+					state: "released",
+					browserDisposition: "retained",
+					requestedOperationKey: args.operationKey,
+					matchingOperation: true,
+					identityFreshness: "stored_completion",
+				};
+				if (name === "browser_close") {
+					if (change === "falseAck") metadata.consumerAck = { kind: "closed" };
+					if (change === "mismatch") metadata.matchingOperation = false;
+					if (change === "notRetained") metadata.browserDisposition = "closed";
+					if (change === "notReleased") metadata.state = "active";
+					if (change === "foreign") metadata.taskId = "foreign";
+				}
+				return envelope(name, metadata);
+			}
+			return envelope(name, d);
+		});
+		const session = makeSession({ callTool }, admission, await directory(), () => 2000);
+		await session.acquire();
+		await session.read("url", {}, "original-url-key");
+		await expect(session.release("original-url-key")).rejects.toMatchObject({
+			code: "consumer_readback_required",
+		});
+		expect(await session.originalReadback("original-url-key")).toMatchObject({
+			state: "released",
+			readbackOnly: true,
+			pageObserved: false,
+		});
+		await expect(session.release("different-original-key")).rejects.toMatchObject({
+			code: "consumer_readback_required",
+		});
+		await expect(session.originalReadback("original-url-key")).rejects.toMatchObject({
+			code: "consumer_operation_held",
+		});
+		expect(callTool).toHaveBeenCalledTimes(4);
+	});
+	it("releases a ref with unknown original history without clearing or replacing that history", async () => {
+		const callTool = vi.fn(async ({ name, arguments: args }) => {
+			const d = data(name === "browser_open" ? "open" : "url", args.operationKey);
+			if (name === "browser_command") throw new Error("uncertain original read");
+			if (name === "browser_close") {
+				const { result: _result, targetObservation: _target, consumerAck: _ack, ...stored } = d;
+				return envelope(name, {
+					...stored,
+					state: "released",
+					browserDisposition: "retained",
+					requestedOperationKey: args.operationKey,
+					matchingOperation: true,
+					identityFreshness: "unavailable",
+					identity: null,
+					operation: { ...stored.operation, state: "unknown", ack: null },
+				});
+			}
+			return envelope(name, d);
+		});
+		const dir = await directory();
+		const session = makeSession({ callTool }, admission, dir, () => 2000);
+		await session.acquire();
+		await expect(session.read("url", {}, "original-url-key")).rejects.toBeDefined();
+		expect(await session.release("original-url-key")).toMatchObject({
+			operationState: "unknown",
+			state: "released",
+			identityFreshness: "unavailable",
+		});
+		await expect(session.acquire()).rejects.toBeDefined();
+		await expect(
+			makeSession({ callTool }, admission, dir, () => 2000).acquire(),
+		).rejects.toBeDefined();
+		expect(callTool).toHaveBeenCalledTimes(3);
+	});
+	it("explicitly releases only the acquired consumer ref and returns prior operation metadata", async () => {
+		const callTool = vi.fn(async ({ name, arguments: args }) => {
+			const d = data(name === "browser_open" ? "open" : "url", args.operationKey);
+			if (name === "browser_close") {
+				const { result: _result, targetObservation: _target, consumerAck: _ack, ...metadata } = d;
+				return envelope(name, {
+					...metadata,
+					state: "released",
+					browserDisposition: "retained",
+					requestedOperationKey: args.operationKey,
+					matchingOperation: true,
+					identityFreshness: "stored_completion",
+				});
+			}
+			return envelope(name, d);
+		});
+		const session = makeSession({ callTool }, admission, await directory(), () => 2000);
+		await session.acquire();
+		await session.read("url", {}, "original-url-key");
+		expect(await session.release("original-url-key")).toMatchObject({
+			state: "released",
+			browserDisposition: "retained",
+			pageObserved: false,
+			operationKey: "original-url-key",
+		});
+		expect(callTool.mock.calls[2][0]).toEqual({
+			name: "browser_close",
+			arguments: { taskId: "synthetic-consumer-task", operationKey: "original-url-key" },
+		});
+		await expect(session.release("original-url-key")).rejects.toMatchObject({
+			code: "consumer_readback_required",
+		});
+		await expect(session.read("url", {}, "after-release-key")).rejects.toMatchObject({
+			code: "consumer_readback_required",
+		});
+		expect(callTool).toHaveBeenCalledTimes(3);
+	});
 	it("acquires once in consumer mode and retains the exact task/control on the same client", async () => {
 		const callTool = vi.fn(async ({ name, arguments: args }) =>
 			envelope(name, data(name === "browser_open" ? "open" : args.action, args.operationKey)),

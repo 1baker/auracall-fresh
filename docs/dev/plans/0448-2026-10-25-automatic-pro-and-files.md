@@ -10,8 +10,9 @@ private personal work-tracker81; direct human2026-10-25 automatic Pro/files requ
 P449db5/0601 is live. The immutable191/c8 protected Pro-only checkpoint remains
 source-only. This existing-lane continuation adds the own SDK private receiver and
 pinned caller; no producer/runtime installation or private/browser effect occurs.
-Its live foreground entry stays closed while the lifetime contract is unresolved;
-native Pro still refuses. Actual acceptance remains4/6=66%,2/2Sends used/PDheld.
+Its live foreground entry stays closed until actual operator admission and host
+preservation qualify. The lifetime contract and compiled policy are implemented;
+matched AX semantic Pro source is now covered below, without runtime activation. Actual acceptance remains4/6=66%,2/2Sends used/PDheld.
 Current allowance6.1M/source6068600/B143981 carries all spending; Browser3M is
 separate. The proposed extra60 page reads remain pending, with18 documented and
 complete trace UNKNOWN. The following initial checkpoint is historical.
@@ -141,7 +142,8 @@ closed before private reads/process startup while the producer lifetime/cleanup
 contract is unresolved. No JSON enable flag, SDK.close or browser_close release
 is introduced. Hermetic source fixtures may supply the trusted lifetime/IO seam;
 those callbacks are not runtime admission or producer readiness. Native semantic
-Pro controls remain a separate unsupported gap; full Spec stays PARTIAL.
+At this initial caller checkpoint Pro was unsupported; the later matched AX
+source continuation below supersedes that source gap, not the runtime holds.
 
 Validation: receiver privacy/scope/pin/expiry, opaque runtime serialization, one
 SDK/acquisition/public-binding route, concurrent/changed-ID fences, input drift,
@@ -150,7 +152,7 @@ native/frontend/relay regressions, production/type/style gates and separate nati
 Standards/Spec review. No live SDKconnect/Open, private values, install/key/grant,
 model/Browser effects or file transfer is part of this continuation.
 
-### Own SDK source verification
+### Own SDK source verification (418 historical checkpoint)
 
 131 affected tests across12 files pass, including22 new private receiver/runtime
 fixtures and the existing native identity, consumer, protected preparation,
@@ -162,8 +164,9 @@ evidence; no live producer process or browser was exercised.
 
 Independent native Standards and bounded Source Spec reviews both PASS with no
 material findings on the nine-file frozen candidate. The verification paragraph
-is a lead-checked documentation-only addition after that review. No production
-lifetime policy is supplied, and native semantic Pro remains unsupported. Full
+is a lead-checked documentation-only addition after that review. At this checkpoint no production
+lifetime policy was supplied and semantic Pro remained unsupported; the later
+compiled-policy and matched AX sections record their source successors. Full
 Spec stays PARTIAL, real acceptance4/6=66%, and all runtime/read/Send/PD holds carry.
 
 ### Same-session lifetime readback continuation
@@ -201,3 +204,34 @@ Synthetic public-policy and runtime fixtures must prove exact bindings, late
 admission hold/expiry, client replacement refusal and stored/mismatched readback
 not clearing holds. Run affected checks and native Standards/Spec review. Native
 Pro's matched AX contract and activation remain independent unqualified gates.
+
+## Matched native AX Pro and explicit reference release (Plan0448)
+
+The source adapter now consumes the reviewed privacy-r2 AX contract d082ce05 and
+17-case fixture8434aa4a. It requires a unique named Intelligence or Thinking effort
+slider, explicit enabled state, finite integer value in the observed0..4 range,
+and a matching visible label. Model/account/composer evidence and URL must remain
+qualified. Unknown names or missing/conflicting AX facts refuse; this recipe is
+synthetically tested, not proof of a current website layout.
+
+Preparation opens only the observed enabled model picker when necessary, then
+uses snapshot-ref ArrowRight input with a Boolean native ACK. Each step requires
+a newly correlated URL/snapshot/URL observation and exactly one value increment;
+the protected prepare-only journal additionally runs independent inspection.
+Input reservations retain the existing control cap and leave six reads for the
+post-input and final independent checks. No claim, prompt, Send or file transfer
+is added. Refusal or uncertainty holds the session and never replays input.
+
+The own runtime exposes explicit `releaseConsumerReference(originalKey)` on its
+retained session. It journals one consumer-reference release, conservatively
+charges one existing control slot and reserves one remaining metadata read.
+`browser_close` must report released/retained with matching prior-operation
+metadata; this is not a fresh close/input ACK. A lost result permits only original
+metadata readback. Unknown operation history, the SDK connection and producer
+browser remain retained; no SDK.close, reconnect or automatic cleanup occurs.
+
+The compiled producer pin remains e43/6814, not silently changed to AX55 or a
+future cache-preserving host. Actual operator admission, compatible installed
+producer, cache transition/old-host preservation and browser Pro acceptance stay
+unqualified. Default startup is closed. Shared Sends remain2/2 used, +60 page
+reads pending, PD held; source tests grant no live capacity.

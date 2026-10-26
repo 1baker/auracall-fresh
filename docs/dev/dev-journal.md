@@ -1,3 +1,12 @@
+## 2026-10-26: Matched privacy-r2 native Pro source
+
+Existing Plan0448 continuation adopts d082/8434 AX facts and6b47 reference-release
+semantics. Reuses418/249/b75 caller, original readback and retention policy. Adds
+semantic Pro with independent observed readback and explicit ref-only release;
+no producer selection/install/runtime action. Source checks and native grades
+recorded in the existing AuraCall review. Live admission/cache preservation,
+files, exhausted Sends and pending page allowance remain held.
+
 ## 2026-10-25 — Compiled retained-client lifetime policy
 
 Continue the same P448/P266 source lane against received lifecycle6b47. Add a
