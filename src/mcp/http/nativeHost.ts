@@ -1,5 +1,6 @@
 import { once } from "node:events";
 import type { Server } from "node:http";
+import { createOriginalAccountedNativeCallbackIntegration } from "../../browser/frontends/nativeCallbackIntegration.js";
 import {
 	type NativeFiniteAuthority,
 	type NativeSendIntent,
@@ -31,6 +32,28 @@ export interface OwnNativeFrontendHostOptions {
 export interface OwnNativeFrontendHost {
 	readonly runtime: OwnNativeProRuntime;
 	readonly server: Server;
+}
+
+/** One concrete private bootstrap; complete history and actual original guard
+ * selection must pass before the existing host can acquire a client. No launcher,
+ * new server or JSON callback mode, and no caller-provided usage verifier. */
+export async function startOriginalAccountedNativeFrontendHost(
+	options: Omit<OwnNativeFrontendHostOptions, "dependencies" | "authority"> & {
+		transport: Parameters<typeof createOriginalAccountedNativeCallbackIntegration>[1];
+		accounting: Parameters<typeof createOriginalAccountedNativeCallbackIntegration>[2];
+	},
+) {
+	const integration = await createOriginalAccountedNativeCallbackIntegration(
+		options.input,
+		options.transport,
+		options.accounting,
+	);
+	return startOwnNativeFrontendHost({
+		input: options.input,
+		http: options.http,
+		intent: options.intent,
+		...integration,
+	});
 }
 
 /** Private caller retains the SAME held runtime for original-only reconciliation.

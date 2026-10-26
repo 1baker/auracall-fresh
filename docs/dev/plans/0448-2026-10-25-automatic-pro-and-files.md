@@ -460,3 +460,24 @@ Preserve exact dispatch and closed refusal where the frozen counterpart rejects
 it. Operator successor and independent review, real providers/bootstrap/accounting
 and actual frontend transport remain separate gates. No browser/runtime activation
 or Send allowance follows from this source slice.
+
+## Original accounting implementation, same continuation
+
+Direct human instruction after NONE_AVAILABLE selects implementation in the own
+lane, not another pointer request. Supply a concrete filesystem verifier and
+durable two-observation actor joined to the existing private Node peer/host.
+Require original identity/source provenance, actual held relevant-writer locks,
+complete carry, existing two spent Sends, and exact target reservation digest.
+Unknown/missing history refuses; failed/uncertain witness charges persist and
+duplicate invocation cannot replay. Reuse one phase driver and the existing
+full-v2/native frontend/sender. No production inventory, identity or privilege
+may be manufactured during source work. Verify with isolated temporary records
+and the frozen actual Python guard; no real runtime/private/browser effect.
+
+Validation checkpoint: combined original/target carry is now checked before the
+two-read reservation and again before witness invocation. Both counterexample
+tests failed before repair and passed afterward. The first remedial full run
+recorded one unexplained positive-path refusal (15/16); later diagnostic runs
+passed, including16/16. That intermittent refusal remains unresolved. Source
+Spec remediation passed; Standards/validation remains PARTIAL. This is a private
+source checkpoint, not a clean integration or production activation candidate.

@@ -1,5 +1,8 @@
 import { createNativeCallbackPeer, type NativeCallbackPeerOptions } from "./nativeCallbackPeer.js";
 import { createNativeOperatorIntegration, type NativeOperatorOptions } from "./nativeOperator.js";
+import { bindNativeOperatorIntegration, type NativeRuntimeInput } from "./nativeRuntime.js";
+import { openOriginalAccounting } from "./originalAccounting.js";
+import type { OriginalAccountingSelection } from "./originalAccountingHistory.js";
 
 /** Exact existing70 host dependencies, using ONE persistent Python peer.
  * Still requires the real private receiver, original accounting suppliers,
@@ -24,21 +27,89 @@ export function createNativeCallbackIntegration(
 			assertCurrent: peer.assertNativeCurrent,
 		},
 	});
+	return finish(peer, integration, peer.finite);
+}
+
+function finish(
+	peer: ReturnType<typeof createNativeCallbackPeer>,
+	integration: ReturnType<typeof createNativeOperatorIntegration>,
+	authority: ReturnType<typeof createNativeCallbackPeer>["finite"],
+) {
 	const lifetime = Object.freeze({
 		...integration.lifetime,
 		assertAcquiredCurrent(
-			context: Parameters<typeof integration.lifetime.assertAcquiredCurrent>[0],
+			context: Parameters<
+				ReturnType<typeof createNativeOperatorIntegration>["lifetime"]["assertAcquiredCurrent"]
+			>[0],
 		) {
 			peer.assertCurrent();
 			integration.lifetime.assertAcquiredCurrent(context);
 		},
-		async uncertain(context: Parameters<typeof integration.lifetime.uncertain>[0], reason: string) {
+		async uncertain(
+			context: Parameters<
+				ReturnType<typeof createNativeOperatorIntegration>["lifetime"]["uncertain"]
+			>[0],
+			reason: string,
+		) {
 			peer.hold();
 			await integration.lifetime.uncertain(context, reason);
 		},
 	});
 	return Object.freeze({
 		dependencies: Object.freeze({ ...integration, lifetime, taskReceiver: peer.taskReceiver }),
-		authority: peer.finite,
+		authority,
 	});
+}
+
+/** Production accounting selection is explicit and read-only until qualification.
+ * All usage/reservation callbacks are implemented here; only the separately owned
+ * native witness actuator remains supplied by the admitted operator. */
+export async function createOriginalAccountedNativeCallbackIntegration(
+	input: NativeRuntimeInput,
+	transport: NativeCallbackPeerOptions,
+	options: Pick<NativeOperatorOptions, "ownerAuthority" | "producerTaskId"> & {
+		selection: OriginalAccountingSelection;
+		observe: NativeOperatorOptions["supplier"]["observe"];
+	},
+) {
+	const peer = createNativeCallbackPeer(transport);
+	let accounting: Awaited<ReturnType<typeof openOriginalAccounting>> | undefined;
+	try {
+		accounting = await openOriginalAccounting(options.selection, {
+			context: transport.context,
+			guard: peer.guard,
+			writer: peer.writer,
+			hold: peer.hold,
+		});
+		const heldAccounting = accounting;
+		const integration = await bindNativeOperatorIntegration(input, {
+			ownerAuthority: options.ownerAuthority,
+			producerTaskId: options.producerTaskId,
+			guard: peer.guard,
+			dispatchJoin: peer.dispatchJoin,
+			writer: accounting.writer,
+			supplier: {
+				reserveObservationReads: accounting.reserveObservationReads,
+				originalUsage: accounting.originalUsage,
+				observe: (context, nonce) => heldAccounting.observe(context, nonce, options.observe),
+				assertCurrent: peer.assertNativeCurrent,
+			},
+		});
+		const authority: typeof peer.finite = {
+			verify: (context) => heldAccounting.guarded(context, () => peer.finite.verify(context)),
+			assertClaim: (context) =>
+				heldAccounting.guarded(context, () => peer.finite.assertClaim(context)),
+			protect: (operation, run) =>
+				peer.finite.protect(operation, () => heldAccounting.guarded(operation.context, run)),
+			assertCurrent: (operation, stage) =>
+				heldAccounting.guarded(operation.context, () =>
+					peer.finite.assertCurrent(operation, stage),
+				),
+		};
+		return finish(peer, integration, Object.freeze(authority));
+	} catch (error) {
+		peer.hold();
+		await accounting?.closeReadHandle();
+		throw error;
+	}
 }

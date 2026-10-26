@@ -1,3 +1,26 @@
+## 2026-10-26 — Accounting candidate validation limit
+
+The review found target carry was counted after observation. Moved combined
+original/target/observer capacity and uncertainty checks before reservation and
+witness; both reproductions changed RED to GREEN. One earlier positive-path
+refusal remains unexplained despite subsequent diagnostic passes. Preserve its
+receipt: this checkpoint is not a clean lane or ready for production selection.
+Standards PARTIAL; bounded source Spec remediation PASS; full automation PARTIAL.
+
+## 2026-10-26 — Concrete original accounting supplier
+
+Implemented original source enumeration, physical identity/guard-lock checks,
+complete carry verification and durable two-read reservation before the witness.
+The existing private Node peer and host now have an assembled supplier path,
+rather than caller-provided accounting callbacks. The existing peer still owns
+one transaction; no duplicate sender or Python controller was added.
+
+Validation uses isolated synthetic original records and actual temporary Python
+guard locks. Production read trace remains UNKNOWN; no real complete inventory,
+writer binding or runtime authority is claimed. The frozen carrier's dispatch
+compatibility repair remains with the operator. Shared Sends stay 2/2 exhausted;
+manual acceptance is retained and autonomous acceptance remains pending.
+
 ## 2026-10-26 — Automatic prompt/reply host transport join
 
 Direct-human acceptancebf8f5906 requires automatic Codex -> owned ChatGPT Pro ->

@@ -1,3 +1,15 @@
+## 2026-10-26 — Original accounting callbacks had no concrete supplier
+
+- Added real pinned-file/native-reservation enumeration and guard process/lock
+  verification, preserving the existing original authority instead of creating
+  a target-local zero baseline. Full original history must still be reconciled.
+- Persist both observation charges before invoking the witness; reserve once,
+  retain failed dispatches, and refuse missing receipts or duplicate instances.
+- Join the supplier to the existing private callback peer and host. One outer
+  writer remains responsible before ledger mutation through known cleanup.
+- These are source behavior checks, not production writer participation or live
+  Pro/prompt/reply acceptance. No operator inventory or Send grant is invented.
+
 ## 2026-10-26 — Native startup did not host the retained sender
 
 - The own runtime and finite sender existed, but ordinary startup did not compose

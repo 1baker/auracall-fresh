@@ -803,3 +803,56 @@ Local IPC proof does not qualify real bootstrap, original accounting participati
 complete carried usage, two reserved observations, private admission, producer
 selection, frontend transport or an additional Send. Existing 2/2 Sends remain
 spent; autonomous browser acceptance is still incomplete.
+
+## Original accounting supplier (source only, 2026-10-26)
+
+The private compiled entrypoint `startOriginalAccountedNativeFrontendHost` joins
+the existing host, one callback peer, and `openOriginalAccounting`. It reuses the
+same acquired frontend and Bastion sender. No CLI/JSON enable mode, process
+launcher, new server, browser action or additional Send is introduced.
+
+Its operator-selected `OriginalAccountingSelection` pins the ORIGINAL authority
+directory and identity, complete source inventory, live guard PID/start time,
+claim/journal, participating writer locks and source revisions, and disjoint target
+ledger. The supplier verifies actual Linux ownership/inodes, held FLOCK locks and
+the original guard's hash-chained journal. It reads actual native reservations,
+the terminal manual two-Send job, the unclaimed PD job, and reviewed stock/Browser
+event evidence. Unknown, missing, changed or incomplete history refuses.
+
+The coverage inventory is an independently reviewed original-accounting input,
+not a client claim that history is complete. Event counts must be reconciled to
+the original evidence before that inventory is selected. Source hashes and lock
+files alone cannot prove that all affected writers participate; the operator must
+bind the actual cooperating implementations to those SAME held locks. The supplier
+never creates the authority identity, inventory or writer locks. A new empty
+target is not a substitute for original history. Current production read trace
+remains UNKNOWN, so no complete production inventory is asserted by this slice.
+
+Before the native witness, the supplier creates one fixed, durable two-read
+reservation under the held ORIGINAL directory. It fsyncs the file and directory,
+then marks dispatch before invoking the existing witness actuator. Failure or
+uncertainty retains the charge and marker; another instance cannot overwrite or
+replay it. Only returned observation metadata is recorded, not private payloads.
+The actual target-reservation digest and complete original carry feed the existing
+read-budget qualifier; the two spent Sends remain spent.
+
+One existing peer writer protects the ledger transaction. Current guard/lock and
+record checks run inside that transaction before its callback and at mutation,
+effect and cleanup checks. Opaque Node results stay local until the carrier's
+AFTER return. `closeReadHandle` holds the supplier and closes only its own read-only
+directory descriptor: it does not release authority, close the SDK/browser, delete
+records, or refund usage.
+
+There is no qualified production invocation yet: the independently selected
+original identity/inventory and real affected-writer lock binding, matching
+reviewed private carrier/witness/admission, and frontend transport/supervision
+remain required. Select those inputs through the existing operator; never fill
+UNKNOWN with zero or create a fresh identity/ledger to make startup succeed.
+
+Validation checkpoint: combined original/target carry is now checked before the
+two-read reservation and again before witness invocation. Both counterexample
+tests failed before repair and passed afterward. The first remedial full run
+recorded one unexplained positive-path refusal (15/16); later diagnostic runs
+passed, including16/16. That intermittent refusal remains unresolved. Source
+Spec remediation passed; Standards/validation remains PARTIAL. This is a private
+source checkpoint, not a clean integration or production activation candidate.
