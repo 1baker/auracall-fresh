@@ -416,3 +416,26 @@ immediately before the first SDK connector call after asynchronous qualification
 A refused or lost attempt retains its journal; restarting cannot issue a new
 policy over an already-budgeted ledger. This source check still requires actual
 operator-held writer exclusion and does not manufacture preservation proof.
+
+### Isolated producer selection (same P266 source integration)
+
+The compiled `NativeProducerPin` can include `namespace: "p266new"` for the
+reviewed isolated direction. The received pin is frozen before private reads;
+the SDK child adds `AGENT_BROWSER_DEV_NAMESPACE=p266new` to its existing explicit
+home/socket/development environment. Other namespace values refuse. Private
+runtime JSON has no namespace field, and ambient environment cannot select it.
+The source default e43 binary/manifest remains unchanged and does not select or
+activate the new realm. The operator must supply the final matching reviewed
+selection and bind the exact disjoint roots/authority through real admission.
+
+This fixes namespaced producer process-evidence routing without passing the
+installer's seven ports or Remote View credentials into the SDK by assumption.
+Frozen producer `renderDevelopmentLauncher` emits the variable, and native
+`dashboard_backend_unit_name` uses it for the isolated DEV backend. The explicit
+socket override still controls endpoint routing; namespace alone is not authority.
+
+Current direction5efee avoids any old5354 shutdown/write rather than proving old
+shutdown safe. The remaining operator/native integration must hold current guard
+and complete original accounting across observation, SDK acquisition and use.
+The early observer's30-second validity cannot be replaced by the longer grant
+expiry or a one-time READY boolean. No such production guard is supplied here.

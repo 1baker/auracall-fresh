@@ -129,6 +129,7 @@ it.each([
 	"bindingAsGrant",
 	"ownerCapability",
 	"lifetimeFlag",
+	"namespaceFlag",
 	"expired",
 	"publicFile",
 	"symlink",
@@ -139,6 +140,7 @@ it.each([
 	if (change === "bindingAsGrant") input.grant = f.input.grant.producer;
 	if (change === "ownerCapability") input.ownerProfileCapability = "fixture-OWNER-secret";
 	if (change === "lifetimeFlag") input.lifetime = { cleanupVerified: true };
+	if (change === "namespaceFlag") input.namespace = "p266new";
 	if (change === "expired") {
 		f.input.grant.expiresAtMs = f.input.admission.expiresAtMs = f.now - 1;
 	}
@@ -365,6 +367,41 @@ it("uses carried read accounting in the real owned runtime preparation", async (
 	});
 	expect(runtime.state).toBe("held");
 	expect(callTool).toHaveBeenCalledOnce();
+});
+it.each([
+	"",
+	"default",
+	"../p266new",
+	"p266new\n",
+])("rejects unselected compiled namespace %j before private reads", async (namespace) => {
+	await expect(
+		readNativeRuntimeInput("/must-not-read-private-input", { ...fixturePin, namespace } as never),
+	).rejects.toMatchObject({ code: "native_runtime_namespace_unqualified" });
+});
+it("carries the compiled isolated namespace into the exact SDK child without inherited authority", async () => {
+	const f = await fixture();
+	const pin = { ...fixturePin, namespace: "p266new" as const };
+	const input = await readNativeRuntimeInput(f.path, pin, () => f.now);
+	Object.assign(pin, { namespace: "default" }); // Caller mutation cannot retarget the received selection.
+	const connect = vi.fn(async (_descriptor: NativeSdkDescriptor) => ({
+		callTool: vi.fn(async () => opened(f)),
+	}));
+	await startOwnNativeRuntime(input, {
+		connect,
+		lifetime: fixtureLifetime(),
+		readBudget: fixtureBudget(f),
+	});
+	expect(connect).toHaveBeenCalledOnce();
+	expect(connect.mock.calls[0][0].env).toEqual(
+		Object.fromEntries([
+			["HOME", f.dirs.home],
+			["AGENT_BROWSER_SOCKET_DIR", f.dirs.socket],
+			["AGENT_BROWSER_RUNTIME_ENVIRONMENT", "development"],
+			["AGENT_BROWSER_RUNTIME_HOST", "1"],
+			["AGENT_BROWSER_EXTERNAL_BROWSER_DISCOVERY", "disabled"],
+			["AGENT_BROWSER_DEV_NAMESPACE", "p266new"],
+		]),
+	);
 });
 it("connects one own client and obtains the preparation route from public acquired binding, never a borrowed task", async () => {
 	const f = await fixture(),

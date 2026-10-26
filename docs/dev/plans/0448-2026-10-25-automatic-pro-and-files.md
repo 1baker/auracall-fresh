@@ -264,3 +264,23 @@ immediately before the first SDK connector call after asynchronous qualification
 A refused or lost attempt retains its journal; restarting cannot issue a new
 policy over an already-budgeted ledger. This source check still requires actual
 operator-held writer exclusion and does not manufacture preservation proof.
+
+## Selected isolated SDK integration (2026-10-26)
+
+Chief5efee selects corrected1ebbee/3348/9e1a under the already-approved fresh
+choice. The old default realm stays untouched. In this same owner slice, carry
+only the source-selected p266new namespace in NativeProducerPin through the own
+SDK descriptor; do not add a private JSON/env enable flag, inherit provider
+credentials/ports, or retarget the unchanged e43 binary/manifest defaults.
+Validate unsupported namespace before private input and freeze the selection.
+The frozen producer launcher13373 line768 and runtime_multiplicity06e470
+lines340-361 establish the actual need for this variable. Socket override still
+chooses the native endpoint; a missing namespace is not automatically proof of
+wrong endpoint attachment. No source change to Browser or operator is made.
+
+Acceptance: fixture descriptor has the exact namespace/home/socket allowlist;
+invalid/private JSON namespace and caller mutation cannot choose another realm.
+No SDK/activation effect. Actual compiled admit, continuous guard/current native
+observation and original accounting reservation across realms still require the
+final source-connected counterpart. Do not invent an actor, proof JSON or source
+wire to bypass that missing production join.

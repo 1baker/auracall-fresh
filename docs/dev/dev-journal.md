@@ -1,3 +1,16 @@
+## 2026-10-26 — Isolated SDK namespace propagation
+
+Same P266 direction5efee selects source integration for a disjoint p266new realm.
+Old5354/Chrome/data remain untouched. Frozen producer launcher13373 emits the
+namespace and native runtime_multiplicity06e470 uses it to choose the exact DEV
+backend; the owned SDK descriptor previously omitted it. Add an optional compiled
+p266new selection to NativeProducerPin, freeze it before private reads, and emit
+only its literal child variable. Private JSON, ambient environment, defaults and
+producer binary/manifest pins do not select the realm. Behavioral RED/GREEN and
+invalid-namespace fixtures verify this narrow integration. Actual guarded native
+observer/admission and original shared-accounting exclusion remain unimplemented
+here; no generic READY wrapper or live SDK/namespace/authority effect is added.
+
 ## 2026-10-26 — Carried native read allowance repair
 
 The direct human FIX instruction continues Plan0448 in the same owner lane.

@@ -1,3 +1,17 @@
+## 2026-10-26 — Isolated namespace missing from own SDK descriptor
+
+- Symptom: a compiled isolated producer selection lost AGENT_BROWSER_DEV_NAMESPACE
+  in the SDK child. Frozen producer source uses that variable for the exact DEV
+  backend process evidence; explicit socket routing alone does not select that
+  backend. This was a source finding, not an observed wrong-host connection.
+- Fix: preserve optional compiled namespace p266new in the immutable received pin
+  and exact child environment. Unknown/default/path-like values refuse before
+  private reads. Private JSON cannot select it, and caller mutation cannot change
+  the received selection. No broad environment or seven-port inheritance.
+- Boundary: reviewed successor binary/manifest selection, actual disjoint provider
+  capacity, current operator guard/observation and full carried usage remain
+  required. Default e43 pin, strict private shapes and f874 accounting stay intact.
+
 ## 2026-10-26 — Approved read amendment was not connected to the native ledger
 
 - Symptom: the approved cumulative80-read Pro allowance could not reach the

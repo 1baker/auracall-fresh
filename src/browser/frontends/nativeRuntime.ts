@@ -24,6 +24,8 @@ import { FrontendError, type NativeTaskBinding, type NativeTaskFrontendRoute } f
 export interface NativeProducerPin {
 	readonly binarySha256: string;
 	readonly manifestSha256: string;
+	/** Reviewed source-selected realm, never supplied by private input or ambient env. */
+	readonly namespace?: "p266new";
 }
 export const P266_ENROLLMENT_PRODUCER: NativeProducerPin = Object.freeze({
 	binarySha256: "e43ca62a0728551aa0221304f8559bc8af6b943b6b95efff8f3c080f1a53f114",
@@ -197,7 +199,13 @@ export async function readNativeRuntimeInput(
 ): Promise<NativeRuntimeInput> {
 	try {
 		posix();
-		if (!hash.safeParse(pin.binarySha256).success || !hash.safeParse(pin.manifestSha256).success)
+		const selectedPin = Object.freeze({ ...pin });
+		if (selectedPin.namespace !== undefined && selectedPin.namespace !== "p266new")
+			refuse("native_runtime_namespace_unqualified");
+		if (
+			!hash.safeParse(selectedPin.binarySha256).success ||
+			!hash.safeParse(selectedPin.manifestSha256).success
+		)
 			refuse("native_runtime_producer_pin_mismatch");
 		const raw = await file(path, true);
 		const parsed = inputSchema.parse(
@@ -240,7 +248,7 @@ export async function readNativeRuntimeInput(
 			preparation.startsWith(`${ledger}${sep}`)
 		)
 			refuse("native_runtime_ledger_scope_invalid");
-		await verifyProducer(options, pin);
+		await verifyProducer(options, selectedPin);
 		const token: NativeRuntimeInput = Object.freeze({ kind: "auracall-own-sdk-runtime-input" });
 		inputs.set(token, {
 			admission,
@@ -250,7 +258,7 @@ export async function readNativeRuntimeInput(
 			bindingOut: parsed.bindingOut,
 			inputHash: digest(raw),
 			bindingHash: digest(bindingBytes),
-			pin: Object.freeze({ ...pin }),
+			pin: selectedPin,
 			now,
 		});
 		return token;
@@ -560,6 +568,7 @@ export async function startOwnNativeRuntime(
 					["AGENT_BROWSER_RUNTIME_ENVIRONMENT", "development"],
 					["AGENT_BROWSER_RUNTIME_HOST", "1"],
 					["AGENT_BROWSER_EXTERNAL_BROWSER_DISCOVERY", "disabled"],
+					...(data.pin.namespace ? [["AGENT_BROWSER_DEV_NAMESPACE", data.pin.namespace]] : []),
 				]),
 			),
 		});

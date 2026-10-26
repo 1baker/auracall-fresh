@@ -1,3 +1,14 @@
+## Isolated native SDK namespace (same P266 direction, 2026-10-26)
+
+The nativeRuntime public fixture records the supplied SDK connector descriptor.
+The failing-before-fix case proves a selected p266new namespace was omitted.
+The corrected case verifies exact allowlisted child environment, preserved private
+home/socket and immutable selection. Invalid compiled namespaces refuse before
+private reads; a private JSON namespace flag is rejected. Reuse native lifetime,
+consumer, Pro and relay-preparation checks for the same caller integration.
+No candidate, native browser, namespace, unit, port or private authority is invoked.
+The final native observer/operator guard join remains a production requirement.
+
 ## Carried native Pro read allowance (Plan0448, 2026-10-26)
 
 Run frontend.nativeConsumer/nativeRuntime/nativePro with the existing identity,
