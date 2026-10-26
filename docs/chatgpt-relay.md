@@ -574,3 +574,55 @@ Actual persistent bridge, writer exclusion, original usage/reservation, helper
 execution, private admission and host transport are still unbound. The normal CLI
 has no defaults for them. No native Send/fill permission, producer pin, JSON input
 field, Bastion store identity or cumulative limit changes in this source slice.
+
+### Finite Send on the retained native runtime (source only)
+
+`bindOwnNativeSendFrontend(runtime, intent, authority)` exposes the existing
+`FrontendTools` interface from the SAME acquired `OwnNativeProRuntime`. It does
+not call the factory, acquire a second task, start a transport or change broker
+routing. The original `prepareProOnly` entry and f874 allowance remain closed to
+Send. Binding is one-way, and only an actual retained runtime instance qualifies.
+
+The strict intent binds request ID, canonical request fingerprint, exact UTF-8
+prompt digest and nullable previous request ID. `NativeFiniteAuthority` has three
+mandatory compiled ports: `verify(context)` supplies complete original carry and
+a real additional one-draft/one-Send approval; `assertClaim(context)` verifies the
+original canonical P447 frontend claim; `protect(operation, run)` holds the real
+original writer authority and same canonical request/current P447 phase across
+the entire native ledger transaction, SDK effect, completion and lock cleanup.
+Preclaim reads/controls use its ready/configuration intent; draft/Send requires
+its current frontend claim. This is one phase driver,
+not a second nested operator checkpoint. No JSON token, OAuth scope or default
+callback supplies that authority.
+
+The verifier receives the actual acquired task, route/model/URL, admission and
+producer digests, ledger directory and expiry. Its closed evidence binds that
+context, approval and original lineage/reservation digests, complete consumed
+counts, one additional draft and Send, and unchanged 80-read/6-control ceilings.
+The original two Sends stay charged. Unknown carry refuses. A separate immutable
+`finite-send-policy.json` binds the approved finite policy while the original
+read-budget anchor advances with every reservation; default sessions refuse that
+policy rather than silently downgrading after a restart.
+
+Only the active opaque transaction permits its exact native operation. Fill must
+match the bound prompt and deterministic request key. Send requires the same
+request, real claim and fresh independent Pro/model/URL observation. Before draft
+or Send, capacity must cover the minimum reply verification (eleven or nine
+remaining native reads respectively); variable generation may need more. Every
+actual read still charges the original ledger. Missing authority, callback hold,
+expiry, changed accounting or native uncertainty remains held without replay.
+
+For future composition, inject this facade into the existing frontend MCP server
+on the WSL browser host. Bastion keeps the canonical store and P447 dispatcher;
+its owned connected SDK uses the existing `createMcpFrontend` adapter. P447 alone
+claims and sends; it saves and returns the complete reply. A lost outer MCP ACK
+can use original status while native authority remains valid. A lost native ACK
+or authority does not grant ordinary status access or imply recoverability.
+
+**Production remains unbound:** actual finite approval and full carried usage;
+original-writer/claim authority and persistent live guard; qualified producer,
+private admission and current target; and authenticated Bastion-to-WSL transport
+with the real canonical claim verifier. No new endpoint, native JSON startup,
+store alias, credential or runtime activation is supplied. Current two Sends are
+exhausted. Files/PD remain held, and `liveVerified: false` is retained. Synthetic
+success is not automatic live ChatGPT acceptance.

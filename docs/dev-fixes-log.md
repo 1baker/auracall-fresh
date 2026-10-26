@@ -26202,3 +26202,16 @@ The required exact operator callback ports now wrap the full operation, propagat
 post-call refusal and retain the original client/attempt. Full observation-v2 and
 acquired authority checks remain. This closes a source gap; the actual persistent
 operator bridge and live accounting/admission remain unqualified.
+
+
+## 2026-10-26 — Keep finite Send separate from native preparation
+
+A retained native runtime hid its frontend, while recreating the factory would
+acquire again and generic broker routing rejects native handles. Bind a separate
+exact-request finite facade to the existing instance instead. Require real carry,
+additional finite approval, canonical claim and whole-ledger writer protection;
+keep original prepare-only policy closed. Active opaque operation identity avoids
+nesting another SDK guard or using a global bypass flag. Preserve holds after
+callbacks and distinguish outer transport ACK loss from actual native uncertainty.
+Reserve minimum complete-reply read capacity before drafting/sending; refusing
+only after Send consumes budget without a possible successful readback.

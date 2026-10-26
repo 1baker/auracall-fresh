@@ -4049,3 +4049,19 @@ Synthetic checks exercise before/after refusal, exact-once callback execution,
 opaque local results and refused readback/release; existing full-v2/custody/gap
 and acquired-identity coverage remains. No Python production guard or browser is
 executed. Preserve failed diagnostic receipts; fixture corrections are not flakes.
+
+
+### Retained native finite-Send facade (2026-10-26)
+
+The focused nativeRuntime/nativeConsumer/nativeLifetime/nativeOperator/nativePro
+and relay.mcpFrontend suites exercise the retained source runtime through P447.
+All files, canonical store, provider UI and allowances are synthetic. The test
+checks one acquisition, observed Pro before exact Send, complete Unicode
+persistence/return and no resend after an outer MCP acknowledgment loss. Native
+acknowledgment loss remains held and denies normal reply reads. Guard callbacks
+that skip, replace, repeat, refuse or hold their operation cannot publish success.
+Malformed/unknown carry, exact-intent drift and expiry refuse; the default
+prepare-only policy still forbids draft/Send. A red regression demonstrated a Send
+with insufficient complete-readback capacity; finite draft/Send now preserve the
+minimum eleven/nine remaining reads without adding quota. No browser, private
+operator, production transport or real Send is exercised by these suites.

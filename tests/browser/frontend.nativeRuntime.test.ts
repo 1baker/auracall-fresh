@@ -1,7 +1,15 @@
+import { createHash, randomUUID } from "node:crypto";
 import { chmod, mkdir, mkdtemp, readdir, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, expect, it, vi } from "vitest";
+import { setAuracallHomeDirOverrideForTest } from "../../src/auracallHome.js";
+import { createMcpFrontend } from "../../src/browser/frontends/mcpClient.js";
+import {
+	type NativeFiniteAuthority,
+	type NativeFiniteContext,
+	nativePromptDigest,
+} from "../../src/browser/frontends/nativeFiniteSend.js";
 import { createRetainedNativeLifetime } from "../../src/browser/frontends/nativeLifetime.js";
 import {
 	nativeBudgetDigest,
@@ -11,6 +19,7 @@ import {
 import {
 	startOwnNativeRuntime as actualStartOwnNativeRuntime,
 	bindNativeOperatorIntegration,
+	bindOwnNativeSendFrontend,
 	type NativeRuntimeDependencies,
 	type NativeRuntimeInput,
 	type NativeSdkDescriptor,
@@ -18,6 +27,8 @@ import {
 	readNativeRuntimeInput,
 	runNativeOperation,
 } from "../../src/browser/frontends/nativeRuntime.js";
+import { dispatchRelayRequest } from "../../src/mcp/relay/dispatch.js";
+import { RelayStore } from "../../src/mcp/relay/store.js";
 import { fixtureDispatchJoin } from "./nativeDispatchFixture.js";
 
 // Synthetic wrappers for existing runtime fixtures; production has no default.
@@ -31,6 +42,7 @@ import { withCompletedIdentity } from "./nativeIdentityFixture.js";
 
 const roots: string[] = [];
 afterEach(async () => {
+	setAuracallHomeDirOverrideForTest(null);
 	for (const path of roots.splice(0)) await rm(path, { recursive: true, force: true });
 });
 const fixturePin = {
@@ -238,7 +250,7 @@ function fixtureLifetime() {
 		uncertain: vi.fn(async () => {}),
 	};
 }
-function fixtureBudget(f: Awaited<ReturnType<typeof fixture>>) {
+function fixtureBudget(f: Awaited<ReturnType<typeof fixture>>, reads = 18, drafts = 0) {
 	return (
 		context: import("../../src/browser/frontends/nativeReadBudget.js").NativeReadBudgetContext,
 	) =>
@@ -248,7 +260,7 @@ function fixtureBudget(f: Awaited<ReturnType<typeof fixture>>) {
 				amendment: nativeReadAmendment,
 				contextDigest: nativeBudgetDigest(ctx),
 				reservationDigest: nativeBudgetDigest([]),
-				consumed: { acquisition: 0, read: 18, control: 0, draft: 0, send: 2 },
+				consumed: { acquisition: 0, read: reads, control: 0, draft: drafts, send: 2 },
 			}),
 			() => f.now,
 		);
@@ -1125,4 +1137,499 @@ it("keeps the runtime dispatch fence even if the lifetime hold hook refuses", as
 	expect(client.callTool).toHaveBeenCalledOnce();
 	expect(runtime.state).toBe("held");
 	expect(client.close).not.toHaveBeenCalled();
+});
+
+it("keeps a retained runtime closed to automatic Send without a finite authority", async () => {
+	const f = await fixture();
+	const input = await readNativeRuntimeInput(f.path, fixturePin, () => f.now);
+	const client = { callTool: vi.fn(async () => opened(f)) };
+	const runtime = await startOwnNativeRuntime(input, {
+		lifetime: fixtureLifetime(),
+		readBudget: fixtureBudget(f),
+		connect: async () => client,
+	});
+	await expect(
+		bindOwnNativeSendFrontend(
+			runtime,
+			{
+				requestId: "finite-synthetic-request",
+				requestFingerprint: "b".repeat(64),
+				promptDigest: "a".repeat(64),
+				previousRequestId: null,
+			},
+			undefined as never,
+		),
+	).rejects.toMatchObject({ code: "native_finite_authority_required" });
+	expect(client.callTool).toHaveBeenCalledOnce();
+	expect(runtime.state).toBe("active");
+});
+
+async function finiteFixture(reads = 18, drafts = 0) {
+	const f = await fixture();
+	setAuracallHomeDirOverrideForTest(join(f.root, "frontend-home"));
+	const input = await readNativeRuntimeInput(f.path, fixturePin, () => f.now);
+	const prompt = " Exact request λ\n",
+		answer = "Complete answer αβ\n\nFinal line 🧪";
+	const requestId = `finite_${randomUUID()}`;
+	const canonical = new RelayStore(join(f.root, "synthetic-canonical-host"), "synthetic-owner");
+	await canonical.enqueue({ requestId, prompt });
+	const saved = await canonical.request(requestId);
+	const intent = {
+		requestId,
+		requestFingerprint: saved.fingerprint,
+		promptDigest: nativePromptDigest(prompt),
+		previousRequestId: null,
+	};
+	let effort = 3,
+		composer = "",
+		sent = false,
+		sends = 0,
+		protectedNow = false;
+	let failSend = false;
+	const events: string[] = [];
+	const client = {
+		callTool: vi.fn(async (request: { name: string; arguments: Record<string, unknown> }) => {
+			if (request.name === "browser_open") return opened(f);
+			expect(protectedNow).toBe(true);
+			const a = request.arguments,
+				action = String(a.action),
+				key = String(a.operationKey),
+				params = a.params as Record<string, unknown>;
+			events.push(`native:${action}`);
+			let result: unknown;
+			if (action === "url") result = { url: f.input.options.expectedUrl };
+			else if (action === "snapshot")
+				result = {
+					snapshot:
+						'- button "Fixture model" [ref=e1]\n- button "Open profile menu" [ref=e2]\n- textbox "Ask anything" [ref=e3]\n- slider "Intelligence" [ref=e4]' +
+						(sent
+							? '\n- article\n  - heading "You said:"\n  - paragraph: Exact request\n- article\n  - heading "ChatGPT said:"\n  - paragraph: Complete answer'
+							: ""),
+					refs: {
+						e1: { role: "button", name: "Fixture model" },
+						e2: { role: "button", name: "Open profile menu" },
+						e3: { role: "textbox", name: "Ask anything" },
+						e4: {
+							role: "slider",
+							name: "Intelligence",
+							ax: {
+								schemaVersion: "agent-browser.ax-control.v1",
+								disabled: false,
+								minimum: 0,
+								maximum: 4,
+								value: effort,
+								valueText: effort === 4 ? "Pro" : "Extra High",
+							},
+						},
+					},
+				};
+			else if (action === "press") {
+				effort++;
+				result = { pressed: true };
+			} else if (action === "fill") {
+				composer = String(params.value);
+				result = { filled: true };
+			} else if (action === "click") {
+				expect(composer).toBe(prompt);
+				expect(effort).toBe(4);
+				expect(await canonical.status(requestId)).toMatchObject({ state: "awaiting_reply" });
+				sends++;
+				sent = true;
+				composer = "";
+				if (failSend) throw new Error("synthetic lost native Send ACK");
+				result = { clicked: true };
+			} else if (action === "gettext")
+				result = {
+					text:
+						params.selector === "#prompt-textarea"
+							? composer
+							: String(params.selector).includes('"user"')
+								? prompt
+								: answer,
+				};
+			else throw new Error("unexpected synthetic action");
+			f.now += 200;
+			const base = JSON.parse(opened(f).content[0].text).data;
+			const ack = {
+				kind: ["url", "snapshot", "gettext"].includes(action) ? "observed" : "input_acknowledged",
+				completedAtMs: f.now,
+			};
+			const data = withCompletedIdentity(
+				{
+					...base,
+					operation: {
+						operationId: key,
+						operationKey: key,
+						action,
+						state: "completed",
+						ack,
+						createdAtMs: f.now - 1,
+					},
+					consumerAck: ack,
+					result,
+					targetObservation: { ...base.targetObservation, operationId: key, observedAtMs: f.now },
+				},
+				f.input.admission,
+			);
+			return {
+				content: [
+					{
+						type: "text",
+						text: JSON.stringify({
+							tool: request.name,
+							session: "fixture-OWN-sdk-connection",
+							success: true,
+							error: null,
+							data,
+						}),
+					},
+				],
+			};
+		}),
+	};
+	const lifetime = fixtureLifetime(),
+		execution = fixtureDispatchJoin();
+	const protectedDispatch = vi.fn();
+	const originalDispatch = execution.protected_dispatch;
+	execution.protected_dispatch = async (run) => {
+		protectedDispatch();
+		return originalDispatch(run);
+	};
+	const runtime = await actualStartOwnNativeRuntime(input, {
+		lifetime,
+		execution,
+		readBudget: fixtureBudget(f, reads, drafts),
+		connect: async () => client,
+	});
+	const evidence = async (context: NativeFiniteContext) => {
+		const names = (await readdir(f.dirs.consumer)).filter((n) => n.startsWith("reservation-"));
+		const rows = await Promise.all(
+			names.map(async (name) => [
+				name,
+				createHash("sha256")
+					.update(await readFile(join(f.dirs.consumer, name)))
+					.digest("hex"),
+			]),
+		);
+		rows.sort(([a], [b]) => a.localeCompare(b));
+		return {
+			contextDigest: nativeBudgetDigest(context),
+			approvalDigest: "c".repeat(64),
+			originalLineageDigest: "d".repeat(64),
+			reservationDigest: nativeBudgetDigest(rows),
+			consumed: { acquisition: 1, read: reads, control: 0, draft: drafts, send: 2 },
+			additional: { draft: 1, send: 1 },
+			readCeiling: 80,
+			controlCeiling: 6,
+		};
+	};
+	const authority: NativeFiniteAuthority = {
+		verify: vi.fn(evidence),
+		assertClaim: vi.fn(async (c) => {
+			expect(await canonical.status(c.intent.requestId)).toMatchObject({ state: "awaiting_reply" });
+			expect((await canonical.request(c.intent.requestId)).fingerprint).toBe(
+				c.intent.requestFingerprint,
+			);
+		}),
+		protect: vi.fn(async (_op, run) => {
+			expect(await readdir(f.dirs.consumer)).not.toContain("operation.lock");
+			events.push(`before:${_op.bucket}`);
+			protectedNow = true;
+			try {
+				return await run();
+			} finally {
+				protectedNow = false;
+				expect(await readdir(f.dirs.consumer)).not.toContain("operation.lock");
+				events.push(`after:${_op.bucket}`);
+			}
+		}),
+	};
+	const dispatch = async (frontend: Awaited<ReturnType<typeof bindOwnNativeSendFrontend>>) =>
+		dispatchRelayRequest({
+			store: canonical,
+			frontend,
+			requestId,
+			routeId: f.input.options.routeId,
+			expectedUrl: f.input.options.expectedUrl,
+			expectedModel: f.input.options.expectedModel,
+			maxStatusChecks: 3,
+			pollIntervalMs: 0,
+		});
+	return {
+		f,
+		runtime,
+		client,
+		lifetime,
+		authority,
+		evidence,
+		intent,
+		prompt,
+		answer,
+		canonical,
+		dispatch,
+		events,
+		protectedDispatch,
+		get sends() {
+			return sends;
+		},
+		set failSend(value: boolean) {
+			failSend = value;
+		},
+	};
+}
+
+it("runs one finite native Send on the retained session through P447 and saves the complete reply", async () => {
+	const h = await finiteFixture();
+	const frontend = await bindOwnNativeSendFrontend(h.runtime, h.intent, h.authority);
+	await expect(h.runtime.prepareProOnly()).rejects.toMatchObject({
+		code: "native_finite_send_unqualified",
+	});
+	const result = await h.dispatch(frontend);
+	expect(result).toMatchObject({ state: "replied", reply: { text: h.answer } });
+	expect(await h.canonical.status(h.intent.requestId)).toMatchObject({ reply: { text: h.answer } });
+	expect(h.sends).toBe(1);
+	expect(h.client.callTool.mock.calls.filter(([r]) => r.name === "browser_open")).toHaveLength(1);
+	expect(h.protectedDispatch).not.toHaveBeenCalled(); // full-ledger guard replaces inner SDK wrapper
+	expect(h.events).toContain("native:press");
+	expect(h.events).toContain("before:draft");
+	expect(h.events).toContain("after:send");
+	await expect(h.dispatch(frontend)).resolves.toMatchObject({ state: "replied" });
+	expect(h.sends).toBe(1);
+	const budget = JSON.parse(await readFile(join(h.f.dirs.consumer, "read-budget.json"), "utf8"));
+	expect(budget.version).toBe(1);
+	expect(await readdir(h.f.dirs.consumer)).toContain("finite-send-policy.json");
+});
+
+it.each([
+	"prompt",
+	"request",
+	"previous",
+	"route",
+])("rejects wrong finite %s before native effects", async (kind) => {
+	const h = await finiteFixture();
+	const api = await bindOwnNativeSendFrontend(h.runtime, h.intent, h.authority);
+	await expect(
+		api.send(
+			kind === "route" ? "other" : h.f.input.options.routeId,
+			kind === "request" ? "other-request" : h.intent.requestId,
+			kind === "prompt" ? `${h.prompt}x` : h.prompt,
+			kind === "previous" ? "other-previous" : undefined,
+		),
+	).rejects.toBeDefined();
+	expect(h.client.callTool).toHaveBeenCalledOnce();
+	expect(h.sends).toBe(0);
+});
+
+it.each([
+	"unknown",
+	"carry",
+	"snapshot",
+	"draft",
+	"approval",
+	"context",
+])("refuses unqualified finite %s evidence", async (kind) => {
+	const h = await finiteFixture();
+	h.authority.verify = async (c) => {
+		const e: Record<string, unknown> = await h.evidence(c);
+		if (kind === "unknown")
+			e.consumed = { acquisition: 1, read: null, control: 0, draft: 0, send: 2 };
+		if (kind === "carry") e.consumed = { acquisition: 1, read: 18, control: 0, draft: 0, send: 0 };
+		if (kind === "snapshot") e.reservationDigest = "e".repeat(64);
+		if (kind === "draft") e.additional = { send: 1 };
+		if (kind === "approval") delete e.approvalDigest;
+		if (kind === "context") e.contextDigest = "e".repeat(64);
+		return e;
+	};
+	try {
+		const api = await bindOwnNativeSendFrontend(h.runtime, h.intent, h.authority);
+		await api.inspect(h.f.input.options.routeId);
+		throw new Error("accepted");
+	} catch (error) {
+		expect(error).toMatchObject({ code: "native_finite_send_unqualified" });
+	}
+	expect(h.client.callTool).toHaveBeenCalledOnce();
+	expect(h.sends).toBe(0);
+});
+
+it.each([
+	"verify",
+	"before",
+	"authority",
+	"after",
+])("preserves callback hold at finite %s boundary", async (when) => {
+	const h = await finiteFixture();
+	const original = h.authority.protect;
+	if (when === "verify")
+		h.authority.verify = async (c) => {
+			const e = await h.evidence(c);
+			await h.runtime.hold();
+			return e;
+		};
+	if (when === "before")
+		h.authority.protect = async (_op, run) => {
+			await h.runtime.hold();
+			return run();
+		};
+	if (when === "after")
+		h.authority.protect = async (op, run) => {
+			const result = await original(op, run);
+			await h.runtime.hold();
+			return result;
+		};
+	if (when === "authority")
+		h.lifetime.assertCurrent.mockImplementation(async () => {
+			await h.runtime.hold();
+		});
+	await expect(
+		(async () => {
+			const api = await bindOwnNativeSendFrontend(h.runtime, h.intent, h.authority);
+			return api.inspect(h.f.input.options.routeId);
+		})(),
+	).rejects.toBeDefined();
+	expect(h.runtime.state).toBe("held");
+	expect(h.client.callTool).toHaveBeenCalledTimes(when === "after" ? 2 : 1);
+	expect(h.sends).toBe(0);
+});
+
+it("retains an uncertain native Send without replay or ordinary reply-read permission", async () => {
+	const h = await finiteFixture();
+	const api = await bindOwnNativeSendFrontend(h.runtime, h.intent, h.authority);
+	h.failSend = true;
+	await expect(h.dispatch(api)).resolves.toMatchObject({ state: "held_unknown" });
+	expect(h.sends).toBe(1);
+	expect(h.runtime.state).toBe("held");
+	const calls = h.client.callTool.mock.calls.length;
+	await expect(api.status(h.f.input.options.routeId, h.intent.requestId)).rejects.toBeDefined();
+	await expect(
+		api.send(h.f.input.options.routeId, h.intent.requestId, h.prompt),
+	).rejects.toBeDefined();
+	expect(h.client.callTool).toHaveBeenCalledTimes(calls);
+	expect(h.sends).toBe(1);
+});
+
+it("refuses foreign runtime, rebinding and a second acquisition", async () => {
+	await expect(
+		bindOwnNativeSendFrontend({} as never, {} as never, {} as never),
+	).rejects.toMatchObject({ code: "native_finite_send_unqualified" });
+	const h = await finiteFixture();
+	await bindOwnNativeSendFrontend(h.runtime, h.intent, h.authority);
+	await expect(bindOwnNativeSendFrontend(h.runtime, h.intent, h.authority)).rejects.toMatchObject({
+		code: "native_finite_send_unqualified",
+	});
+	expect(h.client.callTool).toHaveBeenCalledOnce();
+});
+
+it("recovers a lost OUTER frontend ACK through08b/P447 without repeating the native Send", async () => {
+	const h = await finiteFixture();
+	const api = await bindOwnNativeSendFrontend(h.runtime, h.intent, h.authority);
+	let lose = true;
+	const frontend = createMcpFrontend(
+		{
+			callTool: async (request) => {
+				const a = request.arguments;
+				let result: Record<string, unknown>;
+				if (request.name === "frontend_inspect") result = await api.inspect(String(a.routeId));
+				else if (request.name === "frontend_configure") {
+					expect(a.effort).toBe("pro");
+					result = await api.configure(String(a.routeId), "pro");
+				} else if (request.name === "frontend_send") {
+					result = await api.send(String(a.routeId), String(a.requestId), String(a.text));
+					if (lose) {
+						lose = false;
+						throw new Error("lost outer acknowledgment after confirmed native send");
+					}
+				} else result = await api.status(String(a.routeId), String(a.requestId));
+				return {
+					structuredContent: result,
+					content: [{ type: "text", text: JSON.stringify(result) }],
+				};
+			},
+		},
+		h.f.input.options.routeId,
+	);
+	await expect(h.dispatch(frontend)).resolves.toMatchObject({ state: "held_unknown" });
+	expect(h.runtime.state).toBe("active");
+	await expect(h.dispatch(frontend)).resolves.toMatchObject({
+		state: "replied",
+		reply: { text: h.answer },
+	});
+	expect(h.sends).toBe(1);
+});
+
+it.each([
+	"skip",
+	"replace",
+	"duplicate",
+	"refuse",
+])("rejects a finite protector that %s the whole transaction", async (mode) => {
+	const h = await finiteFixture();
+	const original = h.authority.protect;
+	h.authority.protect = async (op, run) => {
+		if (mode === "skip") return {} as never;
+		if (mode === "refuse") throw new Error("synthetic no authority");
+		const value = await original(op, run);
+		if (mode === "replace") return {} as never;
+		try {
+			await original(op, run);
+		} catch {
+			/* cannot swallow double operation */
+		}
+		return value;
+	};
+	const api = await bindOwnNativeSendFrontend(h.runtime, h.intent, h.authority);
+	await expect(api.inspect(h.f.input.options.routeId)).rejects.toBeDefined();
+	expect(h.runtime.state).toBe("held");
+	expect(h.client.callTool).toHaveBeenCalledTimes(["skip", "refuse"].includes(mode) ? 1 : 2);
+	if (["skip", "refuse"].includes(mode))
+		expect(await readdir(h.f.dirs.consumer)).not.toContain("finite-send-policy.json");
+});
+
+it.each([
+	"expired",
+	"clock_reverse",
+	"claim_hold",
+	"claim_refused",
+])("retains finite protection when %s", async (mode) => {
+	const h = await finiteFixture();
+	if (mode === "claim_hold" || mode === "claim_refused")
+		h.authority.assertClaim = async () => {
+			if (mode === "claim_hold") await h.runtime.hold();
+			else throw new Error("not a P447 claim");
+		};
+	const api = await bindOwnNativeSendFrontend(h.runtime, h.intent, h.authority);
+	if (mode === "expired") h.f.now = h.f.input.admission.expiresAtMs;
+	if (mode === "clock_reverse") h.f.now--;
+	if (mode === "claim_hold" || mode === "claim_refused") {
+		await expect(h.dispatch(api)).resolves.toMatchObject({ state: "held_unknown" });
+		expect(h.sends).toBe(0);
+		expect(h.runtime.state).toBe("held");
+	} else {
+		await expect(api.inspect(h.f.input.options.routeId)).rejects.toBeDefined();
+		expect(h.client.callTool).toHaveBeenCalledOnce();
+	}
+});
+
+it("refuses finite draft and Send when minimum complete readback cannot fit", async () => {
+	const h = await finiteFixture(60);
+	const api = await bindOwnNativeSendFrontend(h.runtime, h.intent, h.authority);
+	await expect(h.dispatch(api)).resolves.toMatchObject({ state: "held_unknown" });
+	expect(h.sends).toBe(0);
+	expect(h.events).not.toContain("native:fill");
+});
+it("carries two original drafts and Sends without resetting them", async () => {
+	const h = await finiteFixture(18, 2);
+	const api = await bindOwnNativeSendFrontend(h.runtime, h.intent, h.authority);
+	await expect(h.dispatch(api)).resolves.toMatchObject({
+		state: "replied",
+		reply: { text: h.answer },
+	});
+	expect(h.sends).toBe(1);
+	const rows = await readdir(h.f.dirs.consumer);
+	const reservations = await Promise.all(
+		rows
+			.filter((n) => n.startsWith("reservation-"))
+			.map(async (n) => JSON.parse(await readFile(join(h.f.dirs.consumer, n), "utf8"))),
+	);
+	expect(reservations.filter((r) => r.bucket === "send")).toHaveLength(1);
+	expect(reservations.filter((r) => r.bucket === "draft")).toHaveLength(1);
 });

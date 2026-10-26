@@ -4,6 +4,16 @@ import { lstat, mkdir, open, readdir, unlink } from "node:fs/promises";
 import { isAbsolute, join } from "node:path";
 import { z } from "zod";
 import {
+	assertNativeFiniteSend,
+	checkFiniteInput,
+	finiteLedgerPolicy,
+	holdNativeFiniteSend,
+	matchNativeFiniteOwner,
+	type NativeFinitePermit,
+	protectFiniteLedger,
+	recordFiniteReservation,
+} from "./nativeFiniteSend.js";
+import {
 	matchNativeReadReservations,
 	type NativeReadBudget,
 	nativeReadBudgetData,
@@ -113,6 +123,11 @@ function fail(code: string): never {
 
 /** Immutable reservations count even on failure. No private UI text or credentials. */
 class NativeLedger {
+	private finite?: NativeFinitePermit;
+	bindFinite(permit: NativeFinitePermit) {
+		if (this.finite || !this.budget) fail("native_finite_send_unqualified");
+		this.finite = permit;
+	}
 	constructor(
 		private readonly directory: string,
 		private readonly budget?: NativeReadBudget,
@@ -255,6 +270,17 @@ class NativeLedger {
 		originalKey?: string | string[],
 		readReserve = 0,
 	): Promise<T> {
+		const run = () => this.runLocked(key, intent, bucket, effect, originalKey, readReserve);
+		return this.finite ? protectFiniteLedger(this.finite, key, bucket, intent, run) : run();
+	}
+	private async runLocked<T>(
+		key: string,
+		intent: unknown,
+		bucket: Bucket,
+		effect: () => Promise<{ value: T; metadata: unknown }>,
+		originalKey?: string | string[],
+		readReserve = 0,
+	): Promise<T> {
 		if (!/^[a-zA-Z0-9_-]{8,128}$/.test(key)) fail("consumer_operation_key_invalid");
 		await mkdir(this.directory, { recursive: true, mode: 0o700 });
 		await this.privatePath(this.directory, true);
@@ -262,6 +288,8 @@ class NativeLedger {
 		const fd = await open(lock, "wx", 0o600).catch(() => fail("consumer_operation_held"));
 		try {
 			const entries = await readdir(this.directory);
+			if (!this.finite && entries.includes("finite-send-policy.json"))
+				fail("native_finite_send_unqualified");
 			const originals =
 				originalKey === undefined ? [] : Array.isArray(originalKey) ? originalKey : [originalKey];
 			const found = new Set<string>();
@@ -321,16 +349,55 @@ class NativeLedger {
 				}
 			}
 			const accounting = await this.accounting(entries, rows);
+			const snapshot = digest(
+				[...rows]
+					.map(([name, row]): [string, string] => [name, row.hash])
+					.sort(([a], [b]) => a.localeCompare(b)),
+			);
+			const finite = this.finite
+				? finiteLedgerPolicy(this.finite, snapshot, accounting.totals)
+				: null;
+			if (finite) {
+				if (!accounting.policyId) fail("native_finite_send_unqualified");
+				const name = "finite-send-policy.json";
+				if (entries.includes(name)) {
+					await this.privatePath(join(this.directory, name));
+					const file = await open(
+						join(this.directory, name),
+						constants.O_RDONLY | constants.O_NOFOLLOW,
+					);
+					try {
+						if ((await file.stat()).size > 1024) fail("native_finite_send_unqualified");
+						const saved = z
+							.object({ version: z.literal(1), policyId: z.literal(finite.id) })
+							.strict();
+						if (!saved.safeParse(JSON.parse(await file.readFile("utf8"))).success)
+							fail("native_finite_send_unqualified");
+					} finally {
+						await file.close();
+					}
+				} else {
+					if (this.finite) assertNativeFiniteSend(this.finite);
+					await this.write(name, { version: 1, policyId: finite.id });
+				}
+			}
 			const token = digest(key);
 			if (found.size !== originals.length) fail("consumer_operation_key_invalid");
 			if (entries.includes(`reservation-${token}.json`))
 				fail(bucket === "acquisition" ? "consumer_acquisition_held" : "consumer_operation_held");
-			if (accounting.policyId && (bucket === "draft" || bucket === "send"))
+			if (accounting.policyId && !finite && (bucket === "draft" || bucket === "send"))
 				fail("consumer_budget_exhausted");
-			if (accounting.totals[bucket] >= (bucket === "read" ? accounting.readLimit : limits[bucket]))
+			if (
+				accounting.totals[bucket] >=
+				(finite?.limits[bucket] ?? (bucket === "read" ? accounting.readLimit : limits[bucket]))
+			)
 				fail("consumer_budget_exhausted");
 			// Leave capacity for the post-input URL/snapshot/URL and independent prepare check.
-			if (accounting.readLimit - accounting.totals.read < readReserve)
+			// Two full stable reply observations need at least 5 + 4 native reads.
+			// Draft also needs exact composer and URL readback before the Send.
+			// This is a lower bound, not a promise that generation finishes in time.
+			const replyReserve = finite ? (bucket === "draft" ? 11 : bucket === "send" ? 9 : 0) : 0;
+			if (accounting.readLimit - accounting.totals.read < Math.max(readReserve, replyReserve))
 				fail("consumer_budget_exhausted");
 			if (this.budget && this.expectedBudget)
 				nativeReadBudgetData(this.budget, this.expectedBudget, this.now);
@@ -340,7 +407,17 @@ class NativeLedger {
 				intentDigest: digest(intent),
 				...(accounting.policyId ? { budgetId: accounting.policyId } : {}),
 			};
+			if (this.finite) {
+				assertNativeFiniteSend(this.finite);
+				checkFiniteInput(this.finite, bucket, key, intent);
+			}
 			await this.write(`reservation-${token}.json`, reservation);
+			const nextSnapshot = digest(
+				[...rows]
+					.map(([name, row]): [string, string] => [name, row.hash])
+					.concat([[`reservation-${token}.json`, digest(reservation)]])
+					.sort(([a], [b]) => a.localeCompare(b)),
+			);
 			if (this.budget) {
 				const previous = [...rows].map(([name, row]): [string, string] => [name, row.hash]);
 				const next = [
@@ -353,9 +430,12 @@ class NativeLedger {
 					digest(next.sort(([a], [b]) => a.localeCompare(b))),
 				);
 			}
+			if (this.finite) recordFiniteReservation(this.finite, nextSnapshot, bucket);
 			if (this.budget && this.expectedBudget)
 				nativeReadBudgetData(this.budget, this.expectedBudget, this.now);
+			if (this.finite) assertNativeFiniteSend(this.finite);
 			const result = await effect();
+			if (this.finite) assertNativeFiniteSend(this.finite);
 			await this.write(`completed-${token}.json`, {
 				bucket,
 				key,
@@ -389,6 +469,8 @@ export class NativeConsumerSession {
 	#acquisitionId: string | null = null;
 	#bindingDigest: string | null = null;
 	#completedOperations = new Set<string>();
+	#finite?: NativeFinitePermit;
+	#directory: string;
 	constructor(
 		client: NativeMcpClient,
 		admission: NativeConsumerAdmission,
@@ -396,6 +478,7 @@ export class NativeConsumerSession {
 		now = Date.now,
 		readBudget?: NativeReadBudget,
 	) {
+		this.#directory = directory;
 		this.#client = client;
 		this.#admission = parseNativeConsumerAdmission(admission);
 		const expectedBudget = {
@@ -411,9 +494,24 @@ export class NativeConsumerSession {
 		if (!this.#binding) return fail("consumer_acquisition_required");
 		return { ...this.#binding };
 	}
+	/** One-way source-only policy composition on THIS acquired session. A branded
+	 * permit from the future real accounting authority is mandatory; no new Open.
+	 */
+	bindFiniteSend(permit: NativeFinitePermit) {
+		if (this.#held || this.#finite) fail("native_finite_send_unqualified");
+		matchNativeFiniteOwner(permit, this, {
+			ledgerDirectory: this.#directory,
+			admissionDigest: digest(this.#admission),
+			expiresAtMs: this.#admission.expiresAtMs,
+			nativeTask: this.binding,
+		});
+		this.#ledger.bindFinite(permit);
+		this.#finite = permit;
+	}
 	/** Sticky semantic uncertainty; original metadata may still be read. */
 	hold() {
 		this.#held = true;
+		if (this.#finite) holdNativeFiniteSend(this.#finite);
 	}
 	private async payload(tool: string, args: Record<string, unknown>) {
 		const raw = await this.#client.callTool({ name: tool, arguments: args });

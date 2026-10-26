@@ -56183,3 +56183,16 @@ startup/operator composition; preserved full f865/v2 validation and uncertainty.
 Actual Python ObservationTiming/FD binding remains the operator's missing runtime
 join. Original reads80/usageUNKNOWN, controls6, Sends2used/0remaining and PD hold
 are unchanged. No SDK connection, browser action, repin, install or runtime test.
+
+
+## 2026-10-26 — Retained native finite-Send source composition
+
+Same bf8/01a1751a implements the narrow c45c join. The owned runtime now exposes
+its existing frontend through a separate finite facade; it never reacquires.
+Original P447 and08b remain the canonical claim/transport/return path. Mandatory
+compiled allowance, canonical claim and whole-ledger authority ports have no
+production defaults. Native loss holds; outer transport loss can read the same
+request without resend. Current2used/0remaining,80UNKNOWN/6 and PD holds stay.
+Runtime/operator providers and actual Bastion/WSL transport remain unbound; no
+source test is live acceptance. Independent reviews and immutable receipts are
+kept with native-finite-send-20261026 in the owner preparation evidence.

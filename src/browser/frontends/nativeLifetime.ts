@@ -54,7 +54,7 @@ const dispatchSchema = z.union([
 	z
 		.object({
 			kind: z.literal("command"),
-			action: z.enum(["url", "snapshot", "gettext", "click", "press"]),
+			action: z.enum(["url", "snapshot", "gettext", "click", "press", "fill"]),
 			operationKey,
 		})
 		.strict(),

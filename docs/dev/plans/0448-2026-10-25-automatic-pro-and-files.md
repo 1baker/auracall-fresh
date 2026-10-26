@@ -380,3 +380,24 @@ Actual Python ObservationTiming conversion, persistent Node/Python operation
 bridge, real writer/accounting suppliers and private finite host admission remain
 operator integration requirements. No executable binding or caller-loaded JSON
 proof is introduced. Source prepare-only/2-used-0-remaining Sends stay unchanged.
+
+## Retained finite-Send source join (2026-10-26)
+
+Same bf8/01a1751a, exact Chief c45c and operator5e676035: 08b MCP adapter is already
+complete. Expose a distinct default-closed finite facade over the current runtime,
+frontend, session and route. No factory reacquisition or broker native-handle
+fallback. Keep prepare-only/default f874 behavior and real carry unchanged.
+
+Accept only an exact request/fingerprint/prompt/previous binding, a compiled real
+finite allowance verifier, canonical P447 claim verifier and whole-ledger writer
+protector. Preserve two consumed Sends, cumulative80 reads and6 controls. One
+active transaction must cover reservation through effect/completion/cleanup and
+bind the actual acquired task/current authority. Never nest the existing SDK
+wrapper in that same transaction or treat an outer ACK as provider proof.
+
+Source acceptance: synthetic owned runtime + semantic Pro + P447 canonical claim
++ exact one Send + full saved Unicode reply; no second Open; no replay after outer
+ACK loss; sticky holds after native ACK/authority loss, callback refusal, changed
+intent/carry or expiry. Refuse draft/Send without minimum reply-read capacity.
+Return the typed interface and explicitly absent production suppliers. Live
+activation, grants, provider actions, files and PD remain outside this slice.

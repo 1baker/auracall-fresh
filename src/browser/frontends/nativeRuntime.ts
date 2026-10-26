@@ -5,6 +5,7 @@ import { dirname, isAbsolute, join, resolve, sep } from "node:path";
 import { z } from "zod";
 import { prepareRelayProOnly } from "../../mcp/relay/proPreparation.js";
 import { RelayStore, relayId } from "../../mcp/relay/store.js";
+import type { FrontendTools } from "./config.js";
 import { NativeChatgptFrontend } from "./nativeChatgpt.js";
 import {
 	type NativeConsumerAdmission,
@@ -12,6 +13,18 @@ import {
 	type NativeMcpClient,
 	parseNativeConsumerAdmission,
 } from "./nativeConsumer.js";
+import {
+	assertNativeFiniteClaim,
+	assertNativeFiniteSend,
+	finiteProtectsCall,
+	holdNativeFiniteSend,
+	type NativeFiniteAuthority,
+	type NativeFinitePermit,
+	type NativeSendIntent,
+	nativePromptDigest,
+	nativeSendIntentSchema,
+	qualifyNativeFiniteSend,
+} from "./nativeFiniteSend.js";
 import {
 	matchNativeReadBudget,
 	type NativeReadBudget,
@@ -286,7 +299,7 @@ export type NativeRuntimeDispatch =
 	| { readonly kind: "sdk_connect" | "acquire" }
 	| {
 			readonly kind: "command";
-			readonly action: "url" | "snapshot" | "gettext" | "click" | "press";
+			readonly action: "url" | "snapshot" | "gettext" | "click" | "press" | "fill";
 			readonly operationKey: string;
 	  }
 	| { readonly kind: "original_readback" | "release"; readonly operationKey: string };
@@ -525,6 +538,7 @@ async function connectPinnedSdk(descriptor: NativeSdkDescriptor): Promise<Native
 
 function protectedDispatch(
 	request: Parameters<NativeMcpClient["callTool"]>[0],
+	finite = false,
 ): NativeRuntimeDispatch {
 	if (request.name === "browser_open") return Object.freeze({ kind: "acquire" });
 	const operationKey = request.arguments.operationKey;
@@ -536,9 +550,9 @@ function protectedDispatch(
 			operationKey,
 		});
 	const action = z
-		.enum(["url", "snapshot", "gettext", "click", "press"])
+		.enum(["url", "snapshot", "gettext", "click", "press", "fill"])
 		.safeParse(request.arguments.action);
-	if (request.name !== "browser_command" || !action.success)
+	if (request.name !== "browser_command" || !action.success || (action.data === "fill" && !finite))
 		return refuse("native_runtime_dispatch_unqualified");
 	return Object.freeze({ kind: "command", action: action.data, operationKey });
 }
@@ -553,6 +567,9 @@ class NativeProRuntime implements OwnNativeProRuntime {
 	#context: NativeRuntimeLifetimeContext;
 	#directory: string;
 	#session: NativeConsumerSession;
+	#finite?: NativeFinitePermit;
+	#finiteBound = false;
+	#busy = false;
 	constructor(
 		data: ReceivedInput,
 		lifetime: NativeRuntimeLifetime,
@@ -586,6 +603,7 @@ class NativeProRuntime implements OwnNativeProRuntime {
 	}
 	async hold() {
 		this.#state = "held";
+		if (this.#finite) holdNativeFiniteSend(this.#finite);
 		await holdOriginal(
 			this.#directory,
 			this.#lifetime,
@@ -606,6 +624,8 @@ class NativeProRuntime implements OwnNativeProRuntime {
 
 	async prepareProOnly(): Promise<Record<string, unknown>> {
 		if (this.#state !== "active") return refuse("native_runtime_readback_required");
+		if (this.#busy || this.#finiteBound) return refuse("native_finite_send_unqualified");
+		this.#busy = true;
 		try {
 			if (this.#data.grant.expiresAtMs <= this.#data.now())
 				refuse("native_runtime_admission_expired");
@@ -620,8 +640,131 @@ class NativeProRuntime implements OwnNativeProRuntime {
 			const failure = publicError(error);
 			await holdOriginal(this.#directory, this.#lifetime, this.#context, failure.code);
 			throw failure;
+		} finally {
+			this.#busy = false;
 		}
 	}
+	/** Checked only for the exact active ledger call. There is no global skip flag. */
+	finiteProtects(request: Parameters<NativeMcpClient["callTool"]>[0]): boolean {
+		return Boolean(
+			this.#finite &&
+				request.name === "browser_command" &&
+				finiteProtectsCall(this.#finite, request),
+		);
+	}
+	async bindFinite(
+		intent: NativeSendIntent,
+		authority: NativeFiniteAuthority,
+	): Promise<FrontendTools> {
+		if (
+			!authority ||
+			typeof authority.verify !== "function" ||
+			typeof authority.protect !== "function" ||
+			typeof authority.assertClaim !== "function"
+		)
+			return refuse("native_finite_authority_required");
+		if (this.#state !== "active" || this.#busy || this.#finiteBound)
+			return refuse("native_finite_send_unqualified");
+		this.#busy = true;
+		this.#finiteBound = true;
+		try {
+			const request = nativeSendIntentSchema.parse(intent);
+			const permit = await qualifyNativeFiniteSend(
+				{
+					...this.#context,
+					nativeTask: this.#session.binding,
+					admissionDigest: digest(JSON.stringify(this.#data.admission)),
+					ledgerDirectory: this.#data.options.consumerLedgerDirectory,
+					routeId: this.#route.id,
+					expectedUrl: this.#route.expectedUrl,
+					expectedModel: this.#route.expectedModel,
+					intent: request,
+				},
+				this.#session,
+				authority,
+				this.#data.now,
+			);
+			this.#finite = permit;
+			if (this.#state !== "active") {
+				holdNativeFiniteSend(permit);
+				return refuse("native_finite_send_unqualified");
+			}
+			this.#session.bindFiniteSend(permit);
+			let sent = false;
+			const call = async (routeId: string, operation: () => Promise<Record<string, unknown>>) => {
+				if (this.#state !== "active" || this.#busy || routeId !== this.#route.id)
+					return refuse("native_finite_send_unqualified");
+				assertNativeFiniteSend(permit);
+				this.#busy = true;
+				try {
+					const value = await operation();
+					assertNativeFiniteSend(permit);
+					if (this.#state !== "active") return refuse("native_finite_send_unqualified");
+					if (value.code || ["failed_presend", "uncertain"].includes(String(value.status)))
+						await this.hold();
+					return value;
+				} catch (error) {
+					await this.hold();
+					throw publicError(error);
+				} finally {
+					this.#busy = false;
+				}
+			};
+			return Object.freeze({
+				inspect: (routeId: string) => call(routeId, () => this.#frontend.inspect(routeId)),
+				configure: (routeId: string, effort = "pro") =>
+					call(routeId, () => {
+						if (sent || effort !== "pro") return refuse("native_finite_send_unqualified");
+						return this.#frontend.configure(routeId, effort);
+					}),
+				send: (routeId: string, requestId: string, text: string, previousRequestId?: string) =>
+					call(routeId, async () => {
+						if (
+							sent ||
+							requestId !== request.requestId ||
+							nativePromptDigest(text) !== request.promptDigest ||
+							(previousRequestId ?? null) !== request.previousRequestId
+						)
+							return refuse("native_finite_send_unqualified");
+						sent = true;
+						await assertNativeFiniteClaim(permit);
+						const observed = await this.#frontend.inspect(routeId);
+						assertNativeFiniteSend(permit);
+						if (
+							observed.effort !== "pro" ||
+							observed.url !== this.#route.expectedUrl ||
+							observed.model !== this.#route.expectedModel
+						)
+							return refuse("native_finite_send_unqualified");
+						return this.#frontend.send(routeId, requestId, text, previousRequestId);
+					}),
+				status: (routeId: string, requestId: string) =>
+					call(routeId, () => {
+						if (requestId !== request.requestId && requestId !== request.previousRequestId)
+							return refuse("native_finite_send_unqualified");
+						return this.#frontend.status(routeId, requestId);
+					}),
+			});
+		} catch (error) {
+			await this.hold();
+			throw publicError(error);
+		} finally {
+			this.#busy = false;
+		}
+	}
+}
+
+/** Distinct compiled finite-Send facade over the SAME runtime/frontend/session.
+ * No acquisition, transport construction, endpoint/store alias, JSON enable or
+ * canonical claim occurs here. P447 on the canonical host owns claim/Send/return.
+ */
+export async function bindOwnNativeSendFrontend(
+	runtime: OwnNativeProRuntime,
+	intent: NativeSendIntent,
+	authority: NativeFiniteAuthority,
+): Promise<FrontendTools> {
+	if (!(runtime instanceof NativeProRuntime)) return refuse("native_finite_send_unqualified");
+	return runtime.bindFinite(intent, authority);
 }
 
 /** One foreground owner. A new ID/config/client cannot recover a previous attempt. */
@@ -713,9 +856,10 @@ export async function startOwnNativeRuntime(
 		if (data.grant.expiresAtMs <= data.now()) refuse("native_runtime_admission_expired");
 		const protectedClient: NativeMcpClient = Object.freeze({
 			async callTool(request: Parameters<NativeMcpClient["callTool"]>[0]) {
-				const dispatch = protectedDispatch(request);
+				const finite = runtime?.finiteProtects(request) ?? false;
+				const dispatch = protectedDispatch(request, finite);
 				const wrap = dispatch.kind === "acquire" ? execution.acquire : execution.protected_dispatch;
-				return runNativeOperation(wrap, async () => {
+				const invoke = async () => {
 					await lifetime.assertCurrent(acquiredContext, dispatch);
 					// A hold is synchronous even if its lifetime hook or durable write fails.
 					if (
@@ -724,8 +868,12 @@ export async function startOwnNativeRuntime(
 						dispatch.kind !== "release"
 					)
 						refuse("native_runtime_readback_required");
+					if (finite && !runtime?.finiteProtects(request)) refuse("native_finite_send_unqualified");
 					return client.callTool(request);
-				});
+				};
+				// The finite authority encloses the WHOLE ledger transaction; never
+				// reenter the same Python phase driver at its inner SDK effect.
+				return finite ? invoke() : runNativeOperation(wrap, invoke);
 			},
 		});
 		const session = new NativeConsumerSession(
