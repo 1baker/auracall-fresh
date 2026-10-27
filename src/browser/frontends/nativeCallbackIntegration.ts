@@ -96,7 +96,12 @@ export async function createOriginalAccountedNativeCallbackIntegration(
 			},
 		});
 		const authority: typeof peer.finite = {
-			verify: (context) => heldAccounting.guarded(context, () => peer.finite.verify(context)),
+			verify: (context) =>
+				heldAccounting.guarded(context, async () => {
+					const evidence = await peer.finite.verify(context);
+					heldAccounting.validateFiniteApproval(evidence);
+					return evidence;
+				}),
 			assertClaim: (context) =>
 				heldAccounting.guarded(context, () => peer.finite.assertClaim(context)),
 			protect: (operation, run) =>

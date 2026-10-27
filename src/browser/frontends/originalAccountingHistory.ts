@@ -3,7 +3,11 @@ import { constants } from "node:fs";
 import { lstat, open, readdir, readFile, realpath } from "node:fs/promises";
 import { isAbsolute, join } from "node:path";
 import { z } from "zod";
-import { nativeBudgetDigest } from "./nativeReadBudget.js";
+import {
+	isolatedAcceptanceApproval,
+	isolatedAcceptanceRun,
+	nativeBudgetDigest,
+} from "./nativeReadBudget.js";
 import { FrontendError } from "./types.js";
 
 export const originalWriters = [
@@ -64,7 +68,8 @@ const coverageSchema = z
 	})
 	.strict();
 export interface OriginalAccountingSelection {
-	/** Existing ORIGINAL authority, never a new realm's directory or a copied identity. */
+	/** Existing real authority. A new isolated identity is eligible ONLY through
+	 * the separately approved isolated coverage variant, never as old history. */
 	directory: OriginalPathPin;
 	identity: OriginalFilePin;
 	coverage: OriginalFilePin;
@@ -317,10 +322,156 @@ function isSameNames(a: string[], b: string[]) {
 	return JSON.stringify([...a].sort()) === JSON.stringify([...b].sort());
 }
 
-export async function readOriginalHistory(selection: OriginalAccountingSelection) {
-	const coverage = coverageSchema.parse(
-		JSON.parse((await readOriginalFile(selection.coverage)).toString()),
-	);
+interface AccountingHistory {
+	consumed: OriginalCounts;
+	uncertain: boolean;
+	coverageDigest: string;
+	isolation?: {
+		amendment: typeof isolatedAcceptanceRun;
+		approvalDigest: typeof isolatedAcceptanceApproval;
+		historicalReadUsage: "UNKNOWN";
+	};
+}
+
+const isolatedEventSource = z
+	.object({
+		kind: z.literal("isolated-events"),
+		writer: z.enum(["stock", "browser-owner", "human-relay", "proposal"]),
+		file: filePin,
+	})
+	.strict();
+const isolatedCoverageSchema = z
+	.object({
+		schema: z.literal("auracall.isolated-acceptance-accounting.v1"),
+		runReference: z.literal(isolatedAcceptanceRun),
+		approvalDigest: z.literal(isolatedAcceptanceApproval),
+		originalScopeDigest: hash,
+		status: z.literal("COMPLETE_FOR_NEW_RUN"),
+		gaps: z.array(z.string()).length(0),
+		historical: z
+			.object({
+				sendsConsumed: z.literal(2),
+				readUsage: z.literal("UNKNOWN"),
+				readLimit: z.literal(80),
+				controlLimit: z.literal(6),
+			})
+			.strict(),
+		sources: z
+			.array(z.discriminatedUnion("kind", [sourceSchema.options[0], isolatedEventSource]))
+			.length(5),
+	})
+	.strict();
+
+/** New-run records cannot satisfy the old-history validator. The same selected
+ * live guard and all five enforcing writers must still qualify before this read.
+ * This function never creates identity, coverage, event records or capacity. */
+async function readIsolatedHistory(
+	selection: OriginalAccountingSelection,
+	value: unknown,
+): Promise<AccountingHistory> {
+	const coverage = isolatedCoverageSchema.parse(value);
+	if (
+		coverage.originalScopeDigest !== selection.originalScopeDigest ||
+		originalWriters.some((w) => coverage.sources.filter((s) => s.writer === w).length !== 1)
+	)
+		accountingRefusal("isolated_accounting_history_unknown");
+	const consumed: OriginalCounts = { acquisition: 0, read: 0, control: 0, draft: 0, send: 2 };
+	const paths = new Set<string>(),
+		events = new Set<string>();
+	let uncertain = false;
+	function add(id: string, bucket: keyof OriginalCounts, units = 1) {
+		if (events.has(id) || !Number.isSafeInteger(units) || units < 1) accountingRefusal();
+		events.add(id);
+		consumed[bucket] += units;
+		if (!Number.isSafeInteger(consumed[bucket])) accountingRefusal();
+	}
+	for (const source of coverage.sources) {
+		const path = source.kind === "native-ledger" ? source.directory.path : source.file.path;
+		if (paths.has(path)) accountingRefusal();
+		paths.add(path);
+		if (source.kind === "native-ledger") {
+			if (
+				source.directory.path === selection.targetLedger.path ||
+				(source.directory.dev === selection.targetLedger.dev &&
+					source.directory.ino === selection.targetLedger.ino)
+			)
+				accountingRefusal();
+			const data = await readNativeReservations(source.directory);
+			if (
+				nativeBudgetDigest(data.snapshot) !==
+				nativeBudgetDigest(
+					source.reservations.map((r) => [r.name, r.sha256]).sort(([a], [b]) => a.localeCompare(b)),
+				)
+			)
+				accountingRefusal();
+			for (const row of data.rows) add(`native:${row.key}`, row.bucket);
+			uncertain ||= data.uncertain;
+		} else {
+			const record = z
+				.object({
+					schema: z.literal("auracall.isolated-counted-events.v1"),
+					runReference: z.literal(isolatedAcceptanceRun),
+					originalScopeDigest: hash,
+					writer: isolatedEventSource.shape.writer,
+					complete: z.literal(true),
+					gaps: z.array(z.string()).length(0),
+					events: z
+						.array(
+							z
+								.object({
+									id: z.string().min(1),
+									bucket: originalBucket,
+									units: integer.positive(),
+									state: z.enum(["completed", "reserved", "uncertain"]),
+									evidence: filePin,
+								})
+								.strict(),
+						)
+						.max(4096),
+				})
+				.strict()
+				.parse(JSON.parse((await readOriginalFile(source.file)).toString()));
+			if (
+				record.writer !== source.writer ||
+				record.originalScopeDigest !== selection.originalScopeDigest
+			)
+				accountingRefusal();
+			for (const event of record.events) {
+				await readOriginalFile(event.evidence);
+				add(`${source.writer}:${event.id}`, event.bucket, event.units);
+				uncertain ||= event.state !== "completed";
+			}
+		}
+	}
+	// Any prior Send/draft/uncertainty in this run needs original reconciliation,
+	// not another startup allowance or a replacement run.
+	if (
+		consumed.send !== 2 ||
+		consumed.draft !== 0 ||
+		consumed.acquisition > 1 ||
+		consumed.read > 80 ||
+		consumed.control > 6
+	)
+		accountingRefusal();
+	return {
+		consumed,
+		uncertain,
+		coverageDigest: selection.coverage.sha256,
+		isolation: {
+			amendment: isolatedAcceptanceRun,
+			approvalDigest: isolatedAcceptanceApproval,
+			historicalReadUsage: "UNKNOWN",
+		},
+	};
+}
+
+export async function readOriginalHistory(
+	selection: OriginalAccountingSelection,
+): Promise<AccountingHistory> {
+	const value = JSON.parse((await readOriginalFile(selection.coverage)).toString());
+	if (value.schema === "auracall.isolated-acceptance-accounting.v1")
+		return readIsolatedHistory(selection, value);
+	const coverage = coverageSchema.parse(value);
 	if (
 		coverage.originalScopeDigest !== selection.originalScopeDigest ||
 		originalWriters.some((w) => !coverage.sources.some((s) => s.writer === w))

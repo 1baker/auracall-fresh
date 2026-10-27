@@ -889,3 +889,59 @@ recorded one unexplained positive-path refusal (15/16); later diagnostic runs
 passed, including16/16. That intermittent refusal remains unresolved. Source
 Spec remediation passed; Standards/validation remains PARTIAL. This is a private
 source checkpoint, not a clean integration or production activation candidate.
+
+
+## Approved isolated acceptance accounting (2026-10-27, source only)
+
+Human approval `2663ec8f` and execution route `2070f63d` authorize one separately
+accounted run, `p266-isolated-acceptance-20261027-2663ec8f`: at most one additional
+Send, 80 additional native page reads and six controls. The original two Sends
+remain consumed and original read usage remains UNKNOWN. This exception does
+not authorize PD, files, old-browser replacement, or replay after uncertainty.
+
+Use the SAME `startOriginalAccountedNativeFrontendHost`, `OriginalAccountingSelection`,
+local actor, persistent peer, session, guard and writer ports. The operator must
+provide the real isolated identity/controller and physical input pins. Aura does
+not create that authority, initialize an empty history, or supply default records.
+
+The selection's pinned coverage file has a distinct closed schema:
+`auracall.isolated-acceptance-accounting.v1`. Its required fields are:
+
+- `runReference`: exactly `p266-isolated-acceptance-20261027-2663ec8f`.
+- `approvalDigest`: the complete approved receipt hash
+  `2663ec8f067a3dd531c6ee2934cf86072d3d1bbccff6ca85b926f06f3bc821d5`.
+- `originalScopeDigest`: the existing guard ABI name for this NEW run's actual
+  scope binding, never a substitution for the old scope.
+- `status`: `COMPLETE_FOR_NEW_RUN`, with `gaps: []`.
+- `historical`: `sendsConsumed: 2`, `readUsage: "UNKNOWN"`, `readLimit: 80`,
+  `controlLimit: 6`. These preserve history, not reusable capacity.
+- `sources`: exactly one source for each existing writer. The native source uses
+  the existing `native-ledger` directory/reservation pins. The four other sources
+  use `kind: "isolated-events"`, their actual writer label and a physical file pin.
+
+Each new-run event file uses `auracall.isolated-counted-events.v1`, the same
+`runReference` and `originalScopeDigest`, its `writer`, `complete: true`, empty
+`gaps`, and pinned counted `events`. Event fields remain `id`, `bucket`, positive
+`units`, `state` and `evidence`. The operator must qualify the complete inventory
+and actual enforcing writer participation. Zero events are valid only when the
+new run actually has no events for that writer; they are not old-history zeros.
+
+The existing actor reserves both observation reads once before invoking the
+witness. Its budget evidence names this new run as the amendment and retains
+`approvalDigest` plus `historicalReadUsage: "UNKNOWN"`. Counted reads/controls are
+from this run only; Send accounting starts with the known historical two. The
+finite verifier must return the SAME approval digest before the existing
+one-additional-Send policy can bind. The operator verifies the local reservation
+read-only and must not charge a second remote supplier path.
+
+The old coverage and budget schemas remain strict and unchanged. Selecting the
+new schema cannot repair old UNKNOWN history. Missing writers, a different
+approval/run, incomplete new history, capacity overflow, stale guard or changed
+physical records refuse before witness or SDK effects.
+
+Source validation: three focused tests passed after two initial failures;
+125 affected regression checks, type checking and focused lint passed. The
+retained earlier unexplained original-accounting refusal remains historical
+unresolved evidence; this result does not erase it. Independent bounded Standards
+and SourceSpec review passed. Actual private inputs, browser admission, frontend
+transport and automatic Pro/prompt/reply acceptance remain unverified.

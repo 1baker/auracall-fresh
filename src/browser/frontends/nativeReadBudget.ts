@@ -22,7 +22,10 @@ const contextSchema = z
 	.strict();
 export type NativeReadBudgetContext = Readonly<z.infer<typeof contextSchema>>;
 export const nativeReadAmendment = "same-p266-pro-only-063a5c60-additional60";
-const evidenceSchema = z
+export const isolatedAcceptanceRun = "p266-isolated-acceptance-20261027-2663ec8f";
+export const isolatedAcceptanceApproval =
+	"2663ec8f067a3dd531c6ee2934cf86072d3d1bbccff6ca85b926f06f3bc821d5";
+const originalEvidenceSchema = z
 	.object({
 		amendment: z.literal(nativeReadAmendment),
 		contextDigest: hash,
@@ -38,6 +41,16 @@ const evidenceSchema = z
 			.strict(),
 	})
 	.strict();
+// The explicitly approved new run has its own read/control trace. Old Sends stay
+// consumed and old read history stays UNKNOWN; neither becomes fresh headroom.
+const evidenceSchema = z.union([
+	originalEvidenceSchema,
+	originalEvidenceSchema.extend({
+		amendment: z.literal(isolatedAcceptanceRun),
+		approvalDigest: z.literal(isolatedAcceptanceApproval),
+		historicalReadUsage: z.literal("UNKNOWN"),
+	}),
+]);
 export type NativeReadBudgetEvidence = z.infer<typeof evidenceSchema>;
 export interface NativeReadBudget {
 	readonly kind: "auracall-native-pro-read-budget";

@@ -1,3 +1,14 @@
+## 2026-10-27 — Approved isolated acceptance accounting
+
+Approval2663/route2070 permits one isolated acceptance tranche while old two
+Sends/readUNKNOWN remain history. Added a distinct new-run coverage/budget
+variant to the same local accounting actor; old strict validators remain intact.
+The existing finite binding now requires the same approval digest. No authority
+root, observer, peer, session or host is duplicated. Three focused checks changed
+to GREEN;125 affected regression checks/typecheck/lint passed. The earlier
+unexplained original-path refusal remains unresolved historical evidence.
+Actual operator private selection and runtime activation are still pending.
+
 ## 2026-10-27 — Actual public Node/Python v3 exchange
 
 Reused current e6c582bc peer and matched the reviewed8c6e Python bundle in the

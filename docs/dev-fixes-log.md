@@ -1,3 +1,13 @@
+## 2026-10-27 — Do not label a newly approved run as complete old history
+
+- A new isolated allowance needs explicit provenance, not changed old counters.
+- Keep legacy coverage strict; bind one separately named coverage/budget variant
+  to the exact approval and real operator-selected identity and writer guard.
+- Preserve historical two Sends and UNKNOWN reads. Reserve the two observer
+  reads once in the same local actor; finite approval must match the new run.
+- Complete new-run inventory, actual enforcement and private runtime bindings
+  remain necessary. Source tests do not establish a live automatic roundtrip.
+
 ## 2026-10-27 — Close the paired-transport gap without repeating the peer repair
 
 - The older3e peer was v1; current e6c582bc already uses v3 and `[wire]` validation.

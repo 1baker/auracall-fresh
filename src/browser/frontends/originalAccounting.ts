@@ -256,6 +256,16 @@ export async function openOriginalAccounting(
 	return Object.freeze({
 		writer: Object.freeze(protectedWriter),
 		guarded,
+		validateFiniteApproval(evidence: unknown) {
+			if (
+				baseline.isolation &&
+				(!evidence ||
+					typeof evidence !== "object" ||
+					!("approvalDigest" in evidence) ||
+					evidence.approvalDigest !== baseline.isolation.approvalDigest)
+			)
+				hold();
+		},
 		/** Only this supplier's read-only directory FD. This holds the participant;
 		 * it releases NO authority lock, browser reference, SDK or durable record. */
 		async closeReadHandle() {
@@ -329,6 +339,7 @@ export async function openOriginalAccounting(
 				const target = await targetBeforeObservation(prior);
 				return {
 					amendment: nativeReadAmendment,
+					...prior.isolation,
 					contextDigest: nativeBudgetDigest(context),
 					reservationDigest: target.digest,
 					consumed: target.consumed,

@@ -35,7 +35,7 @@ async function file(path: string, value: unknown): Promise<OriginalFilePin> {
 	await writeFile(path, `${JSON.stringify(value)}\n`, { mode: 0o600 });
 	return { ...(await pin(path)), sha256: originalSha(await readFile(path)) };
 }
-async function fixture(reads = 1, unknown = false) {
+async function fixture(reads = 1, unknown = false, isolated = false) {
 	if (!rootSource) throw new Error("public frozen fixture source required");
 	const root = await mkdtemp(join(homedir(), ".auracall-original-accounting-test-"));
 	const context = {
@@ -98,18 +98,52 @@ async function fixture(reads = 1, unknown = false) {
 				events: [],
 			}),
 		});
-	const coverage = await file(join(root, "coverage.json"), {
-		schema: "auracall.original-accounting-coverage.v1",
-		originalScopeDigest: "f".repeat(64),
-		status: unknown ? "UNKNOWN" : "COMPLETE",
-		gaps: unknown ? ["original read trace not enumerated"] : [],
-		sources: [
-			{ kind: "native-ledger", writer: "native", directory: await pin(legacy), reservations },
-			{ kind: "manual-roundtrip", writer: "human-relay", file: manual },
-			{ kind: "proposal-job", writer: "proposal", file: proposal },
-			...eventSources,
-		],
-	});
+	const isolatedSources = [];
+	if (isolated) {
+		for (const writer of originalWriters.filter((w) => w !== "native"))
+			isolatedSources.push({
+				kind: "isolated-events",
+				writer,
+				file: await file(join(root, `isolated-${writer}.json`), {
+					schema: "auracall.isolated-counted-events.v1",
+					runReference: "p266-isolated-acceptance-20261027-2663ec8f",
+					originalScopeDigest: "f".repeat(64),
+					writer,
+					complete: true,
+					gaps: [],
+					events: [],
+				}),
+			});
+	}
+	const coverage = await file(
+		join(root, "coverage.json"),
+		isolated
+			? {
+					schema: "auracall.isolated-acceptance-accounting.v1",
+					runReference: "p266-isolated-acceptance-20261027-2663ec8f",
+					approvalDigest: "2663ec8f067a3dd531c6ee2934cf86072d3d1bbccff6ca85b926f06f3bc821d5",
+					originalScopeDigest: "f".repeat(64),
+					status: unknown ? "UNKNOWN" : "COMPLETE_FOR_NEW_RUN",
+					gaps: unknown ? ["new run trace missing"] : [],
+					historical: { sendsConsumed: 2, readUsage: "UNKNOWN", readLimit: 80, controlLimit: 6 },
+					sources: [
+						{ kind: "native-ledger", writer: "native", directory: await pin(legacy), reservations },
+						...isolatedSources,
+					],
+				}
+			: {
+					schema: "auracall.original-accounting-coverage.v1",
+					originalScopeDigest: "f".repeat(64),
+					status: unknown ? "UNKNOWN" : "COMPLETE",
+					gaps: unknown ? ["original read trace not enumerated"] : [],
+					sources: [
+						{ kind: "native-ledger", writer: "native", directory: await pin(legacy), reservations },
+						{ kind: "manual-roundtrip", writer: "human-relay", file: manual },
+						{ kind: "proposal-job", writer: "proposal", file: proposal },
+						...eventSources,
+					],
+				},
+	);
 	const writers = [];
 	for (const writer of originalWriters) {
 		const p = await file(join(root, `${writer}.lock`), {});
@@ -188,6 +222,54 @@ async function fixture(reads = 1, unknown = false) {
 }
 
 describe.skipIf(!rootSource)("original accounting with actual synthetic POSIX guard locks", () => {
+	it("isolated approval2663 counts only the approved new run and preserves historical UNKNOWN and two Sends", async () => {
+		const f = await fixture(1, false, true);
+		const a = await f.open();
+		await a.reserveObservationReads(f.context, 2);
+		await a.reserveObservationReads(f.context, 2);
+		const witness = vi.fn(async () => ({ synthetic: true }));
+		await a.observe(f.context, "a".repeat(64), witness);
+		const evidence = await a.originalUsage(f.budget);
+		expect(evidence.consumed).toEqual({ acquisition: 0, read: 3, control: 0, draft: 0, send: 2 });
+		expect(evidence.amendment).toBe("p266-isolated-acceptance-20261027-2663ec8f");
+		expect(evidence).toMatchObject({
+			historicalReadUsage: "UNKNOWN",
+			approvalDigest: "2663ec8f067a3dd531c6ee2934cf86072d3d1bbccff6ca85b926f06f3bc821d5",
+		});
+		await expect(qualifyNativeReadBudget(f.budget, a.originalUsage)).resolves.toBeDefined();
+		await expect(
+			qualifyNativeReadBudget(f.budget, async () => ({
+				...evidence,
+				approvalDigest: "b".repeat(64),
+			})),
+		).rejects.toBeDefined();
+		await expect(
+			qualifyNativeReadBudget(f.budget, async () => ({ ...evidence, historicalReadUsage: 0 })),
+		).rejects.toBeDefined();
+		a.validateFiniteApproval({ approvalDigest: evidence.approvalDigest });
+		expect(() => a.validateFiniteApproval({ approvalDigest: "b".repeat(64) })).toThrow();
+		expect(witness).toHaveBeenCalledOnce();
+	});
+	it("isolated approval2663 refuses changed approval, unknown new trace and missing writer", async () => {
+		for (const mutation of ["approval", "trace", "writer"]) {
+			const f = await fixture(0, false, true);
+			const value = JSON.parse(await readFile(f.selection.coverage.path, "utf8"));
+			if (mutation === "approval") value.approvalDigest = "b".repeat(64);
+			if (mutation === "trace") value.status = "UNKNOWN";
+			if (mutation === "writer") value.sources.pop();
+			f.selection.coverage = await file(f.selection.coverage.path, value);
+			await expect(f.open()).rejects.toBeDefined();
+			expect((await readdir(f.root)).some((n) => n.startsWith(".auracall-"))).toBe(false);
+		}
+	});
+	it("isolated approval2663 refuses capacity overflow before the witness and does not relabel old UNKNOWN", async () => {
+		const f = await fixture(79, false, true);
+		const a = await f.open();
+		await expect(a.reserveObservationReads(f.context, 2)).rejects.toBeDefined();
+		expect((await readdir(f.root)).some((n) => n.startsWith(".auracall-"))).toBe(false);
+		const old = await fixture(0, true);
+		await expect(old.open()).rejects.toBeDefined();
+	});
 	it("counts original native rows and the two canonical Sends; commits two witness reads before invocation", async () => {
 		const f = await fixture();
 		const a = await f.open();
