@@ -1,3 +1,13 @@
+## 2026-10-27 — Actual public Node/Python v3 exchange
+
+Reused current e6c582bc peer and matched the reviewed8c6e Python bundle in the
+existing opt-in IPC fixture. One public synthetic pair passes with one two-read
+reservation, witness, single-wire validation and full-dispatch ledger callback.
+All seven local import/data pins are checked; operator Node077f/a665 is not run.
+No production source repair, controller selection, build or runtime activation.
+Real writer/accounting/private bindings remain unavailable, UNKNOWN carried, and
+2/2 Sends consumed. The original accounting refusal remains recorded.
+
 ## 2026-10-26 — Supplier RPC on the existing v3 peer
 
 Added the exact three owner supplier RPCs to the existing retained peer; full

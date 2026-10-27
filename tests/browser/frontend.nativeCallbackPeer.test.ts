@@ -501,14 +501,27 @@ it.skipIf(!process.env.AURACALL_REVIEWED_V3_CARRIER_SOURCE)(
 			const nonce = "a".repeat(64),
 				wire = { ...ready.wire, requestNonce: nonce };
 			const opaqueAdmission = Symbol("local-admission");
+			// Select the remote synthetic supplier for this IPC test only. The
+			// original-accounted host selects its concrete local supplier instead;
+			// never call both reservation/witness paths for one attempt.
+			await peer.supplier.reserveObservationReads(ready.context, 2);
+			let validationCalls = 0;
 			const admission = await peer.dispatchJoin.admit_once(
 				nonce,
 				async () => {
-					wire.observedAtMs = Date.now();
-					wire.validUntilMs = wire.observedAtMs + 30000;
+					const observed = (await peer.supplier.observe(ready.context, nonce)) as {
+						privateResult: typeof wire;
+					};
+					expect(observed.privateResult).toMatchObject({
+						receiptDigest: ready.context.receiptDigest,
+						producerSha256: ready.context.producerSha256,
+						requestNonce: nonce,
+					});
+					Object.assign(wire, observed.privateResult);
 					return { wire, value: opaqueAdmission };
 				},
 				(raw) => {
+					validationCalls++;
 					expect(raw).toEqual(wire);
 					return {
 						receiptDigest: wire.receiptDigest,
@@ -520,10 +533,15 @@ it.skipIf(!process.env.AURACALL_REVIEWED_V3_CARRIER_SOURCE)(
 				},
 			);
 			expect(admission).toBe(opaqueAdmission);
+			expect(validationCalls).toBe(1);
 			const budget = new Map([["opaque", 80]]);
 			expect(
 				await peer.dispatchJoin.qualify_budget(ready.budget, async () => {
 					await peer.guard.assert_current(ready.context);
+					expect(await peer.supplier.originalUsage(ready.budget)).toEqual({
+						publicSyntheticOnly: true,
+						observerCharges: 2,
+					});
 					return budget;
 				}),
 			).toBe(budget);

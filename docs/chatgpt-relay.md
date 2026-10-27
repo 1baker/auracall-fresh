@@ -816,14 +816,22 @@ accounting composition; this transport delta does not replace its selection,
 create an operator provider, or instantiate both accounting paths.
 
 Historical f862 IPC reproduced refusal of the mandatory `dispatch` field before
-invoking the operation. The a17f v2 successor carries that field, but its known
-finite-permission overlap race remains with the incumbent operator. Reviewcfa6163e also rejects the4254 runner for its non-root ACK/hold and missing
-same-session receiver joins; it used stub Aura startup exports. The actual
-paired Node/Python v3 check requires the repaired, independently reviewed successor;
-none is selected here. Its opt-in fixture refuses even when a source path is supplied
-until an immutable reviewed pin is committed. A skipped pair is not compatibility
-proof. Do not strip dispatch, reuse an older fixture as v3 evidence, or run a17f/4254 as the
-accepted counterpart.
+invoking the operation. The a17f successor carried that field; review270e later
+closed the finite-permission race for exact bridge56ce. Reviewcfa6163e's separate
+operator Node ACK/hold and same-session reader findings remain open.
+
+The 2026-10-27 public pair test uses the actual Aura v3 peer with reviewed Python
+bundle8c6e/07ff (carrier4062, bridge56ce, contract18b8). Its fixture verifies all
+seven imported source/data hashes before loading Python, without loading the
+operator's Node client or runner. One anonymous-IPC exchange passed: reserve two
+synthetic reads once, observe once, validate `[wire]` once, read the unchanged
+usage result, then complete budget/handshake/acquisition-notification and the
+full-dispatch protected operation. Opaque Node values remain local until AFTER.
+This test selects the remote synthetic supplier only. The original-accounted
+host instead selects its concrete local reservation/witness supplier; never call
+both paths for one attempt. The operator verifies the SAME durable original
+two-read record without adding a second charge. No production producer pin or
+controller was selected by this test, and prior failures remain historical evidence.
 Local IPC proof does not qualify real bootstrap, original accounting participation,
 complete carried usage, two reserved observations, private admission, producer
 selection, frontend transport or an additional Send. Existing 2/2 Sends remain

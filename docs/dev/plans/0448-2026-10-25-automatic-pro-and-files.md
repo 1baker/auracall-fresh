@@ -500,3 +500,15 @@ observation/usage without normalization and preserving the existing after-ACK
 fence, receiver and one phase driver. No duplicate controller/decoder/host.
 Original accounting remains unchanged. Actual paired IPC requires repaired,
 reviewed counterpart bytes; no production provider, admission or capacity follows.
+
+## Matched public v3 pair, 2026-10-27
+
+Current e6c582bc already implements v3 and one-argument validation; no repeated
+peer/controller repair. Test-only selection of reviewed8c6e/07ff Python4062 +
+bridge56ce closes the pending public paired-IPC check: one actual Aura/Python
+exchange passes, including one reservation/witness path and complete dispatch.
+The fixture pins its seven local imports/data, not a runtime producer. No build,
+installation, original-accounting admission, SDK/browser action or Send occurred.
+Original accounting15/16 failure remains unresolved; actual complete carry and
+enforcing writer selection remain unavailable. Operator Node ACK/hold and reader
+findings remain separate. Full autonomous acceptance remains PARTIAL, 4/6.

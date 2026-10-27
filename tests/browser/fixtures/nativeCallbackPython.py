@@ -12,15 +12,22 @@ import sys
 import tempfile
 import time
 
-# No repaired/reviewed v3 successor has been selected. Set an exact immutable
-# reviewed source pin only after the incumbent's finite-permission repair passes.
-# Never accept a path/env-provided digest or run the known-racy a17f/4254 candidate.
-REVIEWED_CARRIER_SHA256 = None
+# TEST-ONLY selection: reviewed 8c6e/07ff Python bundle (270e finite delta).
+# Pin its complete local import/data closure before executing any of it. This
+# neither selects a production producer nor imports the operator's Node runner.
+REVIEWED_SOURCE = {
+    "original_callback_carrier.py": "4062c82c1d55762cd2ff3c5e258602b46edf229e688024f7338f90706f019d4c",
+    "aura_guard_bridge.py": "56ce0a0fd38389ea9da96d015b8230324860da100260a0b1aaed4c6d67d74375",
+    "original_reservation_guard.py": "86e74ecaa4e2d975ae9f493ffde4af4347580c4a34fb7aeb5f5b05b2f14cef5b",
+    "original_guard_pipe.py": "393a6d4881dfc090f53424de171337a04bcd6c54bcd2299cc3eebb6735c37535",
+    "isolated_publication_guard.py": "852c2fc8aefa547d90060023740d915456d734e69c498bb0b461c99c561c824f",
+    "test_original_callback_carrier.py": "0f8e43d298a2c0682e69791908c685681a936f076be89743b879c4efc2e09d6c",
+    "synthetic-native-observation-v2.json": "74e327bfa4804caf835879ebfc0bc77b90b4016f97f65bb2392c59a71cc3c154",
+}
 source = Path(sys.argv[1])
-if REVIEWED_CARRIER_SHA256 is None:
-    raise RuntimeError("reviewed v3 carrier selection pending; no pair execution")
-if hashlib.sha256((source / "original_callback_carrier.py").read_bytes()).hexdigest() != REVIEWED_CARRIER_SHA256:
-    raise RuntimeError("frozen carrier mismatch")
+for name, expected in REVIEWED_SOURCE.items():
+    if hashlib.sha256((source / name).read_bytes()).hexdigest() != expected:
+        raise RuntimeError("frozen public IPC fixture dependency mismatch")
 sys.path.insert(0, str(source))
 from original_callback_carrier import OriginalCallbackCarrier
 from original_reservation_guard import OriginalAuthorityPin, OriginalReservationGuard

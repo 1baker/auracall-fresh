@@ -1,3 +1,14 @@
+## 2026-10-27 — Close the paired-transport gap without repeating the peer repair
+
+- The older3e peer was v1; current e6c582bc already uses v3 and `[wire]` validation.
+  Reconcile current bytes before implementing a historical mismatch again.
+- After exact Python4062/bridge56ce review, exercise the actual Aura peer over
+  anonymous IPC with synthetic providers. Pin the complete local Python import
+  and data closure; do not load a different Node client or runner as Aura proof.
+- Select one reservation/witness path. Remote supplier RPCs and the concrete
+  original-accounted host are alternatives, not two charges for one observation.
+  Public IPC success does not manufacture original writer or accounting authority.
+
 ## 2026-10-26 — Successor supplier RPCs were absent from the existing peer
 
 - Extend the same strict peer to protocolv3 and the three documented owner
