@@ -1,3 +1,12 @@
+## 2026-10-27 — A local charge also needs its carrier acknowledgment
+
+- The carrier observation gate tracks acknowledgment separately from the local
+  accounting record. Commit once locally, then notify the existing supplier RPC.
+- In the local-accounted host, that operator provider is read-only verification
+  of the same record, not the remote route’s reservation implementation.
+- Retain the existing guarded await/hold boundary. Lost or refused ACKs keep the
+  charge and stop before witness; record tampering still fails the witness gate.
+
 ## 2026-10-27 — Do not label a newly approved run as complete old history
 
 - A new isolated allowance needs explicit provenance, not changed old counters.

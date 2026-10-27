@@ -6,6 +6,7 @@ import { createInterface } from "node:readline";
 import { PassThrough } from "node:stream";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { createOriginalAccountedNativeCallbackIntegration } from "../../src/browser/frontends/nativeCallbackIntegration.js";
 import {
 	nativeBudgetDigest,
 	qualifyNativeReadBudget,
@@ -222,6 +223,120 @@ async function fixture(reads = 1, unknown = false, isolated = false) {
 }
 
 describe.skipIf(!rootSource)("original accounting with actual synthetic POSIX guard locks", () => {
+	it.each([
+		"accepted",
+		"refused",
+		"lost",
+		"held-after-ack",
+		"altered-record",
+	])("local observation reservation precedes the carrier ACK: %s", async (mode) => {
+		const f = await fixture(0, false, true);
+		const input = new PassThrough(),
+			output = new PassThrough();
+		const recordPath = join(f.root, ".auracall-original-observer-reservation.json");
+		const protocol = "p266.original-callback-carrier.v3";
+		let acknowledgments = 0,
+			originalRecord = "",
+			carrierAccepted = false;
+		const response = (id: number, ok = true) =>
+			output.write(
+				`${JSON.stringify({
+					protocol,
+					type: "return",
+					id,
+					ok,
+					...(ok ? { result: null } : { error: "fixture_refusal" }),
+				})}\n`,
+			);
+		input.on("data", (raw) => {
+			const frame = JSON.parse(raw.toString());
+			if (frame.method === "binding.hold") return;
+			void (async () => {
+				await f.command("check");
+				if (frame.method === "supplier.reserve_observation_reads") {
+					acknowledgments++;
+					expect(frame.args).toEqual([f.context, 2]);
+					// This provider verifies the already committed record; it never writes a charge.
+					originalRecord = await readFile(recordPath, "utf8");
+					expect(JSON.parse(originalRecord)).toMatchObject({ reads: 2 });
+					if (mode === "altered-record") await writeFile(recordPath, "{}\n");
+					if (mode === "lost") return;
+					carrierAccepted = mode === "accepted";
+					response(frame.id, mode !== "refused");
+					if (mode === "held-after-ack") output.end();
+					return;
+				}
+				response(frame.id);
+			})().catch(() => response(frame.id, false));
+		});
+		const witness = vi.fn(async () => {
+			if (!carrierAccepted) throw new Error("carrier observation not acknowledged");
+			return { synthetic: true };
+		});
+		const complete = new Error("synthetic integration boundary complete");
+		vi.spyOn(runtimeModule, "bindNativeOperatorIntegration").mockImplementation(
+			async (_input, options) => {
+				if (mode === "accepted") {
+					await options.supplier.reserveObservationReads(f.context, 2);
+					await options.supplier.observe(f.context, "a".repeat(64));
+					expect(witness).toHaveBeenCalledOnce();
+				} else if (mode === "altered-record") {
+					// Even a successful ACK cannot hide later record tampering from the witness gate.
+					await options.supplier.reserveObservationReads(f.context, 2);
+					await expect(options.supplier.observe(f.context, "a".repeat(64))).rejects.toBeDefined();
+					await expect(
+						options.supplier.reserveObservationReads(f.context, 2),
+					).rejects.toBeDefined();
+					expect(witness).not.toHaveBeenCalled();
+				} else {
+					await expect(
+						options.supplier.reserveObservationReads(f.context, 2),
+					).rejects.toBeDefined();
+					// A lost/refused/held ACK cannot be retried and cannot reach the witness.
+					await expect(
+						options.supplier.reserveObservationReads(f.context, 2),
+					).rejects.toBeDefined();
+					await expect(options.supplier.observe(f.context, "a".repeat(64))).rejects.toBeDefined();
+					expect(witness).not.toHaveBeenCalled();
+				}
+				expect(acknowledgments).toBe(1);
+				if (mode !== "altered-record")
+					expect(await readFile(recordPath, "utf8")).toBe(originalRecord);
+				expect(
+					(await readdir(f.root)).filter((name) => name.includes("observer-reservation")),
+				).toHaveLength(1);
+				throw complete;
+			},
+		);
+		try {
+			await expect(
+				createOriginalAccountedNativeCallbackIntegration(
+					{ kind: "auracall-own-sdk-runtime-input" },
+					{
+						input,
+						output,
+						context: f.context,
+						target: {
+							profileId: "synthetic",
+							browserId: "synthetic",
+							tabId: "synthetic",
+							targetId: "synthetic",
+						},
+						timeoutMs: 250,
+					},
+					{
+						selection: f.selection,
+						observe: witness,
+						ownerAuthority: {},
+						producerTaskId: "synthetic-producer",
+					},
+				),
+			).rejects.toBe(complete);
+		} finally {
+			input.end();
+			output.end();
+		}
+	});
 	it("isolated approval2663 counts only the approved new run and preserves historical UNKNOWN and two Sends", async () => {
 		const f = await fixture(1, false, true);
 		const a = await f.open();

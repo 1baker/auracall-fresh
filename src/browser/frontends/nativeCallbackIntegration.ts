@@ -89,7 +89,14 @@ export async function createOriginalAccountedNativeCallbackIntegration(
 			dispatchJoin: peer.dispatchJoin,
 			writer: accounting.writer,
 			supplier: {
-				reserveObservationReads: accounting.reserveObservationReads,
+				reserveObservationReads: async (context, reads) => {
+					await heldAccounting.reserveObservationReads(context, reads);
+					// The accounted carrier provider only verifies this SAME committed
+					// record. Its ACK enables observation; it must never charge again.
+					await heldAccounting.guarded(context, () =>
+						peer.supplier.reserveObservationReads(context, reads),
+					);
+				},
 				originalUsage: accounting.originalUsage,
 				observe: (context, nonce) => heldAccounting.observe(context, nonce, options.observe),
 				assertCurrent: peer.assertNativeCurrent,

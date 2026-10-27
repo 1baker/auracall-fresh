@@ -828,9 +828,11 @@ synthetic reads once, observe once, validate `[wire]` once, read the unchanged
 usage result, then complete budget/handshake/acquisition-notification and the
 full-dispatch protected operation. Opaque Node values remain local until AFTER.
 This test selects the remote synthetic supplier only. The original-accounted
-host instead selects its concrete local reservation/witness supplier; never call
-both paths for one attempt. The operator verifies the SAME durable original
-two-read record without adding a second charge. No production producer pin or
+host instead commits the two reads through its concrete local accounting actor,
+then acknowledges that SAME record through `peer.supplier.reserveObservationReads`.
+For this host the operator must bind that RPC to read-only verification, never a
+second reservation. A refused or lost ACK holds the attempt with charges retained;
+no witness or retry follows. Local record validation still precedes the witness. No production producer pin or
 controller was selected by this test, and prior failures remain historical evidence.
 Local IPC proof does not qualify real bootstrap, original accounting participation,
 complete carried usage, two reserved observations, private admission, producer

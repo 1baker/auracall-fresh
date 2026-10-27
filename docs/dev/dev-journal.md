@@ -1,3 +1,12 @@
+## 2026-10-27 — Acknowledge the local observer reservation
+
+The local-accounted host now sends the existing carrier reservation ACK only
+after its durable two-read record is committed. The same guarded accounting
+actor checks the boundary; ACK refusal, loss or hold retains the charge and
+prevents witness/retry. The operator RPC must verify the SAME record read-only;
+no second charge, actor, driver, controller or witness was added. Runtime still
+requires the operator-qualified read-only provider and private admission.
+
 ## 2026-10-27 — Approved isolated acceptance accounting
 
 Approval2663/route2070 permits one isolated acceptance tranche while old two
