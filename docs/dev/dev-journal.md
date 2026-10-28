@@ -56316,3 +56316,16 @@ Actual original accounting/provider/bootstrap bindings remain absent; source
 ownership is not a live participant. Browser5354 and original shared limits stay
 unchanged. Focused evidence distinguishes Node-peer checks from prior Python-only
 checks and full live-provider acceptance.
+
+
+## 2026-10-27 — Attach the same accounted frontend over private MCP streams
+
+Chief's exact 9b63 attachment qualification identified an HTTP-only host despite
+an existing private MCP consumer. Added one compiled stdio entrypoint sharing
+the same accounting integration, runtime, finite facade and four existing tools.
+A required operator peer/route/request/lifetime assertion runs before/after
+attachment and tool calls; loss holds the original without release or replay.
+The HTTP composition and its JWT/scopes remain unchanged. Public SDK stream tests
+exercise complete Unicode reply roundtrip, denied/wrong authority, channel loss
+during acquisition, framing poison and one-accounting-instance forwarding.
+Actual platform channel selection and autonomous browser acceptance remain open.

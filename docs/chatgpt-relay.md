@@ -947,3 +947,41 @@ retained earlier unexplained original-accounting refusal remains historical
 unresolved evidence; this result does not erase it. Independent bounded Standards
 and SourceSpec review passed. Actual private inputs, browser admission, frontend
 transport and automatic Pro/prompt/reply acceptance remain unverified.
+
+
+## Private MCP attachment to the accounted native host (source only)
+
+`startOriginalAccountedNativeFrontendStdioHost` in `src/mcp/http/nativeHost.ts`
+is the private-transport alternative to the existing HTTP host. Select ONE host.
+It creates the same original-accounting integration once, acquires one runtime,
+and binds that runtime's finite frontend once. It exposes only the existing
+`frontend_inspect`, `frontend_configure`, `frontend_send`, and `frontend_status`
+tools through the SDK's stdio transport; it never launches a client or dispatches.
+The local two-read commit and operator's read-only acknowledgment remain unchanged.
+
+The compiled operator supplies the existing `input`, `transport`, `accounting`,
+and exact `intent`, plus `channel: { input, output, routeId, assertCurrent }`.
+The streams must be explicit Node Readable/Writable instances. No process-stdio
+default, JSON authority flag, HTTP config, SSH command, or token is accepted by
+this entrypoint. `assertCurrent({ routeId, intent, stage, scope })` must verify
+the real peer, channel, selected route, exact request binding and home-process
+lifetime. Its stages are `attach`, `before`, and `after`; scope is null during
+attachment or the existing `frontend:read`, `frontend:configure`, `frontend:send`.
+This callback is a required trusted platform implementation, not authentication
+provided by streams or by possession of an opaque route label.
+
+Authority is checked before acquisition, after binding, after MCP attachment and
+before/after each tool. EOF, stream/framing errors, wrong route, or failed checks
+latch a hold on the original runtime. Disconnect does not release the browser,
+undo an in-flight effect, cancel an in-flight acquisition, reconnect or replay.
+A runtime acquired during disconnect is retained and held before startup returns
+a failure. The operator must reconcile that original attempt. Tool results are
+returned complete through the unchanged MCP adapter; uncertain after-checks do
+not publish a successful result.
+
+Bastion retains the canonical store and P447 claim/send/recovery. Its existing
+`createMcpFrontend` consumes the corresponding operator-owned connected SDK client.
+The platform must still qualify and supply the private authenticated transport,
+peer/lifetime checker, actual owner/fingerprint and retained continuation. This
+source change neither selects that transport nor starts it, broadens HTTP/OAuth
+authority, proves browser Pro, or consumes the approved isolated Send.

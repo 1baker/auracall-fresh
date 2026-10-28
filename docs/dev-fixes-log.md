@@ -26321,3 +26321,14 @@ Source compatibility still does not install a carrier or authorize browser input
 - Real synthetic Node/Python IPC exposed an operator mismatch: the frozen parser
   omits Aura's mandatory dispatch descriptor. Preserve the descriptor and refusal;
   repair belongs to the existing Python owner, not a client-side downgrade.
+
+
+## 2026-10-27 — Accounted host could not expose its retained facade to a private MCP peer
+
+The only host entrypoint required a new authenticated HTTP binding. Expose the
+SAME accounted runtime and finite facade through explicit private streams using
+the existing frontend tool registration. Require actual operator channel checks
+before acquisition and around tools; preserve sticky uncertainty and the original
+runtime on disconnect. Do not create another sender, browser acquisition, store,
+issuer or unauthenticated generic-server fallback. HTTP regressions and private
+SDK stream roundtrip/refusal checks pass; real private transport is operator-owned.
