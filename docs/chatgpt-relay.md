@@ -949,6 +949,24 @@ and SourceSpec review passed. Actual private inputs, browser admission, frontend
 transport and automatic Pro/prompt/reply acceptance remain unverified.
 
 
+## Accounted observation through the retained peer (source only)
+
+The compiled `createOriginalAccountedNativeCallbackIntegration` factory accepts
+an explicit `observe: "same-peer"` selection or the existing supplied witness
+function. Missing or other selections refuse before peer or accounting setup.
+This is a compiled caller option, not native JSON startup or an authority grant.
+
+With `"same-peer"`, the factory forwards observation through its own existing
+peer's `supplier.observe`, inside `heldAccounting.observe`. The local actor
+still commits two reads before the carrier's read-only reservation ACK, then
+marks dispatch before the witness. Full observation results pass unchanged to
+the existing validator. Failure, lost ACK or a held connection keeps the charge
+and stops reuse; no fallback, second peer or remote reservation is introduced.
+
+The operator must still bind the same carrier's read-only reservation verifier
+and sole witness, real accounting/identity and private transport. Selecting this
+option does not establish a running browser connection or Pro/reply acceptance.
+
 ## Private MCP attachment to the accounted native host (source only)
 
 `startOriginalAccountedNativeFrontendStdioHost` in `src/mcp/http/nativeHost.ts`

@@ -3,6 +3,7 @@ import { createNativeOperatorIntegration, type NativeOperatorOptions } from "./n
 import { bindNativeOperatorIntegration, type NativeRuntimeInput } from "./nativeRuntime.js";
 import { openOriginalAccounting } from "./originalAccounting.js";
 import type { OriginalAccountingSelection } from "./originalAccountingHistory.js";
+import { FrontendError } from "./types.js";
 
 /** Exact existing70 host dependencies, using ONE persistent Python peer.
  * Still requires the real private receiver, original accounting suppliers,
@@ -69,10 +70,19 @@ export async function createOriginalAccountedNativeCallbackIntegration(
 	transport: NativeCallbackPeerOptions,
 	options: Pick<NativeOperatorOptions, "ownerAuthority" | "producerTaskId"> & {
 		selection: OriginalAccountingSelection;
-		observe: NativeOperatorOptions["supplier"]["observe"];
+		/** Explicit compiled binding, never a default or JSON authority. */
+		observe: NativeOperatorOptions["supplier"]["observe"] | "same-peer";
 	},
 ) {
+	const selectedObserve = options?.observe;
+	if (selectedObserve !== "same-peer" && typeof selectedObserve !== "function")
+		throw new FrontendError(
+			"native_observation_binding_invalid",
+			"Select the existing private witness binding explicitly before accounting setup.",
+		);
 	const peer = createNativeCallbackPeer(transport);
+	const witness =
+		selectedObserve === "same-peer" ? peer.supplier.observe.bind(peer.supplier) : selectedObserve;
 	let accounting: Awaited<ReturnType<typeof openOriginalAccounting>> | undefined;
 	try {
 		accounting = await openOriginalAccounting(options.selection, {
@@ -98,7 +108,7 @@ export async function createOriginalAccountedNativeCallbackIntegration(
 					);
 				},
 				originalUsage: accounting.originalUsage,
-				observe: (context, nonce) => heldAccounting.observe(context, nonce, options.observe),
+				observe: (context, nonce) => heldAccounting.observe(context, nonce, witness),
 				assertCurrent: peer.assertNativeCurrent,
 			},
 		});

@@ -1,3 +1,13 @@
+## 2026-10-28 — Bind the private witness inside its owning factory
+
+- The accounted factory owns the peer; an external callback cannot access that
+  same peer. Use an explicit compiled selection inside the factory, not another
+  peer, copied factory or exposed raw transport.
+- Keep `heldAccounting.observe` around the selected witness. Local durable
+  reservation, read-only carrier ACK, dispatch marker and AFTER checks remain.
+- Reject missing/unknown selections before setup. Do not silently fall back or
+  treat a source option as private authority, runtime activation or live proof.
+
 ## 2026-10-27 — A local charge also needs its carrier acknowledgment
 
 - The carrier observation gate tracks acknowledgment separately from the local

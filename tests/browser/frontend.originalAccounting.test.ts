@@ -7,11 +7,13 @@ import { PassThrough } from "node:stream";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createOriginalAccountedNativeCallbackIntegration } from "../../src/browser/frontends/nativeCallbackIntegration.js";
+import * as peerModule from "../../src/browser/frontends/nativeCallbackPeer.js";
 import {
 	nativeBudgetDigest,
 	qualifyNativeReadBudget,
 } from "../../src/browser/frontends/nativeReadBudget.js";
 import * as runtimeModule from "../../src/browser/frontends/nativeRuntime.js";
+import * as accountingModule from "../../src/browser/frontends/originalAccounting.js";
 import { openOriginalAccounting } from "../../src/browser/frontends/originalAccounting.js";
 import {
 	type OriginalAccountingSelection,
@@ -222,7 +224,158 @@ async function fixture(reads = 1, unknown = false, isolated = false) {
 	};
 }
 
+it.each([
+	undefined,
+	null,
+	"remote",
+	{ kind: "same-peer" },
+])("rejects invalid observation selection before peer/accounting setup: %j", async (observe) => {
+	const input = new PassThrough(),
+		output = new PassThrough();
+	const peer = vi.spyOn(peerModule, "createNativeCallbackPeer");
+	const accounting = vi.spyOn(accountingModule, "openOriginalAccounting");
+	try {
+		await expect(
+			createOriginalAccountedNativeCallbackIntegration(
+				{ kind: "auracall-own-sdk-runtime-input" },
+				{
+					input,
+					output,
+					context: {
+						receiptDigest: "1".repeat(64),
+						producerSha256: "2".repeat(64),
+						expiresAtMs: Date.now() + 90000,
+					},
+					target: {
+						profileId: "synthetic",
+						browserId: "synthetic",
+						tabId: "synthetic",
+						targetId: "synthetic",
+					},
+					timeoutMs: 250,
+				},
+				{
+					selection: {} as never,
+					observe: observe as never,
+					ownerAuthority: {},
+					producerTaskId: "synthetic-producer",
+				},
+			),
+		).rejects.toMatchObject({ code: "native_observation_binding_invalid" });
+		expect(peer).not.toHaveBeenCalled();
+		expect(accounting).not.toHaveBeenCalled();
+	} finally {
+		input.end();
+		output.end();
+	}
+});
+
 describe.skipIf(!rootSource)("original accounting with actual synthetic POSIX guard locks", () => {
+	it.each([
+		"accepted",
+		"witness-refused",
+		"witness-lost",
+		"held-after-witness",
+	])("explicit same-peer observation keeps local accounting and one attempt: %s", async (mode) => {
+		const f = await fixture(0, false, true);
+		const input = new PassThrough(),
+			output = new PassThrough();
+		const peerFactory = vi.spyOn(peerModule, "createNativeCallbackPeer");
+		const recordPath = join(f.root, ".auracall-original-observer-reservation.json");
+		const wire = {
+			publicResult: { success: true, data: { ownerObservation: "completed" } },
+			privateResult: { testOnly: "opaque synthetic full-wire result λ" },
+		};
+		const nonce = "a".repeat(64),
+			order: string[] = [];
+		let committed = "",
+			observed = 0;
+		let carrierError: unknown;
+		const reply = (id: number, ok: boolean, result: unknown = null) =>
+			output.write(
+				`${JSON.stringify({ protocol: "p266.original-callback-carrier.v3", type: "return", id, ok, ...(ok ? { result } : { error: "fixture_refusal" }) })}\n`,
+			);
+		input.on("data", (raw) => {
+			const frame = JSON.parse(raw.toString());
+			if (frame.method === "binding.hold") return;
+			void (async () => {
+				await f.command("check");
+				if (frame.method === "supplier.reserve_observation_reads") {
+					committed = await readFile(recordPath, "utf8");
+					expect(JSON.parse(committed).reads).toBe(2);
+					order.push("readonly-ACK");
+					reply(frame.id, true);
+					return;
+				}
+				if (frame.method === "supplier.observe") {
+					observed++;
+					order.push("observe");
+					expect(order).toEqual(["readonly-ACK", "observe"]);
+					expect(frame.args).toEqual([f.context, nonce]);
+					expect(await readFile(recordPath, "utf8")).toBe(committed);
+					expect(
+						JSON.parse(
+							await readFile(join(f.root, ".auracall-original-observer-dispatched.json"), "utf8"),
+						),
+					).toMatchObject({ nonce });
+					if (mode === "witness-lost") return;
+					reply(frame.id, mode !== "witness-refused", wire);
+					if (mode === "held-after-witness") output.emit("error", new Error("synthetic peer hold"));
+					return;
+				}
+				reply(frame.id, true);
+			})().catch((error) => {
+				carrierError = error;
+				reply(frame.id, false);
+			});
+		});
+		const complete = new Error("synthetic binding boundary complete");
+		vi.spyOn(runtimeModule, "bindNativeOperatorIntegration").mockImplementation(
+			async (_input, options) => {
+				await options.supplier.reserveObservationReads(f.context, 2);
+				if (mode === "accepted")
+					await expect(options.supplier.observe(f.context, nonce)).resolves.toEqual(wire);
+				else await expect(options.supplier.observe(f.context, nonce)).rejects.toBeDefined();
+				await expect(options.supplier.observe(f.context, nonce)).rejects.toBeDefined();
+				expect(observed).toBe(1);
+				expect(carrierError).toBeUndefined();
+				expect(peerFactory).toHaveBeenCalledOnce();
+				expect(await readFile(recordPath, "utf8")).toBe(committed);
+				expect(
+					(await readdir(f.root)).filter((n) => n.includes("observer-reservation")),
+				).toHaveLength(1);
+				throw complete;
+			},
+		);
+		try {
+			await expect(
+				createOriginalAccountedNativeCallbackIntegration(
+					{ kind: "auracall-own-sdk-runtime-input" },
+					{
+						input,
+						output,
+						context: f.context,
+						target: {
+							profileId: "synthetic",
+							browserId: "synthetic",
+							tabId: "synthetic",
+							targetId: "synthetic",
+						},
+						timeoutMs: 250,
+					},
+					{
+						selection: f.selection,
+						observe: "same-peer",
+						ownerAuthority: {},
+						producerTaskId: "synthetic-producer",
+					},
+				),
+			).rejects.toBe(complete);
+		} finally {
+			input.end();
+			output.end();
+		}
+	});
 	it.each([
 		"accepted",
 		"refused",

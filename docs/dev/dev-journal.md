@@ -1,3 +1,15 @@
+## 2026-10-28 — Forward accounted observation through the same peer
+
+Added the explicit compiled `observe: "same-peer"` option inside the existing
+accounted factory. Invalid selections refuse before setup; the selected witness
+still runs inside local accounting, after its durable two-read record and the
+same carrier's read-only ACK. The existing full-wire validator and one-attempt
+hold behavior are unchanged. No peer, factory, controller or sender is copied.
+Eight focused cases went RED to GREEN, including refusal/loss/AFTER-hold and
+one unchanged reservation. The first GREEN attempt exposed a fixture filename
+error, now corrected without changing production accounting. Runtime binding
+and autonomous Pro/full-reply acceptance remain operator-gated and unverified.
+
 ## 2026-10-27 — Acknowledge the local observer reservation
 
 The local-accounted host now sends the existing carrier reservation ACK only
