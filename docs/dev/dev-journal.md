@@ -1,3 +1,18 @@
+## 2026-10-28 — ACCOUNTING-MAP-01 v4 phase source
+
+Implemented the source target selected by Chief2981fa40: explicit initial v4
+peer, one preproducer accounting actor, immutable producer carry, actual receiver
+native link, and one-use retained stdio-host composition. V3 defaults and the
+selected0135 runtime remain. Full source-qualified plan selection and the real
+matching parent/participant/worker/channel still block activation. Public source
+checks exercise holds, unknown trace, original costs and actual opaque receiver;
+they do not establish browser/Pro/reply acceptance. The affected runs passed194
+checks across six files with the old public v3 pair skipped. The final Promise
+signature/isolation delta passed9 phase cases (one newly added isolation case;
+195 distinct cases across the recorded runs). Typecheck, TypeScript emission,
+compiled export load and scoped lint pass. No matching public v4 Python pair or
+independent reviewer is claimed. No runtime or model effect.
+
 ## 2026-10-28 — Forward accounted observation through the same peer
 
 Added the explicit compiled `observe: "same-peer"` option inside the existing

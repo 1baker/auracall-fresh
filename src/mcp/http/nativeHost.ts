@@ -4,7 +4,11 @@ import { Readable, Writable } from "node:stream";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import type { FrontendTools } from "../../browser/frontends/config.js";
-import { createOriginalAccountedNativeCallbackIntegration } from "../../browser/frontends/nativeCallbackIntegration.js";
+import {
+	createOriginalAccountedNativeCallbackIntegration,
+	takeRetainedNativeAccountingIntegration,
+	type RetainedNativeAccountingIntegration,
+} from "../../browser/frontends/nativeCallbackIntegration.js";
 import {
 	type NativeFiniteAuthority,
 	type NativeSendIntent,
@@ -102,6 +106,21 @@ export async function startOriginalAccountedNativeFrontendStdioHost(
 		channel: options.channel,
 		intent: options.intent,
 		...integration,
+	});
+}
+
+/** Consume the SAME phase factory's opaque result once. No accounting factory
+ * reentry, protocol switch or second sender/runtime during producer promotion. */
+export async function startRetainedNativeFrontendStdioHost(
+	options: Omit<OwnNativeFrontendStdioOptions, "input" | "dependencies" | "authority"> & {
+		integration: RetainedNativeAccountingIntegration;
+	},
+) {
+	const retained = takeRetainedNativeAccountingIntegration(options.integration);
+	return startOwnNativeFrontendStdioHost({
+		channel: options.channel,
+		intent: options.intent,
+		...retained,
 	});
 }
 

@@ -140,3 +140,47 @@ compilation, full typecheck and scoped lint PASS. Independent native Standards
 and bounded source Spec PASS; full goal remains PARTIAL. The post-freeze unused
 Vitest import removal is mechanical and covered by final validation. No Browser
 tests rerun or actual connection/Send/Windows/provider/install/LIVE effects.
+
+## ACCOUNTING-MAP-01 explicit v4 source continuation
+
+Chief decision2981fa40 selects b9e5/a0f5 as the source implementation target.
+The separate ControlLane alternative fdb218 is retained history. Neither decision
+changes the selected 0135/v3 runtime, producer pin or browser custody.
+
+The opt-in `createPreproducerAccountedNativeCallbackIntegration` starts one v4
+peer with no native context or target. `prepare` obtains the actual parent's
+whole-plan reservation, then opens one run-bound local accounting actor before
+the producer callback. The parent must supply real participant/writer authority;
+the peer's empty opaque capability is correlation only. One parser, sequence,
+root and actor continue into native use. Existing v3 construction stays default.
+
+The actor checks exact private record bytes and source-selected full plan,
+complete r4 starts/dispositions, identities and mapped charges. A compiled
+`ProducerPolicySelection` must pin the entire qualified plan; there is no JSON
+startup option or default plan. Consumer acquisition remains separate from the
+once-bound producer lifecycle. Producer reads/controls enter the same totals as
+LOCAL2 and later native work. Unknown producer completion holds its complete
+reservation and cannot advance or retry.
+
+Native linkage consumes its slot before awaiting the existing opaque receiver.
+The matcher checks actual private bytes, owner/producer task and original result
+tuple. It derives the native receipt from inputHash:bindingHash, not producer
+operation/owner-process/plan digests. Create-only phase/carry/link records retain
+both immutable run context and later native context. The native link is record2
+of the Aura-owned local phase chain and refers to record1's exact byte hash; this
+is not a fabricated sequence in the operator or Browser journal. Native identity
+is published only after durable link, parent AFTER ACK and a local hold fence.
+
+`startRetainedNativeFrontendStdioHost` consumes that same opaque integration once
+and calls the existing host without reopening accounting. Same-peer observation,
+LOCAL2 then readonly ACK, full-v2 validation, acquired-task/finite protection and
+canonical Bastion sender remain. Record references are relative to the selected
+accounting directory; production preparation must select real accepted input
+and binding records in that root, rather than introduce path aliases/copies.
+
+Source checks are provider-free. A matching parent v4 implementation, complete
+qualified transitive cost plan, real private participant and worker/channel
+admission remain required. The exact five pinned fresh initialization sites are
+producer administration per2981; no blanket CDP/readiness exemption is inferred.
+No live protocol switch, SDK/Open, browser effect, reservation, claim or Send is
+part of this source slice. The autonomous Pro roundtrip remains unverified.

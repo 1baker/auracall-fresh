@@ -951,6 +951,32 @@ transport and automatic Pro/prompt/reply acceptance remain unverified.
 
 ## Accounted observation through the retained peer (source only)
 
+An additional compiled candidate,
+`createPreproducerAccountedNativeCallbackIntegration`, implements the selected
+ACCOUNTING-MAP-01 v4 phase path. It begins one peer without native identity and
+retains one local actor across producer reservation/completion and verified
+native linkage. The current v3 factory and installed runtime are unchanged.
+
+The private caller must select an exact qualified whole-plan digest and source
+evidence. Source parsing, a JSON plan, an ACK or the opaque capability alone
+does not qualify authority. Unknown original producer work keeps its whole
+reservation. Producer lifecycle is separate from consumer acquisition; its
+page/control costs share the existing allowance with LOCAL2 and Pro work.
+
+Native linkage uses the existing recognized input and actual private bytes.
+Its receipt keeps the inputHash:bindingHash derivation. Actual producer and
+consumer tasks remain separate; native context is installed once after durable
+link and parent AFTER checks. Private record references are rooted in the selected
+original accounting directory. Own records are bounded to1MiB; native IPC remains
+16KiB per frame/32KiB per delivered batch. No large carry or capability crosses it.
+
+`startRetainedNativeFrontendStdioHost` consumes the same opaque integration once,
+then uses the existing host/runtime/finite frontend. It does not reenter the old
+accounting factory, connect a second peer or dispatch a model prompt. Matching
+parent v4 source, real participant/writer bindings, complete cost qualification
+and runtime admission remain required. This candidate is not an automatic Pro
+roundtrip acceptance or a runtime configuration recipe.
+
 The compiled `createOriginalAccountedNativeCallbackIntegration` factory accepts
 an explicit `observe: "same-peer"` selection or the existing supplied witness
 function. Missing or other selections refuse before peer or accounting setup.

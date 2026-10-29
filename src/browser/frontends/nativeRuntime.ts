@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { constants } from "node:fs";
 import { lstat, mkdir, open, readFile, realpath } from "node:fs/promises";
 import { dirname, isAbsolute, join, resolve, sep } from "node:path";
+import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import { prepareRelayProOnly } from "../../mcp/relay/proPreparation.js";
 import { RelayStore, relayId } from "../../mcp/relay/store.js";
@@ -33,6 +34,7 @@ import {
 	revalidateNativeReadBudget,
 } from "./nativeReadBudget.js";
 import { FrontendError, type NativeTaskBinding, type NativeTaskFrontendRoute } from "./types.js";
+import type { ProducerBinding, ProducerNativeResult } from "./nativeProducerPhaseRecords.js";
 
 /** Trusted source policy, never an authority or pin supplied by the private JSON. */
 export interface NativeProducerPin {
@@ -139,24 +141,39 @@ function posix() {
 	if (process.platform === "win32" || !process.getuid)
 		refuse("native_runtime_private_posix_required");
 }
-async function privateDirectory(path: string) {
+async function privateDirectory(path: string, fence: () => void = () => {}) {
 	const s = await lstat(path);
+	fence();
+	const real = await realpath(path);
+	fence();
 	if (
 		!s.isDirectory() ||
 		s.isSymbolicLink() ||
 		s.uid !== process.getuid?.() ||
 		s.mode & 0o077 ||
-		(await realpath(path)) !== path
+		real !== path
 	)
 		refuse("native_runtime_private_input_invalid");
 }
-async function file(path: string, privateInput: boolean, executable = false): Promise<Buffer> {
-	if (!absolute.safeParse(path).success || (await realpath(path)) !== path)
+async function file(
+	path: string,
+	privateInput: boolean,
+	executable = false,
+	fence: () => void = () => {},
+): Promise<Buffer> {
+	const real = await realpath(path);
+	fence();
+	if (!absolute.safeParse(path).success || real !== path)
 		refuse("native_runtime_private_input_invalid");
-	if (privateInput) await privateDirectory(dirname(path));
+	if (privateInput) {
+		await privateDirectory(dirname(path), fence);
+		fence();
+	}
 	const fd = await open(path, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
+	fence();
 	try {
 		const before = await fd.stat();
+		fence();
 		if (
 			!before.isFile() ||
 			before.uid !== process.getuid?.() ||
@@ -166,7 +183,9 @@ async function file(path: string, privateInput: boolean, executable = false): Pr
 		)
 			refuse("native_runtime_private_input_invalid");
 		const bytes = await fd.readFile();
+		fence();
 		const after = await fd.stat();
+		fence();
 		if (
 			after.size !== before.size ||
 			after.mtimeMs !== before.mtimeMs ||
@@ -177,19 +196,24 @@ async function file(path: string, privateInput: boolean, executable = false): Pr
 		return bytes;
 	} finally {
 		await fd.close();
+		fence();
 	}
 }
-async function verifyProducer(options: ReceivedInput["options"], pin: NativeProducerPin) {
+async function verifyProducer(
+	options: ReceivedInput["options"],
+	pin: NativeProducerPin,
+	fence: () => void = () => {},
+) {
 	if (
-		digest(await file(options.producerExecutable, false, true)) !== pin.binarySha256 ||
-		digest(await file(options.producerManifest, false)) !== pin.manifestSha256
+		digest(await file(options.producerExecutable, false, true, fence)) !== pin.binarySha256 ||
+		digest(await file(options.producerManifest, false, false, fence)) !== pin.manifestSha256
 	)
 		refuse("native_runtime_producer_pin_mismatch");
 }
-async function verifyReceived(data: ReceivedInput) {
+async function verifyReceived(data: ReceivedInput, fence: () => void = () => {}) {
 	if (
-		digest(await file(data.path, true)) !== data.inputHash ||
-		digest(await file(data.bindingOut, true)) !== data.bindingHash
+		digest(await file(data.path, true, false, fence)) !== data.inputHash ||
+		digest(await file(data.bindingOut, true, false, fence)) !== data.bindingHash
 	)
 		refuse("native_runtime_input_changed");
 	for (const path of [
@@ -197,10 +221,102 @@ async function verifyReceived(data: ReceivedInput) {
 		data.options.producerSocketDirectory,
 		data.options.consumerLedgerDirectory,
 		data.options.preparationDirectory,
-	])
-		await privateDirectory(path);
-	await verifyProducer(data.options, data.pin);
+	]) {
+		await privateDirectory(path, fence);
+		fence();
+	}
+	await verifyProducer(data.options, data.pin, fence);
+	fence();
 	if (data.grant.expiresAtMs <= data.now()) refuse("native_runtime_admission_expired");
+}
+
+interface ProducerNativeMatch {
+	readonly inputPath: string;
+	readonly bindingPath: string;
+	readonly inputHash: string;
+	readonly bindingHash: string;
+	readonly context: Readonly<Omit<NativeRuntimeLifetimeContext, "nativeTask">>;
+	readonly target: Pick<NativeTaskBinding, "profileId" | "browserId" | "tabId" | "targetId">;
+	readonly producerTaskId: string;
+	readonly runtimeSource: { readonly path: string; readonly sha256: string };
+}
+export interface MatchedProducerNativeInput {
+	readonly kind: "matched-original-producer-native-input";
+}
+const producerMatches = new WeakMap<MatchedProducerNativeInput, ProducerNativeMatch>();
+/** Private owned actor boundary, not a JSON decoder or caller verifier. */
+export function producerNativeMatch(token: MatchedProducerNativeInput): ProducerNativeMatch {
+	const value = producerMatches.get(token);
+	if (!value) return refuse("native_runtime_private_input_invalid");
+	return value;
+}
+/** Reuse the EXISTING opaque receiver and actual accepted bytes. Browser owner
+ * and published native process digests remain distinct, independently joined by
+ * the real parent authority; neither is substituted for the receipt digest. */
+export async function matchOriginalProducerNativeInput(
+	input: NativeRuntimeInput,
+	binding: ProducerBinding,
+	completed: ProducerNativeResult,
+	producerTaskId: string,
+	ownerAuthority: unknown,
+	fence: () => void,
+): Promise<MatchedProducerNativeInput> {
+	const data = inputs.get(input);
+	if (!data) return refuse("native_runtime_private_input_invalid");
+	fence();
+	await verifyReceived(data, fence);
+	fence();
+	const owner = nativeRegisteredAuthoritySchema.parse(ownerAuthority),
+		actual = completed.result,
+		p = data.grant.producer;
+	if (
+		completed.state !== "completed" ||
+		!actual ||
+		completed.operationId !== binding.producerOperationId ||
+		completed.intentDigest !== binding.producerIntentDigest ||
+		completed.ownerTransportSession !== binding.ownerTransportSession ||
+		p.ownerTransportSession !== binding.ownerTransportSession ||
+		actual.taskId !== producerTaskId ||
+		owner.profileId !== p.profileId ||
+		owner.principalId === data.grant.caller.principalId ||
+		owner.capabilityId === data.grant.caller.capabilityId ||
+		binding.expectedOwner.binarySha256 !== data.pin.binarySha256 ||
+		binding.expiresAtMs <= data.now() ||
+		new URL(actual.url).origin !== p.origin
+	)
+		return refuse("native_runtime_producer_link_mismatch");
+	for (const key of ["profileId", "browserId", "tabId", "targetId"] as const)
+		if (actual[key] !== p[key]) return refuse("native_runtime_producer_link_mismatch");
+	const sourcePath = fileURLToPath(import.meta.url),
+		sourceBytes = await file(sourcePath, false, false, fence);
+	fence();
+	const token: MatchedProducerNativeInput = Object.freeze({
+		kind: "matched-original-producer-native-input",
+	});
+	producerMatches.set(
+		token,
+		Object.freeze({
+			inputPath: data.path,
+			bindingPath: data.bindingOut,
+			inputHash: data.inputHash,
+			bindingHash: data.bindingHash,
+			context: Object.freeze({
+				receiptDigest: digest(`${data.inputHash}:${data.bindingHash}`),
+				producerSha256: data.pin.binarySha256,
+				expiresAtMs: data.grant.expiresAtMs,
+			}),
+			target: Object.freeze({
+				profileId: p.profileId,
+				browserId: p.browserId,
+				tabId: p.tabId,
+				targetId: p.targetId,
+			}),
+			producerTaskId,
+			runtimeSource: Object.freeze({ path: sourcePath, sha256: digest(sourceBytes) }),
+		}),
+	);
+	fence();
+	return token;
 }
 
 /** Local receiving format, NOT a native mode in the existing frontend JSON factory.
@@ -366,19 +482,24 @@ export async function bindNativeOperatorIntegration(
 		import("./nativeOperator.js").NativeOperatorOptions,
 		"guard" | "supplier" | "dispatchJoin" | "writer" | "ownerAuthority" | "producerTaskId"
 	>,
+	fence: () => void = () => {},
 ) {
 	const data = inputs.get(input);
 	if (!data) return refuse("native_runtime_private_input_invalid");
 	try {
-		await verifyReceived(data);
+		await verifyReceived(data, fence);
+		fence();
 		const { createNativeOperatorIntegration } = await import("./nativeOperator.js");
-		return createNativeOperatorIntegration({
+		fence();
+		const integration = createNativeOperatorIntegration({
 			...operator,
 			grant: data.grant,
 			producerSha256: data.pin.binarySha256,
 			receiptDigest: digest(`${data.inputHash}:${data.bindingHash}`),
 			now: data.now,
 		});
+		fence();
+		return integration;
 	} catch (error) {
 		throw publicError(error);
 	}

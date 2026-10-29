@@ -1,3 +1,16 @@
+## 2026-10-28 — Retain one actor while producer context becomes native context
+
+- An initial producer has no native receipt or target. Select v4 explicitly at
+  connection creation; keep the existing v3 constructor closed and unchanged.
+- Retain the same actor/FD/reservation through producer and real native linkage.
+  Never open a second receipt-bound actor after producer completion.
+- Keep whole original reservation on unknown work or lost ACK. Source plan
+  selection is explicit; five initialized CDP sites do not qualify all setup.
+- Snapshot staged native metadata before ACK. Derive native receipt from actual
+  receiver bytes; do not substitute producer-operation or owner-process hashes.
+- A retained host token is consumable once; it carries the same integration,
+  not a factory callback that could open another peer/accounting actor.
+
 ## 2026-10-28 — Bind the private witness inside its owning factory
 
 - The accounted factory owns the peer; an external callback cannot access that

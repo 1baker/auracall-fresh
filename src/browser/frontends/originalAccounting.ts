@@ -9,6 +9,10 @@ import {
 } from "./nativeReadBudget.js";
 import type { NativeRuntimeLifetimeContext } from "./nativeRuntime.js";
 import {
+	openProducerPhaseAccounting,
+	type OriginalProducerPhaseBindings,
+} from "./nativeProducerAccounting.js";
+import {
 	accountingRefusal,
 	type OriginalAccountingSelection,
 	originalSha,
@@ -29,6 +33,9 @@ export interface OriginalAccountingBindings {
 	hold(): void;
 	now?: () => number;
 }
+export interface PreproducerAccountingBindings extends Omit<OriginalAccountingBindings, "context"> {
+	preproducer: OriginalProducerPhaseBindings;
+}
 
 /** Select the pre-existing ORIGINAL lineage and real live guard. Never creates
  * an authority/coverage document, native ledger, process, lock or capacity. The
@@ -36,12 +43,16 @@ export interface OriginalAccountingBindings {
  * Source-only construction must not be invoked on private state before admission. */
 export async function openOriginalAccounting(
 	selection: OriginalAccountingSelection,
-	bindings: OriginalAccountingBindings,
+	bindings: OriginalAccountingBindings | PreproducerAccountingBindings,
 ) {
-	const selected = structuredClone(selection),
-		base = Object.freeze({ ...bindings.context });
-	if (Object.keys(base).sort().join(",") !== "expiresAtMs,producerSha256,receiptDigest")
+	const selected = structuredClone(selection);
+	const preproducer = "preproducer" in bindings ? bindings.preproducer : undefined;
+	let base: Readonly<Base> | undefined =
+		"context" in bindings ? Object.freeze({ ...bindings.context }) : undefined;
+	if (base && Object.keys(base).sort().join(",") !== "expiresAtMs,producerSha256,receiptDigest")
 		accountingRefusal();
+	const originalContext = preproducer ? structuredClone(preproducer.binding) : base;
+	if (!originalContext) accountingRefusal();
 	const guard = bindings.guard.assert_current.bind(bindings.guard),
 		protect = bindings.writer.protect.bind(bindings.writer),
 		assertWriter = bindings.writer.assertCurrent.bind(bindings.writer),
@@ -56,21 +67,37 @@ export async function openOriginalAccounting(
 	let dispatchRecord: object | undefined, returnRecord: object | undefined;
 	const paths = new Set([selected.directory.path, selected.targetLedger.path]);
 	if (paths.size !== 2) accountingRefusal();
-	const contextDigest = nativeBudgetDigest(base);
+	const contextDigest = () => nativeBudgetDigest(requireBase());
+	let producer: Awaited<ReturnType<typeof openProducerPhaseAccounting>> | undefined;
+	let nativeCommitted = false;
 	let baseline: Awaited<ReturnType<typeof readOriginalHistory>>;
 	let targetSnapshot: string | undefined;
 	function current() {
+		preproducer?.current();
 		const time = now();
-		if (held || !Number.isSafeInteger(time) || time < lastNow || time >= base.expiresAtMs)
+		if (
+			held ||
+			!Number.isSafeInteger(time) ||
+			time < lastNow ||
+			time >=
+				(base?.expiresAtMs ??
+					(preproducer?.nativeLinkPending()
+						? Number.MAX_SAFE_INTEGER
+						: (preproducer?.binding.expiresAtMs ?? 0)))
+		)
 			accountingRefusal();
 		lastNow = time;
 	}
 	function hold(): never {
-		held = true;
-		notify();
+		poison();
 		return accountingRefusal();
 	}
+	function poison() {
+		held = true;
+		notify();
+	}
 	function original(context: NativeRuntimeLifetimeContext) {
+		const base = requireBase();
 		if (
 			context.receiptDigest !== base.receiptDigest ||
 			context.producerSha256 !== base.producerSha256 ||
@@ -78,18 +105,29 @@ export async function openOriginalAccounting(
 		)
 			hold();
 	}
+	function requireBase(): Readonly<Base> {
+		current();
+		if (!base) return hold();
+		return base;
+	}
 	async function check() {
 		current();
-		await guard(base);
+		if (preproducer) await preproducer.assertCurrent();
+		else await guard(requireBase());
 		current();
-		await verifyOriginalGuard(selected, base);
+		if (preproducer && nativeCommitted) {
+			await guard(requireBase());
+			current();
+		}
+		await verifyOriginalGuard(selected, originalContext);
 		current();
 		if (root) {
 			const s = await root.stat();
 			current();
 			if (s.dev !== selected.directory.dev || s.ino !== selected.directory.ino) hold();
 		}
-		await guard(base);
+		if (preproducer) await preproducer.assertCurrent();
+		else await guard(requireBase());
 		current();
 	}
 	async function history() {
@@ -157,23 +195,26 @@ export async function openOriginalAccounting(
 		}
 		// Partial, failed or lost acknowledgment leaves the original file in place.
 	}
-	const record = Object.freeze({
-		schema: "auracall.original-observer-reservation.v1",
-		originalScopeDigest: selected.originalScopeDigest,
-		coverageDigest: selected.coverage.sha256,
-		contextDigest,
-		context: base,
-		reads: 2,
-		phase: "RESERVED",
-	});
+	const record = () =>
+		Object.freeze({
+			schema: "auracall.original-observer-reservation.v1",
+			originalScopeDigest: selected.originalScopeDigest,
+			coverageDigest: selected.coverage.sha256,
+			contextDigest: contextDigest(),
+			context: requireBase(),
+			reads: 2,
+			phase: "RESERVED",
+		});
 	async function reservation() {
 		if (
 			!reserved ||
-			nativeBudgetDigest(await readOwned(reservationName)) !== nativeBudgetDigest(record)
+			nativeBudgetDigest(await readOwned(reservationName)) !== nativeBudgetDigest(record())
 		)
 			hold();
 	}
 	async function durable() {
+		await producer?.durable();
+		current();
 		if (reserved) await reservation();
 		for (const [name, expected] of [
 			[dispatchName, dispatchRecord],
@@ -184,6 +225,8 @@ export async function openOriginalAccounting(
 		}
 	}
 	async function targetBeforeObservation(prior: typeof baseline) {
+		await producer?.durable();
+		current();
 		await check();
 		const target = await readNativeReservations(selected.targetLedger);
 		current();
@@ -195,7 +238,12 @@ export async function openOriginalAccounting(
 			hold();
 		const digest = nativeBudgetDigest(target.snapshot);
 		if (targetSnapshot !== undefined && targetSnapshot !== digest) hold();
-		const consumed = { ...prior.consumed, read: prior.consumed.read + 2 };
+		const producerCosts = producer?.consumed() ?? { read: 0, control: 0 };
+		const consumed = {
+			...prior.consumed,
+			read: prior.consumed.read + producerCosts.read + 2,
+			control: prior.consumed.control + producerCosts.control,
+		};
 		for (const row of target.rows) consumed[row.bucket]++;
 		if (
 			consumed.send !== 2 ||
@@ -206,11 +254,14 @@ export async function openOriginalAccounting(
 		)
 			hold();
 		await check();
+		await producer?.durable();
+		current();
 		return { consumed, digest };
 	}
 	try {
 		await check();
 		baseline = await history();
+		if (preproducer && !baseline.isolation) accountingRefusal("producer_isolated_history_required");
 		await verifyOriginalPath(selected.targetLedger, true);
 		current();
 		root = await open(
@@ -218,6 +269,16 @@ export async function openOriginalAccounting(
 			constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW,
 		);
 		await check();
+		if (preproducer) {
+			producer = await openProducerPhaseAccounting(selected, preproducer, {
+				check,
+				current,
+				writeOnce,
+				readOwned,
+				consumed: baseline.consumed,
+			});
+			current();
+		}
 	} catch {
 		if (root) await root.close();
 		return hold();
@@ -233,6 +294,8 @@ export async function openOriginalAccounting(
 			const result = await operation();
 			current();
 			await check();
+			await producer?.durable();
+			current();
 			return result;
 		} catch {
 			return hold();
@@ -254,6 +317,17 @@ export async function openOriginalAccounting(
 		},
 	};
 	return Object.freeze({
+		poison,
+		/** SAME actor, directory FD and baseline; never reopens a receipt-bound actor. */
+		producerPhase: producer,
+		commitNativeContext(context: Base) {
+			current();
+			if (!producer || base || nativeCommitted || !producer.linkedContextMatches(context))
+				return hold();
+			base = Object.freeze({ ...context });
+			nativeCommitted = true;
+			current();
+		},
 		writer: Object.freeze(protectedWriter),
 		guarded,
 		validateFiniteApproval(evidence: unknown) {
@@ -286,7 +360,7 @@ export async function openOriginalAccounting(
 				}
 				const target = await targetBeforeObservation(baseline);
 				targetSnapshot = target.digest;
-				await writeOnce(reservationName, record);
+				await writeOnce(reservationName, record());
 				reserved = true;
 				await reservation();
 			} catch {
@@ -307,18 +381,18 @@ export async function openOriginalAccounting(
 				witnessBusy = true;
 				dispatchRecord = Object.freeze({
 					schema: "auracall.original-observer-dispatch.v1",
-					contextDigest,
+					contextDigest: contextDigest(),
 					nonce,
-					reservationDigest: nativeBudgetDigest(record),
+					reservationDigest: nativeBudgetDigest(record()),
 				});
 				await writeOnce(dispatchName, dispatchRecord);
 				await check();
-				const result = await witness(base, nonce);
+				const result = await witness(requireBase(), nonce);
 				current();
 				await check();
 				returnRecord = Object.freeze({
 					schema: "auracall.original-observer-return.v1",
-					contextDigest,
+					contextDigest: contextDigest(),
 					nonce,
 					resultDigest: originalSha(JSON.stringify(result)),
 				});

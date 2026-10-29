@@ -1,0 +1,705 @@
+{
+  "schema": "agent-browser.producer-open.complete-synthetic-fixtures.v1",
+  "note": "SYNTHETIC ONLY. Expected typed source contract; no handles,authority,private values or runtime result. Replaces illustrative partial early r4 result as complete validator fixture; r4 frozen bytes retained.",
+  "wireRequest": {
+    "operation": {
+      "schemaVersion": "agent-browser.producer-open.v1",
+      "operationId": "11111111-1111-4111-8111-111111111111",
+      "mode": "execute",
+      "expectedOwner": {
+        "pid": 123,
+        "startToken": "synthetic-start",
+        "binarySha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "expiresAtMs": 200000
+    },
+    "intent": {
+      "profileMode": "disposable",
+      "taskKey": "synthetic-task",
+      "url": "https://chatgpt.com/",
+      "serviceName": "synthetic-service",
+      "agentName": "synthetic-agent",
+      "taskName": "Synthetic original producer"
+    }
+  },
+  "ownerSession": "synthetic-original-owner",
+  "executeClockMs": 100000,
+  "intentDigest": "cd4e58c352031195ca92a07bb7bbaab61eae9c306778b44ed485a8826377ab86",
+  "bindingDigest": "3c896e2d30a28df8d56c682f0d63657981161ba5b3bdd4adffa8503abe91bc19",
+  "completed": {
+    "schemaVersion": "agent-browser.producer-open-result.v1",
+    "operationId": "11111111-1111-4111-8111-111111111111",
+    "intentDigest": "cd4e58c352031195ca92a07bb7bbaab61eae9c306778b44ed485a8826377ab86",
+    "ownerTransportSession": "synthetic-original-owner",
+    "ownerProcessDigest": "1a34e021881ce69a1dcec9e1b75e6711bb8cee0a0a75ce59bace495f35ffbff6",
+    "state": "completed",
+    "steps": [
+      {
+        "eventId": "11111111-1111-4111-8111-111111111111:1",
+        "sequence": 1,
+        "step": "freshness",
+        "status": "started",
+        "startEventId": null,
+        "nativeMethod": "freshness_snapshot",
+        "cost": {
+          "acquisitions": 0,
+          "reads": 0,
+          "controls": 0,
+          "localStateReads": 0
+        },
+        "nativeIdentity": null,
+        "errorCode": null
+      },
+      {
+        "eventId": "11111111-1111-4111-8111-111111111111:2",
+        "sequence": 2,
+        "step": "freshness",
+        "status": "completed",
+        "startEventId": "11111111-1111-4111-8111-111111111111:1",
+        "nativeMethod": "freshness_snapshot",
+        "cost": {
+          "acquisitions": 0,
+          "reads": 0,
+          "controls": 0,
+          "localStateReads": 0
+        },
+        "nativeIdentity": null,
+        "errorCode": null
+      },
+      {
+        "eventId": "11111111-1111-4111-8111-111111111111:3",
+        "sequence": 3,
+        "step": "initialize",
+        "status": "started",
+        "startEventId": null,
+        "nativeMethod": "initialize_fresh_host",
+        "cost": {
+          "acquisitions": 0,
+          "reads": 0,
+          "controls": 0,
+          "localStateReads": 0
+        },
+        "nativeIdentity": null,
+        "errorCode": null
+      },
+      {
+        "eventId": "11111111-1111-4111-8111-111111111111:4",
+        "sequence": 4,
+        "step": "initialize",
+        "status": "completed",
+        "startEventId": "11111111-1111-4111-8111-111111111111:3",
+        "nativeMethod": "initialize_fresh_host",
+        "cost": {
+          "acquisitions": 0,
+          "reads": 0,
+          "controls": 0,
+          "localStateReads": 0
+        },
+        "nativeIdentity": null,
+        "errorCode": null
+      },
+      {
+        "eventId": "11111111-1111-4111-8111-111111111111:5",
+        "sequence": 5,
+        "step": "open",
+        "status": "started",
+        "startEventId": null,
+        "nativeMethod": "open_disposable",
+        "cost": {
+          "acquisitions": 1,
+          "reads": 0,
+          "controls": 0,
+          "localStateReads": 0
+        },
+        "nativeIdentity": null,
+        "errorCode": null
+      },
+      {
+        "eventId": "11111111-1111-4111-8111-111111111111:6",
+        "sequence": 6,
+        "step": "open",
+        "status": "completed",
+        "startEventId": "11111111-1111-4111-8111-111111111111:5",
+        "nativeMethod": "open_disposable",
+        "cost": {
+          "acquisitions": 0,
+          "reads": 0,
+          "controls": 0,
+          "localStateReads": 0
+        },
+        "nativeIdentity": {
+          "taskId": "synthetic-task",
+          "profileId": "synthetic-profile",
+          "browserId": "synthetic-browser",
+          "tabId": null,
+          "targetId": null
+        },
+        "errorCode": null
+      },
+      {
+        "eventId": "11111111-1111-4111-8111-111111111111:7",
+        "sequence": 7,
+        "step": "open_state",
+        "status": "started",
+        "startEventId": null,
+        "nativeMethod": "read_durable_state",
+        "cost": {
+          "acquisitions": 0,
+          "reads": 0,
+          "controls": 0,
+          "localStateReads": 1
+        },
+        "nativeIdentity": {
+          "taskId": "synthetic-task",
+          "profileId": "synthetic-profile",
+          "browserId": "synthetic-browser",
+          "tabId": null,
+          "targetId": null
+        },
+        "errorCode": null
+      },
+      {
+        "eventId": "11111111-1111-4111-8111-111111111111:8",
+        "sequence": 8,
+        "step": "open_state",
+        "status": "completed",
+        "startEventId": "11111111-1111-4111-8111-111111111111:7",
+        "nativeMethod": "read_durable_state",
+        "cost": {
+          "acquisitions": 0,
+          "reads": 0,
+          "controls": 0,
+          "localStateReads": 0
+        },
+        "nativeIdentity": {
+          "taskId": "synthetic-task",
+          "profileId": "synthetic-profile",
+          "browserId": "synthetic-browser",
+          "tabId": null,
+          "targetId": null
+        },
+        "errorCode": null
+      },
+      {
+        "eventId": "11111111-1111-4111-8111-111111111111:9",
+        "sequence": 9,
+        "step": "acquire_initial_tab",
+        "status": "started",
+        "startEventId": null,
+        "nativeMethod": "acquire_initial_tab",
+        "cost": {
+          "acquisitions": 0,
+          "reads": 0,
+          "controls": 1,
+          "localStateReads": 0
+        },
+        "nativeIdentity": {
+          "taskId": "synthetic-task",
+          "profileId": "synthetic-profile",
+          "browserId": "synthetic-browser",
+          "tabId": null,
+          "targetId": null
+        },
+        "errorCode": null
+      },
+      {
+        "eventId": "11111111-1111-4111-8111-111111111111:10",
+        "sequence": 10,
+        "step": "acquire_initial_tab",
+        "status": "completed",
+        "startEventId": "11111111-1111-4111-8111-111111111111:9",
+        "nativeMethod": "acquire_initial_tab",
+        "cost": {
+          "acquisitions": 0,
+          "reads": 0,
+          "controls": 0,
+          "localStateReads": 0
+        },
+        "nativeIdentity": {
+          "taskId": "synthetic-task",
+          "profileId": "synthetic-profile",
+          "browserId": "synthetic-browser",
+          "tabId": "synthetic-tab",
+          "targetId": "synthetic-target"
+        },
+        "errorCode": null
+      },
+      {
+        "eventId": "11111111-1111-4111-8111-111111111111:11",
+        "sequence": 11,
+        "step": "target_state",
+        "status": "started",
+        "startEventId": null,
+        "nativeMethod": "read_durable_state",
+        "cost": {
+          "acquisitions": 0,
+          "reads": 0,
+          "controls": 0,
+          "localStateReads": 1
+        },
+        "nativeIdentity": {
+          "taskId": "synthetic-task",
+          "profileId": "synthetic-profile",
+          "browserId": "synthetic-browser",
+          "tabId": "synthetic-tab",
+          "targetId": "synthetic-target"
+        },
+        "errorCode": null
+      },
+      {
+        "eventId": "11111111-1111-4111-8111-111111111111:12",
+        "sequence": 12,
+        "step": "target_state",
+        "status": "completed",
+        "startEventId": "11111111-1111-4111-8111-111111111111:11",
+        "nativeMethod": "read_durable_state",
+        "cost": {
+          "acquisitions": 0,
+          "reads": 0,
+          "controls": 0,
+          "localStateReads": 0
+        },
+        "nativeIdentity": {
+          "taskId": "synthetic-task",
+          "profileId": "synthetic-profile",
+          "browserId": "synthetic-browser",
+          "tabId": "synthetic-tab",
+          "targetId": "synthetic-target"
+        },
+        "errorCode": null
+      },
+      {
+        "eventId": "11111111-1111-4111-8111-111111111111:13",
+        "sequence": 13,
+        "step": "navigate",
+        "status": "started",
+        "startEventId": null,
+        "nativeMethod": "Page.navigate",
+        "cost": {
+          "acquisitions": 0,
+          "reads": 0,
+          "controls": 1,
+          "localStateReads": 0
+        },
+        "nativeIdentity": {
+          "taskId": "synthetic-task",
+          "profileId": "synthetic-profile",
+          "browserId": "synthetic-browser",
+          "tabId": "synthetic-tab",
+          "targetId": "synthetic-target"
+        },
+        "errorCode": null
+      },
+      {
+        "eventId": "11111111-1111-4111-8111-111111111111:14",
+        "sequence": 14,
+        "step": "navigate",
+        "status": "completed",
+        "startEventId": "11111111-1111-4111-8111-111111111111:13",
+        "nativeMethod": "Page.navigate",
+        "cost": {
+          "acquisitions": 0,
+          "reads": 0,
+          "controls": 0,
+          "localStateReads": 0
+        },
+        "nativeIdentity": {
+          "taskId": "synthetic-task",
+          "profileId": "synthetic-profile",
+          "browserId": "synthetic-browser",
+          "tabId": "synthetic-tab",
+          "targetId": "synthetic-target"
+        },
+        "errorCode": null
+      },
+      {
+        "eventId": "11111111-1111-4111-8111-111111111111:15",
+        "sequence": 15,
+        "step": "url",
+        "status": "started",
+        "startEventId": null,
+        "nativeMethod": "Target.getTargetInfo",
+        "cost": {
+          "acquisitions": 0,
+          "reads": 1,
+          "controls": 0,
+          "localStateReads": 0
+        },
+        "nativeIdentity": {
+          "taskId": "synthetic-task",
+          "profileId": "synthetic-profile",
+          "browserId": "synthetic-browser",
+          "tabId": "synthetic-tab",
+          "targetId": "synthetic-target"
+        },
+        "errorCode": null
+      },
+      {
+        "eventId": "11111111-1111-4111-8111-111111111111:16",
+        "sequence": 16,
+        "step": "url",
+        "status": "completed",
+        "startEventId": "11111111-1111-4111-8111-111111111111:15",
+        "nativeMethod": "Target.getTargetInfo",
+        "cost": {
+          "acquisitions": 0,
+          "reads": 0,
+          "controls": 0,
+          "localStateReads": 0
+        },
+        "nativeIdentity": {
+          "taskId": "synthetic-task",
+          "profileId": "synthetic-profile",
+          "browserId": "synthetic-browser",
+          "tabId": "synthetic-tab",
+          "targetId": "synthetic-target"
+        },
+        "errorCode": null
+      },
+      {
+        "eventId": "11111111-1111-4111-8111-111111111111:17",
+        "sequence": 17,
+        "step": "final_state",
+        "status": "started",
+        "startEventId": null,
+        "nativeMethod": "read_durable_state",
+        "cost": {
+          "acquisitions": 0,
+          "reads": 0,
+          "controls": 0,
+          "localStateReads": 1
+        },
+        "nativeIdentity": {
+          "taskId": "synthetic-task",
+          "profileId": "synthetic-profile",
+          "browserId": "synthetic-browser",
+          "tabId": "synthetic-tab",
+          "targetId": "synthetic-target"
+        },
+        "errorCode": null
+      },
+      {
+        "eventId": "11111111-1111-4111-8111-111111111111:18",
+        "sequence": 18,
+        "step": "final_state",
+        "status": "completed",
+        "startEventId": "11111111-1111-4111-8111-111111111111:17",
+        "nativeMethod": "read_durable_state",
+        "cost": {
+          "acquisitions": 0,
+          "reads": 0,
+          "controls": 0,
+          "localStateReads": 0
+        },
+        "nativeIdentity": {
+          "taskId": "synthetic-task",
+          "profileId": "synthetic-profile",
+          "browserId": "synthetic-browser",
+          "tabId": "synthetic-tab",
+          "targetId": "synthetic-target"
+        },
+        "errorCode": null
+      }
+    ],
+    "result": {
+      "taskId": "synthetic-task",
+      "profileId": "synthetic-profile",
+      "browserId": "synthetic-browser",
+      "tabId": "synthetic-tab",
+      "targetId": "synthetic-target",
+      "url": "https://chatgpt.com/?observed=actual"
+    },
+    "errorCode": null,
+    "fresh": false
+  },
+  "unknownAfterOriginalNavigateStart": {
+    "schemaVersion": "agent-browser.producer-open-result.v1",
+    "operationId": "11111111-1111-4111-8111-111111111111",
+    "intentDigest": "cd4e58c352031195ca92a07bb7bbaab61eae9c306778b44ed485a8826377ab86",
+    "ownerTransportSession": "synthetic-original-owner",
+    "ownerProcessDigest": "1a34e021881ce69a1dcec9e1b75e6711bb8cee0a0a75ce59bace495f35ffbff6",
+    "state": "unknown",
+    "steps": [
+      {
+        "eventId": "11111111-1111-4111-8111-111111111111:1",
+        "sequence": 1,
+        "step": "freshness",
+        "status": "started",
+        "startEventId": null,
+        "nativeMethod": "freshness_snapshot",
+        "cost": {
+          "acquisitions": 0,
+          "reads": 0,
+          "controls": 0,
+          "localStateReads": 0
+        },
+        "nativeIdentity": null,
+        "errorCode": null
+      },
+      {
+        "eventId": "11111111-1111-4111-8111-111111111111:2",
+        "sequence": 2,
+        "step": "freshness",
+        "status": "completed",
+        "startEventId": "11111111-1111-4111-8111-111111111111:1",
+        "nativeMethod": "freshness_snapshot",
+        "cost": {
+          "acquisitions": 0,
+          "reads": 0,
+          "controls": 0,
+          "localStateReads": 0
+        },
+        "nativeIdentity": null,
+        "errorCode": null
+      },
+      {
+        "eventId": "11111111-1111-4111-8111-111111111111:3",
+        "sequence": 3,
+        "step": "initialize",
+        "status": "started",
+        "startEventId": null,
+        "nativeMethod": "initialize_fresh_host",
+        "cost": {
+          "acquisitions": 0,
+          "reads": 0,
+          "controls": 0,
+          "localStateReads": 0
+        },
+        "nativeIdentity": null,
+        "errorCode": null
+      },
+      {
+        "eventId": "11111111-1111-4111-8111-111111111111:4",
+        "sequence": 4,
+        "step": "initialize",
+        "status": "completed",
+        "startEventId": "11111111-1111-4111-8111-111111111111:3",
+        "nativeMethod": "initialize_fresh_host",
+        "cost": {
+          "acquisitions": 0,
+          "reads": 0,
+          "controls": 0,
+          "localStateReads": 0
+        },
+        "nativeIdentity": null,
+        "errorCode": null
+      },
+      {
+        "eventId": "11111111-1111-4111-8111-111111111111:5",
+        "sequence": 5,
+        "step": "open",
+        "status": "started",
+        "startEventId": null,
+        "nativeMethod": "open_disposable",
+        "cost": {
+          "acquisitions": 1,
+          "reads": 0,
+          "controls": 0,
+          "localStateReads": 0
+        },
+        "nativeIdentity": null,
+        "errorCode": null
+      },
+      {
+        "eventId": "11111111-1111-4111-8111-111111111111:6",
+        "sequence": 6,
+        "step": "open",
+        "status": "completed",
+        "startEventId": "11111111-1111-4111-8111-111111111111:5",
+        "nativeMethod": "open_disposable",
+        "cost": {
+          "acquisitions": 0,
+          "reads": 0,
+          "controls": 0,
+          "localStateReads": 0
+        },
+        "nativeIdentity": {
+          "taskId": "synthetic-task",
+          "profileId": "synthetic-profile",
+          "browserId": "synthetic-browser",
+          "tabId": null,
+          "targetId": null
+        },
+        "errorCode": null
+      },
+      {
+        "eventId": "11111111-1111-4111-8111-111111111111:7",
+        "sequence": 7,
+        "step": "open_state",
+        "status": "started",
+        "startEventId": null,
+        "nativeMethod": "read_durable_state",
+        "cost": {
+          "acquisitions": 0,
+          "reads": 0,
+          "controls": 0,
+          "localStateReads": 1
+        },
+        "nativeIdentity": {
+          "taskId": "synthetic-task",
+          "profileId": "synthetic-profile",
+          "browserId": "synthetic-browser",
+          "tabId": null,
+          "targetId": null
+        },
+        "errorCode": null
+      },
+      {
+        "eventId": "11111111-1111-4111-8111-111111111111:8",
+        "sequence": 8,
+        "step": "open_state",
+        "status": "completed",
+        "startEventId": "11111111-1111-4111-8111-111111111111:7",
+        "nativeMethod": "read_durable_state",
+        "cost": {
+          "acquisitions": 0,
+          "reads": 0,
+          "controls": 0,
+          "localStateReads": 0
+        },
+        "nativeIdentity": {
+          "taskId": "synthetic-task",
+          "profileId": "synthetic-profile",
+          "browserId": "synthetic-browser",
+          "tabId": null,
+          "targetId": null
+        },
+        "errorCode": null
+      },
+      {
+        "eventId": "11111111-1111-4111-8111-111111111111:9",
+        "sequence": 9,
+        "step": "acquire_initial_tab",
+        "status": "started",
+        "startEventId": null,
+        "nativeMethod": "acquire_initial_tab",
+        "cost": {
+          "acquisitions": 0,
+          "reads": 0,
+          "controls": 1,
+          "localStateReads": 0
+        },
+        "nativeIdentity": {
+          "taskId": "synthetic-task",
+          "profileId": "synthetic-profile",
+          "browserId": "synthetic-browser",
+          "tabId": null,
+          "targetId": null
+        },
+        "errorCode": null
+      },
+      {
+        "eventId": "11111111-1111-4111-8111-111111111111:10",
+        "sequence": 10,
+        "step": "acquire_initial_tab",
+        "status": "completed",
+        "startEventId": "11111111-1111-4111-8111-111111111111:9",
+        "nativeMethod": "acquire_initial_tab",
+        "cost": {
+          "acquisitions": 0,
+          "reads": 0,
+          "controls": 0,
+          "localStateReads": 0
+        },
+        "nativeIdentity": {
+          "taskId": "synthetic-task",
+          "profileId": "synthetic-profile",
+          "browserId": "synthetic-browser",
+          "tabId": "synthetic-tab",
+          "targetId": "synthetic-target"
+        },
+        "errorCode": null
+      },
+      {
+        "eventId": "11111111-1111-4111-8111-111111111111:11",
+        "sequence": 11,
+        "step": "target_state",
+        "status": "started",
+        "startEventId": null,
+        "nativeMethod": "read_durable_state",
+        "cost": {
+          "acquisitions": 0,
+          "reads": 0,
+          "controls": 0,
+          "localStateReads": 1
+        },
+        "nativeIdentity": {
+          "taskId": "synthetic-task",
+          "profileId": "synthetic-profile",
+          "browserId": "synthetic-browser",
+          "tabId": "synthetic-tab",
+          "targetId": "synthetic-target"
+        },
+        "errorCode": null
+      },
+      {
+        "eventId": "11111111-1111-4111-8111-111111111111:12",
+        "sequence": 12,
+        "step": "target_state",
+        "status": "completed",
+        "startEventId": "11111111-1111-4111-8111-111111111111:11",
+        "nativeMethod": "read_durable_state",
+        "cost": {
+          "acquisitions": 0,
+          "reads": 0,
+          "controls": 0,
+          "localStateReads": 0
+        },
+        "nativeIdentity": {
+          "taskId": "synthetic-task",
+          "profileId": "synthetic-profile",
+          "browserId": "synthetic-browser",
+          "tabId": "synthetic-tab",
+          "targetId": "synthetic-target"
+        },
+        "errorCode": null
+      },
+      {
+        "eventId": "11111111-1111-4111-8111-111111111111:13",
+        "sequence": 13,
+        "step": "navigate",
+        "status": "started",
+        "startEventId": null,
+        "nativeMethod": "Page.navigate",
+        "cost": {
+          "acquisitions": 0,
+          "reads": 0,
+          "controls": 1,
+          "localStateReads": 0
+        },
+        "nativeIdentity": {
+          "taskId": "synthetic-task",
+          "profileId": "synthetic-profile",
+          "browserId": "synthetic-browser",
+          "tabId": "synthetic-tab",
+          "targetId": "synthetic-target"
+        },
+        "errorCode": null
+      }
+    ],
+    "result": null,
+    "errorCode": "producer_readback_required",
+    "fresh": false
+  },
+  "readbackRequest": {
+    "operation": {
+      "schemaVersion": "agent-browser.producer-open.v1",
+      "operationId": "11111111-1111-4111-8111-111111111111",
+      "mode": "readback",
+      "expectedOwner": {
+        "pid": 123,
+        "startToken": "synthetic-start",
+        "binarySha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "expiresAtMs": 200000
+    },
+    "intent": {
+      "profileMode": "disposable",
+      "taskKey": "synthetic-task",
+      "url": "https://chatgpt.com/",
+      "serviceName": "synthetic-service",
+      "agentName": "synthetic-agent",
+      "taskName": "Synthetic original producer"
+    }
+  }
+}
