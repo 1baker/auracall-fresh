@@ -56356,3 +56356,16 @@ The HTTP composition and its JWT/scopes remain unchanged. Public SDK stream test
 exercise complete Unicode reply roundtrip, denied/wrong authority, channel loss
 during acquisition, framing poison and one-accounting-instance forwarding.
 Actual platform channel selection and autonomous browser acceptance remain open.
+## 2026-10-30 — Supply the missing original-producer policy
+
+- Added one source-selected nine-phase operation/cost constructor for frozen
+  ac178, including transitive setup, conditional waits, bookkeeping and no-fallback
+  boundaries. It provides the actual CompiledPolicy inputs, without private authority.
+- Seven new Node policy cases, nine existing accounting regressions and four
+  pure Python validator cases pass. Final typecheck/production emission/lint pass.
+- Standards PASS for this owned source slice; Source Spec PASS for the policy
+  input; full automatic Pro roundtrip Spec PARTIAL/NOT_RUN. No browser/SDK/Send.
+- Same operator must select the exact frozen policy and actual private bindings
+  before producer effects. No sender/peer/controller rebuild or duplicate actor.
+- Root allowance now6.2M/source6168600, baseline143981; all spending/overruns,
+  separate operator/Browser budgets, old2/UNKNOWN/PD/5354 and2663 once preserved.

@@ -1,5 +1,34 @@
 # P446: reviewed native consumer and complete reply readback
 
+## 2026-10-30 — Concrete full producer policy
+
+Under the existing automatic-Pro objective and explicit owner +100k continuation,
+implemented `qualifyP266ProducerPolicy` for the exact ac178/ff332 build. It reads
+and qualifies eighteen frozen transitive source files and the pinned operation
+classification, then returns the closed nine-row plan, immutable selected policy,
+full operation table and scope digest. No runtime policy override or JSON authority
+is added. The source policy reserves one producer lifecycle, two shared reads,
+two controls and twenty bounded local-observation groups. The optional navigation
+load observation is conservatively charged; all conditional work stays reserved.
+Consumer acquisition and LOCAL2 remain separate within the same carried limits.
+
+The qualification document is
+`docs/dev/contracts/p266-producer-policy-qualification.md`. It names the five
+already-approved startup administrative sites, child/endpoint/resource waits,
+passive transport, integrity bookkeeping and unreachable ordinary fallback paths.
+Unknown effects keep the whole reservation. The existing Python CompiledPolicy
+accepts the actual compiled constructor output; missing operations, cost changes
+and a scope mismatch refuse. Seven focused Node cases and nine existing accounting
+regressions pass; four pure Python policy checks pass. Source typecheck, production
+TypeScript emission and scoped lint pass. These are source checks, not live proof.
+
+Operator consumption stays on the same actor/factory/peer: select these compiled
+bytes at frozen paths, compare the real binary, construct the existing CompiledPolicy,
+and write the planRecord only in the privately admitted selection directory before
+producer reservation/effects. Real controller/writer/owner/channel/full-carry bindings
+remain required. No private factory, browser, SDK, grant, claim or Send was run here;
+automatic Pro/full-reply acceptance remains NOT_RUN. Old counters and history stay.
+
 State: OPEN. Owner: AuraCall01a16096-da12-7753-8d44-e299c2172cef.
 Parent: P444; private personal work-tracker81. Base:0eb4499152931efc1564c2ba4fbc19a97edab00e.
 

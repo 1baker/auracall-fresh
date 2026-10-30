@@ -26355,3 +26355,13 @@ before acquisition and around tools; preserve sticky uncertainty and the origina
 runtime on disconnect. Do not create another sender, browser acquisition, store,
 issuer or unauthenticated generic-server fallback. HTTP regressions and private
 SDK stream roundtrip/refusal checks pass; real private transport is operator-owned.
+## 2026-10-30 — A native counter summary is not a full producer policy
+
+- Qualify the complete source-selected operation table, including transitive
+  startup, local readiness/endpoint checks and conditional post-navigation reads.
+  Keep administrative startup sites narrowly bound to the selected source.
+- Use the existing Node closed plan and Python CompiledPolicy on the same output.
+  Preserve full reservations on unknown outcomes; keep LOCAL2 and consumer
+  acquisition separate. A public plan descriptor never supplies private authority.
+- Refuse source/evidence drift, writable/symlink/missing files and caller cost
+  overrides. Match the exact compiled policy and browser before real use.
