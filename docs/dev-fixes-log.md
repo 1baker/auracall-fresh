@@ -26365,3 +26365,14 @@ SDK stream roundtrip/refusal checks pass; real private transport is operator-own
   acquisition separate. A public plan descriptor never supplies private authority.
 - Refuse source/evidence drift, writable/symlink/missing files and caller cost
   overrides. Match the exact compiled policy and browser before real use.
+
+## 2026-10-31 — Canonical completion must cover every publication path
+
+- Mint the claim and canonical pending reservation atomically. A process-local
+  set of recently created legacy claims can accidentally grant fresh rights
+  after a legacy Send; restarting the store is not the only recovery case.
+- Generation-bound replies must enter through matched original terminal proof.
+  Block generic reply submission, and withhold generic completion/linked context
+  until matching settlement exists, including an interrupted publication ACK.
+- A held or fenced operation is still encumbered. Neither timeout nor a closed
+  transport cancels external work or permits a new generation to resend it.

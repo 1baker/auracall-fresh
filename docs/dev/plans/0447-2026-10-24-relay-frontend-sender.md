@@ -1,5 +1,48 @@
 # P447: Automatic foreground relay-to-frontend sender
 
+## 2026-10-31 — Exact canonical execution span
+
+The explicit Root +1M continuation makes the previously blocked ac91382b
+two-file canonical-admission delta eligible in the same owned source lane.
+Implement the existing `RelayStore` and `dispatchRelayRequest` seams; no new
+public MCP tools, schema module, CLI mode, issuer or browser factory.
+
+Private compiled composition may select `execution` with an actual generation,
+intent digest and real operator authority. Before each protected callback and
+after it completes, check the same exact request/fingerprint/claim/route/intent/
+generation. Reserve immutable `dispatch.json` before the first frontend mutation;
+record the real `frontend_send` request/route/prompt/previous-request operation
+before calling Send. This operation ID is the actual frontend request ID, not
+a native action ID, provider message ID or fabricated browser receipt.
+
+In this explicit mode, qualify the observed target/model first, then reserve
+the immutable claim/span before Pro control. This intentionally consumes the
+once-only claim even if later Pro preparation fails. Pro must still be freshly
+observed before Send. Legacy Pro-before-claim and separate prepare-only paths
+remain unchanged. No model request is sent by claiming alone.
+
+The private authority must implement `assertCurrent(binding, stage)` and
+`verifyTerminal(binding, operation, receipt)` from genuine current bindings;
+labels or serialized settings do not supply those methods. The span reserves
+canonical overlap rights, not browser/custodian authority. Factory/controller,
+administrative coverage and private transport remain independently required.
+
+Hold/fence/EOF/timeout never cancels an already issued operation or admits a
+replacement generation. Original recovery is readback/publication/settlement
+only; it cannot reconfigure, Send again, change IDs or adopt a legacy claim as
+fresh authority. Genuine independently authorized original readback may save
+the exact complete terminal answer after a hold. Verify terminal proof before
+create-only reply publication, then persist matching settlement. A partial
+publication or lost ACK retains pending rights. Metadata status is not native
+Pro/provider proof. Old strict claim/reply/hold records and runtime are preserved.
+
+Actual use still needs selected compiled code, canonical Bastion store,
+authenticated same frontend, actual authority and separately qualified runtime
+admission. No Source result approves administrative-only g2 identity, manager
+reload, private custody changes or a new Send allowance. Definition of done for
+the full goal remains automatic Pro/exact prompt/full saved reply returned to
+Codex, not passing source cases.
+
 State: CLOSED — source implementation and native validation complete;
 actual runtime/frontend binding and live acceptance remain pending.
 Owner: AuraCall, thread01a16096-da12-7753-8d44-e299c2172cef.

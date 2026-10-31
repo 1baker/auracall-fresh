@@ -74,6 +74,103 @@ const replySchema = z
 const holdSchema = z
 	.object({ claimId: z.string().uuid(), state: z.literal("held_unknown") })
 	.strict();
+const dispatchBindingSchema = frontendClaimSchema
+	.extend({
+		requestId: relayId,
+		intent: hash,
+		generation: z.string().regex(/^[A-Za-z0-9_-]{1,128}$/),
+	})
+	.strict();
+export type CanonicalDispatchBinding = z.infer<typeof dispatchBindingSchema>;
+const dispatchAdmissionSchema = dispatchBindingSchema.omit({ claimId: true }).strict();
+export type CanonicalDispatchAdmission = z.infer<typeof dispatchAdmissionSchema>;
+export type CanonicalDispatchStage =
+	| "admit"
+	| "configure"
+	| "send"
+	| "readback"
+	| "publish"
+	| "settle"
+	| "fence";
+/** Selected private operator code supplies real authority. These methods are
+ * deliberately unavailable in JSON startup/MCP metadata; labels do not authorize. */
+export interface CanonicalDispatchAuthority {
+	assertCurrent(
+		binding: Readonly<CanonicalDispatchBinding>,
+		stage: CanonicalDispatchStage,
+	): Promise<void>;
+	verifyTerminal(
+		binding: Readonly<CanonicalDispatchBinding>,
+		operation: Readonly<CanonicalOriginalOperation>,
+		receipt: Readonly<CanonicalTerminalReceipt>,
+	): Promise<void>;
+}
+const originalOperationSchema = z
+	.object({
+		method: z.literal("frontend_send"),
+		operationId: relayId,
+		requestId: relayId,
+		routeId: z.string().min(1).max(128),
+		promptSha256: hash,
+		previousRequestId: relayId.nullable(),
+	})
+	.strict();
+export type CanonicalOriginalOperation = z.infer<typeof originalOperationSchema>;
+const terminalReceiptSchema = z
+	.object({
+		ok: z.literal(true),
+		status: z.literal("completed"),
+		requestId: relayId,
+		routeId: z.string().min(1).max(128),
+		previousRequestId: relayId.nullable(),
+		conversationUrl: z.string().regex(/^https:\/\/chatgpt\.com\/c\/[A-Za-z0-9_-]+$/),
+		output: z.string().min(1).max(262144),
+	})
+	.strict();
+export type CanonicalTerminalReceipt = z.infer<typeof terminalReceiptSchema>;
+const dispatchRecordSchema = z
+	.object({
+		version: z.literal(1),
+		spanId: z.string().uuid(),
+		binding: dispatchBindingSchema,
+	})
+	.strict();
+const dispatchOperationSchema = z
+	.object({
+		spanId: z.string().uuid(),
+		operation: originalOperationSchema,
+	})
+	.strict();
+const dispatchSettlementSchema = z
+	.object({
+		spanId: z.string().uuid(),
+		binding: dispatchBindingSchema,
+		operation: originalOperationSchema,
+		replySha256: hash,
+		terminalReceiptSha256: hash,
+	})
+	.strict();
+const dispatchFenceSchema = z
+	.object({ spanId: z.string().uuid(), binding: dispatchBindingSchema })
+	.strict();
+export interface CanonicalDispatchSpan {
+	readonly binding: Readonly<CanonicalDispatchBinding>;
+	assertCurrent(stage: CanonicalDispatchStage): Promise<void>;
+	recordOriginal(): Promise<Readonly<CanonicalOriginalOperation>>;
+	settleOriginal(receipt: CanonicalTerminalReceipt): Promise<void>;
+	hold(): Promise<void>;
+}
+const dispatchSpans = new WeakMap<
+	CanonicalDispatchSpan,
+	{
+		store: RelayStore;
+		binding: CanonicalDispatchBinding;
+		fresh: boolean;
+		attached: boolean;
+		issued: boolean;
+	}
+>();
+const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 const missing = (error: unknown) => (error as NodeJS.ErrnoException)?.code === "ENOENT";
 
 export class RelayError extends Error {
@@ -361,6 +458,7 @@ export class RelayStore {
 		fingerprint: string,
 		value: RelayFrontendBinding,
 		configureAndObserve: () => Promise<void>,
+		span?: CanonicalDispatchSpan,
 	) {
 		const binding = frontendBindingSchema.safeParse(value);
 		if (!binding.success) throw new RelayError("relay_sender_binding_invalid");
@@ -368,8 +466,22 @@ export class RelayStore {
 			const job = await this.job(id);
 			if (job.fingerprint !== fingerprint) throw new RelayError("request_conflict");
 			await this.status(id);
-			if (await this.read(dir, "claim.json", claimSchema))
-				throw new RelayError("relay_sender_claim_not_owned");
+			const claim = await this.read(dir, "claim.json", claimSchema);
+			if (claim) {
+				const own = span && dispatchSpans.get(span);
+				if (
+					!own ||
+					own.store !== this ||
+					own.binding.requestId !== id ||
+					own.binding.claimId !== claim.claimId ||
+					own.binding.fingerprint !== fingerprint ||
+					Object.entries(binding.data).some(
+						([k, v]) => own.binding[k as keyof RelayFrontendBinding] !== v,
+					)
+				)
+					throw new RelayError("relay_sender_claim_not_owned");
+				await span.assertCurrent("configure");
+			}
 			if (await this.read(dir, "configuration.json", configurationSchema))
 				throw new RelayError("relay_frontend_configuration_held");
 			const intent = { ...binding.data, fingerprint, effort: "pro" as const };
@@ -377,6 +489,303 @@ export class RelayStore {
 			await configureAndObserve();
 			await this.publish(dir, "configuration-verified.json", intent);
 		});
+	}
+	/** Exact immutable claim + generation. No lease expiry, takeover or automatic
+	 * replacement. The reservation remains pending across crashes and lost ACKs. */
+	async beginExactRequest(
+		value: CanonicalDispatchAdmission,
+		authority: CanonicalDispatchAuthority,
+	): Promise<CanonicalDispatchSpan> {
+		const parsed = dispatchAdmissionSchema.safeParse(value);
+		if (!parsed.success) throw new RelayError("relay_dispatch_binding_invalid");
+		if (
+			typeof authority?.assertCurrent !== "function" ||
+			typeof authority?.verifyTerminal !== "function"
+		)
+			throw new RelayError("relay_dispatch_authority_required");
+		const binding = dispatchBindingSchema.parse({ ...parsed.data, claimId: randomUUID() });
+		await authority.assertCurrent(Object.freeze({ ...binding }), "admit");
+		const record = await this.locked(binding.requestId, async (dir) => {
+			const job = await this.job(binding.requestId);
+			if (job.fingerprint !== binding.fingerprint) throw new RelayError("request_conflict");
+			if (await this.read(dir, "claim.json", claimSchema))
+				throw new RelayError("relay_dispatch_fresh_claim_required");
+			if ((await this.status(binding.requestId)).state !== "ready")
+				throw new RelayError("relay_dispatch_not_fresh");
+			const preparation = await this.read(dir, "configuration.json", configurationSchema);
+			if (
+				preparation &&
+				Object.entries({
+					routeId: binding.routeId,
+					expectedUrl: binding.expectedUrl,
+					expectedModel: binding.expectedModel,
+				}).some(([k, v]) => preparation[k as keyof RelayFrontendBinding] !== v)
+			)
+				throw new RelayError("relay_sender_binding_mismatch");
+			await authority.assertCurrent(Object.freeze({ ...binding }), "admit");
+			const row = { version: 1 as const, spanId: randomUUID(), binding };
+			const claim = { claimId: binding.claimId, fingerprint: binding.fingerprint };
+			// Same request lock: no legacy Send can escape before its canonical
+			// reservation exists. Partial publication is permanently non-fresh.
+			await this.publish(dir, "claim.json", claim);
+			await this.publish(dir, "sender.json", {
+				...{
+					routeId: binding.routeId,
+					expectedUrl: binding.expectedUrl,
+					expectedModel: binding.expectedModel,
+				},
+				...claim,
+			});
+			await this.publish(dir, "dispatch.json", row);
+			return row;
+		});
+		const span = this.dispatchSpan(record, authority, true);
+		await span.assertCurrent("admit");
+		return span;
+	}
+	/** Recovery is original-readback/settlement ONLY, never another Send or Pro
+	 * change. Actual current readback authority must be supplied independently. */
+	async originalDispatch(
+		value: CanonicalDispatchBinding,
+		authority: CanonicalDispatchAuthority,
+	): Promise<CanonicalDispatchSpan> {
+		const binding = dispatchBindingSchema.parse(value);
+		if (
+			typeof authority?.assertCurrent !== "function" ||
+			typeof authority?.verifyTerminal !== "function"
+		)
+			throw new RelayError("relay_dispatch_authority_required");
+		await authority.assertCurrent(Object.freeze({ ...binding }), "readback");
+		const record = await this.matchDispatchBinding(binding);
+		if (!record) throw new RelayError("relay_dispatch_missing");
+		return this.dispatchSpan(record, authority, false);
+	}
+	async fenceExactRequest(value: CanonicalDispatchBinding, authority: CanonicalDispatchAuthority) {
+		const binding = dispatchBindingSchema.parse(value);
+		if (typeof authority?.assertCurrent !== "function")
+			throw new RelayError("relay_dispatch_authority_required");
+		await authority.assertCurrent(Object.freeze({ ...binding }), "fence");
+		return this.locked(binding.requestId, async (dir) => {
+			const record = await this.matchDispatchBinding(binding);
+			if (!record) throw new RelayError("relay_dispatch_missing");
+			await authority.assertCurrent(Object.freeze({ ...binding }), "fence");
+			const old = await this.read(dir, "dispatch-fence.json", dispatchFenceSchema);
+			if (!old) await this.publish(dir, "dispatch-fence.json", { spanId: record.spanId, binding });
+			else if (old.spanId !== record.spanId || !same(old.binding, binding))
+				throw new RelayError("relay_storage_invalid");
+			return { state: "fenced_original_unsettled" as const, cancelled: false as const };
+		});
+	}
+	private async matchDispatchBinding(binding: CanonicalDispatchBinding) {
+		const dir = this.dir(binding.requestId),
+			job = await this.job(binding.requestId);
+		const claim = await this.read(dir, "claim.json", claimSchema);
+		const sender = await this.read(dir, "sender.json", frontendClaimSchema);
+		if (
+			job.fingerprint !== binding.fingerprint ||
+			claim?.claimId !== binding.claimId ||
+			!sender ||
+			Object.entries(sender).some(([k, v]) => binding[k as keyof CanonicalDispatchBinding] !== v)
+		)
+			throw new RelayError("relay_dispatch_binding_mismatch");
+		const record = await this.read(dir, "dispatch.json", dispatchRecordSchema);
+		if (record && !same(record.binding, binding))
+			throw new RelayError("relay_dispatch_binding_mismatch");
+		const operation = await this.read(dir, "dispatch-operation.json", dispatchOperationSchema);
+		if (
+			operation &&
+			(!record ||
+				operation.spanId !== record.spanId ||
+				operation.operation.operationId !== binding.requestId ||
+				operation.operation.requestId !== binding.requestId ||
+				operation.operation.routeId !== binding.routeId ||
+				operation.operation.promptSha256 !== digest(job.prompt) ||
+				operation.operation.previousRequestId !== (job.previousRequestId ?? null))
+		)
+			throw new RelayError("relay_dispatch_binding_mismatch");
+		return record;
+	}
+	private dispatchSpan(
+		record: z.infer<typeof dispatchRecordSchema>,
+		authority: CanonicalDispatchAuthority,
+		fresh: boolean,
+	): CanonicalDispatchSpan {
+		const binding = Object.freeze({ ...record.binding }),
+			dir = this.dir(binding.requestId);
+		let held = false,
+			issued = false;
+		const assertCurrent = async (stage: CanonicalDispatchStage) => {
+			if (!fresh && !["readback", "publish", "settle"].includes(stage))
+				throw new RelayError("relay_dispatch_readback_only");
+			try {
+				await authority.assertCurrent(binding, stage);
+				const current = await this.matchDispatchBinding(binding);
+				if (!current || current.spanId !== record.spanId)
+					throw new RelayError("relay_dispatch_binding_mismatch");
+				if (
+					!["readback", "publish", "settle"].includes(stage) &&
+					(held ||
+						(await this.read(dir, "hold.json", holdSchema)) ||
+						(await this.read(dir, "dispatch-fence.json", dispatchFenceSchema)))
+				)
+					throw new RelayError("relay_dispatch_held");
+				await authority.assertCurrent(binding, stage);
+			} catch (error) {
+				held = true;
+				throw error;
+			}
+		};
+		const span: CanonicalDispatchSpan = {
+			binding,
+			assertCurrent,
+			recordOriginal: async () => {
+				if (!fresh || held || issued) throw new RelayError("relay_dispatch_readback_only");
+				issued = true; // consume before the first await; failed reservation never retries
+				const capability = dispatchSpans.get(span);
+				if (!capability) throw new RelayError("relay_dispatch_span_not_owned");
+				capability.issued = true;
+				await assertCurrent("send");
+				const job = await this.job(binding.requestId);
+				const operation: CanonicalOriginalOperation = {
+					method: "frontend_send",
+					operationId: binding.requestId,
+					requestId: binding.requestId,
+					routeId: binding.routeId,
+					promptSha256: digest(job.prompt),
+					previousRequestId: job.previousRequestId ?? null,
+				};
+				await this.locked(binding.requestId, async () => {
+					await assertCurrent("send");
+					if (await this.read(dir, "dispatch-operation.json", dispatchOperationSchema))
+						throw new RelayError("relay_dispatch_operation_exists");
+					await this.publish(dir, "dispatch-operation.json", { spanId: record.spanId, operation });
+					await assertCurrent("send");
+				});
+				return Object.freeze(operation);
+			},
+			settleOriginal: async (raw) => {
+				const receipt = terminalReceiptSchema.parse(raw);
+				await assertCurrent("settle");
+				const original = await this.read(dir, "dispatch-operation.json", dispatchOperationSchema);
+				if (
+					!original ||
+					original.spanId !== record.spanId ||
+					receipt.requestId !== binding.requestId ||
+					receipt.routeId !== binding.routeId ||
+					receipt.previousRequestId !== original.operation.previousRequestId ||
+					receipt.conversationUrl !== binding.expectedUrl ||
+					!receipt.output.trim()
+				)
+					throw new RelayError("relay_dispatch_terminal_mismatch");
+				await authority.verifyTerminal(
+					binding,
+					Object.freeze({ ...original.operation }),
+					Object.freeze({ ...receipt }),
+				);
+				await assertCurrent("settle");
+				await this.locked(binding.requestId, async () => {
+					await assertCurrent("settle");
+					let reply = await this.read(dir, "reply.json", replySchema);
+					if (
+						reply &&
+						(reply.claimId !== binding.claimId ||
+							reply.text !== receipt.output ||
+							reply.sha256 !== digest(receipt.output))
+					)
+						throw new RelayError("relay_dispatch_terminal_conflict");
+					if (!reply) {
+						await assertCurrent("publish");
+						reply = replySchema.parse({
+							claimId: binding.claimId,
+							text: receipt.output,
+							sha256: digest(receipt.output),
+							providerResponseId: null,
+							liveVerified: false,
+						});
+						await this.publish(dir, "reply.json", reply);
+						await assertCurrent("publish");
+					}
+					const terminal = {
+						spanId: record.spanId,
+						binding,
+						operation: original.operation,
+						replySha256: reply.sha256,
+						terminalReceiptSha256: digest(JSON.stringify(receipt)),
+					};
+					const old = await this.read(dir, "dispatch-settlement.json", dispatchSettlementSchema);
+					if (old) {
+						if (!same(old, terminal)) throw new RelayError("relay_dispatch_terminal_conflict");
+					} else await this.publish(dir, "dispatch-settlement.json", terminal);
+					await assertCurrent("settle");
+				});
+			},
+			hold: async () => {
+				held = true;
+				await this.hold(binding.requestId, binding.claimId);
+			},
+		};
+		dispatchSpans.set(span, {
+			store: this,
+			binding: { ...binding },
+			fresh,
+			attached: false,
+			issued: false,
+		});
+		return Object.freeze(span);
+	}
+	/** Consume the SAME local span once after private producer/startup work.
+	 * No serialized Node object, second claim or factory acquisition is accepted. */
+	async attachExactRequest(span: CanonicalDispatchSpan, value: CanonicalDispatchAdmission) {
+		const expected = dispatchAdmissionSchema.parse(value),
+			own = dispatchSpans.get(span);
+		if (
+			!own ||
+			own.store !== this ||
+			!own.fresh ||
+			own.issued ||
+			own.attached ||
+			Object.entries(expected).some(
+				([k, v]) => own.binding[k as keyof CanonicalDispatchBinding] !== v,
+			)
+		)
+			throw new RelayError("relay_dispatch_span_not_owned");
+		own.attached = true;
+		await span.assertCurrent("admit");
+		return span.binding;
+	}
+	/** Canonical metadata only; settled means the exact verified terminal record
+	 * and saved reply agree, not a new grant or native/provider identity. */
+	async exactRequestStatus(value: CanonicalDispatchBinding) {
+		const binding = dispatchBindingSchema.parse(value);
+		const record = await this.matchDispatchBinding(binding);
+		if (!record) throw new RelayError("relay_dispatch_missing");
+		const dir = this.dir(binding.requestId);
+		const original = await this.read(dir, "dispatch-operation.json", dispatchOperationSchema);
+		const terminal = await this.read(dir, "dispatch-settlement.json", dispatchSettlementSchema);
+		const fence = await this.read(dir, "dispatch-fence.json", dispatchFenceSchema);
+		const reply = await this.read(dir, "reply.json", replySchema);
+		if (
+			(original && original.spanId !== record.spanId) ||
+			(fence && (fence.spanId !== record.spanId || !same(fence.binding, binding))) ||
+			(terminal &&
+				(!original ||
+					!reply ||
+					terminal.spanId !== record.spanId ||
+					!same(terminal.binding, binding) ||
+					!same(terminal.operation, original.operation) ||
+					reply.sha256 !== digest(reply.text) ||
+					terminal.replySha256 !== reply.sha256))
+		)
+			throw new RelayError("relay_storage_invalid");
+		return {
+			binding,
+			spanId: record.spanId,
+			state: terminal ? "settled" : fence ? "fenced" : "pending",
+			operation: original?.operation ?? null,
+			settlement: terminal,
+			savedReplySha256: reply?.sha256 ?? null,
+			cancelled: false as const,
+		};
 	}
 	/** Route comparison metadata, never browser authority. Partial writes refuse recovery. */
 	async frontendClaim(id: string, fingerprint: string, value: RelayFrontendBinding) {
@@ -434,6 +843,8 @@ export class RelayStore {
 			const claim = await this.read(dir, "claim.json", claimSchema);
 			if (!claim || claim.claimId !== claimId || claim.fingerprint !== job.fingerprint)
 				throw new RelayError("claim_mismatch");
+			if (await this.read(dir, "dispatch.json", dispatchRecordSchema))
+				throw new RelayError("relay_dispatch_span_required");
 			const old = await this.read(dir, "reply.json", replySchema);
 			if (old) {
 				if (old.claimId !== claimId || old.text !== text || old.sha256 !== reply.data.sha256)
@@ -462,6 +873,10 @@ export class RelayStore {
 		const hold = await this.read(dir, "hold.json", holdSchema);
 		const preparation = await this.read(dir, "configuration.json", configurationSchema);
 		const verified = await this.read(dir, "configuration-verified.json", configurationSchema);
+		const execution = await this.read(dir, "dispatch.json", dispatchRecordSchema);
+		const settled = execution
+			? (await this.exactRequestStatus(execution.binding)).state === "settled"
+			: true;
 		if (
 			(preparation && preparation.fingerprint !== job.fingerprint) ||
 			(verified && JSON.stringify(verified) !== JSON.stringify(preparation)) ||
@@ -474,15 +889,16 @@ export class RelayStore {
 		return {
 			requestId: id,
 			fingerprint: job.fingerprint,
-			state: reply
-				? "replied"
-				: hold || (preparation && !verified)
-					? "held_unknown"
-					: claim
-						? "awaiting_reply"
-						: "ready",
+			state:
+				reply && settled
+					? "replied"
+					: hold || (reply && !settled) || (preparation && !verified)
+						? "held_unknown"
+						: claim
+							? "awaiting_reply"
+							: "ready",
 			claimId: claim?.claimId ?? null,
-			reply,
+			reply: settled ? reply : null,
 			liveVerified: false as const,
 		};
 	}

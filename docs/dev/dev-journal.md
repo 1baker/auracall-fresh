@@ -56369,3 +56369,21 @@ Actual platform channel selection and autonomous browser acceptance remain open.
   before producer effects. No sender/peer/controller rebuild or duplicate actor.
 - Root allowance now6.2M/source6168600, baseline143981; all spending/overruns,
   separate operator/Browser budgets, old2/UNKNOWN/PD/5354 and2663 once preserved.
+
+## 2026-10-31 — Hold canonical execution through original terminal settlement
+
+- Root +1M continuation applied once (7.2M/source7168600/B143981); all previous
+  spending/overruns and other owners' allocations remain.
+- Implemented the ac913 two-file admission delta in the existing relay store and
+  dispatcher. Claim/sender/generation reservation are created under one lock.
+  Pro remains verified before Send; explicit generation mode reserves its claim
+  before Pro control, while legacy and prepare-only paths remain unchanged.
+- Native bounded review found and reproduced two blockers: same-instance legacy
+  claim promotion, and generic reply publication/linked-context consumption
+  before terminal verification. Atomic fresh admission and canonical-only
+  settlement close those bypasses; partial reply publication stays nonterminal.
+- Existing public MCP schema/issuer, private runtime, canonical live data, browser
+  and old5354 are untouched. Actual g2 authority/coverage, private transport and
+  frontend acceptance still require the operator's qualified binding/admission.
+- Full goal remains automatic Pro selection, exact prompt Send and complete saved
+  reply returned to Codex. Source tests are not that runtime acceptance.
