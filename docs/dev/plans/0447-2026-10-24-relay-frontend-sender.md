@@ -1,5 +1,26 @@
 # P447: Automatic foreground relay-to-frontend sender
 
+## 2026-11-01 — Prepared-run private MCP lifecycle
+
+Continue the selected same-owner source lane from qualification23488cbe. Reuse
+the actual initial-v4 factory guard and one opaque prepared-run reference.
+Connect one server before native acquisition, keep frontend calls unavailable,
+then perform the explicit once-producer/native-link operations and install one
+runtime/facade in that same server. Preserve the factory's phase driver, parent
+protocol/strict shapes, LOCAL2 and all encumbered rights. No new tool, auth flow,
+peer, endpoint launcher or JSON mode. The private contract is
+`docs/dev/contracts/native-prepared-frontend.md`.
+
+Guarded ping checks only actual retained run/channel currentness. It cannot stand
+in for canonical business authority or terminal verification. Accepted7a store /
+dispatch source stays closed; actual canonical binding/result propagation,
+private runtime selection and automatic Pro/full-reply acceptance remain separate.
+
+Validate opaque same-actor retention, early SDK connection without acquisition,
+explicit producer and one promotion, held/late ACKs, overlapping operations, exact
+input snapshots and affected legacy startup. Use public fixtures only. No new
+reviewer, closed pair/browser build replay or private runtime action is selected.
+
 ## 2026-10-31 — Exact canonical execution span
 
 The explicit Root +1M continuation makes the previously blocked ac91382b

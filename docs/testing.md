@@ -1,3 +1,16 @@
+## Prepared-run private MCP lifecycle (2026-11-01)
+
+Run `tests/browser/frontend.nativeProducerAccounting.test.ts` and
+`tests/mcp.nativeStdioHost.test.ts`, plus the affected native HTTP host regression.
+Public fixtures prove same-actor opaque retention, a single SDK connection before
+acquisition, explicit producer/native linking, one promotion, no implicit Send,
+held guard ACKs, initial refusal, overlapping calls, exact pre-await snapshots
+and late retained runtime after EOF. The host test uses synthetic factory/runtime
+collaborators; the accounting test retains its actual local actor. Neither runs
+a private parent, browser, model or real administrative transition. Guarded ping
+is not canonical authority or terminal proof. Reuse closed sender/pair/build
+evidence when unchanged; this is the focused affected selection, not a full suite.
+
 ## Automatic sender through frontend MCP (2026-10-26)
 
 `tests/relay.mcpFrontend.test.ts` connects an SDK client to the existing registered

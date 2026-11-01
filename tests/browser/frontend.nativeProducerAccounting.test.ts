@@ -3,22 +3,23 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { PassThrough } from "node:stream";
 import { afterEach, expect, it, vi } from "vitest";
+import { PRODUCER_CALLBACK_PROTOCOL } from "../../src/browser/frontends/nativeCallbackFrames.js";
+import * as callbackIntegration from "../../src/browser/frontends/nativeCallbackIntegration.js";
 import {
 	createPreproducerAccountedNativeCallbackIntegration,
 	takeRetainedNativeAccountingIntegration,
 } from "../../src/browser/frontends/nativeCallbackIntegration.js";
-import { PRODUCER_CALLBACK_PROTOCOL } from "../../src/browser/frontends/nativeCallbackFrames.js";
 import { producerMetadataDigest } from "../../src/browser/frontends/nativeProducerAccounting.js";
 import {
 	bindingSchema,
-	planSchema,
 	nativeResultSchema,
 	type ProducerRecordRef,
+	planSchema,
 } from "../../src/browser/frontends/nativeProducerPhaseRecords.js";
 import { readNativeRuntimeInput } from "../../src/browser/frontends/nativeRuntime.js";
-import * as history from "../../src/browser/frontends/originalAccountingHistory.js";
 import * as accountingModule from "../../src/browser/frontends/originalAccounting.js";
 import type { OriginalAccountingSelection } from "../../src/browser/frontends/originalAccountingHistory.js";
+import * as history from "../../src/browser/frontends/originalAccountingHistory.js";
 import browserFixture from "./fixtures/producer-open-r4-public.json";
 
 const roots: string[] = [];
@@ -478,6 +479,49 @@ it("uses one real local actor through durable producer carry and actual opaque n
 	expect(retained.input).toBe(f.input);
 	expect(() => takeRetainedNativeAccountingIntegration(token)).toThrow();
 	f.flow.hold("refused");
+});
+
+it("retains one prepared factory through pure guard and actual native promotion", async () => {
+	const f = await fixture();
+	const cap = await f.flow.prepare(f.binding, f.source);
+	const prepared = f.flow.retainPreparedRun(cap);
+	expect(() => callbackIntegration.takeRetainedPreparedNativeRun({ ...prepared })).toThrow();
+	const retained = callbackIntegration.takeRetainedPreparedNativeRun(prepared);
+	expect(() => callbackIntegration.takeRetainedPreparedNativeRun(prepared)).toThrow();
+	await retained.assertCurrent();
+	expect(f.frames.filter((x) => x.method === "phase.producer")).toHaveLength(0);
+	expect(f.frames.filter((x) => x.method === "phase.link_native")).toHaveLength(0);
+	const value = Symbol("same retained producer result");
+	expect(await retained.runProducer(f.operation, async () => ({ trace: f.traceRef, value }))).toBe(
+		value,
+	);
+	await retained.assertCurrent();
+	const native = await retained.linkNative({
+		input: f.input,
+		ownerAuthority: f.ownerAuthority,
+		producerTaskId: "synthetic-task",
+	});
+	expect(takeRetainedNativeAccountingIntegration(native).input).toBe(f.input);
+	await retained.assertCurrent();
+	expect(f.opened).toHaveBeenCalledTimes(1);
+	expect(f.frames.filter((x) => x.method === "phase.prepare")).toHaveLength(1);
+	expect(f.frames.filter((x) => x.method === "phase.producer")).toHaveLength(1);
+	expect(f.frames.filter((x) => x.method === "phase.link_native")).toHaveLength(1);
+	expect(() => f.flow.retainPreparedRun(cap)).toThrow();
+	retained.hold("refused");
+});
+
+it("keeps a retained prepared run held when its guard ACK arrives after hold", async () => {
+	const f = await fixture();
+	const cap = await f.flow.prepare(f.binding, f.source);
+	const run = callbackIntegration.takeRetainedPreparedNativeRun(f.flow.retainPreparedRun(cap));
+	const pending = run.assertCurrent();
+	f.flow.hold("lost-reply");
+	await expect(pending).rejects.toThrow();
+	const start = vi.fn();
+	await expect(run.runProducer(f.operation, start)).rejects.toThrow();
+	expect(start).not.toHaveBeenCalled();
+	expect(f.frames.filter((x) => x.method === "phase.producer")).toHaveLength(0);
 });
 
 it("holds complete original reservation on unknown producer instead of admitting native or retrying", async () => {

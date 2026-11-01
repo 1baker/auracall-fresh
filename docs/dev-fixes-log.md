@@ -1,3 +1,19 @@
+## 2026-11-01 — A frontend-first listener cannot authorize producer startup
+
+- Retain the actual prepared factory guard in an opaque, single-consumer handle.
+  It must keep one actor/peer/phase driver rather than accept a success callback.
+- Connect the private server before native acquisition; frontend tools refuse
+  until actual native link and one promotion. Keep the same client/transport.
+- A custom ping can check the retained run. Default pong, metadata echoes and
+  even guarded run-currentness are not canonical business/terminal authority.
+- Keep producer startup explicit and separately guarded. Reject overlap before
+  another peer assertion, and hold a consumed prepared actor on initialization
+  failure. Preserve late acquired runtime and original uncertainty after EOF.
+- Snapshot real producer/link metadata before guards while retaining the opaque
+  input identity. A later mutation must not change the admitted operation.
+- The original reservation, UNKNOWN and LOCAL2 remain; no Source test, new PID,
+  host listener or promotion restores consumed/uncertain runtime rights.
+
 ## 2026-10-28 — Retain one actor while producer context becomes native context
 
 - An initial producer has no native receipt or target. Select v4 explicitly at

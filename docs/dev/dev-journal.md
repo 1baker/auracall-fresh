@@ -1,3 +1,24 @@
+## 2026-11-01 — Connect the retained prepared run before native acquisition
+
+The initial-v4 factory now issues one source-owned opaque prepared reference.
+The private host consumes that SAME factory/actor, connects one MCP server, and
+defers native runtime/facade creation until the explicit actual link. Guarded ping
+checks actual retained phase/channel currentness without producer/page effects.
+Producer startup remains explicit; one promotion retains the same connection.
+Initial validation failure, hold/EOF, concurrent calls and late results retain
+the original attempt. Exact descriptors are captured before awaiting guards.
+Legacy native-first behavior remains. Source/fixture verification is separate
+from the still-unqualified canonical business authority, G2/runtime selection,
+same-run carried rights and real automatic Pro/reply acceptance. No private action.
+
+The release selection passes40 focused cases (9new/31existing across three
+files), full types, production TypeScript emission and scoped lint. Compiled
+Node22 export loading rejects a forged prepared handle before I/O. Initial
+channel refusal and pending-ping cancellation had retained public REDs and now
+hold the same actor. The initial type-check failures were fixture typing only,
+fixed before final checks. Native-lead Standards/bounded Source Spec PASS;
+independent NOT REVIEWED per current no-new-reviewer scope. Full goal PARTIAL.
+
 ## 2026-10-28 — ACCOUNTING-MAP-01 v4 phase source
 
 Implemented the source target selected by Chief2981fa40: explicit initial v4

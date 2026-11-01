@@ -3,12 +3,20 @@ import type { Server } from "node:http";
 import { Readable, Writable } from "node:stream";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { ErrorCode, McpError, PingRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import type { FrontendTools } from "../../browser/frontends/config.js";
 import {
 	createOriginalAccountedNativeCallbackIntegration,
-	takeRetainedNativeAccountingIntegration,
+	type PreparedNativeRun,
 	type RetainedNativeAccountingIntegration,
+	type RetainedPreparedNativeRun,
+	takeRetainedNativeAccountingIntegration,
+	takeRetainedPreparedNativeRun,
 } from "../../browser/frontends/nativeCallbackIntegration.js";
+import type {
+	ProducerDescriptor,
+	ProducerLocalResult,
+} from "../../browser/frontends/nativeCallbackPeer.js";
 import {
 	type NativeFiniteAuthority,
 	type NativeSendIntent,
@@ -64,6 +72,33 @@ export interface NativePrivateFrontendChannel {
 export type OwnNativeFrontendStdioOptions = Omit<OwnNativeFrontendHostOptions, "http"> & {
 	channel: NativePrivateFrontendChannel;
 };
+
+export interface PreparedNativeFrontendStdioOptions {
+	prepared: RetainedPreparedNativeRun;
+	intent: NativeSendIntent;
+	channel: NativePrivateFrontendChannel;
+}
+
+/** Connect once using the SAME prepared factory. Producer startup and actual
+ * native linking are explicit local operations, never MCP ping/tool effects.
+ * Guarded ping checks the retained run only; it is not canonical authority or
+ * terminal proof. The actual source-bound channel/provider remains required.
+ */
+export async function startPreparedNativeFrontendStdioHost(
+	options: PreparedNativeFrontendStdioOptions,
+) {
+	const prepared = takeRetainedPreparedNativeRun(options.prepared);
+	try {
+		return await startPrivateNativeStdioHost(options, { prepared });
+	} catch (error) {
+		try {
+			prepared.hold("refused");
+		} catch {
+			/* Same consumed actor remains retained. */
+		}
+		throw error;
+	}
+}
 
 /** One concrete private bootstrap; complete history and actual original guard
  * selection must pass before the existing host can acquire a client. No launcher,
@@ -219,6 +254,15 @@ export async function startOwnNativeFrontendHost(
  * Same runtime/facade and canonical P447 sender; no HTTP/JWT substitution, second
  * Open, process launch, auto-dispatch or browser release on channel loss. */
 export async function startOwnNativeFrontendStdioHost(options: OwnNativeFrontendStdioOptions) {
+	const host = await startPrivateNativeStdioHost(options, { native: options });
+	if (!host.runtime) refuse();
+	return Object.freeze({ runtime: host.runtime, server: host.server });
+}
+
+async function startPrivateNativeStdioHost(
+	options: Pick<OwnNativeFrontendStdioOptions, "intent" | "channel">,
+	mode: { native: OwnNativeFrontendStdioOptions } | { prepared: PreparedNativeRun },
+) {
 	const channel = options.channel;
 	if (
 		!channel ||
@@ -232,41 +276,67 @@ export async function startOwnNativeFrontendStdioHost(options: OwnNativeFrontend
 	const { input, output, routeId } = channel;
 	const assertCurrent = channel.assertCurrent.bind(channel);
 	const intent = Object.freeze(nativeSendIntentSchema.parse(options.intent));
+	const prepared = "prepared" in mode ? mode.prepared : undefined;
 	let held = false,
 		holdStarted = false,
-		runtime: OwnNativeProRuntime | undefined;
+		preparedHoldStarted = false,
+		busy = false,
+		promotionAttempted = false,
+		runtime: OwnNativeProRuntime | undefined,
+		bound: Awaited<ReturnType<typeof bindFrontend>> | undefined;
 	const lose = () => {
 		held = true;
+		if (prepared && !preparedHoldStarted) {
+			preparedHoldStarted = true;
+			try {
+				prepared.hold("currentness-lost");
+			} catch {
+				/* Retain without a hold ACK. */
+			}
+		}
 		if (runtime && !holdStarted) {
 			holdStarted = true;
 			void runtime.hold().catch(() => {});
 		}
 	};
+	const current = () => {
+		if (held || input.destroyed || input.readableEnded || output.destroyed || output.writableEnded)
+			refuse();
+	};
 	const check = async (stage: NativePrivateChannelCheck["stage"], scope: FrontendScope | null) => {
 		try {
-			if (
-				held ||
-				input.destroyed ||
-				input.readableEnded ||
-				output.destroyed ||
-				output.writableEnded
-			)
-				refuse();
+			current();
+			if (prepared) await prepared.assertCurrent();
+			current();
 			await assertCurrent(Object.freeze({ stage, scope, routeId, intent }));
-			if (
-				held ||
-				input.destroyed ||
-				input.readableEnded ||
-				output.destroyed ||
-				output.writableEnded
-			)
-				refuse();
+			current();
+			if (prepared) await prepared.assertCurrent();
+			current();
 		} catch {
 			lose();
 			throw new FrontendError(
 				"native_private_channel_unqualified",
 				"Reconcile the original private channel; do not reconnect or replay.",
 			);
+		}
+	};
+	const exclusive = async <T>(action: () => Promise<T>): Promise<T> => {
+		if (busy) {
+			lose();
+			refuse();
+		}
+		busy = true;
+		try {
+			current();
+			const value = await action();
+			current();
+			return value;
+		} catch (error) {
+			if (error instanceof NativeFrontendHostError) runtime = error.runtime;
+			lose();
+			throw error;
+		} finally {
+			busy = false;
 		}
 	};
 	input.once("end", lose);
@@ -278,41 +348,114 @@ export async function startOwnNativeFrontendStdioHost(options: OwnNativeFrontend
 	let server: McpServer | undefined;
 	try {
 		await check("attach", null);
-		const bound = await bindFrontend({ ...options, intent }, routeId);
-		runtime = bound.runtime;
+		if ("native" in mode) {
+			bound = await bindFrontend({ ...mode.native, intent }, routeId);
+			runtime = bound.runtime;
+		}
 		await check("attach", null);
 		const run = async (
 			id: string,
 			scope: FrontendScope,
-			action: () => Promise<Record<string, unknown>>,
+			action: (service: FrontendTools) => Promise<Record<string, unknown>>,
 		) => {
 			if (id !== routeId) {
 				lose();
 				refuse();
 			}
-			await check("before", scope);
-			try {
-				return await action();
-			} finally {
-				await check("after", scope);
-			}
+			const selected = bound;
+			if (!selected)
+				throw new FrontendError("native_frontend_not_ready", "Native linking is not complete.");
+			const invoke = async () => {
+				await check("before", scope);
+				try {
+					return await action(selected.service);
+				} finally {
+					await check("after", scope);
+				}
+			};
+			return prepared ? exclusive(invoke) : invoke();
 		};
 		const service: FrontendTools = {
-			inspect: (id) => run(id, "frontend:read", () => bound.service.inspect(id)),
+			inspect: (id) => run(id, "frontend:read", (service) => service.inspect(id)),
 			configure: (id, effort) =>
-				run(id, "frontend:configure", () => bound.service.configure(id, effort)),
+				run(id, "frontend:configure", (service) => service.configure(id, effort)),
 			send: (id, requestId, text, previous) =>
-				run(id, "frontend:send", () => bound.service.send(id, requestId, text, previous)),
+				run(id, "frontend:send", (service) => service.send(id, requestId, text, previous)),
 			status: (id, requestId) =>
-				run(id, "frontend:read", () => bound.service.status(id, requestId)),
+				run(id, "frontend:read", (service) => service.status(id, requestId)),
 		};
 		server = new McpServer({ name: "auracall-private-native-frontend", version: "1" });
 		registerFrontendTools(server, service);
+		if (prepared) {
+			// Replace the SDK's automatic pong BEFORE connecting. This performs only
+			// the actual retained run and channel checks; no producer or page action.
+			server.server.setRequestHandler(PingRequestSchema, async (_request, extra) => {
+				const cancelled = () => lose();
+				extra.signal.addEventListener("abort", cancelled, { once: true });
+				try {
+					if (extra.signal.aborted) {
+						lose();
+						refuse();
+					}
+					await exclusive(() => check("attach", null));
+					if (extra.signal.aborted) {
+						lose();
+						refuse();
+					}
+					return {};
+				} catch {
+					throw new McpError(ErrorCode.InvalidRequest, "Retained prepared run is held.");
+				} finally {
+					extra.signal.removeEventListener("abort", cancelled);
+				}
+			});
+		}
 		server.server.onclose = lose;
 		server.server.onerror = lose;
 		await server.connect(new StdioServerTransport(input, output, { maxBufferSize: 65536 }));
 		await check("attach", null);
-		return Object.freeze({ runtime, server });
+		return Object.freeze({
+			get runtime() {
+				return runtime;
+			},
+			server,
+			runProducer: <T>(operation: ProducerDescriptor, run: () => Promise<ProducerLocalResult<T>>) =>
+				exclusive(async () => {
+					if (!prepared) refuse();
+					const selected = structuredClone(operation);
+					await check("attach", null);
+					const value = await prepared.runProducer(selected, run);
+					await check("attach", null);
+					return value;
+				}),
+			linkNative: (actual: Parameters<PreparedNativeRun["linkNative"]>[0]) =>
+				exclusive(async () => {
+					if (!prepared || promotionAttempted || runtime) refuse();
+					promotionAttempted = true;
+					const selected = {
+						input: actual.input,
+						ownerAuthority: structuredClone(actual.ownerAuthority),
+						producerTaskId: actual.producerTaskId,
+					};
+					await check("attach", null);
+					const token = await prepared.linkNative(selected);
+					current();
+					const retained = takeRetainedNativeAccountingIntegration(token);
+					bound = await bindFrontend({ ...retained, intent }, routeId);
+					runtime = bound.runtime;
+					await check("attach", null);
+					return runtime;
+				}),
+			readOriginalTrace: (original: Parameters<PreparedNativeRun["readOriginalTrace"]>[0]) =>
+				exclusive(async () => {
+					if (!prepared) refuse();
+					const selected = structuredClone(original);
+					await check("attach", null);
+					const trace = await prepared.readOriginalTrace(selected);
+					await check("attach", null);
+					return trace;
+				}),
+		});
 	} catch (error) {
 		lose();
 		await server?.close();

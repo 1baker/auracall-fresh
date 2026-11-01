@@ -1,28 +1,28 @@
+import { isDeepStrictEqual } from "node:util";
 import {
 	createNativeCallbackPeer,
 	createProducerCallbackPeer,
 	type NativeCallbackPeerOptions,
 	type ProducerCallbackPeerOptions,
-	type ProducerRunCapability,
-	type ProducerPlanSource,
 	type ProducerDescriptor,
 	type ProducerLocalResult,
+	type ProducerPlanSource,
+	type ProducerRunCapability,
 	type ProducerRunCurrentCheck,
 } from "./nativeCallbackPeer.js";
-import { isDeepStrictEqual } from "node:util";
 import type { NativeFiniteAuthority } from "./nativeFiniteSend.js";
-import { bindingSchema, type ProducerBinding } from "./nativeProducerPhaseRecords.js";
-import {
-	producerMetadataDigest as producerMetadata,
-	type ProducerPolicySelection,
-} from "./nativeProducerAccounting.js";
 import { createNativeOperatorIntegration, type NativeOperatorOptions } from "./nativeOperator.js";
+import {
+	type ProducerPolicySelection,
+	producerMetadataDigest as producerMetadata,
+} from "./nativeProducerAccounting.js";
+import { bindingSchema, type ProducerBinding } from "./nativeProducerPhaseRecords.js";
 import {
 	bindNativeOperatorIntegration,
 	matchOriginalProducerNativeInput,
-	producerNativeMatch,
-	nativeRegisteredAuthoritySchema,
 	type NativeRuntimeInput,
+	nativeRegisteredAuthoritySchema,
+	producerNativeMatch,
 } from "./nativeRuntime.js";
 import { openOriginalAccounting } from "./originalAccounting.js";
 import type { OriginalAccountingSelection } from "./originalAccountingHistory.js";
@@ -173,6 +173,40 @@ async function finishAccounted(
 export interface RetainedNativeAccountingIntegration {
 	readonly kind: "same-actor-native-accounting-integration";
 }
+export interface RetainedPreparedNativeRun {
+	readonly kind: "same-actor-prepared-native-run";
+}
+export interface PreparedNativeRun {
+	assertCurrent(): Promise<void>;
+	runProducer<T>(
+		operation: ProducerDescriptor,
+		run: () => Promise<ProducerLocalResult<T>>,
+	): Promise<T>;
+	linkNative(actual: {
+		input: NativeRuntimeInput;
+		ownerAuthority: unknown;
+		producerTaskId: string;
+	}): Promise<RetainedNativeAccountingIntegration>;
+	readOriginalTrace(original: {
+		bindingDigest: string;
+		operationId: string;
+	}): ReturnType<ReturnType<typeof createProducerCallbackPeer>["phase"]["readOriginalTrace"]>;
+	hold(reason: "refused" | "lost-reply" | "disconnect" | "currentness-lost"): void;
+}
+const preparedRuns = new WeakMap<
+	RetainedPreparedNativeRun,
+	{ used: boolean; current(): void; run: PreparedNativeRun }
+>();
+
+/** Consume a reference to the SAME prepared actor, never a factory constructor. */
+export function takeRetainedPreparedNativeRun(token: RetainedPreparedNativeRun): PreparedNativeRun {
+	const state = preparedRuns.get(token);
+	if (!state || state.used)
+		throw new FrontendError("native_prepared_run_unqualified", "Retain the original prepared run.");
+	state.current();
+	state.used = true;
+	return state.run;
+}
 type Accounted = Awaited<ReturnType<typeof finishAccounted>>;
 const phaseIntegrations = new WeakMap<
 	RetainedNativeAccountingIntegration,
@@ -221,7 +255,8 @@ export function createPreproducerAccountedNativeCallbackIntegration(
 		activationAttempted = false;
 	let phase: "reserved" | "producer" | "producer-completed" | "native-link" = "reserved";
 	let held = false,
-		epoch = 0;
+		epoch = 0,
+		preparedRetained = false;
 	peer.onHold(() => {
 		if (!held) ++epoch;
 		held = true;
@@ -266,156 +301,184 @@ export function createPreproducerAccountedNativeCallbackIntegration(
 		});
 		current();
 	};
-	return Promise.resolve(
-		Object.freeze({
-			async prepare(actual: ProducerBinding, source: ProducerPlanSource) {
-				if (prepareAttempted) {
-					peer.hold();
-					current();
-				}
-				prepareAttempted = true;
-				return checked(async () => {
-					if (!isDeepStrictEqual(actual, binding)) throw new Error("changed binding");
-					const capturedSource = structuredClone(source);
-					if (
-						!policy ||
-						policy.planDigest !== capturedSource.planDigest ||
-						capturedSource.bindingDigest !== producerMetadata(binding)
-					)
-						throw new Error("unselected producer plan");
-					capability = await peer.phase.prepare(binding, capturedSource);
-					current();
-					actor = await openOriginalAccounting(selection, {
-						preproducer: {
-							binding,
-							source: capturedSource,
-							ack: peer.phase.prepared(capability),
-							policy,
-							assertCurrent: assertPhase,
-							current,
-							nativeLinkPending: () => phase === "native-link",
-						},
-						guard: peer.guard,
-						writer: peer.writer,
-						hold: peer.hold,
-					});
-					current();
-					return capability;
+	const flow = Object.freeze({
+		async prepare(actual: ProducerBinding, source: ProducerPlanSource) {
+			if (prepareAttempted) {
+				peer.hold();
+				current();
+			}
+			prepareAttempted = true;
+			return checked(async () => {
+				if (!isDeepStrictEqual(actual, binding)) throw new Error("changed binding");
+				const capturedSource = structuredClone(source);
+				if (
+					!policy ||
+					policy.planDigest !== capturedSource.planDigest ||
+					capturedSource.bindingDigest !== producerMetadata(binding)
+				)
+					throw new Error("unselected producer plan");
+				capability = await peer.phase.prepare(binding, capturedSource);
+				current();
+				actor = await openOriginalAccounting(selection, {
+					preproducer: {
+						binding,
+						source: capturedSource,
+						ack: peer.phase.prepared(capability),
+						policy,
+						assertCurrent: assertPhase,
+						current,
+						nativeLinkPending: () => phase === "native-link",
+					},
+					guard: peer.guard,
+					writer: peer.writer,
+					hold: peer.hold,
 				});
-			},
-			async runProducer<T>(
-				cap: ProducerRunCapability,
-				operation: ProducerDescriptor,
-				run: () => Promise<ProducerLocalResult<T>>,
-			): Promise<T> {
-				return checked(async () => {
-					same(cap);
-					const producer = actor?.producerPhase;
-					if (!producer || phase !== "reserved") throw new Error("unprepared");
-					const descriptor = structuredClone(operation);
-					phase = "producer";
-					const value = await peer.phase.runProducer(cap, descriptor, async () => {
-						await producer.begin(descriptor);
-						current();
-						const produced = await run(),
-							value = produced.value;
-						peer.phase.retainProducerValue(value);
-						current();
-						const trace = structuredClone(produced.trace);
-						// Retain original value in the peer before filesystem trace validation.
-						await producer.complete(trace);
-						current();
-						return { trace, value };
-					});
+				current();
+				return capability;
+			});
+		},
+		async runProducer<T>(
+			cap: ProducerRunCapability,
+			operation: ProducerDescriptor,
+			run: () => Promise<ProducerLocalResult<T>>,
+		): Promise<T> {
+			return checked(async () => {
+				same(cap);
+				const producer = actor?.producerPhase;
+				if (!producer || phase !== "reserved") throw new Error("unprepared");
+				const descriptor = structuredClone(operation);
+				phase = "producer";
+				const value = await peer.phase.runProducer(cap, descriptor, async () => {
+					await producer.begin(descriptor);
 					current();
-					producer.completedResult();
-					phase = "producer-completed";
-					return value;
+					const produced = await run(),
+						value = produced.value;
+					peer.phase.retainProducerValue(value);
+					current();
+					const trace = structuredClone(produced.trace);
+					// Retain original value in the peer before filesystem trace validation.
+					await producer.complete(trace);
+					current();
+					return { trace, value };
 				});
-			},
-			async assertCurrent(cap: ProducerRunCapability, check: ProducerRunCurrentCheck) {
-				return checked(async () => {
-					same(cap);
-					await peer.phase.assertCurrent(cap, check);
-					current();
-				});
-			},
-			async readOriginalTrace(
-				cap: ProducerRunCapability,
-				original: { bindingDigest: string; operationId: string },
-			) {
-				return checked(async () => {
-					same(cap);
-					const result = await peer.phase.readOriginalTrace(cap, original);
-					current();
-					return result;
-				});
-			},
-			async linkNative(
-				cap: ProducerRunCapability,
-				actual: { input: NativeRuntimeInput; ownerAuthority: unknown; producerTaskId: string },
-			): Promise<RetainedNativeAccountingIntegration> {
-				if (activationAttempted) {
-					peer.hold();
-					current();
-				}
-				activationAttempted = true;
-				return checked(async () => {
-					same(cap);
-					const accounting = actor;
-					const producer = accounting?.producerPhase;
-					if (!accounting || !producer || phase !== "producer-completed")
-						throw new Error("producer incomplete");
-					const selectedActual = {
-						input: actual.input,
-						ownerAuthority: nativeRegisteredAuthoritySchema.parse(
-							structuredClone(actual.ownerAuthority),
-						),
-						producerTaskId: actual.producerTaskId,
-					};
-					phase = "native-link";
-					let matched: Awaited<ReturnType<typeof matchOriginalProducerNativeInput>> | undefined;
-					await peer.phase.linkNative(cap, async () => {
-						matched = await matchOriginalProducerNativeInput(
-							selectedActual.input,
-							binding,
-							producer.completedResult(),
-							selectedActual.producerTaskId,
-							selectedActual.ownerAuthority,
-							current,
-						);
-						current();
-						const staged = await producer.stageNative(matched);
-						current();
-						return staged;
-					});
-					current();
-					if (!matched) throw new Error("link missing");
-					accounting.commitNativeContext(producerNativeMatch(matched).context);
-					const integration = await finishAccounted(
-						peer,
-						accounting,
+				current();
+				producer.completedResult();
+				phase = "producer-completed";
+				return value;
+			});
+		},
+		async assertCurrent(cap: ProducerRunCapability, check: ProducerRunCurrentCheck) {
+			return checked(async () => {
+				same(cap);
+				await peer.phase.assertCurrent(cap, check);
+				current();
+			});
+		},
+		async readOriginalTrace(
+			cap: ProducerRunCapability,
+			original: { bindingDigest: string; operationId: string },
+		) {
+			return checked(async () => {
+				same(cap);
+				const result = await peer.phase.readOriginalTrace(cap, original);
+				current();
+				return result;
+			});
+		},
+		async linkNative(
+			cap: ProducerRunCapability,
+			actual: { input: NativeRuntimeInput; ownerAuthority: unknown; producerTaskId: string },
+		): Promise<RetainedNativeAccountingIntegration> {
+			if (activationAttempted) {
+				peer.hold();
+				current();
+			}
+			activationAttempted = true;
+			return checked(async () => {
+				same(cap);
+				const accounting = actor;
+				const producer = accounting?.producerPhase;
+				if (!accounting || !producer || phase !== "producer-completed")
+					throw new Error("producer incomplete");
+				const selectedActual = {
+					input: actual.input,
+					ownerAuthority: nativeRegisteredAuthoritySchema.parse(
+						structuredClone(actual.ownerAuthority),
+					),
+					producerTaskId: actual.producerTaskId,
+				};
+				phase = "native-link";
+				let matched: Awaited<ReturnType<typeof matchOriginalProducerNativeInput>> | undefined;
+				await peer.phase.linkNative(cap, async () => {
+					matched = await matchOriginalProducerNativeInput(
 						selectedActual.input,
-						selectedActual,
+						binding,
+						producer.completedResult(),
+						selectedActual.producerTaskId,
+						selectedActual.ownerAuthority,
+						current,
 					);
 					current();
-					await assertPhase();
+					const staged = await producer.stageNative(matched);
 					current();
-					const token: RetainedNativeAccountingIntegration = Object.freeze({
-						kind: "same-actor-native-accounting-integration",
-					});
-					phaseIntegrations.set(token, {
-						input: selectedActual.input,
-						integration,
-						used: false,
-						current,
-					});
-					current();
-					return token;
+					return staged;
 				});
-			},
-			hold(_reason: "refused" | "lost-reply" | "disconnect" | "currentness-lost") {
-				peer.hold();
+				current();
+				if (!matched) throw new Error("link missing");
+				accounting.commitNativeContext(producerNativeMatch(matched).context);
+				const integration = await finishAccounted(
+					peer,
+					accounting,
+					selectedActual.input,
+					selectedActual,
+				);
+				current();
+				await assertPhase();
+				current();
+				const token: RetainedNativeAccountingIntegration = Object.freeze({
+					kind: "same-actor-native-accounting-integration",
+				});
+				phaseIntegrations.set(token, {
+					input: selectedActual.input,
+					integration,
+					used: false,
+					current,
+				});
+				current();
+				return token;
+			});
+		},
+		hold(_reason: "refused" | "lost-reply" | "disconnect" | "currentness-lost") {
+			peer.hold();
+		},
+	});
+	return Promise.resolve(
+		Object.freeze({
+			...flow,
+			retainPreparedRun(cap: ProducerRunCapability): RetainedPreparedNativeRun {
+				same(cap);
+				if (preparedRetained || !actor || phase !== "reserved") {
+					peer.hold();
+					current();
+				}
+				preparedRetained = true;
+				const token: RetainedPreparedNativeRun = Object.freeze({
+					kind: "same-actor-prepared-native-run",
+				});
+				const run: PreparedNativeRun = Object.freeze({
+					assertCurrent: () => checked(assertPhase),
+					runProducer: <T>(
+						operation: ProducerDescriptor,
+						start: () => Promise<ProducerLocalResult<T>>,
+					) => flow.runProducer(cap, operation, start),
+					linkNative: (actual: Parameters<PreparedNativeRun["linkNative"]>[0]) =>
+						flow.linkNative(cap, actual),
+					readOriginalTrace: (original: Parameters<PreparedNativeRun["readOriginalTrace"]>[0]) =>
+						flow.readOriginalTrace(cap, original),
+					hold: flow.hold,
+				});
+				preparedRuns.set(token, { used: false, current, run });
+				return token;
 			},
 		}),
 	);
