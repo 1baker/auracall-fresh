@@ -107,16 +107,17 @@ class HarnessTests(unittest.TestCase):
         self.assertEqual(json.loads(response.split(b"\r\n\r\n", 1)[1])["Id"], "c" * 64)
 
     def test_other_target_api_version_query_and_head_refuse(self):
-        for path, method in (
-            (f"/v{renderer.API_VERSION}/containers/other/json", "GET"),
-            ("/v1.99/containers/fixture/json", "GET"),
-            (f"/v{renderer.API_VERSION}/images/other/json", "GET"),
-            (f"/v{renderer.API_VERSION}/containers/fixture/json?extra=1", "GET"),
-            ("/other", "HEAD"),
+        for path, method, status in (
+            (f"/v{renderer.API_VERSION}/containers/other/json", "GET", 404),
+            ("/v1.99/containers/fixture/json", "GET", 404),
+            (f"/v{renderer.API_VERSION}/images/other/json", "GET", 404),
+            (f"/v{renderer.API_VERSION}/containers/fixture/json?extra=1", "GET", 404),
+            ("/other", "HEAD", 404),
+            ("/version", "POST", 501),
         ):
             with self.subTest(path=path, method=method):
                 response, unexpected = self.request(path, method)
-                self.assertIn(b" 404 ", response.split(b"\r\n", 1)[0])
+                self.assertIn(f" {status} ".encode(), response.split(b"\r\n", 1)[0])
                 self.assertTrue(unexpected)
 
     def test_server_closes_after_body_exception(self):

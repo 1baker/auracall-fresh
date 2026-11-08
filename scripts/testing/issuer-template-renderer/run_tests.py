@@ -84,6 +84,10 @@ class Handler(BaseHTTPRequestHandler):
     def address_string(self):
         return "fixture"
 
+    def send_error(self, code, message=None, explain=None):
+        self.server.unexpected_request = True
+        super().send_error(code, message, explain)
+
     def reply(self, status, body):
         data = json.dumps(body).encode() if body is not None else b"OK"
         self.send_response(status)

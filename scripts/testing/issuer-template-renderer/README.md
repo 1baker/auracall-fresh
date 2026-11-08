@@ -38,8 +38,8 @@ comparisons. These commands do not change the production issuer.
 Check the harness itself with
 `python3 -I -B scripts/testing/issuer-template-renderer/test_harness.py -v`.
 
-Requirements: Python 3 standard library and a Docker CLI binary. No Docker
-daemon, network, Go toolchain or credentials. HOME, DOCKER_CONFIG and the
+Requirements: Python 3 standard library and a Docker CLI binary. No production
+Docker daemon, external network, Go toolchain or credentials. HOME, DOCKER_CONFIG and the
 environment are isolated in a temporary directory.
 
 Recorded engine: Docker CLI 29.1.3 (Ubuntu 24.04 package), fake API version 1.52.

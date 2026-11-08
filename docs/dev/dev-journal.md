@@ -56462,6 +56462,7 @@ Actual platform channel selection and autonomous browser acceptance remain open.
   frontend acceptance still require the operator's qualified binding/admission.
 - Full goal remains automatic Pro selection, exact prompt Send and complete saved
   reply returned to Codex. Source tests are not that runtime acceptance.
+
 ## 2026-11-08 — Exercise issuer templates with the real CLI formatter
 
 Added an isolated stdlib harness using Docker CLI 29.1.3 against a synthetic
@@ -56479,4 +56480,3 @@ Ten offline harness regressions cover containment/cleanup/assertion boundaries.
 Snapshot regeneration matches its recorded provenance. Production generators,
 private operational capsules and issuer/Browser/SDK/runtime state are unchanged.
 The actual deployed refusal cause and autonomous exchange remain unproved.
-

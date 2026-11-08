@@ -26429,6 +26429,7 @@ SDK stream roundtrip/refusal checks pass; real private transport is operator-own
   until matching settlement exists, including an interrupted publication ACK.
 - A held or fenced operation is still encumbered. Neither timeout nor a closed
   transport cancels external work or permits a new generation to resend it.
+
 ## 2026-11-08 — Preserve real Go fixture failures and required observations
 
 - Render templates with the installed Docker formatter against a synthetic Unix
@@ -26443,4 +26444,3 @@ SDK stream roundtrip/refusal checks pass; real private transport is operator-own
   failures. A refused version-server fixture is not successful readiness.
 - Record public reproduction separately from actual deployed cause, operational
   authority and production-generator integration; no live success is inferred.
-
