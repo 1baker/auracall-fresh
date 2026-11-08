@@ -26429,3 +26429,18 @@ SDK stream roundtrip/refusal checks pass; real private transport is operator-own
   until matching settlement exists, including an interrupted publication ACK.
 - A held or fenced operation is still encumbered. Neither timeout nor a closed
   transport cancels external work or permits a new generation to resend it.
+## 2026-11-08 — Preserve real Go fixture failures and required observations
+
+- Render templates with the installed Docker formatter against a synthetic Unix
+  API; static/Python checks do not cover typed inspect/raw-map fallback behavior.
+- Preserve the failing snapshot and distinguish an old candidate's passing
+  matrix from compatibility with newer Source and required-field semantics.
+  `.Id` versus `.ID` changes typed/raw execution: omitted image fields may become
+  zero strings under typed decoding. A nullable entrypoint guard can preserve
+  raw-map required-field refusals without choosing a signal/default.
+- Bind exact fake API versions and fixture identities, assert full mount
+  records, bound pipes and deadlines, and guarantee cleanup after setup/body
+  failures. A refused version-server fixture is not successful readiness.
+- Record public reproduction separately from actual deployed cause, operational
+  authority and production-generator integration; no live success is inferred.
+

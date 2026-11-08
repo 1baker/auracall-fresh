@@ -11,12 +11,15 @@ Exit status is non-zero if any case fails.
 """
 import json
 import os
+import selectors
 import shutil
 import socketserver
 import subprocess
 import sys
 import tempfile
 import threading
+import time
+from contextlib import contextmanager
 from http.server import BaseHTTPRequestHandler
 from pathlib import Path
 
@@ -24,7 +27,7 @@ HERE = Path(__file__).resolve().parent
 TEMPLATES_PATH = Path(sys.argv[sys.argv.index("--templates") + 1]) if "--templates" in sys.argv else HERE / "templates.json"
 TEMPLATES = json.loads(TEMPLATES_PATH.read_text())
 SECRET = "SYNTHETIC-SECRET-VALUE-MUST-NOT-RENDER"
-API_VERSION = "1.41"
+API_VERSION = "1.52"
 
 
 def container(env=(), args=("authelia", "--config", "/config/configuration.yml"), mounts=None, **over):
@@ -61,6 +64,7 @@ def container(env=(), args=("authelia", "--config", "/config/configuration.yml")
 class State:
     container = container()
     image = {"Id": "sha256:" + "i" * 64, "Config": {"Entrypoint": ["/app/entrypoint.sh"], "User": "", "StopSignal": "SIGTERM"}}
+    server_available = True
 
 
 VERSION = {
@@ -92,29 +96,127 @@ class Handler(BaseHTTPRequestHandler):
             self.wfile.write(data)
 
     def do_HEAD(self):
-        self.do_GET()
+        if self.path == "/_ping":
+            return self.reply(200, None)
+        self.refuse_route()
+
+    def refuse_route(self):
+        self.server.unexpected_request = True
+        self.reply(404, {"message": "unexpected fixture route"})
 
     def do_GET(self):
-        path = self.path.split("?")[0]
-        tail = path.split("/", 2)[-1] if path.startswith("/v1.") else path.lstrip("/")
-        if tail == "_ping":
+        if self.path == "/_ping":
             return self.reply(200, None)
-        if tail == "version":
+        if self.path in ("/version", f"/v{API_VERSION}/version"):
+            if not State.server_available:
+                return self.reply(500, {"message": "fixture server unavailable"})
             return self.reply(200, VERSION)
-        if tail.startswith("containers/") and tail.endswith("/json"):
+        if self.path in (f"/v{API_VERSION}/containers/fixture/json", f"/v{API_VERSION}/containers/fixture/json?size=0"):
             return self.reply(200, State.container)
-        if tail.startswith("images/") and tail.endswith("/json"):
+        if self.path == f"/v{API_VERSION}/images/fixture/json":
             return self.reply(200, State.image)
-        return self.reply(404, {"message": "not found"})
+        self.refuse_route()
 
 
 class Server(socketserver.ThreadingMixIn, socketserver.UnixStreamServer):
     daemon_threads = True
+    unexpected_request = False
+
+
+class HarnessError(Exception):
+    pass
+
+
+@contextmanager
+def running_server(path):
+    server = Server(path, Handler)
+    thread = threading.Thread(target=lambda: server.serve_forever(poll_interval=0.05), daemon=True)
+    server.serve_thread = thread
+    started = False
+    try:
+        thread.start()
+        started = True
+        yield server
+    finally:
+        try:
+            if started and thread.is_alive():
+                server.shutdown()
+        finally:
+            server.server_close()
+            if started:
+                thread.join(timeout=1)
+        if thread.is_alive():
+            raise HarnessError("fixture server cleanup incomplete")
+
+
+def bounded_child(argv, env, timeout=30, stdout_cap=16384, stderr_cap=4096):
+    deadline = time.monotonic() + timeout
+    work_deadline = deadline - min(1, timeout / 2)
+    selector = None
+    output = {"stdout": bytearray(), "stderr": bytearray()}
+    cleanup_failed = False
+    child = subprocess.Popen(argv, env=env, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    try:
+        selector = selectors.DefaultSelector()
+        for stream, kind in ((child.stdout, "stdout"), (child.stderr, "stderr")):
+            os.set_blocking(stream.fileno(), False)
+            selector.register(stream, selectors.EVENT_READ, kind)
+        while selector.get_map():
+            left = work_deadline - time.monotonic()
+            if left <= 0:
+                raise HarnessError("CLI deadline exceeded")
+            for key, _ in selector.select(min(0.1, left)):
+                kind = key.data
+                cap = stdout_cap if kind == "stdout" else stderr_cap
+                try:
+                    chunk = os.read(key.fileobj.fileno(), min(4096, cap - len(output[kind]) + 1))
+                except BlockingIOError:
+                    continue
+                if not chunk:
+                    selector.unregister(key.fileobj)
+                    continue
+                output[kind].extend(chunk)
+                if len(output[kind]) > cap:
+                    raise HarnessError(f"CLI {kind} bound exceeded")
+        left = work_deadline - time.monotonic()
+        if left <= 0:
+            raise HarnessError("CLI deadline exceeded")
+        try:
+            code = child.wait(timeout=left)
+        except subprocess.TimeoutExpired as error:
+            raise HarnessError("CLI deadline exceeded") from error
+        return code, output["stdout"].decode("utf-8"), output["stderr"].decode("utf-8")
+    finally:
+        try:
+            if child.poll() is None:
+                try:
+                    child.kill()
+                except ProcessLookupError:
+                    pass
+        except OSError:
+            cleanup_failed = True
+        try:
+            if child.poll() is None:
+                child.wait(timeout=max(0.001, deadline - time.monotonic()))
+        except (OSError, subprocess.TimeoutExpired):
+            cleanup_failed = True
+        finally:
+            for resource in (selector, child.stdout, child.stderr):
+                if resource is not None:
+                    try:
+                        resource.close()
+                    except (OSError, ValueError):
+                        cleanup_failed = True
+        if cleanup_failed:
+            raise HarnessError("CLI cleanup incomplete")
 
 
 def render(docker, env, argv):
-    proc = subprocess.run([docker, *argv], env=env, capture_output=True, text=True, timeout=30)
-    return proc.returncode, proc.stdout, proc.stderr
+    return bounded_child([docker, *argv], env)
+
+
+def selected_mounts(expected):
+    return lambda out: (out["mounts"] == [*expected, None], out["mounts"])
 
 
 def cell(out, name):
@@ -200,20 +302,20 @@ def selector_cases():
     )
     yield "args empty", container(args=[]), "baseline", args([])
 
-    def mounts(expected_targets):
-        return lambda o: ([m["target"] for m in o["mounts"][:-1]] == expected_targets and o["mounts"][-1] is None, o["mounts"])
-
     common = [
         {"Type": "bind", "Source": "/srv/c", "Destination": "/config", "RW": True},
         {"Type": "bind", "Source": "/srv/o", "Destination": "/var/lib/other", "RW": True},
         {"Type": "volume", "Source": "/srv/s", "Destination": "/secrets", "RW": False},
         {"Type": "bind", "Source": "/srv/cs", "Destination": "/config/sub", "RW": True},
     ]
-    yield "mounts baseline selects /config only", container(mounts=common), "baseline", mounts(["/config"])
-    yield "mounts file literal adds /secrets", container(mounts=common), "fileLiteral", mounts(["/config", "/secrets"])
+    config_mount = {"type": "bind", "source": "/srv/c", "target": "/config", "rw": True}
+    secret_mount = {"type": "volume", "source": "/srv/s", "target": "/secrets", "rw": False}
+    data_mount = {"type": "bind", "source": "/srv/d", "target": "/data", "rw": True}
+    yield "mounts baseline selects /config only", container(mounts=common), "baseline", selected_mounts([config_mount])
+    yield "mounts file literal adds /secrets", container(mounts=common), "fileLiteral", selected_mounts([config_mount, secret_mount])
     yield "mounts env path selects /data", container(
         env=["CUSTOM_USERS_PATH=/data/users.yml"], mounts=[*common, {"Type": "bind", "Source": "/srv/d", "Destination": "/data", "RW": True}]
-    ), "envPath", mounts(["/config", "/data"])
+    ), "envPath", selected_mounts([config_mount, data_mount])
     yield "mounts over 64 is null", container(mounts=[common[0]] * 65), "baseline", lambda o: (o["mounts"] is None, o["mounts"])
 
     def nullable(o):
@@ -238,10 +340,8 @@ def main():
     if not docker:
         raise SystemExit("docker CLI not found")
     failures = 0
-    with tempfile.TemporaryDirectory(prefix="issuer-template-") as tmp:
+    with tempfile.TemporaryDirectory(prefix="issuer-template-") as tmp, running_server(os.path.join(tmp, "docker.sock")) as server:
         sock = os.path.join(tmp, "docker.sock")
-        server = Server(sock, Handler)
-        threading.Thread(target=server.serve_forever, daemon=True).start()
         os.makedirs(os.path.join(tmp, "home"), mode=0o700)
         os.makedirs(os.path.join(tmp, "config"), mode=0o700)
         env = {
@@ -252,23 +352,42 @@ def main():
             "LANG": "C.UTF-8",
             "LC_ALL": "C.UTF-8",
         }
-        version = render(docker, env, ["version", "--format", "{{.Client.Version}}"])[1].strip()
+        version_code, version_out, version_err = render(docker, env, ["version", "--format", "{{.Client.Version}}"])
+        if version_code or version_err or server.unexpected_request:
+            raise HarnessError("CLI fixture version qualification failed")
+        version = version_out.strip()
         print(f"engine: docker CLI {version} at {docker} (Go text/template)")
         print(f"templates: {TEMPLATES_PATH.name} sourceTemplate {TEMPLATES['provenance']['sourceTemplateSha256'][:12]}")
 
-        def run_case(name, argv, check):
+        def run_case(name, argv, check, unavailable=False, refusal_field=None):
             nonlocal failures
-            code, out, err = render(docker, env, argv)
+            server.unexpected_request = False
             try:
-                if code != 0 or err:
-                    raise AssertionError(f"exit={code} stderr={err.strip()[:300]}")
-                if SECRET in out:
+                code, out, err = render(docker, env, argv)
+                if server.unexpected_request:
+                    raise AssertionError("unexpected fixture route")
+                if SECRET in out or SECRET in err:
                     raise AssertionError("secret value rendered")
-                ok, detail = check(json.loads(out))
+                if refusal_field is not None:
+                    if code != 1 or f'map has no entry for key "{refusal_field}"' not in err:
+                        raise AssertionError("omitted required image field was not refused")
+                    print(f"PASS {name}")
+                    return
+                if unavailable:
+                    if code != 1 or "fixture server unavailable" not in err:
+                        raise AssertionError("expected bounded server-unavailable refusal")
+                elif code != 0 or err:
+                    raise AssertionError(f"exit={code} stderr={err.strip()[:300]}")
+                decoded = json.loads(out)
+                if argv[0] == "container" and (decoded["id"] != State.container["Id"] or decoded["image"] != State.container["Image"]):
+                    raise AssertionError("fixture container/image identity mismatch")
+                if argv[0] == "image" and decoded["id"] != State.image["Id"]:
+                    raise AssertionError("fixture image identity mismatch")
+                ok, detail = check(decoded)
                 if not ok:
                     raise AssertionError(detail)
                 print(f"PASS {name}")
-            except (AssertionError, json.JSONDecodeError) as error:
+            except (AssertionError, ValueError, KeyError, TypeError, OSError, HarnessError) as error:
                 failures += 1
                 print(f"FAIL {name}: {str(error)[:500]}")
 
@@ -282,10 +401,19 @@ def main():
         State.image = {"Id": "sha256:" + "i" * 64, "Config": {"Entrypoint": None, "User": "1000", "StopSignal": ""}}
         run_case("image null entrypoint", ["image", "inspect", "--format", TEMPLATES["image"], "fixture"],
                  lambda o: (o["entrypoint"] is None and o["user"] == "1000", o))
+        for required in ("User", "StopSignal"):
+            State.image = {"Id": "sha256:" + "i" * 64, "Config": {"Entrypoint": ["/app/entrypoint.sh"], "User": "1000", "StopSignal": "SIGTERM"}}
+            del State.image["Config"][required]
+            run_case(f"image omitted {required} refuses", ["image", "inspect", "--format", TEMPLATES["image"], "fixture"],
+                     lambda o: (False, "expected refusal"), refusal_field=required)
         run_case("version client and server", ["version", "--format", TEMPLATES["version"]],
                  lambda o: (o["server"]["version"] == "29.1.3-fixture" and o["server"]["minApi"] == "1.24" and o["client"]["os"] == "linux", o))
-        server.shutdown()
-        server.server_close()
+        State.server_available = False
+        try:
+            run_case("version server unavailable is null and refused", ["version", "--format", TEMPLATES["version"]],
+                     lambda o: (o["server"] is None and o["client"]["os"] == "linux", o), unavailable=True)
+        finally:
+            State.server_available = True
     print(f"{'FAILED' if failures else 'OK'}: {failures} failure(s)")
     sys.exit(1 if failures else 0)
 
