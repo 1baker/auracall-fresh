@@ -14,6 +14,19 @@
 - The original reservation, UNKNOWN and LOCAL2 remain; no Source test, new PID,
   host listener or promotion restores consumed/uncertain runtime rights.
 
+## 2026-11-08 — Keep readiness evidence and live authority distinct
+
+- A metadata read can describe selected inputs; it cannot establish writer
+  exclusion, request drain, a supervisor hold or complete transitive closure.
+- Distinguish the selected canonical device/private_key_jwt holder from a
+  legacy public-client PKCE example. A registered public key is not the private
+  holder, and selected design is not a genuine grant.
+- Do not turn conditional legacy diagnostics into an independent canonical
+  route's first-Send prerequisite. Qualify the receipt method before startup;
+  verify the actual process/input receipt after startup.
+- The issuer evidence map is working documentation, not an executable runbook,
+  a runtime admission or proof that the autonomous exchange completed.
+
 ## 2026-10-28 — Retain one actor while producer context becomes native context
 
 - An initial producer has no native receipt or target. Select v4 explicitly at
