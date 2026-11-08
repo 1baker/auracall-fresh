@@ -14,6 +14,17 @@
 - The original reservation, UNKNOWN and LOCAL2 remain; no Source test, new PID,
   host listener or promotion restores consumed/uncertain runtime rights.
 
+## 2026-11-08 — Keep request validation behind authorization
+
+- Validate malformed tools/call requests with the SDK request/tool schemas so
+  invalid params return -32602 without leaking validation details.
+- A message schema also admits notifications. Restrict this response guard to
+  requests; preserve notification handling and transport400 behavior.
+- Keep existing tool-scope checks before the new guard, including for malformed
+  arguments, so an insufficient-scope refusal retains precedence.
+- Synthetic regressions and a Source fix are not a diagnosis of a deployed
+  generic internal error. Correlated runtime evidence remains separate.
+
 ## 2026-11-08 — Separate relay tool failures from framework failures
 
 - Relay read-tool errors caught by respond return named tool results in the

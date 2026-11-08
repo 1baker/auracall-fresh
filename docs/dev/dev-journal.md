@@ -19,6 +19,24 @@ hold the same actor. The initial type-check failures were fixture typing only,
 fixed before final checks. Native-lead Standards/bounded Source Spec PASS;
 independent NOT REVIEWED per current no-new-reviewer scope. Full goal PARTIAL.
 
+## 2026-11-08 — Return Invalid params for malformed tool requests
+
+The human selected the narrow envelope fix after the tests-only PR merged.
+The HTTP server now uses the pinned SDK request and tools/call schemas to return
+-32602 Invalid params for malformed request params before tool dispatch. The
+request ID is preserved and SDK validation details are not echoed. Existing
+scope checks retain precedence. Notifications remain response-free under SDK
+handling; transport-invalid messages still return HTTP400.
+
+Native RED reproduced the old -32603 cases. Review also reproduced two boundary
+regressions in the initial message-schema fix: replying to malformed
+notifications and checking params before the existing scope refusal. Using the
+request schema after the scope gate resolves both. All four required suites
+pass68cases, plus typecheck and test lint. The existing import-order diagnostic
+remains tracked separately; no unrelated cleanup. Tests use synthetic keys,
+temporary state and loopback only. This Source fix does not establish the actual
+deployed failure's cause, deploy a service or complete an autonomous exchange.
+
 ## 2026-11-08 — Characterize relay read errors with synthetic requests
 
 Added eighteen relay error-boundary cases using generated fixture keys,

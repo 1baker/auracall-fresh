@@ -3,6 +3,7 @@ import { once } from "node:events";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import { CallToolRequestSchema, JSONRPCRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import type { JWTVerifyGetKey } from "jose";
 import {
 	createStartupFrontendService,
@@ -185,6 +186,24 @@ export function createFrontendHttpServer(options: FrontendHttpOptions) {
 				const scope = requiredScopes.get(body.params.name);
 				if (scope && !principal.scopes.has(scope))
 					throw new HttpRefusal(403, "insufficient_scope", scope);
+			}
+			// The SDK can report malformed tools/call requests as internal errors.
+			// Validate with its own schemas after the existing scope gate, without
+			// echoing validation details. The request schema preserves notifications
+			// and transport-refused messages for the SDK's existing handling.
+			if (
+				record(body) &&
+				body.method === "tools/call" &&
+				JSONRPCRequestSchema.safeParse(body).success &&
+				!CallToolRequestSchema.safeParse(body).success
+			) {
+				const id = typeof body.id === "string" || typeof body.id === "number" ? body.id : null;
+				json(res, 200, {
+					jsonrpc: "2.0",
+					id,
+					error: { code: -32602, message: "Invalid params" },
+				});
+				return;
 			}
 			const mcp = makeMcp();
 			const transport = new StreamableHTTPServerTransport({
