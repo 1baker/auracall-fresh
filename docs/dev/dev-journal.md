@@ -19,6 +19,23 @@ hold the same actor. The initial type-check failures were fixture typing only,
 fixed before final checks. Native-lead Standards/bounded Source Spec PASS;
 independent NOT REVIEWED per current no-new-reviewer scope. Full goal PARTIAL.
 
+## 2026-11-08 — Review the issuer startup evidence map
+
+Reviewed the documentation-only issuer readiness map in work item96. The map
+separates selected metadata from genuine controller/writer/drain authority and
+complete input closure. It records the selected user-associated device grant
+and private_key_jwt holder separately from the older public-client PKCE route.
+Legacy relay diagnosis remains conditional to the route that needs it.
+Private staging precedes stop; persistent inhibit and a consistent checkpoint
+cover the affected interval. Actual startup receipts are outputs, not objects
+to search for before first creation. Home bootstrap is qualified separately;
+Bastion readiness belongs inside one full invocation.
+
+Native validation covers document structure, relative links, privacy and
+reconciliation with the newer local Source history. No runtime code, issuer
+configuration, credentials, service or browser action changed. The map does not
+prove preservation, registration, startup or an autonomous exchange.
+
 ## 2026-10-28 — ACCOUNTING-MAP-01 v4 phase source
 
 Implemented the source target selected by Chief2981fa40: explicit initial v4
