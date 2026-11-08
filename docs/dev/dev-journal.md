@@ -1,21 +1,3 @@
-## 2026-11-08 — Exercise issuer templates with the real CLI formatter
-
-Added an isolated stdlib harness using Docker CLI 29.1.3 against a synthetic
-Unix Engine API. The frozen public R2 templates reproduce 37 failures in the
-original40 cases; a `.ID` comparison passes those40 but later required-field
-counterexamples show it masks omitted image User/StopSignal as Go zero strings.
-It is not selected as a production fix. Native receiving tightened exact API
-routes, bounded child output/deadline/cleanup, full mount and identity assertions,
-and version-server absence. Final43-case comparisons remain separate: R2 has37
-expected rendering failures; the `.ID` variant has2 required-field failures;
-a newer selector with a disposable image-only nullable guard passes42/43,
-retaining one documented historical controller-label contract mismatch. Its
-current contract is qualified separately; historical expectations are not relaxed.
-Ten offline harness regressions cover containment/cleanup/assertion boundaries.
-Snapshot regeneration matches its recorded provenance. Production generators,
-private operational capsules and issuer/Browser/SDK/runtime state are unchanged.
-The actual deployed refusal cause and autonomous exchange remain unproved.
-
 ## 2026-11-01 — Connect the retained prepared run before native acquisition
 
 The initial-v4 factory now issues one source-owned opaque prepared reference.
@@ -36,6 +18,24 @@ channel refusal and pending-ping cancellation had retained public REDs and now
 hold the same actor. The initial type-check failures were fixture typing only,
 fixed before final checks. Native-lead Standards/bounded Source Spec PASS;
 independent NOT REVIEWED per current no-new-reviewer scope. Full goal PARTIAL.
+
+## 2026-11-08 — Exercise issuer templates with the real CLI formatter
+
+Added an isolated stdlib harness using Docker CLI 29.1.3 against a synthetic
+Unix Engine API. The frozen public R2 templates reproduce 37 failures in the
+original40 cases; a `.ID` comparison passes those40 but later required-field
+counterexamples show it masks omitted image User/StopSignal as Go zero strings.
+It is not selected as a production fix. Native receiving tightened exact API
+routes, bounded child output/deadline/cleanup, full mount and identity assertions,
+and version-server absence. Final43-case comparisons remain separate: R2 has37
+expected rendering failures; the `.ID` variant has2 required-field failures;
+a newer selector with a disposable image-only nullable guard passes42/43,
+retaining one documented historical controller-label contract mismatch. Its
+current contract is qualified separately; historical expectations are not relaxed.
+Ten offline harness regressions cover containment/cleanup/assertion boundaries.
+Snapshot regeneration matches its recorded provenance. Production generators,
+private operational capsules and issuer/Browser/SDK/runtime state are unchanged.
+The actual deployed refusal cause and autonomous exchange remain unproved.
 
 ## 2026-11-08 — Return Invalid params for malformed tool requests
 
