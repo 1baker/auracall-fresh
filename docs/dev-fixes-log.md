@@ -14,6 +14,16 @@
 - The original reservation, UNKNOWN and LOCAL2 remain; no Source test, new PID,
   host listener or promotion restores consumed/uncertain runtime rights.
 
+## 2026-11-08 — Separate relay tool failures from framework failures
+
+- Relay read-tool errors caught by respond return named tool results in the
+  characterized cases. Malformed tools/call envelopes can fail before that
+  handler and reproduce a generic SDK error instead.
+- A synthetic reproduction identifies a supported local path; it does not
+  diagnose a deployed image or request without correlated runtime evidence.
+- Keep optional envelope-error hardening separate from the tests-only change.
+  Preserve full successful payloads, error privacy and independent POSTs.
+
 ## 2026-11-08 — Keep readiness evidence and live authority distinct
 
 - A metadata read can describe selected inputs; it cannot establish writer
