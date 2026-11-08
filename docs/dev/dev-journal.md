@@ -31,8 +31,10 @@ handling; transport-invalid messages still return HTTP400.
 Native RED reproduced the old -32603 cases. Review also reproduced two boundary
 regressions in the initial message-schema fix: replying to malformed
 notifications and checking params before the existing scope refusal. Using the
-request schema after the scope gate resolves both. All four required suites
-pass68cases, plus typecheck and test lint. The existing import-order diagnostic
+request schema after the scope gate resolves both. Spec review then caught an
+early-response bypass of the SDK's Accept/protocol refusals. Four header cases
+went RED; the guard now delegates those refusals back to the SDK. All four
+required suites pass72cases, plus typecheck and test lint. The existing import-order diagnostic
 remains tracked separately; no unrelated cleanup. Tests use synthetic keys,
 temporary state and loopback only. This Source fix does not establish the actual
 deployed failure's cause, deploy a service or complete an autonomous exchange.

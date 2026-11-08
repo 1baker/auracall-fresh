@@ -39,7 +39,7 @@ let token = "";
 let port = 0;
 let server: ReturnType<typeof createFrontendHttpServer>;
 
-const post = (body: unknown): Promise<Reply> =>
+const post = (body: unknown, headers: Record<string, string | undefined> = {}): Promise<Reply> =>
 	new Promise((resolve, reject) => {
 		const req = httpRequest(
 			{
@@ -47,12 +47,15 @@ const post = (body: unknown): Promise<Reply> =>
 				port,
 				path: "/mcp",
 				method: "POST",
-				headers: {
-					host: "relay.example.test",
-					accept: "application/json, text/event-stream",
-					"content-type": "application/json",
-					authorization: `Bearer ${token}`,
-				},
+				headers: Object.fromEntries(
+					Object.entries({
+						host: "relay.example.test",
+						accept: "application/json, text/event-stream",
+						"content-type": "application/json",
+						authorization: `Bearer ${token}`,
+						...headers,
+					}).filter(([, value]) => value !== undefined),
+				),
 			},
 			(res) => {
 				const chunks: Buffer[] = [];
@@ -219,6 +222,28 @@ describe("pre-handler framework boundary", () => {
 });
 
 describe("notification and scope boundaries", () => {
+	it.each([
+		["unsupported protocol", { "mcp-protocol-version": "unsupported" }, 400],
+		["missing Accept", { accept: undefined }, 406],
+		["JSON-only Accept", { accept: "application/json" }, 406],
+		["SSE-only Accept", { accept: "text/event-stream" }, 406],
+	])("preserves the SDK refusal for %s", async (_label, headers, expectedStatus) => {
+		const read = vi.spyOn(RelayStore.prototype, "request");
+		const reply = await post(
+			{
+				jsonrpc: "2.0",
+				id: 7,
+				method: "tools/call",
+				params: { name: "relay_request", arguments: null },
+			},
+			headers,
+		);
+		expect(reply.status).toBe(expectedStatus);
+		expect((reply.body.error as Record<string, unknown>).code).toBe(-32000);
+		expect(read).not.toHaveBeenCalled();
+		expectNoDisclosure(reply);
+	});
+
 	it.each([
 		["valid arguments", { requestId }],
 		["malformed arguments", null],

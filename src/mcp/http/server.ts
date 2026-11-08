@@ -3,7 +3,11 @@ import { once } from "node:events";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import { CallToolRequestSchema, JSONRPCRequestSchema } from "@modelcontextprotocol/sdk/types.js";
+import {
+	CallToolRequestSchema,
+	JSONRPCRequestSchema,
+	SUPPORTED_PROTOCOL_VERSIONS,
+} from "@modelcontextprotocol/sdk/types.js";
 import type { JWTVerifyGetKey } from "jose";
 import {
 	createStartupFrontendService,
@@ -190,8 +194,17 @@ export function createFrontendHttpServer(options: FrontendHttpOptions) {
 			// The SDK can report malformed tools/call requests as internal errors.
 			// Validate with its own schemas after the existing scope gate, without
 			// echoing validation details. The request schema preserves notifications
-			// and transport-refused messages for the SDK's existing handling.
+			// for the SDK. Only short-circuit when the pinned stateless transport's
+			// Accept/protocol gates accept; otherwise retain its original refusal.
+			const accept = req.headers.accept;
+			const protocolVersion = req.headers["mcp-protocol-version"];
 			if (
+				typeof accept === "string" &&
+				accept.includes("application/json") &&
+				accept.includes("text/event-stream") &&
+				(protocolVersion === undefined ||
+					(typeof protocolVersion === "string" &&
+						SUPPORTED_PROTOCOL_VERSIONS.includes(protocolVersion))) &&
 				record(body) &&
 				body.method === "tools/call" &&
 				JSONRPCRequestSchema.safeParse(body).success &&

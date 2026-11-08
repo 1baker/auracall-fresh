@@ -22,6 +22,9 @@
   requests; preserve notification handling and transport400 behavior.
 - Keep existing tool-scope checks before the new guard, including for malformed
   arguments, so an insufficient-scope refusal retains precedence.
+- An early protocol response must preserve SDK header gates too. With the pinned
+  stateless transport, short-circuit only accepted Accept/protocol headers;
+  otherwise leave the SDK's original refusal and status intact.
 - Synthetic regressions and a Source fix are not a diagnosis of a deployed
   generic internal error. Correlated runtime evidence remains separate.
 

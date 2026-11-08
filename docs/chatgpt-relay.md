@@ -333,7 +333,8 @@ HTTP bodies are bounded at2MiB; legacy frontend mode retains its64KiB ingress.
 For a single authenticated JSON-RPC request with malformed `tools/call` params,
 the HTTP MCP server returns `-32602 Invalid params` with the original request
 ID and no validation details. Authentication and known-tool scope checks retain
-precedence. Transport-invalid messages retain HTTP400; permitted notifications
+precedence. SDK transport refusals retain their statuses, including HTTP400 for
+unsupported protocol versions and HTTP406 for invalid Accept headers. Permitted notifications
 remain with the SDK transport and receive no JSON-RPC error from this guard.
 This Source behavior does not diagnose a deployed `-32603` failure.
 
