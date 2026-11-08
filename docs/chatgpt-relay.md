@@ -330,6 +330,14 @@ An existing complete reply remains readable even if a later hold/cleanup fails.
 Saved replies include their exact UTF-8 SHA256 digest. Prompts allow131,072
 characters, answers262,144; oversize input refuses rather than truncates. Relay
 HTTP bodies are bounded at2MiB; legacy frontend mode retains its64KiB ingress.
+For a single authenticated JSON-RPC request with malformed `tools/call` params,
+the HTTP MCP server returns `-32602 Invalid params` with the original request
+ID and no validation details. Authentication and known-tool scope checks retain
+precedence. SDK transport refusals retain their statuses, including HTTP400 for
+unsupported protocol versions and HTTP406 for invalid Accept headers. Permitted notifications
+remain with the SDK transport and receive no JSON-RPC error from this guard.
+This Source behavior does not diagnose a deployed `-32603` failure.
+
 `providerResponseId:null` and `liveVerified:false` remain explicit: a relay claim
 ID is not a native ChatGPT response ID, and OAuth delivery does not prove native
 browser continuity, project, model or intelligence.

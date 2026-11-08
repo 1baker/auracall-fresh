@@ -14,6 +14,43 @@
 - The original reservation, UNKNOWN and LOCAL2 remain; no Source test, new PID,
   host listener or promotion restores consumed/uncertain runtime rights.
 
+## 2026-11-08 — Keep request validation behind authorization
+
+- Validate malformed tools/call requests with the SDK request/tool schemas so
+  invalid params return -32602 without leaking validation details.
+- A message schema also admits notifications. Restrict this response guard to
+  requests; preserve notification handling and transport400 behavior.
+- Keep existing tool-scope checks before the new guard, including for malformed
+  arguments, so an insufficient-scope refusal retains precedence.
+- An early protocol response must preserve SDK header gates too. With the pinned
+  stateless transport, short-circuit only accepted Accept/protocol headers;
+  otherwise leave the SDK's original refusal and status intact.
+- Synthetic regressions and a Source fix are not a diagnosis of a deployed
+  generic internal error. Correlated runtime evidence remains separate.
+
+## 2026-11-08 — Separate relay tool failures from framework failures
+
+- Relay read-tool errors caught by respond return named tool results in the
+  characterized cases. Malformed tools/call envelopes can fail before that
+  handler and reproduce a generic SDK error instead.
+- A synthetic reproduction identifies a supported local path; it does not
+  diagnose a deployed image or request without correlated runtime evidence.
+- Keep optional envelope-error hardening separate from the tests-only change.
+  Preserve full successful payloads, error privacy and independent POSTs.
+
+## 2026-11-08 — Keep readiness evidence and live authority distinct
+
+- A metadata read can describe selected inputs; it cannot establish writer
+  exclusion, request drain, a supervisor hold or complete transitive closure.
+- Distinguish the selected canonical device/private_key_jwt holder from a
+  legacy public-client PKCE example. A registered public key is not the private
+  holder, and selected design is not a genuine grant.
+- Do not turn conditional legacy diagnostics into an independent canonical
+  route's first-Send prerequisite. Qualify the receipt method before startup;
+  verify the actual process/input receipt after startup.
+- The issuer evidence map is working documentation, not an executable runbook,
+  a runtime admission or proof that the autonomous exchange completed.
+
 ## 2026-10-28 — Retain one actor while producer context becomes native context
 
 - An initial producer has no native receipt or target. Select v4 explicitly at

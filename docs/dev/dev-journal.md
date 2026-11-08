@@ -19,6 +19,60 @@ hold the same actor. The initial type-check failures were fixture typing only,
 fixed before final checks. Native-lead Standards/bounded Source Spec PASS;
 independent NOT REVIEWED per current no-new-reviewer scope. Full goal PARTIAL.
 
+## 2026-11-08 — Return Invalid params for malformed tool requests
+
+The human selected the narrow envelope fix after the tests-only PR merged.
+The HTTP server now uses the pinned SDK request and tools/call schemas to return
+-32602 Invalid params for malformed request params before tool dispatch. The
+request ID is preserved and SDK validation details are not echoed. Existing
+scope checks retain precedence. Notifications remain response-free under SDK
+handling; transport-invalid messages still return HTTP400.
+
+Native RED reproduced the old -32603 cases. Review also reproduced two boundary
+regressions in the initial message-schema fix: replying to malformed
+notifications and checking params before the existing scope refusal. Using the
+request schema after the scope gate resolves both. Spec review then caught an
+early-response bypass of the SDK's Accept/protocol refusals. Four header cases
+went RED; the guard now delegates those refusals back to the SDK. All four
+required suites pass72cases, plus typecheck and test lint. The existing import-order diagnostic
+remains tracked separately; no unrelated cleanup. Tests use synthetic keys,
+temporary state and loopback only. This Source fix does not establish the actual
+deployed failure's cause, deploy a service or complete an autonomous exchange.
+
+## 2026-11-08 — Characterize relay read errors with synthetic requests
+
+Added eighteen relay error-boundary cases using generated fixture keys,
+temporary state and a loopback listener. Named Store errors remain tool errors;
+ordinary exceptions become relay_failed without exposing their messages.
+Malformed tools/call envelopes reproduce SDK pre-handler -32603 responses.
+Sequential and concurrent successful requests still work after failures.
+This is one demonstrated local error path, not the deployed failure's cause or
+a proof that no other SDK error path exists. Actual deployed image/handler and
+request-correlated evidence remain separate, conditional to the selected route.
+
+Native review retained the tests-only selection. A later envelope-validation
+hardening commit was preserved in history and reverted before integration;
+production HTTP behavior is unchanged. All four required suites passed63tests,
+including18new, with typecheck and scoped test lint passing. No live connector,
+issuer, browser, Send, service change or private credential was used.
+
+## 2026-11-08 — Review the issuer startup evidence map
+
+Reviewed the documentation-only issuer readiness map in work item96. The map
+separates selected metadata from genuine controller/writer/drain authority and
+complete input closure. It records the selected user-associated device grant
+and private_key_jwt holder separately from the older public-client PKCE route.
+Legacy relay diagnosis remains conditional to the route that needs it.
+Private staging precedes stop; persistent inhibit and a consistent checkpoint
+cover the affected interval. Actual startup receipts are outputs, not objects
+to search for before first creation. Home bootstrap is qualified separately;
+Bastion readiness belongs inside one full invocation.
+
+Native validation covers document structure, relative links, privacy and
+reconciliation with the newer local Source history. No runtime code, issuer
+configuration, credentials, service or browser action changed. The map does not
+prove preservation, registration, startup or an autonomous exchange.
+
 ## 2026-10-28 — ACCOUNTING-MAP-01 v4 phase source
 
 Implemented the source target selected by Chief2981fa40: explicit initial v4
