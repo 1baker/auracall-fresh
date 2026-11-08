@@ -3,6 +3,7 @@ import { once } from "node:events";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import { CallToolRequestSchema, JSONRPCMessageSchema } from "@modelcontextprotocol/sdk/types.js";
 import type { JWTVerifyGetKey } from "jose";
 import {
 	createStartupFrontendService,
@@ -176,6 +177,25 @@ export function createFrontendHttpServer(options: FrontendHttpOptions) {
 			if (!/^application\/json(?:\s*;\s*charset=utf-8)?$/i.test(req.headers["content-type"] ?? ""))
 				throw new HttpRefusal(415, "unsupported_media_type");
 			const body = await readBody(req, res, isRelay ? 2097152 : bodyLimit);
+			// A tools/call message the SDK transport accepts but its tools/call schema
+			// rejects is reported by the SDK as -32603 internal error. Detect exactly
+			// that case with the SDK's own schemas and answer the caller's invalid
+			// params instead, without echoing validation details. Messages the
+			// transport itself refuses keep its existing response.
+			if (
+				record(body) &&
+				body.method === "tools/call" &&
+				JSONRPCMessageSchema.safeParse(body).success &&
+				!CallToolRequestSchema.safeParse(body).success
+			) {
+				const id = typeof body.id === "string" || typeof body.id === "number" ? body.id : null;
+				json(res, 200, {
+					jsonrpc: "2.0",
+					id,
+					error: { code: -32602, message: "Invalid params" },
+				});
+				return;
+			}
 			if (
 				record(body) &&
 				body.method === "tools/call" &&

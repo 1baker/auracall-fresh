@@ -18,6 +18,7 @@ const resource = "https://relay.example.test/mcp";
 const requestId = "fixture-request-0001";
 const secretPrompt = "SYNTHETIC-PROMPT-DO-NOT-ECHO";
 const secretPath = "/synthetic/private/relay/path";
+const metaKey = "_meta";
 const fingerprint = "a".repeat(64);
 const fixtures = {
 	request: { requestId, prompt: "full", fingerprint, previousRequestId: null, previousReply: null },
@@ -173,22 +174,44 @@ describe("pre-handler framework boundary", () => {
 		expect((reply.body.result as Record<string, unknown>).isError).toBe(true);
 	});
 
-	// Characterizes SDK 1.32.0: a tools/call envelope that fails the SDK request
-	// schema is rejected before any AuraCall handler with the generic internal
-	// error code, not invalid params. This is one local way to observe -32603;
-	// it is not evidence of the deployed cause.
+	// SDK 1.32.0 parses the tools/call envelope before any tool handler and maps
+	// a parse failure to the generic -32603 internal error. The HTTP layer now
+	// checks the same SDK schema first and answers -32602 invalid params. This
+	// is one local -32603 path; it is not evidence of the deployed cause.
 	it.each([
 		["arguments as a string", { name: "relay_request", arguments: "requestId" }],
 		["arguments as an array", { name: "relay_status", arguments: [requestId] }],
 		["arguments as null", { name: "relay_request", arguments: null }],
 		["missing tool name", { arguments: { requestId } }],
-	])("returns JSON-RPC -32603 for %s", async (_label, params) => {
+	])("returns JSON-RPC -32602 invalid params for %s", async (_label, params) => {
 		const read = vi.spyOn(RelayStore.prototype, "request");
 		const status = vi.spyOn(RelayStore.prototype, "status");
 		const reply = await callTool(params);
 		expect(reply.status).toBe(200);
-		const error = reply.body.error as Record<string, unknown>;
-		expect(error.code).toBe(-32603);
+		expect(reply.body).toEqual({
+			jsonrpc: "2.0",
+			id: 7,
+			error: { code: -32602, message: "Invalid params" },
+		});
+		expect(read).not.toHaveBeenCalled();
+		expect(status).not.toHaveBeenCalled();
+		expectNoDisclosure(reply);
+	});
+
+	// Characterizes SDK 1.32.0 transport validation: these never reach request
+	// dispatch, so they are HTTP 400 transport refusals, not -32603.
+	it.each([
+		["non-object params", "relay_request"],
+		[
+			"malformed progress token",
+			{ name: "relay_status", arguments: { requestId }, [metaKey]: { progressToken: {} } },
+		],
+	])("refuses %s at the transport with HTTP 400", async (_label, params) => {
+		const read = vi.spyOn(RelayStore.prototype, "request");
+		const status = vi.spyOn(RelayStore.prototype, "status");
+		const reply = await callTool(params);
+		expect(reply.status).toBe(400);
+		expect((reply.body.error as Record<string, unknown>).code).not.toBe(-32603);
 		expect(read).not.toHaveBeenCalled();
 		expect(status).not.toHaveBeenCalled();
 		expectNoDisclosure(reply);
