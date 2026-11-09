@@ -3,8 +3,9 @@ import path from 'node:path';
 import type { ChildProcess } from 'node:child_process';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+import { requireBuiltMcpEntry } from './mcpBuiltEntry.js';
 
-const entry = path.join(process.cwd(), 'dist/bin/auracall-mcp.js');
+const entry = requireBuiltMcpEntry();
 
 describe('auracall-mcp schemas', () => {
   let client: Client | null = null;

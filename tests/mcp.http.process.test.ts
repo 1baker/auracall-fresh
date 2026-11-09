@@ -13,6 +13,7 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 import { exportJWK, generateKeyPair, SignJWT } from "jose";
 import { parseHTML } from "linkedom";
 import { expect, it } from "vitest";
+import { requireBuiltMcpEntry } from "./mcpBuiltEntry.js";
 
 async function listen(server: Server) {
 	server.listen(0, "127.0.0.1");
@@ -250,22 +251,18 @@ it("uses the normal CLI and HTTPS JWKS, preserving linked receipts across real p
 		};
 		let diagnostic = "";
 		const start = async () => {
-			child = spawn(
-				process.execPath,
-				[fileURLToPath(new URL("../dist/bin/auracall-mcp.js", import.meta.url)), "--http"],
-				{
-					cwd: fileURLToPath(new URL("..", import.meta.url)),
-					stdio: ["ignore", "pipe", "pipe"],
-					env: Object.fromEntries([
-						["PATH", process.env.PATH],
-						["NODE_EXTRA_CA_CERTS", certificate],
-						["AURACALL_HOME_DIR", join(home, "store")],
-						["AURACALL_FRONTEND_CONFIG", frontendPath],
-						["AURACALL_FRONTEND_OAUTH_CONFIG", authPath],
-						["FIXTURE_BROWSER_CAP", "process-fixture-cap"],
-					]),
-				},
-			);
+			child = spawn(process.execPath, [requireBuiltMcpEntry(), "--http"], {
+				cwd: fileURLToPath(new URL("..", import.meta.url)),
+				stdio: ["ignore", "pipe", "pipe"],
+				env: Object.fromEntries([
+					["PATH", process.env.PATH],
+					["NODE_EXTRA_CA_CERTS", certificate],
+					["AURACALL_HOME_DIR", join(home, "store")],
+					["AURACALL_FRONTEND_CONFIG", frontendPath],
+					["AURACALL_FRONTEND_OAUTH_CONFIG", authPath],
+					["FIXTURE_BROWSER_CAP", "process-fixture-cap"],
+				]),
+			});
 			child.stdout?.on("data", (data) => {
 				diagnostic += String(data);
 			});
