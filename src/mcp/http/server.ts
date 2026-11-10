@@ -14,14 +14,16 @@ import {
 	type FrontendTools,
 } from "../../browser/frontends/config.js";
 import { getCliVersion } from "../../version.js";
+import { RelayStore } from "../relay/store.js";
+import { registerRelayTools, relayToolScopes } from "../relay/tools.js";
 import { registerFrontendTools } from "../tools/frontends.js";
 import {
 	createFrontendTokenVerifier,
 	type FrontendScope,
-	type OAuthScope,
 	frontendScopes,
-	relayScopes,
 	HttpRefusal,
+	type OAuthScope,
+	relayScopes,
 } from "./auth.js";
 import {
 	type FrontendHttpConfig,
@@ -29,8 +31,6 @@ import {
 	validateFrontendHttpConfig,
 } from "./config.js";
 import { scopedFrontendTools } from "./scopedFrontend.js";
-import { RelayStore } from "../relay/store.js";
-import { registerRelayTools, relayToolScopes } from "../relay/tools.js";
 
 const bodyLimit = 65536;
 const operationScopes = new Map<string, FrontendScope>([
