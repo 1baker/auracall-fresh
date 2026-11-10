@@ -1,5 +1,25 @@
 # Aura-Call 🧿 — Whispering your tokens to the silicon sage
 
+> **About this copy:** this is a personal fork of [ecochran76/auracall](https://github.com/ecochran76/auracall). The original project's documentation continues below.
+
+**In one sentence:** AuraCall sends a question (and any files) to an AI service, either through its API or through a real signed-in browser session such as ChatGPT, then waits for and saves the complete answer.
+
+**Who it is for:** People who want scripts or AI agents to ask other AI services for help and get the full reply back.
+
+**How it works:**
+
+```mermaid
+flowchart LR
+    Agent[Script or AI agent] -->|prompt + files| AC[AuraCall]
+    AC -->|API| API[AI provider API]
+    AC -->|real browser| Web[ChatGPT and others]
+    API --> Ans[(Full saved answer)]
+    Web --> Ans
+```
+
+---
+
+
 <p align="center">
   <img src="./README-header.png" alt="Aura-Call CLI header banner" width="1100">
 </p>
